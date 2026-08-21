@@ -1,0 +1,498 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//! The verbs. Every model-free command is here in full; the three that need an
+//! endpoint report that plainly rather than degrading into something that
+//! looks like an answer.
+
+use std::path::{Path, PathBuf};
+
+use canon_core::{Act, ActId, ActKind, Log, State, Status};
+
+use crate::store;
+
+// ── plumbing ────────────────────────────────────────────────
+
+fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
+    args.iter()
+        .position(|a| a == name)
+        .and_then(|i| args.get(i + 1))
+        .map(|s| s.as_str())
+}
+
+fn has(args: &[String], name: &str) -> bool {
+    args.iter().any(|a| a == name)
+}
+
+fn positionals(args: &[String]) -> Vec<&str> {
+    let mut out = Vec::new();
+    let mut skip = false;
+    for a in args {
+        if skip {
+            skip = false;
+            continue;
+        }
+        if a == "-m" || a == "--from" || a == "--profile" || a == "--revisit" {
+            skip = true;
+            continue;
+        }
+        if a.starts_with('-') {
+            continue;
+        }
+        out.push(a.as_str());
+    }
+    out
+}
+
+fn dir() -> Result<PathBuf, String> {
+    if let Ok(d) = std::env::var("CANON_DIR") {
+        return Ok(PathBuf::from(d));
+    }
+    let cwd = std::env::current_dir().map_err(|e| e.to_string())?;
+    store::locate(&cwd)
+        .ok_or_else(|| "no canon here. `canon init` to start one, or set CANON_DIR".to_string())
+}
+
+fn load() -> Result<(PathBuf, Log, State), String> {
+    let d = dir()?;
+    let log = store::read(&d)?;
+    let st = log.derive();
+    Ok((d, log, st))
+}
+
+fn fail(e: impl std::fmt::Display) -> i32 {
+    eprintln!("error: {e}");
+    2
+}
+
+/// Resolve a possibly-abbreviated id against the canon. Users read ids off a
+/// listing and type a prefix; an ambiguous prefix is an error rather than a
+/// guess.
+fn resolve(st: &State, needle: &str) -> Result<ActId, String> {
+    let hits: Vec<&ActId> = st
+        .commitments
+        .iter()
+        .map(|c| &c.id)
+        .filter(|id| id.as_str() == needle || id.as_str().starts_with(needle))
+        .collect();
+    match hits.len() {
+        1 => Ok(hits[0].clone()),
+        0 => Err(format!("no commitment matching `{needle}`")),
+        n => Err(format!(
+            "`{needle}` matches {n} commitments — use more characters"
+        )),
+    }
+}
+
+fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
+    let act = Act::new(kind, store::now(), store::actor());
+    store::append(d, &act)?;
+    Ok(act)
+}
+
+// ── record ──────────────────────────────────────────────────
+
+pub fn init(args: &[String]) -> i32 {
+    let profile = flag(args, "--profile").unwrap_or("personal");
+    if !matches!(profile, "personal" | "code" | "house") {
+        return fail(format!("unknown profile `{profile}` (personal|code|house)"));
+    }
+    let base = match std::env::var("CANON_DIR") {
+        Ok(d) => PathBuf::from(d),
+        Err(_) => match std::env::current_dir() {
+            Ok(c) => c.join(store::DIR),
+            Err(e) => return fail(e),
+        },
+    };
+    if base.join(store::FILE).exists() {
+        return fail(format!("a canon already exists at {}", base.display()));
+    }
+    if let Err(e) = std::fs::create_dir_all(&base) {
+        return fail(e);
+    }
+    if let Err(e) = std::fs::write(base.join("profile"), format!("{profile}\n")) {
+        return fail(e);
+    }
+    if let Err(e) = std::fs::write(base.join(store::FILE), "") {
+        return fail(e);
+    }
+    println!(
+        "canon initialised at {} (profile: {profile})",
+        base.display()
+    );
+    println!("  canon add \"<your first commitment>\"");
+    0
+}
+
+pub fn add(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(text) = pos.first() else {
+        return fail("usage: canon add \"<commitment>\"");
+    };
+    let d = match dir() {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
+    match write(
+        &d,
+        ActKind::Assert {
+            text: (*text).to_string(),
+            from: None,
+            source: None,
+        },
+    ) {
+        Ok(act) => {
+            println!("{}  {}", act.id, text);
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+pub fn list(args: &[String]) -> i32 {
+    let (_, _, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    if has(args, "--json") {
+        let live: Vec<_> = st.active().collect();
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&live).unwrap_or_default()
+        );
+        return 0;
+    }
+    let live: Vec<_> = st.active().collect();
+    if live.is_empty() {
+        println!("no live commitments. `canon add \"...\"` to start.");
+        return 0;
+    }
+    for c in &live {
+        println!("{}  {}", c.id, c.text);
+    }
+    println!("\n{} live", live.len());
+    if !st.tolerated.is_empty() {
+        println!(
+            "{} contradiction(s) carried knowingly — `canon list --json` for detail",
+            st.tolerated.len()
+        );
+    }
+    // A hole in the record is louder than a missing feature.
+    if !st.dangling.is_empty() {
+        eprintln!(
+            "\nwarning: {} act(s) reference a commitment that is not in this log:",
+            st.dangling.len()
+        );
+        for (act, missing) in &st.dangling {
+            eprintln!("  {act} -> {missing}");
+        }
+    }
+    // Absence of attribution is reported, never defaulted.
+    if !st.unattended.is_empty() {
+        eprintln!(
+            "\nwarning: {} adjudication(s) were not authored by a person: {}",
+            st.unattended.len(),
+            st.unattended
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
+    0
+}
+
+pub fn why(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(needle) = pos.first() else {
+        return fail("usage: canon why <id>");
+    };
+    let (_, log, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let id = match resolve(&st, needle) {
+        Ok(i) => i,
+        Err(e) => return fail(e),
+    };
+    let c = st.get(&id).expect("resolved");
+    println!("{}  {}", c.id, c.text);
+    println!("  asserted {} by {}", store::ymd(c.asserted_at), c.actor);
+    if let Some(src) = &c.source {
+        println!("  drafted from {src}");
+    }
+    if let Some(up) = &c.from {
+        println!("  inherited from upstream {up}");
+    }
+    for old in &c.replaces {
+        let prev = st.get(old).map(|p| p.text.as_str()).unwrap_or("(unknown)");
+        println!("  replaced {old}: \"{prev}\"");
+    }
+    match &c.status {
+        Status::Active => println!("  status: live"),
+        Status::Superseded { by } => {
+            let next = st.get(by).map(|p| p.text.as_str()).unwrap_or("(unknown)");
+            println!("  status: superseded by {by} — \"{next}\"");
+        }
+        Status::Retracted { at } => println!("  status: retracted {}", store::ymd(*at)),
+    }
+    // The rationale lives on the act, not the derived commitment.
+    for act in log.acts() {
+        match &act.kind {
+            ActKind::Supersede { old, rationale, .. }
+                if old.contains(&id) && !rationale.is_empty() =>
+            {
+                println!("  reason given: {rationale}")
+            }
+            ActKind::Retract { target, rationale } if target == &id && !rationale.is_empty() => {
+                println!("  reason given: {rationale}")
+            }
+            _ => {}
+        }
+    }
+    for t in st.tolerated.iter().filter(|t| t.a == id || t.b == id) {
+        let other = if t.a == id { &t.b } else { &t.a };
+        println!("  carried against {other}: {}", t.rationale);
+        if let Some(r) = &t.revisit {
+            println!("    revisit by {r}");
+        }
+    }
+    0
+}
+
+pub fn supersede(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    if pos.len() < 2 {
+        return fail("usage: canon supersede <id> \"<new text>\" -m \"<reason>\"");
+    }
+    let (d, _, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let old = match resolve(&st, pos[0]) {
+        Ok(i) => i,
+        Err(e) => return fail(e),
+    };
+    match write(
+        &d,
+        ActKind::Supersede {
+            text: pos[1].to_string(),
+            old: vec![old.clone()],
+            rationale: flag(args, "-m").unwrap_or_default().to_string(),
+        },
+    ) {
+        Ok(act) => {
+            println!("{}  {}", act.id, pos[1]);
+            println!("  replaces {old}");
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+pub fn retract(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(needle) = pos.first() else {
+        return fail("usage: canon retract <id> -m \"<reason>\"");
+    };
+    let (d, _, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let target = match resolve(&st, needle) {
+        Ok(i) => i,
+        Err(e) => return fail(e),
+    };
+    match write(
+        &d,
+        ActKind::Retract {
+            target: target.clone(),
+            rationale: flag(args, "-m").unwrap_or_default().to_string(),
+        },
+    ) {
+        Ok(_) => {
+            println!("retracted {target}");
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+pub fn accept(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    if pos.len() < 2 {
+        return fail("usage: canon accept <a> <b> -m \"<reason>\"");
+    }
+    // The rationale is required here and nowhere else: an accepted
+    // contradiction must say what it protects.
+    let Some(rationale) = flag(args, "-m").filter(|r| !r.trim().is_empty()) else {
+        return fail("accept requires -m \"<reason>\" — a tolerated contradiction must say why");
+    };
+    let (d, _, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let (a, b) = match (resolve(&st, pos[0]), resolve(&st, pos[1])) {
+        (Ok(a), Ok(b)) => (a, b),
+        (Err(e), _) | (_, Err(e)) => return fail(e),
+    };
+    match write(
+        &d,
+        ActKind::Accept {
+            a: a.clone(),
+            b: b.clone(),
+            rationale: rationale.to_string(),
+            revisit: flag(args, "--revisit").map(str::to_string),
+        },
+    ) {
+        Ok(_) => {
+            println!("carrying {a} against {b} knowingly");
+            println!("  {rationale}");
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+pub fn dismiss(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    if pos.len() < 2 {
+        return fail("usage: canon dismiss <a> <b> [-m \"<reason>\"]");
+    }
+    let (d, _, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let (a, b) = match (resolve(&st, pos[0]), resolve(&st, pos[1])) {
+        (Ok(a), Ok(b)) => (a, b),
+        (Err(e), _) | (_, Err(e)) => return fail(e),
+    };
+    match write(
+        &d,
+        ActKind::Dismiss {
+            a: a.clone(),
+            b: b.clone(),
+            rationale: flag(args, "-m").unwrap_or_default().to_string(),
+        },
+    ) {
+        Ok(_) => {
+            println!("dismissed: {a} and {b} are not in conflict");
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+pub fn undo(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(target) = pos.first() else {
+        return fail("usage: canon undo <act-id> -m \"<reason>\"");
+    };
+    let (d, log, _) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let hits: Vec<&Act> = log
+        .acts()
+        .iter()
+        .filter(|a| a.id.as_str() == *target || a.id.as_str().starts_with(target))
+        .collect();
+    let act_id = match hits.len() {
+        1 => hits[0].id.clone(),
+        0 => {
+            return fail(format!(
+                "no act matching `{target}` — `canon log` to see them"
+            ))
+        }
+        n => return fail(format!("`{target}` matches {n} acts — use more characters")),
+    };
+    match write(
+        &d,
+        ActKind::Revert {
+            targets: vec![act_id.clone()],
+            rationale: flag(args, "-m").unwrap_or_default().to_string(),
+        },
+    ) {
+        Ok(_) => {
+            println!("reverted {act_id} (itself revertible)");
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+pub fn log(args: &[String]) -> i32 {
+    let (_, log, _) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    if has(args, "--json") {
+        print!("{}", log.render());
+        return 0;
+    }
+    for act in log.acts() {
+        let what = match &act.kind {
+            ActKind::Assert { text, .. } => format!("assert     {text}"),
+            ActKind::Supersede { text, .. } => format!("supersede  {text}"),
+            ActKind::Retract { target, .. } => format!("retract    {target}"),
+            ActKind::Accept { a, b, .. } => format!("accept     {a} / {b}"),
+            ActKind::Dismiss { a, b, .. } => format!("dismiss    {a} / {b}"),
+            ActKind::Revert { targets, .. } => format!("revert     {}", targets.len()),
+            ActKind::Adopt {
+                lineage,
+                generation,
+                ..
+            } => {
+                format!("adopt      {lineage}@{generation}")
+            }
+        };
+        println!(
+            "{}  {}  {}  {}",
+            act.id,
+            store::ymd(act.ts_unix),
+            act.actor,
+            what
+        );
+    }
+    println!("\n{} acts", log.len());
+    0
+}
+
+pub fn share(_args: &[String]) -> i32 {
+    let (d, _, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    // Name the snapshot after the directory holding the canon, so a pasted
+    // block says where it came from without anyone configuring anything.
+    let name = std::fs::read_to_string(d.join("name"))
+        .map(|s| s.trim().to_string())
+        .ok()
+        .filter(|s| !s.is_empty())
+        .or_else(|| {
+            d.parent()
+                .and_then(|p| p.file_name())
+                .map(|n| n.to_string_lossy().to_string())
+        })
+        .unwrap_or_else(|| "canon".into());
+    let live: Vec<_> = st.active().collect();
+
+    // A snapshot is not a log: it carries derived current state and drops
+    // supersession history and rationales, which name incidents and people.
+    // Enough to adopt, not enough to audit.
+    println!("--- canon {name} · snapshot {} ", store::ymd(store::now()));
+    for c in &live {
+        println!("{}  ({})", c.text, c.id);
+    }
+    println!("--- {} live · adopt: canon adopt --paste", live.len());
+    0
+}
+
+// ── needs a model ───────────────────────────────────────────
+
+/// Exit 3 is "cannot judge" — a first-class verdict, not a failure. Reporting
+/// the absence beats emitting something that looks like an answer.
+pub fn needs_model(cmd: &str) -> i32 {
+    eprintln!("cannot judge: `{cmd}` needs a model and this build has no endpoint client yet.");
+    eprintln!("  the model-free verbs are complete: add, list, why, supersede,");
+    eprintln!("  retract, accept, dismiss, undo, log, share.");
+    3
+}
