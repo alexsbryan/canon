@@ -227,8 +227,10 @@ how things should be. A fact, an event, or a one-off feeling is not a \
 commitment.
 
 For each one, return:
-- text: one self-contained sentence stating the rule in the passage's own \
-terms. It must make sense with no passage in front of it.
+- text: one self-contained sentence stating the rule in the holder's own \
+voice, as they would write it in a list of their own commitments. Write \
+\"Mornings are protected.\", never \"The speaker intends to protect their \
+mornings.\" It must make sense with no passage in front of it.
 - quote: the words from the passage it came from, copied exactly. Do not \
 paraphrase, do not fix wording, do not shorten with ellipses.
 
@@ -403,9 +405,16 @@ fn read_sources(args: &[String]) -> Result<Vec<(String, String)>, String> {
     for p in from_paths(args) {
         let path = PathBuf::from(&p);
         if path.is_dir() {
-            return Err(format!(
-                "{p} is a directory — name the files, e.g. --from {p}/*.md"
-            ));
+            let found = walk(&path)?;
+            if found.is_empty() {
+                return Err(format!("{p} has no {} files in it", READABLE.join(" or ")));
+            }
+            for f in found {
+                let text = std::fs::read_to_string(&f)
+                    .map_err(|e| format!("reading {}: {e}", f.display()))?;
+                out.push((f.to_string_lossy().to_string(), text));
+            }
+            continue;
         }
         let text = std::fs::read_to_string(&path).map_err(|e| format!("reading {p}: {e}"))?;
         out.push((p, text));
@@ -415,6 +424,46 @@ fn read_sources(args: &[String]) -> Result<Vec<(String, String)>, String> {
             "nothing to draft from — `canon draft --from <paths>` or `--from-git --since 1y`"
                 .into(),
         );
+    }
+    Ok(out)
+}
+
+/// What a directory walk will pick up. Deliberately narrow: pointing `draft`
+/// at a folder should read the notes in it, not every binary underneath.
+const READABLE: &[&str] = &["md", "txt", "markdown", "text"];
+
+/// Every readable file under a directory, sorted.
+///
+/// Sorted because chunk ids are positions, and a run that reads the same
+/// folder twice in a different order produces a draft-run artifact that
+/// cannot be compared with the first (§18.4).
+fn walk(dir: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut out = Vec::new();
+    let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)
+        .map_err(|e| format!("reading {}: {e}", dir.display()))?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .collect();
+    entries.sort();
+    for path in entries {
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
+        // Hidden directories are infrastructure, not notes: `.git` alone
+        // would bury a run in objects.
+        if name.starts_with('.') {
+            continue;
+        }
+        if path.is_dir() {
+            out.extend(walk(&path)?);
+        } else if path
+            .extension()
+            .map(|e| READABLE.contains(&e.to_string_lossy().as_ref()))
+            .unwrap_or(false)
+        {
+            out.push(path);
+        }
     }
     Ok(out)
 }
@@ -679,6 +728,9 @@ fn review(
             println!("\n(end of input)");
             break;
         };
+        // Piped input echoes nothing, so the prompt and the reply would run
+        // together in a transcript. A terminal supplies this newline itself.
+        println!();
         let text = match answer.trim() {
             "a" | "accept" => c.text.clone(),
             "e" | "edit" => {

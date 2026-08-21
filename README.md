@@ -45,15 +45,97 @@ all, which is enforced by its dependency list rather than by discipline.
 **Nothing is destroyed.** Every act is revertible, including a revert.
 
 **Most of it needs no model.** `add`, `list`, `why`, `supersede`,
-`retract`, `accept`, `dismiss`, `undo`, `log` and `share` are the fold.
-Only `check`, `tensions` and `draft` call one, and they take any
-OpenAI-compatible endpoint.
+`retract`, `accept`, `dismiss`, `undo`, `question`, `open`, `log`,
+`share`, `adopt`, `diff --upstream` and the merge driver are all the
+fold. Only `check`, `tensions`, `draft` and `rebase` call a model, and
+they take any OpenAI-compatible endpoint:
+
+```sh
+canon config set endpoint http://localhost:8080/v1   # any llama.cpp server
+```
+
+A model call is refused unless the endpoint is on this machine, and
+`--allow-remote` is how you say otherwise. Every call names the endpoint
+it used.
+
+## Asking whether something fits
+
+```sh
+canon check "add a second scorer for the adjudication cache"
+```
+
+```
+CONFLICT
+  can-0e50f4ee  "One implementation per threshold, scorer, schema and key."
+                asserted 2026-08-21, in force, never superseded
+                because: the proposal adds a second scorer
+```
+
+Exit 1. The answer always cites a rule you can read, because a bearing
+that names no commitment or gives no reason is refused before it is
+rendered — the difference between *the agent misread the rule* and *the
+rule is wrong* is a correction versus an amendment, and you cannot tell
+them apart without the citation.
+
+A canon on the `personal` profile never renders a verdict and never
+returns exit 1. It reports which commitments have a stake and which way
+each pulls, including contradictions you already chose to carry. A tool
+that ruled on someone's inner life would do harm the codebase profile
+cannot.
+
+## The agent surface
+
+```sh
+canon mcp    # stdio MCP server: canon_list, canon_why, canon_open, canon_check
+```
+
+Everyone running agents has the same problem: the agent does not know the
+house rules, and pasting them into the prompt saturates. This lets it ask.
+
+**Every tool is a read.** There is no tool that writes an act — not
+permission-gated, absent. Amending requires the CLI, run by a person. An
+agent that thinks something should be recorded says so in chat, as a
+command you can run. The canon is what your agents are measured against;
+an agent that can edit it is grading its own work.
+
+## Starting from what you already wrote
+
+```sh
+canon draft --from ./notes        # or --from-git --since 1y
+```
+
+`draft` extracts candidate commitments from text you already have and
+offers them one at a time. **Every candidate carries the passage it came
+from, or it is not shown**: the extractor must return the words verbatim,
+and a quote that is not in the source drops the candidate. A drafted
+commitment with no citation is a model inventing a value you never held.
+
+There is no `--accept-all`. A canon adopted wholesale is disengagement at
+t=0, so accepting one at a time is what makes onboarding the first
+governance session.
+
+## Sharing
+
+```sh
+canon share                 # a block you can paste into a chat thread
+canon adopt --paste         # read one back
+canon diff --upstream       # how you have diverged from what you adopted
+```
+
+For most communities, pasting is not a phase before something better —
+it is how they will always share. A snapshot carries current state and
+drops rationales and supersession history: enough to adopt, not enough to
+audit, which is the right trade for a chat thread. A block edited after
+it was shared is refused rather than adopted under the sender's name.
+
+`adopt <url>` and `upgrade <gen>` clone a lineage so nobody has to type
+git. `rebase --onto <url>@<gen>` maps your changes onto a newer base and
+tells you how much of your law survives before you commit to the move.
 
 ## Status
 
-Early. The record verbs work and are tested; `check`, `tensions` and
-`draft` are not implemented yet and exit `3` (*cannot judge*) rather than
-guessing.
+Early, and honest about it. Every verb in the spec is implemented and
+tested. What has not happened yet is anyone else using it.
 
 ## Format
 
