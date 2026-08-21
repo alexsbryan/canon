@@ -16,7 +16,7 @@ pub mod id;
 pub mod log;
 
 pub use act::{Act, ActKind, FORMAT_VERSION};
-pub use fold::{derive, Ancestry, Commitment, State, Status, Tolerated};
+pub use fold::{derive, Ancestry, Canon, Commitment, Conflict, Disposition, Status};
 pub use id::{ActId, ID_PREFIX};
 pub use log::{Log, ParseError};
 

@@ -5,8 +5,9 @@
 
 use std::path::{Path, PathBuf};
 
-use canon_core::{Act, ActId, ActKind, Log, State, Status};
+use canon_core::{Act, ActId, ActKind, Canon, Disposition, Log, Status};
 
+use crate::profile::Profile;
 use crate::store;
 
 // ── plumbing ────────────────────────────────────────────────
@@ -51,7 +52,7 @@ fn dir() -> Result<PathBuf, String> {
         .ok_or_else(|| "no canon here. `canon init` to start one, or set CANON_DIR".to_string())
 }
 
-fn load() -> Result<(PathBuf, Log, State), String> {
+fn load() -> Result<(PathBuf, Log, Canon), String> {
     let d = dir()?;
     let log = store::read(&d)?;
     let st = log.derive();
@@ -66,7 +67,7 @@ fn fail(e: impl std::fmt::Display) -> i32 {
 /// Resolve a possibly-abbreviated id against the canon. Users read ids off a
 /// listing and type a prefix; an ambiguous prefix is an error rather than a
 /// guess.
-fn resolve(st: &State, needle: &str) -> Result<ActId, String> {
+fn resolve(st: &Canon, needle: &str) -> Result<ActId, String> {
     let hits: Vec<&ActId> = st
         .commitments
         .iter()
@@ -91,10 +92,10 @@ fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
 // ── record ──────────────────────────────────────────────────
 
 pub fn init(args: &[String]) -> i32 {
-    let profile = flag(args, "--profile").unwrap_or("personal");
-    if !matches!(profile, "personal" | "code" | "house") {
-        return fail(format!("unknown profile `{profile}` (personal|code|house)"));
-    }
+    let profile = match Profile::parse(flag(args, "--profile").unwrap_or("personal")) {
+        Ok(p) => p,
+        Err(e) => return fail(e),
+    };
     let base = match std::env::var("CANON_DIR") {
         Ok(d) => PathBuf::from(d),
         Err(_) => match std::env::current_dir() {
@@ -108,15 +109,16 @@ pub fn init(args: &[String]) -> i32 {
     if let Err(e) = std::fs::create_dir_all(&base) {
         return fail(e);
     }
-    if let Err(e) = std::fs::write(base.join("profile"), format!("{profile}\n")) {
+    if let Err(e) = std::fs::write(base.join("profile"), format!("{}\n", profile.as_str())) {
         return fail(e);
     }
     if let Err(e) = std::fs::write(base.join(store::FILE), "") {
         return fail(e);
     }
     println!(
-        "canon initialised at {} (profile: {profile})",
-        base.display()
+        "canon initialised at {} (profile: {})",
+        base.display(),
+        profile.as_str()
     );
     println!("  canon add \"<your first commitment>\"");
     0
@@ -169,11 +171,9 @@ pub fn list(args: &[String]) -> i32 {
         println!("{}  {}", c.id, c.text);
     }
     println!("\n{} live", live.len());
-    if !st.tolerated.is_empty() {
-        println!(
-            "{} contradiction(s) carried knowingly — `canon list --json` for detail",
-            st.tolerated.len()
-        );
+    let carried = st.tolerated().count();
+    if carried > 0 {
+        println!("{carried} contradiction(s) carried knowingly — `canon list --json` for detail");
     }
     // A hole in the record is louder than a missing feature.
     if !st.dangling.is_empty() {
@@ -248,11 +248,24 @@ pub fn why(args: &[String]) -> i32 {
             _ => {}
         }
     }
-    for t in st.tolerated.iter().filter(|t| t.a == id || t.b == id) {
-        let other = if t.a == id { &t.b } else { &t.a };
-        println!("  carried against {other}: {}", t.rationale);
-        if let Some(r) = &t.revisit {
-            println!("    revisit by {r}");
+    for c in st.conflicts.iter().filter(|c| c.a == id || c.b == id) {
+        let other = if c.a == id { &c.b } else { &c.a };
+        match &c.disposition {
+            Disposition::Tolerated { rationale, revisit } => {
+                println!("  carried against {other}: {rationale}");
+                if let Some(r) = revisit {
+                    println!("    revisit by {r}");
+                }
+            }
+            Disposition::Dismissed { rationale } => {
+                let why = if rationale.is_empty() {
+                    "detector noise"
+                } else {
+                    rationale
+                };
+                println!("  not in conflict with {other}: {why}");
+            }
+            Disposition::Open => println!("  open conflict with {other}"),
         }
     }
     0
@@ -478,7 +491,15 @@ pub fn share(_args: &[String]) -> i32 {
     // A snapshot is not a log: it carries derived current state and drops
     // supersession history and rationales, which name incidents and people.
     // Enough to adopt, not enough to audit.
-    println!("--- canon {name} · snapshot {} ", store::ymd(store::now()));
+    let profile = match Profile::load(&d) {
+        Ok(p) => p,
+        Err(e) => return fail(e),
+    };
+    println!(
+        "--- canon {name} · {} · snapshot {}",
+        profile.as_str(),
+        store::ymd(store::now())
+    );
     for c in &live {
         println!("{}  ({})", c.text, c.id);
     }

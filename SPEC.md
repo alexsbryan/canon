@@ -95,7 +95,17 @@ the log is a hole in the record — a truncated file, a hand edit, a
 snapshot adopted without its history. Surface it. Do not treat it as a
 no-op.
 
-Resulting statuses: `active`, `superseded{by}`, `retracted{at}`.
+Resulting commitment statuses: `active`, `superseded{by}`, `retracted{at}`.
+
+**4. A conflict carries its disposition.** `accept` and `dismiss` describe
+the same underlying thing — two commitments that may not both be honoured —
+and derive to one record with one of three dispositions: `open` (proposed,
+never ruled on), `tolerated{rationale, revisit?}`, `dismissed{rationale?}`.
+Conflicts are symmetric: `(a,b)` and `(b,a)` are one conflict.
+
+Implementations MUST NOT derive `open` from the log. A pair nobody ruled on
+left no act by definition; `open` exists for surfaces that *propose*
+conflicts, so that a proposed and a settled pair share one type.
 
 ## Canonical ordering
 

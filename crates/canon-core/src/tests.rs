@@ -165,10 +165,13 @@ fn a_tolerated_contradiction_is_first_class_and_carries_its_reason() {
 
     let st = Log::from_acts(vec![a.clone(), b.clone(), acc]).derive();
     assert_eq!(st.active().count(), 2, "neither side is eliminated");
-    assert_eq!(st.tolerated.len(), 1);
+    assert_eq!(st.tolerated().count(), 1);
     assert!(st.is_settled(&a.id, &b.id));
     assert!(st.is_settled(&b.id, &a.id), "settlement is symmetric");
-    assert!(st.tolerated[0].revisit.is_some());
+    assert!(matches!(
+        st.conflicts[0].disposition,
+        Disposition::Tolerated { ref revisit, .. } if revisit.is_some()
+    ));
 }
 
 #[test]
@@ -432,4 +435,98 @@ fn liveness_is_independent_of_the_order_acts_arrive_in() {
     let forward = Log::from_acts(vec![a.clone(), sup.clone(), rev.clone()]).derive();
     let shuffled = Log::from_acts(vec![rev, a, sup]).derive();
     assert_eq!(forward, shuffled);
+}
+
+// ── the Conflict/Disposition merge ──────────────────────────────
+
+#[test]
+fn a_dismissal_carries_its_reason_into_the_read_model() {
+    // The capability the merge unlocks. While `dismissed` was a bare
+    // `(ActId, ActId)` tuple, the reason someone gave for calling a pair
+    // detector noise was written to the log and then thrown away by the
+    // fold — so no renderer could show it back.
+    let a = assert_c("guests may stay two nights", 100);
+    let b = assert_c("guests park in the second bay", 110);
+    let dis = Act::new(
+        ActKind::Dismiss {
+            a: a.id.clone(),
+            b: b.id.clone(),
+            rationale: "different topics — parking is not staying".into(),
+        },
+        200,
+        "human:sam",
+    );
+
+    let st = Log::from_acts(vec![a.clone(), b.clone(), dis]).derive();
+    assert_eq!(st.conflicts.len(), 1);
+    assert!(matches!(
+        st.conflicts[0].disposition,
+        Disposition::Dismissed { ref rationale } if rationale.contains("parking")
+    ));
+    assert!(
+        st.is_settled(&a.id, &b.id),
+        "a dismissal settles the pair too"
+    );
+    assert_eq!(st.tolerated().count(), 0, "dismissed is not tolerated");
+}
+
+#[test]
+fn tolerated_and_dismissed_are_one_noun_and_do_not_collide() {
+    let a = assert_c("one", 100);
+    let b = assert_c("two", 110);
+    let c = assert_c("three", 120);
+    let tol = Act::new(
+        ActKind::Accept {
+            a: a.id.clone(),
+            b: b.id.clone(),
+            rationale: "both matter".into(),
+            revisit: None,
+        },
+        200,
+        "human:sam",
+    );
+    let dis = Act::new(
+        ActKind::Dismiss {
+            a: a.id.clone(),
+            b: c.id.clone(),
+            rationale: String::new(),
+        },
+        210,
+        "human:sam",
+    );
+
+    let st = Log::from_acts(vec![a.clone(), b.clone(), c.clone(), tol, dis]).derive();
+    assert_eq!(st.conflicts.len(), 2, "both dispositions live in one list");
+    assert_eq!(st.tolerated().count(), 1);
+    assert!(st.is_settled(&a.id, &b.id));
+    assert!(st.is_settled(&a.id, &c.id));
+    assert!(
+        !st.is_settled(&b.id, &c.id),
+        "an unruled pair is not settled"
+    );
+}
+
+#[test]
+fn the_fold_never_mints_an_open_disposition() {
+    // `Open` describes a pair some surface proposed and nobody ruled on,
+    // which by definition left no act. Only `canon tensions` mints it.
+    let a = assert_c("one", 100);
+    let b = assert_c("two", 110);
+    let acc = Act::new(
+        ActKind::Accept {
+            a: a.id.clone(),
+            b: b.id.clone(),
+            rationale: "kept".into(),
+            revisit: None,
+        },
+        200,
+        "human:sam",
+    );
+    let st = Log::from_acts(vec![a, b, acc]).derive();
+    assert!(
+        !st.conflicts
+            .iter()
+            .any(|c| c.disposition == Disposition::Open),
+        "derive() must not invent an Open conflict"
+    );
 }

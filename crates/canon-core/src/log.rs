@@ -132,7 +132,7 @@ impl Log {
         out
     }
 
-    pub fn derive(&self) -> crate::fold::State {
+    pub fn derive(&self) -> crate::fold::Canon {
         crate::fold::derive(&self.acts)
     }
 }
