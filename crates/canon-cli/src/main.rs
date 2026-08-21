@@ -13,6 +13,7 @@ mod cmds;
 mod config;
 mod draft;
 mod explain;
+mod lineage;
 mod mcp;
 mod model;
 mod profile;
@@ -41,7 +42,14 @@ RECORD                                        (no model needed)
   open                                   the open questions
   log                                    the raw acts
   mcp                                    serve the agent surface on stdio
+
+LINEAGE                                       (no model; git optional)
   share                                  a pasteable snapshot
+  adopt <url>[@gen] | --paste            fork someone else's canon
+  diff --upstream [--propose]            how you have diverged from your seed
+  upgrade <gen>                          take a newer generation
+  rebase --onto <url>@<gen>              carry your law onto a different base
+  merge-driver %O %A %B                  git merge driver; run it for setup
 
 ADJUDICATE                                    (needs an endpoint)
   check \"<proposal>\"                     how a proposal stands (personal: stakes)
@@ -86,7 +94,11 @@ fn main() {
         "question" => cmds::question(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
-        "share" => cmds::share(rest),
+        "share" => lineage::share(rest),
+        "adopt" => lineage::adopt(rest),
+        "diff" => lineage::diff(rest),
+        "upgrade" => lineage::upgrade(rest),
+        "merge-driver" => lineage::merge_driver(rest),
         "tensions" => tensions::run(rest),
         "config" => cmds::config(rest),
         "draft" => draft::run(rest),

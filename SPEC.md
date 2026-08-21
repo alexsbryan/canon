@@ -152,6 +152,51 @@ Union both sides, deduplicate by `id`, sort canonically. Under git:
 acts.jsonl merge=canon
 ```
 
+## The snapshot block
+
+A snapshot is what travels when a log does not: readable by a person
+scrolling a chat thread, parseable back by a tool.
+
+```
+--- canon <lineage> · <profile> · snapshot <YYYY-MM-DD> · <generation>
+<text>  (<id>)
+<text>  (<id>)
+--- <n> live · adopt: canon adopt --paste
+```
+
+Each body line is the commitment's text, two spaces, and its id in
+parentheses. The id is LAST so the text may contain anything, including
+parentheses. Readers MUST tolerate surrounding chatter: a block arrives
+with a "here you go" above it and a reply below.
+
+**A snapshot is not a log.** It carries derived current state and drops
+supersession history, rationales, and the reasoning behind tolerated
+contradictions — the parts that name incidents and people. Enough to
+adopt, not enough to audit.
+
+### Generations
+
+The generation is a digest over the snapshot's `(id, text)` pairs, sorted,
+joined, hashed with SHA-256, and truncated. Order-independent, so two
+people holding the same rules are on the same generation whatever order
+their files landed in.
+
+**The text is in the digest and MUST be.** Hashing only the ids looks
+sufficient — ids are already content hashes — but the ids in a pasted
+block are characters someone can retype. A reader MUST refuse a block
+whose declared generation does not match its commitments: it was edited
+after it was shared, and adopting it records someone else's name against
+words they did not write.
+
+### Adopting
+
+Adopting a snapshot writes one `adopt` act naming lineage, generation and
+source, then one `assert` per commitment carrying `from` the upstream id.
+That `from` link — not position, and not text matching — is what a later
+divergence is computed against. Text matching would call a reworded rule a
+different rule, and a canon that arrived by paste has no git history to
+fall back on.
+
 ## Relationship to the Commonwealth governance oplog
 
 The **envelope is shared** — `id`, `v`, `ts_unix`, `actor`, flattened
