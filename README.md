@@ -98,6 +98,22 @@ agent that thinks something should be recorded says so in chat, as a
 command you can run. The canon is what your agents are measured against;
 an agent that can edit it is grading its own work.
 
+Any MCP client that speaks stdio can use it. In Claude Code:
+
+```sh
+claude mcp add canon -- canon mcp
+```
+
+Or by hand, in whatever config your client uses:
+
+```json
+{ "mcpServers": { "canon": { "command": "canon", "args": ["mcp"] } } }
+```
+
+It finds the canon the same way git finds a repository: nearest `.canon`
+walking up from the working directory, falling back to `$HOME/.canon`.
+Set `CANON_DIR` to point it somewhere specific.
+
 ## Starting from what you already wrote
 
 ```sh
