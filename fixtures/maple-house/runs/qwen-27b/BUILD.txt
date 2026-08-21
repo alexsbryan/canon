@@ -1,5 +1,5 @@
-commit    56c6855
-dirty     1 uncommitted file(s)
+commit    d56efcc
+dirty     8 uncommitted file(s)
 model     Qwen3.8-27B-UD-Q6_K_XL
 endpoint  http://localhost:9741/v1
 binary    /private/tmp/claude-502/-Users-alexsbryan-dev-commonwealth-ai/c641ac56-80e2-46aa-aff6-8a46f467759b/scratchpad/canon-bar-binary
