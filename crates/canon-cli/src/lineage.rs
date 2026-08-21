@@ -184,7 +184,7 @@ fn git(args: &[&str], cwd: Option<&Path>) -> Result<String, String> {
 /// Clone or refresh a lineage and read what is live at `generation`.
 ///
 /// The adopter never types git: this is the whole reason it is here.
-fn fetch(
+pub fn fetch(
     dir: &Path,
     url: &str,
     generation: Option<&str>,
