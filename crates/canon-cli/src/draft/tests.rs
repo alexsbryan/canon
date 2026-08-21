@@ -87,7 +87,7 @@ fn a_paraphrased_quote_drops_the_candidate() {
             ),
         ]),
     )]);
-    let (kept, dropped) = extract(&mock.client(), &chunks[0]).unwrap();
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
     assert_eq!(kept.len(), 1, "{kept:#?}");
     assert_eq!(kept[0].source, "house.md:3-4");
     assert_eq!(dropped.len(), 1);
@@ -109,7 +109,7 @@ fn a_quote_reflowed_across_lines_still_cites() {
             "During quiet hours, music must be played through headphones.",
         )]),
     )]);
-    let (kept, dropped) = extract(&mock.client(), &chunks[0]).unwrap();
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
     assert_eq!(kept.len(), 1, "dropped: {dropped:#?}");
 }
 
@@ -117,7 +117,7 @@ fn a_quote_reflowed_across_lines_still_cites() {
 fn a_quote_too_short_to_be_evidence_is_refused() {
     let chunks = chunk_text("house.md", DOC);
     let mock = Mock::spawn(vec![(200, extracted(&[("Be quiet.", "quiet")]))]);
-    let (kept, dropped) = extract(&mock.client(), &chunks[0]).unwrap();
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
     assert!(kept.is_empty());
     assert!(dropped[0].reason.contains("too short"));
 }
@@ -207,4 +207,26 @@ fn a_directory_is_read_in_a_stable_order() {
         .map(|p| p.strip_prefix(&root).unwrap().to_string_lossy().to_string())
         .collect();
     assert_eq!(names, vec!["a.md", "b.md", "sub/c.txt"], "{names:?}");
+}
+
+#[test]
+fn the_extraction_asks_for_the_voice_the_canon_is_written_in() {
+    // A house charter extracted without this came back as "I do not leave
+    // dirty dishes in the sink" — one member's habit, not a house rule. The
+    // profile is already known; using it costs nothing.
+    let chunks = chunk_text("house.md", DOC);
+    for (profile, expect, reject) in [
+        (Profile::House, "household's rules", "one person's own"),
+        (Profile::Personal, "one person's own", "household's rules"),
+        (Profile::Code, "codebase's standards", "household's rules"),
+    ] {
+        let mock = Mock::spawn(vec![(200, extracted(&[]))]);
+        extract(&mock.client(), &chunks[0], profile).unwrap();
+        let system = mock.requests()[0]["messages"][0]["content"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        assert!(system.contains(expect), "{profile:?} prompt: {system}");
+        assert!(!system.contains(reject), "{profile:?} prompt: {system}");
+    }
 }

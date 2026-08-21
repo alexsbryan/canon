@@ -48,6 +48,16 @@ mkdir -p "$OUT"
 echo "endpoint  $ENDPOINT (model $MODEL)"
 echo "document  $DOC"
 echo "runs      $RUNS -> $OUT"
+# Stamp the evidence with the build that produced it. A quality number that
+# cannot say which commit it describes cannot be compared with anything.
+mkdir -p "$OUT"
+{
+  echo "commit    $(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+  echo "dirty     $(git -C "$ROOT" status --porcelain 2>/dev/null | wc -l | tr -d ' ') uncommitted file(s)"
+  echo "model     $MODEL"
+  echo "endpoint  $ENDPOINT"
+  echo "binary    $BIN"
+} > "$OUT/BUILD.txt"
 echo
 
 i=1
@@ -55,7 +65,10 @@ while [ "$i" -le "$RUNS" ]; do
   SCRATCH=$(mktemp -d)
   CANON_DIR="$SCRATCH/.canon"
   export CANON_DIR CANON_ACTOR="bench:draft-bar"
-  "$BIN" init >/dev/null
+  # The fixture is a house charter, so the canon is a house canon: the
+  # profile decides the voice extraction writes in, and a personal-profile
+  # run over a charter produces "I observe quiet hours" instead of a rule.
+  "$BIN" init --profile house >/dev/null
   "$BIN" config set endpoint "$ENDPOINT" >/dev/null
   "$BIN" config set model "$MODEL" >/dev/null
 
