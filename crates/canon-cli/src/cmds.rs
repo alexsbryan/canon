@@ -140,11 +140,12 @@ pub fn list(args: &[String]) -> i32 {
         Err(e) => return fail(e),
     };
     if has(args, "--json") {
-        let live: Vec<_> = st.active().collect();
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&live).unwrap_or_default()
-        );
+        // The whole derived state, not just the live rows: `list` is the
+        // read model, and a caller that wants only the live ones filters on
+        // status. Emitting an array of live commitments made the human
+        // output's own hint — "canon list --json for detail" about carried
+        // contradictions — untrue, because the conflicts were not in it.
+        println!("{}", serde_json::to_string_pretty(&st).unwrap_or_default());
         return 0;
     }
     let live: Vec<_> = st.active().collect();
@@ -200,7 +201,25 @@ pub fn why(args: &[String]) -> i32 {
     };
     match crate::explain::explain(&log, &st, &id) {
         Ok(e) => {
-            print!("{}", e.render("  "));
+            if has(args, "--json") {
+                let record = st
+                    .get(&id)
+                    .and_then(|c| serde_json::to_value(c).ok())
+                    .or_else(|| st.question(&id).and_then(|q| serde_json::to_value(q).ok()))
+                    .unwrap_or(serde_json::Value::Null);
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&serde_json::json!({
+                        "id": id.to_string(),
+                        "headline": e.headline,
+                        "lines": e.lines,
+                        "record": record,
+                    }))
+                    .unwrap_or_default()
+                );
+            } else {
+                print!("{}", e.render("  "));
+            }
             0
         }
         Err(e) => fail(e),
