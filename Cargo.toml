@@ -13,3 +13,6 @@ repository = "https://github.com/alexsbryan/canon"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
+# The only network dependency in the tree. Blocking, so no async runtime
+# enters a CLI that spends its life folding a file.
+ureq = "2.12"

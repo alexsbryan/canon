@@ -99,9 +99,14 @@ Resulting commitment statuses: `active`, `superseded{by}`, `retracted{at}`.
 
 **4. A conflict carries its disposition.** `accept` and `dismiss` describe
 the same underlying thing — two commitments that may not both be honoured —
-and derive to one record with one of three dispositions: `open` (proposed,
-never ruled on), `tolerated{rationale, revisit?}`, `dismissed{rationale?}`.
-Conflicts are symmetric: `(a,b)` and `(b,a)` are one conflict.
+and derive to one record with one of three dispositions: `open{reason}`
+(proposed, never ruled on), `tolerated{rationale, revisit?}`,
+`dismissed{rationale?}`. Conflicts are symmetric: `(a,b)` and `(b,a)` are one
+conflict.
+
+`reason` and `rationale` are deliberately different words for different
+things. A `reason` says why a pair is in tension and belongs to whatever
+proposed it. A `rationale` says why a person ruled the way they did.
 
 Implementations MUST NOT derive `open` from the log. A pair nobody ruled on
 left no act by definition; `open` exists for surfaces that *propose*

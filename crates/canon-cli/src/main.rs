@@ -6,10 +6,13 @@
 //!   0 supported / ok · 1 conflicts · 2 unaddressed or usage · 3 cannot judge
 
 mod cmds;
+mod config;
 mod explain;
 mod mcp;
+mod model;
 mod profile;
 mod store;
+mod tensions;
 
 const HELP: &str = "\
 canon — a body of commitments, and what was decided about them
@@ -36,13 +39,21 @@ ADJUDICATE                                    (needs an endpoint)
   tensions                               where your commitments conflict
   draft --from <paths>                   propose commitments from loose notes
 
+CONFIGURE
+  config show                            what this canon is configured with
+  config set endpoint <url>              any OpenAI-compatible server
+  config set model <name>                model name to send (default: local)
+
 FLAGS
-  --json        machine-readable on stdout; logs go to stderr
-  -m <reason>   the rationale recorded on an act
+  --json          machine-readable on stdout; logs go to stderr
+  -m <reason>     the rationale recorded on an act
+  --allow-remote  permit an endpoint that is not on this machine
 
 ENVIRONMENT
-  CANON_ACTOR   who is acting (default: git user.name, prefixed human:)
-  CANON_DIR     use this canon instead of searching upward
+  CANON_ACTOR      who is acting (default: git user.name, prefixed human:)
+  CANON_DIR        use this canon instead of searching upward
+  CANON_ENDPOINT   override the configured endpoint for one run
+  CANON_MODEL      override the configured model for one run
 ";
 
 fn main() {
@@ -65,7 +76,12 @@ fn main() {
         "log" => cmds::log(rest),
         "mcp" => mcp::serve(),
         "share" => cmds::share(rest),
-        "check" | "tensions" | "draft" => cmds::needs_model(cmd),
+        "tensions" => tensions::run(rest),
+        "config" => cmds::config(rest),
+        "check" | "draft" => {
+            eprintln!("cannot judge: `{cmd}` is not wired up in this build yet.");
+            3
+        }
         "--version" | "-V" => {
             println!("canon {}", env!("CARGO_PKG_VERSION"));
             0

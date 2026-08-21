@@ -7,23 +7,24 @@ use std::path::{Path, PathBuf};
 
 use canon_core::{Act, ActKind, Canon, Log};
 
+use crate::config::{Config, Key};
 use crate::profile::Profile;
 use crate::store;
 
 // ── plumbing ────────────────────────────────────────────────
 
-fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
+pub fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter()
         .position(|a| a == name)
         .and_then(|i| args.get(i + 1))
         .map(|s| s.as_str())
 }
 
-fn has(args: &[String], name: &str) -> bool {
+pub fn has(args: &[String], name: &str) -> bool {
     args.iter().any(|a| a == name)
 }
 
-fn positionals(args: &[String]) -> Vec<&str> {
+pub fn positionals(args: &[String]) -> Vec<&str> {
     let mut out = Vec::new();
     let mut skip = false;
     for a in args {
@@ -31,7 +32,10 @@ fn positionals(args: &[String]) -> Vec<&str> {
             skip = false;
             continue;
         }
-        if a == "-m" || a == "--from" || a == "--profile" || a == "--revisit" {
+        if matches!(
+            a.as_str(),
+            "-m" | "--from" | "--profile" | "--revisit" | "--since" | "--onto" | "--endpoint"
+        ) {
             skip = true;
             continue;
         }
@@ -43,7 +47,7 @@ fn positionals(args: &[String]) -> Vec<&str> {
     out
 }
 
-fn dir() -> Result<PathBuf, String> {
+pub fn dir() -> Result<PathBuf, String> {
     if let Ok(d) = std::env::var("CANON_DIR") {
         return Ok(PathBuf::from(d));
     }
@@ -52,19 +56,19 @@ fn dir() -> Result<PathBuf, String> {
         .ok_or_else(|| "no canon here. `canon init` to start one, or set CANON_DIR".to_string())
 }
 
-fn load() -> Result<(PathBuf, Log, Canon), String> {
+pub fn load() -> Result<(PathBuf, Log, Canon), String> {
     let d = dir()?;
     let log = store::read(&d)?;
     let st = log.derive();
     Ok((d, log, st))
 }
 
-fn fail(e: impl std::fmt::Display) -> i32 {
+pub fn fail(e: impl std::fmt::Display) -> i32 {
     eprintln!("error: {e}");
     2
 }
 
-fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
+pub fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
     let act = Act::new(kind, store::now(), store::actor());
     store::append(d, &act)?;
     Ok(act)
@@ -445,13 +449,73 @@ pub fn share(_args: &[String]) -> i32 {
     0
 }
 
-// ── needs a model ───────────────────────────────────────────
+// ── configuration ───────────────────────────────────────────
 
-/// Exit 3 is "cannot judge" — a first-class verdict, not a failure. Reporting
-/// the absence beats emitting something that looks like an answer.
-pub fn needs_model(cmd: &str) -> i32 {
-    eprintln!("cannot judge: `{cmd}` needs a model and this build has no endpoint client yet.");
-    eprintln!("  the model-free verbs are complete: add, list, why, supersede,");
-    eprintln!("  retract, accept, dismiss, undo, log, share.");
-    3
+pub fn config(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let d = match dir() {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
+    match pos.first().copied() {
+        Some("set") => {
+            if pos.len() < 3 {
+                return fail("usage: canon config set <key> <value>");
+            }
+            let key = match Key::parse(pos[1]) {
+                Ok(k) => k,
+                Err(e) => return fail(e),
+            };
+            match Config::write(&d, key, pos[2]) {
+                Ok(()) => {
+                    println!("{} = {}", key.as_str(), pos[2]);
+                    0
+                }
+                Err(e) => fail(e),
+            }
+        }
+        Some("get") => {
+            if pos.len() < 2 {
+                return fail("usage: canon config get <key>");
+            }
+            let key = match Key::parse(pos[1]) {
+                Ok(k) => k,
+                Err(e) => return fail(e),
+            };
+            let cfg = match Config::load(&d) {
+                Ok(c) => c,
+                Err(e) => return fail(e),
+            };
+            match cfg.get(key) {
+                Some(v) => {
+                    println!("{v}");
+                    0
+                }
+                // Unset is not empty-string. Exit 2 so a script can tell the
+                // difference without parsing stdout.
+                None => {
+                    eprintln!("{} is not set", key.as_str());
+                    2
+                }
+            }
+        }
+        Some("show") | None => {
+            let cfg = match Config::load(&d) {
+                Ok(c) => c,
+                Err(e) => return fail(e),
+            };
+            let rendered = cfg.render();
+            if rendered.is_empty() {
+                println!(
+                    "nothing configured. `canon config set endpoint http://localhost:8080/v1`"
+                );
+            } else {
+                print!("{rendered}");
+            }
+            0
+        }
+        Some(other) => fail(format!(
+            "unknown config command `{other}` — expected set, get, or show"
+        )),
+    }
 }

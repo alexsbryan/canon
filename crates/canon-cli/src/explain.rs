@@ -140,7 +140,9 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                 };
                 lines.push(format!("not in conflict with {other}: {why}"));
             }
-            Disposition::Open => lines.push(format!("open conflict with {other}")),
+            Disposition::Open { reason } => {
+                lines.push(format!("open tension with {other}: {reason}"))
+            }
         }
     }
 
