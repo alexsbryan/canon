@@ -86,20 +86,82 @@ pub struct Proposed {
     pub reason: String,
 }
 
+/// How many commitments go into one comparison.
+///
+/// **Measured, not chosen.** One call over sixty commitments asks a model to
+/// weigh 1,770 pairs in a single pass, and it does not: replaying the same
+/// sixty extracted rules through only this step found 1 of 11 planted
+/// tensions in one call, 3 of 11 in blocks of twenty, and 5 of 11 in blocks
+/// of twelve — with zero false positives on the seven labelled compatible
+/// pairs at every size. Recall was the casualty of the batch size, and
+/// discrimination never was. The spec claimed this regime held to about a
+/// hundred commitments; it does not, and that claim has been corrected.
+const BATCH: usize = 12;
+
 /// The engine: find tensions among these texts, answering in list positions.
 ///
-/// Texts are numbered rather than identified by hash, because a model asked
-/// to echo `can-4f19a2b3c1d0` transposes characters, and a transposed id is a
-/// tension attributed to the wrong rule. A number out of range is dropped
-/// with a warning naming it — an unusable answer is reported, never quietly
-/// rounded to a neighbour (§18.3).
+/// Above [`BATCH`] the comparison is **block-pairwise**: the list is cut into
+/// blocks and every block is compared with itself and with every other block,
+/// so no pair goes unexamined. That costs `k(k+1)/2` calls for `k` blocks —
+/// quadratic, and the reason the spec names a ceiling on how large a canon
+/// this tool serves.
 pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Vec<Proposed>, ModelError> {
     if texts.len() < 2 {
         return Ok(Vec::new());
     }
+    if texts.len() <= BATCH {
+        return one_pass(client, texts, &(0..texts.len()).collect::<Vec<_>>());
+    }
+
+    let blocks: Vec<Vec<usize>> = (0..texts.len())
+        .collect::<Vec<_>>()
+        .chunks(BATCH)
+        .map(<[usize]>::to_vec)
+        .collect();
+    let passes = blocks.len() * (blocks.len() + 1) / 2;
+    eprintln!(
+        "{} commitments is past what one comparison holds — {passes} passes over blocks of {BATCH}",
+        texts.len()
+    );
+
+    let mut out: Vec<Proposed> = Vec::new();
+    let mut done = 0;
+    for x in 0..blocks.len() {
+        for y in x..blocks.len() {
+            let idx: Vec<usize> = if x == y {
+                blocks[x].clone()
+            } else {
+                blocks[x].iter().chain(&blocks[y]).copied().collect()
+            };
+            done += 1;
+            eprint!("\rcomparing {done}/{passes}…");
+            let _ = std::io::Write::flush(&mut std::io::stderr());
+            for p in one_pass(client, texts, &idx)? {
+                // The same pair can surface in more than one pass. First
+                // reason wins; a pair is one tension however often it is
+                // noticed.
+                if !out.iter().any(|q| is_same(q, &p)) {
+                    out.push(p);
+                }
+            }
+        }
+    }
+    eprintln!("\r{passes} passes done, {} pair(s) proposed", out.len());
+    Ok(out)
+}
+
+fn is_same(a: &Proposed, b: &Proposed) -> bool {
+    (a.a, a.b) == (b.a, b.b) || (a.a, a.b) == (b.b, b.a)
+}
+
+/// One comparison over the texts at `idx`, answering in GLOBAL positions.
+fn one_pass(client: &Client, texts: &[&str], idx: &[usize]) -> Result<Vec<Proposed>, ModelError> {
+    if idx.len() < 2 {
+        return Ok(Vec::new());
+    }
     let mut user = String::from("Commitments:\n");
-    for (i, t) in texts.iter().enumerate() {
-        user.push_str(&format!("{}. {}\n", i + 1, t));
+    for (i, g) in idx.iter().enumerate() {
+        user.push_str(&format!("{}. {}\n", i + 1, texts[*g]));
     }
     user.push_str("\nReturn every pair in tension, with the situation that forces the choice.");
 
@@ -107,35 +169,31 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Vec<Proposed>, Mod
 
     let mut out: Vec<Proposed> = Vec::new();
     for p in found.tensions {
-        let in_range = |n: usize| n >= 1 && n <= texts.len();
+        let in_range = |n: usize| n >= 1 && n <= idx.len();
         if !in_range(p.a) || !in_range(p.b) {
             eprintln!(
-                "warning: dropped a proposed tension naming commitment {} and {} — only 1..{} exist",
+                "\nwarning: dropped a proposed tension naming commitment {} and {} — only 1..{} were offered",
                 p.a,
                 p.b,
-                texts.len()
+                idx.len()
             );
             continue;
         }
-        let (a, b) = (p.a - 1, p.b - 1);
+        // Back to positions in the caller's list, which is what identity is
+        // attached to. A pass never returns its own numbering.
+        let (a, b) = (idx[p.a - 1], idx[p.b - 1]);
         if a == b {
-            eprintln!(
-                "warning: dropped a proposed tension of commitment {} with itself",
-                p.a
-            );
+            eprintln!("\nwarning: dropped a proposed tension of a commitment with itself");
             continue;
         }
-        if out
-            .iter()
-            .any(|x| (x.a, x.b) == (a, b) || (x.a, x.b) == (b, a))
-        {
-            continue;
-        }
-        out.push(Proposed {
+        let proposed = Proposed {
             a,
             b,
             reason: p.reason.trim().to_string(),
-        });
+        };
+        if !out.iter().any(|q| is_same(q, &proposed)) {
+            out.push(proposed);
+        }
     }
     Ok(out)
 }
@@ -258,3 +316,6 @@ pub fn run(args: &[String]) -> i32 {
     // and the personal profile must never emit it at all.
     0
 }
+
+#[cfg(test)]
+mod tests;
