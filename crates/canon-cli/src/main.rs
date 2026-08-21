@@ -6,6 +6,8 @@
 //!   0 supported / ok · 1 conflicts · 2 unaddressed or usage · 3 cannot judge
 
 mod cmds;
+mod explain;
+mod mcp;
 mod profile;
 mod store;
 
@@ -26,6 +28,7 @@ RECORD                                        (no model needed)
   dismiss <a> <b> [-m \"<reason>\"]        not actually a conflict
   undo <act-id> [-m \"<reason>\"]          revert an act; itself revertible
   log                                    the raw acts
+  mcp                                    serve the agent surface on stdio
   share                                  a pasteable snapshot
 
 ADJUDICATE                                    (needs an endpoint)
@@ -60,6 +63,7 @@ fn main() {
         "dismiss" => cmds::dismiss(rest),
         "undo" => cmds::undo(rest),
         "log" => cmds::log(rest),
+        "mcp" => mcp::serve(),
         "share" => cmds::share(rest),
         "check" | "tensions" | "draft" => cmds::needs_model(cmd),
         "--version" | "-V" => {
