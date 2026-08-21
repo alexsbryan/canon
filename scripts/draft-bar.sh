@@ -10,6 +10,11 @@
 # own throwaway .canon under a temp directory, and only the run artifact is
 # kept.
 #
+# DO NOT REBUILD WHILE A SWEEP IS RUNNING. The runs invoke
+# target/debug/canon, so a `cargo build` in another terminal swaps the
+# binary mid-sweep and the artifacts are no longer one instrument (§18.4).
+# Set CANON_BAR_BIN to a copy of the binary if you need to keep working.
+#
 # REPEATS ARE THE POINT. One run is an anecdote; the spread between runs over
 # the same document is the noise floor every published number has to clear
 # (§18.5). The scorer refuses fewer than three.
@@ -34,7 +39,10 @@ MODEL=${CANON_MODEL:-primary}
 if [ "$RUNS_ONLY" -eq 0 ]; then
   cargo build --manifest-path "$ROOT/Cargo.toml" 2>&1 | grep -E '^error' && exit 1
 fi
-BIN="$ROOT/target/debug/canon"
+# CANON_BAR_BIN pins the binary for the whole sweep. Set it to a COPY when
+# you intend to keep working in the tree: every run must come from one build
+# or the artifacts are not one instrument (§18.4).
+BIN=${CANON_BAR_BIN:-"$ROOT/target/debug/canon"}
 
 mkdir -p "$OUT"
 echo "endpoint  $ENDPOINT (model $MODEL)"

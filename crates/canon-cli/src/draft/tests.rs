@@ -183,3 +183,28 @@ fn there_is_no_accept_all() {
     let args: Vec<String> = vec!["--accept-all".into()];
     assert_eq!(run(&args), 2);
 }
+
+#[test]
+fn a_directory_is_read_in_a_stable_order() {
+    // Chunk ids are positions, so a folder read in a different order twice
+    // produces two artifacts that cannot be compared. Sorted, always.
+    let root = std::env::temp_dir().join("canon-draft-walk");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(root.join("sub")).unwrap();
+    std::fs::create_dir_all(root.join(".git")).unwrap();
+    for (p, body) in [
+        ("b.md", "second"),
+        ("a.md", "first"),
+        ("notes.bin", "binary"),
+        ("sub/c.txt", "third"),
+        (".git/config", "not notes"),
+    ] {
+        std::fs::write(root.join(p), body).unwrap();
+    }
+    let found = walk(&root).unwrap();
+    let names: Vec<String> = found
+        .iter()
+        .map(|p| p.strip_prefix(&root).unwrap().to_string_lossy().to_string())
+        .collect();
+    assert_eq!(names, vec!["a.md", "b.md", "sub/c.txt"], "{names:?}");
+}
