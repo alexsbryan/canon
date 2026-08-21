@@ -203,6 +203,16 @@ fn maple_house_bar() {
     let non = truth["expected_non_tensions"].as_array().unwrap().len();
 
     let dir = runs_dir();
+    // BUILD.txt names the commit and model that produced these artifacts.
+    // Printed, not parsed: a number that cannot say which build it describes
+    // cannot be compared with anything, including itself next month.
+    if let Ok(build) = std::fs::read_to_string(dir.join("BUILD.txt")) {
+        println!(
+            "
+{}",
+            build.trim()
+        );
+    }
     let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
         .unwrap_or_else(|e| {
             panic!(

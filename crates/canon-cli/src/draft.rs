@@ -41,6 +41,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::model::{self, Client, ModelError};
+use crate::profile::Profile;
 use crate::store;
 use crate::tensions;
 
@@ -111,6 +112,10 @@ pub struct DraftRun {
     pub at: i64,
     pub endpoint: String,
     pub model: String,
+    /// Which voice the extraction asked for. A run scored against another
+    /// must have used the same one.
+    #[serde(default)]
+    pub profile: String,
     pub sources: Vec<String>,
     pub chunks: Vec<Chunk>,
     pub candidates: Vec<Candidate>,
@@ -227,9 +232,9 @@ how things should be. A fact, an event, or a one-off feeling is not a \
 commitment.
 
 For each one, return:
-- text: one self-contained sentence stating the rule in the holder's own \
-voice, as they would write it in a list of their own commitments. Write \
-\"Mornings are protected.\", never \"The speaker intends to protect their \
+- text: one self-contained sentence stating the rule as the holder would \
+write it in a list of their own commitments. Never write about the author — \
+\"Mornings are protected.\", not \"The speaker intends to protect their \
 mornings.\" It must make sense with no passage in front of it.
 - quote: the words from the passage it came from, copied exactly. Do not \
 paraphrase, do not fix wording, do not shorten with ellipses.
@@ -275,19 +280,45 @@ fn extract_schema() -> Value {
     })
 }
 
+/// Whose voice the extracted rules are written in.
+///
+/// The profile is already known and it is the difference between a house
+/// charter reading "Quiet hours run 11pm-7am" and reading "I observe quiet
+/// hours" — which is what a house canon extracted without this said, and it
+/// is wrong in a way a reader notices immediately.
+fn voice(profile: Profile) -> &'static str {
+    match profile {
+        Profile::Personal => {
+            "These are one person's own commitments. Write each as they would state it about \
+             themselves: \"Mornings are protected; I do not schedule before 11.\""
+        }
+        Profile::Code => {
+            "These are a codebase's standards. Write each as a standard the code is held to: \
+             \"One implementation per threshold, scorer, schema and key.\" Never write about \
+             a team or an author."
+        }
+        Profile::House => {
+            "These are a household's rules, held by the house rather than by any one member. \
+             Write each as a house rule: \"Quiet hours run 11pm to 7am.\" Never write \"I\" \
+             or \"the speaker\"."
+        }
+    }
+}
+
 /// Extract from one chunk, keeping only candidates whose quote is actually in
 /// the chunk. The check is the citation guarantee, and it is code rather than
 /// an instruction to the model (§7.6).
 pub fn extract(
     client: &Client,
     chunk: &Chunk,
+    profile: Profile,
 ) -> Result<(Vec<Candidate>, Vec<Dropped>), ModelError> {
+    let system = format!("{EXTRACT_SYSTEM}\n\n{}", voice(profile));
     let user = format!(
         "Passage:\n{}\n\nReturn the commitments this passage states.",
         chunk.text
     );
-    let got: Extracted =
-        client.complete_json(EXTRACT_SYSTEM, &user, "commitments", &extract_schema())?;
+    let got: Extracted = client.complete_json(&system, &user, "commitments", &extract_schema())?;
     let haystack = normalize(&chunk.text);
     let mut kept = Vec::new();
     let mut dropped = Vec::new();
@@ -524,6 +555,10 @@ pub fn run(args: &[String]) -> i32 {
         Ok(d) => d,
         Err(e) => return crate::cmds::fail(e),
     };
+    let profile = match Profile::load(&dir) {
+        Ok(p) => p,
+        Err(e) => return crate::cmds::fail(e),
+    };
     let sources = match read_sources(args) {
         Ok(s) => s,
         Err(e) => return crate::cmds::fail(e),
@@ -557,7 +592,7 @@ pub fn run(args: &[String]) -> i32 {
     for chunk in &chunks {
         eprint!("\rextracting {}/{}…", chunk.id + 1, chunks.len());
         let _ = std::io::stderr().flush();
-        match extract(&client, chunk) {
+        match extract(&client, chunk, profile) {
             Ok((k, d)) => {
                 candidates.extend(k);
                 dropped.extend(d);
@@ -628,6 +663,7 @@ pub fn run(args: &[String]) -> i32 {
         at: store::now(),
         endpoint: client.endpoint().to_string(),
         model: client.model().to_string(),
+        profile: profile.as_str().to_string(),
         sources: sources.iter().map(|(p, _)| p.clone()).collect(),
         chunks: chunks.clone(),
         candidates: candidates.clone(),
