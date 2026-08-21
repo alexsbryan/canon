@@ -74,42 +74,50 @@ fn schema() -> Value {
     })
 }
 
-/// Find tensions among these commitments.
+/// A pair the model proposed, still in terms of the list it was given.
 ///
-/// Commitments are numbered rather than identified by hash: a model asked to
-/// echo `can-4f19a2b3c1d0` transposes characters, and a transposed id is a
+/// Indices, not ids: `draft` compares candidate texts that have no id yet,
+/// and `tensions` compares commitments that do. One engine, and the caller
+/// attaches identity.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Proposed {
+    pub a: usize,
+    pub b: usize,
+    pub reason: String,
+}
+
+/// The engine: find tensions among these texts, answering in list positions.
+///
+/// Texts are numbered rather than identified by hash, because a model asked
+/// to echo `can-4f19a2b3c1d0` transposes characters, and a transposed id is a
 /// tension attributed to the wrong rule. A number out of range is dropped
 /// with a warning naming it — an unusable answer is reported, never quietly
 /// rounded to a neighbour (§18.3).
-///
-/// Shared with `draft`, which runs this over what was just accepted.
-pub fn detect(client: &Client, commitments: &[&Commitment]) -> Result<Vec<Conflict>, ModelError> {
-    if commitments.len() < 2 {
+pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Vec<Proposed>, ModelError> {
+    if texts.len() < 2 {
         return Ok(Vec::new());
     }
     let mut user = String::from("Commitments:\n");
-    for (i, c) in commitments.iter().enumerate() {
-        user.push_str(&format!("{}. {}\n", i + 1, c.text));
+    for (i, t) in texts.iter().enumerate() {
+        user.push_str(&format!("{}. {}\n", i + 1, t));
     }
     user.push_str("\nReturn every pair in tension, with the situation that forces the choice.");
 
     let found: Found = client.complete_json(SYSTEM, &user, "tensions", &schema())?;
 
-    let id_of = |n: usize| -> Option<ActId> {
-        (n >= 1 && n <= commitments.len()).then(|| commitments[n - 1].id.clone())
-    };
-    let mut out: Vec<Conflict> = Vec::new();
+    let mut out: Vec<Proposed> = Vec::new();
     for p in found.tensions {
-        let (Some(a), Some(b)) = (id_of(p.a), id_of(p.b)) else {
+        let in_range = |n: usize| n >= 1 && n <= texts.len();
+        if !in_range(p.a) || !in_range(p.b) {
             eprintln!(
-                "warning: dropped a proposed tension naming commitment {} and {} — \
-                 only 1..{} exist",
+                "warning: dropped a proposed tension naming commitment {} and {} — only 1..{} exist",
                 p.a,
                 p.b,
-                commitments.len()
+                texts.len()
             );
             continue;
-        };
+        }
+        let (a, b) = (p.a - 1, p.b - 1);
         if a == b {
             eprintln!(
                 "warning: dropped a proposed tension of commitment {} with itself",
@@ -117,21 +125,35 @@ pub fn detect(client: &Client, commitments: &[&Commitment]) -> Result<Vec<Confli
             );
             continue;
         }
-        if out.iter().any(|c| c.is_pair(&a, &b)) {
+        if out
+            .iter()
+            .any(|x| (x.a, x.b) == (a, b) || (x.a, x.b) == (b, a))
+        {
             continue;
         }
-        out.push(Conflict {
+        out.push(Proposed {
             a,
             b,
-            // `at: 0` because nothing happened: no act was written, so there
-            // is no moment to record. The fold never mints this.
-            at: 0,
-            disposition: Disposition::Open {
-                reason: p.reason.trim().to_string(),
-            },
+            reason: p.reason.trim().to_string(),
         });
     }
     Ok(out)
+}
+
+/// Find tensions among commitments that already have ids.
+pub fn detect(client: &Client, commitments: &[&Commitment]) -> Result<Vec<Conflict>, ModelError> {
+    let texts: Vec<&str> = commitments.iter().map(|c| c.text.as_str()).collect();
+    Ok(detect_over(client, &texts)?
+        .into_iter()
+        .map(|p| Conflict {
+            a: commitments[p.a].id.clone(),
+            b: commitments[p.b].id.clone(),
+            // `at: 0` because nothing happened: no act was written, so there
+            // is no moment to record. The fold never mints this.
+            at: 0,
+            disposition: Disposition::Open { reason: p.reason },
+        })
+        .collect())
 }
 
 /// Drop pairs someone already ruled on. Returns `(open, settled_count)`.

@@ -1,0 +1,28 @@
+{
+  "corpus_id": "maple-house",
+  "note": "Exhaustive ground-truth manifest for the Maple House governance tension bench. Sections keyed by Charter article numeral or Decision date (both unique). Every genuine cross-section conflict is labeled as a planted tension; every superficially-related-but-compatible pair is labeled expected_non. Splits: train (tunable), dev (tunable), test (sacred — PeekBudget guards it). NOT shipped into the corpus.",
+  "schema_version": 2,
+  "tension_types": ["direct_contradiction", "unmarked_supersession", "charter_conflict", "scope_overlap"],
+  "planted_tensions": [
+    {"id": "T1",  "type": "direct_contradiction", "split": "train", "a": {"article": "I"},   "b": {"date": "2026-03-14"}, "why": "Charter permits overnight guests up to two nights; the decision forbids overnight guests entirely."},
+    {"id": "T2",  "type": "direct_contradiction", "split": "test",  "a": {"article": "VI"},  "b": {"date": "2026-06-03"}, "why": "Charter bans all pets except fish; the decision allows a house cat."},
+    {"id": "T3",  "type": "direct_contradiction", "split": "dev",   "a": {"article": "IV"},  "b": {"date": "2026-05-06"}, "why": "Charter forbids reserving a common area for exclusive use; the decision lets a member reserve the dining room."},
+    {"id": "T4",  "type": "direct_contradiction", "split": "test",  "a": {"article": "II"},  "b": {"date": "2026-06-22"}, "why": "Charter sets quiet hours from 11 PM; the Thursday movie night runs until midnight."},
+    {"id": "T5",  "type": "unmarked_supersession","split": "train", "a": {"article": "II"},  "b": {"date": "2026-02-10"}, "why": "Charter sets quiet hours at 11 PM; the decision silently moves the weeknight start to 10 PM."},
+    {"id": "T6",  "type": "unmarked_supersession","split": "dev",   "a": {"article": "III"}, "b": {"date": "2026-04-02"}, "why": "Charter requires whoever used the kitchen to clean it; the decision exempts the cook (unmarked exception to the rule)."},
+    {"id": "T7",  "type": "unmarked_supersession","split": "test",  "a": {"article": "V"},   "b": {"date": "2026-05-20"}, "why": "Charter states no member is exempt from chores; the decision exempts long-traveling members."},
+    {"id": "T8",  "type": "unmarked_supersession","split": "test",  "a": {"article": "V"},   "b": {"date": "2026-04-02"}, "why": "Charter states no member is exempt from chores for any reason; excusing the cook from kitchen cleanup is a chore exemption (this decision conflicts with BOTH Art III and Art V)."},
+    {"id": "T9",  "type": "charter_conflict",     "split": "train", "a": {"article": "IV"},  "b": {"article": "XI"},     "why": "Article IV forbids reserving a common area for exclusive use and requires it stay open to all; Article XI reserves the dining room for silent study every weeknight 7-9 PM. Two charter articles in conflict."},
+    {"id": "T10", "type": "scope_overlap",        "split": "train", "a": {"date": "2026-02-10"}, "b": {"date": "2026-06-22"}, "why": "Weeknight quiet hours (Sun-Thu) begin at 10 PM; the Thursday movie night may run until midnight. Thursday after 10 PM is governed by both — ambiguous scope."},
+    {"id": "T11", "type": "scope_overlap",        "split": "dev",   "a": {"article": "XI"},  "b": {"date": "2026-05-06"}, "why": "Article XI reserves the dining room for silent study every weeknight 7-9 PM; the 2026-05-06 decision lets a member reserve the dining room for a private event. A booking during the study window conflicts — both claim the dining room exclusively. Detector-surfaced gap (like T8)."}
+  ],
+  "expected_non_tensions": [
+    {"id": "D1", "split": "train", "a": {"article": "I"},    "b": {"date": "2026-03-28"}, "why": "decoy: shares vocabulary (guests, overnight) but governs car parking, not whether/how long guests stay"},
+    {"id": "N1", "split": "test",  "a": {"article": "I"},    "b": {"date": "2026-01-12"}, "why": "compatible: a sign-in logbook is an additive requirement, not a conflict with the stay limit"},
+    {"id": "N2", "split": "dev",   "a": {"article": "II"},   "b": {"date": "2026-02-24"}, "why": "compatible: extends quiet hours to the backyard at the same times"},
+    {"id": "N3", "split": "train", "a": {"article": "VII"},  "b": {"date": "2026-06-10"}, "why": "compatible: indoors stays banned; the porch is outdoors"},
+    {"id": "N4", "split": "test",  "a": {"article": "VIII"}, "b": {"date": "2026-06-15"}, "why": "compatible: a late fee implements the existing due date"},
+    {"id": "N5", "split": "train", "a": {"article": "III"},  "b": {"date": "2026-04-18"}, "why": "compatible: labeling fridge food is an additive kitchen rule, not a conflict with cleanup duty"},
+    {"id": "N6", "split": "test",  "a": {"date": "2026-02-10"}, "b": {"date": "2026-02-24"}, "why": "compatible: two refinements of quiet hours (earlier weeknight start; backyard scope) that do not conflict"}
+  ]
+}
