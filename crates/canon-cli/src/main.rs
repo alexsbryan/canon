@@ -7,12 +7,15 @@
 
 mod cmds;
 mod config;
+mod draft;
 mod explain;
 mod mcp;
 mod model;
 mod profile;
 mod store;
 mod tensions;
+#[cfg(test)]
+mod testing;
 
 const HELP: &str = "\
 canon — a body of commitments, and what was decided about them
@@ -78,7 +81,8 @@ fn main() {
         "share" => cmds::share(rest),
         "tensions" => tensions::run(rest),
         "config" => cmds::config(rest),
-        "check" | "draft" => {
+        "draft" => draft::run(rest),
+        "check" => {
             eprintln!("cannot judge: `{cmd}` is not wired up in this build yet.");
             3
         }

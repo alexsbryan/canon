@@ -165,6 +165,19 @@ impl Client {
         })
     }
 
+    /// The endpoint as configured. Recorded in a draft run, so a published
+    /// number always says which server produced it.
+    pub fn endpoint(&self) -> &str {
+        &self.endpoint
+    }
+
+    /// The model name sent with each request. Recorded alongside the
+    /// endpoint: a quality number that does not say which model produced it
+    /// cannot be compared with anything, including itself next month.
+    pub fn model(&self) -> &str {
+        &self.model
+    }
+
     /// The host, parsed without a URL crate — this is the only URL question
     /// the tool asks, and it does not justify a dependency.
     pub fn host(&self) -> String {
