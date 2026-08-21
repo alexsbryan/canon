@@ -39,12 +39,12 @@ RECORD                                        (no model needed)
   accept <a> <b> -m \"<reason>\"           carry a contradiction knowingly
   dismiss <a> <b> [-m \"<reason>\"]        not actually a conflict
   undo <act-id> [-m \"<reason>\"]          revert an act; itself revertible
-  question \"<text>\"                     record what the canon does not cover
+  question \"<text>\"                      record what the canon does not cover
   open                                   the open questions
   log                                    the raw acts
   mcp                                    serve the agent surface on stdio
 
-LINEAGE                                       (no model; git optional)
+LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
   adopt <url>[@gen] | --paste            fork someone else's canon
   diff --upstream [--propose]            how you have diverged from your seed
@@ -72,6 +72,13 @@ ENVIRONMENT
   CANON_DIR        use this canon instead of searching upward
   CANON_ENDPOINT   override the configured endpoint for one run
   CANON_MODEL      override the configured model for one run
+
+ON THE PERSONAL PROFILE
+  This is a structured journal, not a clinician. It does not diagnose and
+  it does not advise. `check` reports which of your commitments have a
+  stake in something and which way each pulls; it never returns a verdict
+  and never exits 1. A contradiction you are carrying on purpose is a
+  first-class state here, and nothing is ever force-resolved.
 ";
 
 fn main() {
