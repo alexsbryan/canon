@@ -38,14 +38,53 @@ pub struct Commitment {
     pub source: Option<String>,
 }
 
-/// A contradiction the holder carries knowingly.
+/// What was decided about a conflict.
+///
+/// Three states, and the fold mints only the last two: `Open` describes a
+/// pair some surface has proposed and nobody has ruled on, which by
+/// definition left no act in the log. `canon tensions` mints it; `derive`
+/// never does.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Tolerated {
+#[serde(tag = "disposition", rename_all = "snake_case")]
+pub enum Disposition {
+    /// Proposed, never ruled on. Not derivable from the log.
+    Open,
+    /// Carried knowingly. The rationale is required — a contradiction you
+    /// keep on purpose must say what it protects.
+    Tolerated {
+        rationale: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        revisit: Option<String>,
+    },
+    /// Judged not a real conflict. Light ceremony: rejecting noise is
+    /// routine, so the rationale is optional.
+    Dismissed {
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        rationale: String,
+    },
+}
+
+/// Two commitments that may not both be honoured, and what was decided.
+///
+/// One noun for both outcomes. Modelling "carried knowingly" as a struct and
+/// "not a conflict" as a bare pair — which the first scaffold did — loses the
+/// dismissal's reason, and leaves the third state nowhere to live.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Conflict {
     pub a: ActId,
     pub b: ActId,
-    pub rationale: String,
-    pub revisit: Option<String>,
+    pub disposition: Disposition,
+    /// When it was dispositioned. Zero for `Open`, which was never recorded.
+    #[serde(default)]
     pub at: i64,
+}
+
+impl Conflict {
+    /// Does this concern the same unordered pair? Conflicts are symmetric:
+    /// `(a, b)` and `(b, a)` are one conflict, not two.
+    pub fn is_pair(&self, x: &ActId, y: &ActId) -> bool {
+        (&self.a == x && &self.b == y) || (&self.a == y && &self.b == x)
+    }
 }
 
 /// Where this canon came from, if it was adopted.
@@ -57,14 +96,16 @@ pub struct Ancestry {
     pub at: i64,
 }
 
-/// The derived read-model.
+/// What is in force right now — the derived body of norms.
+///
+/// Named for the essence rather than the mechanism: a fold produces state,
+/// but the thing it produces *is* a canon, an authoritative body of norms.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct State {
+pub struct Canon {
     pub commitments: Vec<Commitment>,
-    pub tolerated: Vec<Tolerated>,
-    /// Pairs explicitly judged not-a-conflict. Renderers use this to stop
-    /// re-surfacing noise a person already dismissed.
-    pub dismissed: Vec<(ActId, ActId)>,
+    /// Conflicts someone has ruled on. Only `Tolerated` and `Dismissed`
+    /// appear here — see [`Disposition::Open`].
+    pub conflicts: Vec<Conflict>,
     pub ancestry: Option<Ancestry>,
     /// Adjudications not authored by a person. Reported, never hidden —
     /// absence of attribution is surfaced rather than defaulted.
@@ -77,7 +118,7 @@ pub struct State {
     pub dangling: Vec<(ActId, ActId)>,
 }
 
-impl State {
+impl Canon {
     pub fn active(&self) -> impl Iterator<Item = &Commitment> {
         self.commitments
             .iter()
@@ -88,11 +129,19 @@ impl State {
         self.commitments.iter().find(|c| &c.id == id)
     }
 
-    /// Is this pair already settled — carried knowingly, or dismissed?
+    /// Is this pair already ruled on — carried knowingly, or dismissed?
+    ///
+    /// `tensions` filters through this so a pair someone already settled is
+    /// never re-surfaced as news.
     pub fn is_settled(&self, a: &ActId, b: &ActId) -> bool {
-        let hit = |x: &ActId, y: &ActId| (x == a && y == b) || (x == b && y == a);
-        self.tolerated.iter().any(|t| hit(&t.a, &t.b))
-            || self.dismissed.iter().any(|(x, y)| hit(x, y))
+        self.conflicts.iter().any(|c| c.is_pair(a, b))
+    }
+
+    /// Conflicts carried knowingly, with what they protect.
+    pub fn tolerated(&self) -> impl Iterator<Item = &Conflict> {
+        self.conflicts
+            .iter()
+            .filter(|c| matches!(c.disposition, Disposition::Tolerated { .. }))
     }
 }
 
@@ -101,7 +150,7 @@ impl State {
 /// Acts are folded in the order given; [`crate::Log`] sorts by `(ts_unix, id)`
 /// on parse, so the result is identical regardless of how lines interleaved
 /// during a merge.
-pub fn derive(acts: &[Act]) -> State {
+pub fn derive(acts: &[Act]) -> Canon {
     let n = acts.len();
 
     // Pass 1 — liveness.
@@ -174,7 +223,7 @@ pub fn derive(acts: &[Act]) -> State {
     // an unmerged one.
     let mut order: Vec<ActId> = Vec::new();
     let mut by_id: BTreeMap<ActId, Commitment> = BTreeMap::new();
-    let mut state = State::default();
+    let mut canon = Canon::default();
     let live_acts = || {
         acts.iter()
             .enumerate()
@@ -212,7 +261,7 @@ pub fn derive(acts: &[Act]) -> State {
         // adjudication, and adjudications are expected to be human.
         let adjudication = !matches!(act.kind, ActKind::Assert { .. } | ActKind::Adopt { .. });
         if adjudication && !act.is_human() {
-            state.unattended.push(act.id.clone());
+            canon.unattended.push(act.id.clone());
         }
 
         match &act.kind {
@@ -220,13 +269,13 @@ pub fn derive(acts: &[Act]) -> State {
                 for o in old {
                     match by_id.get_mut(o) {
                         Some(c) => c.status = Status::Superseded { by: act.id.clone() },
-                        None => state.dangling.push((act.id.clone(), o.clone())),
+                        None => canon.dangling.push((act.id.clone(), o.clone())),
                     }
                 }
             }
             ActKind::Retract { target, .. } => match by_id.get_mut(target) {
                 Some(c) => c.status = Status::Retracted { at: act.ts_unix },
-                None => state.dangling.push((act.id.clone(), target.clone())),
+                None => canon.dangling.push((act.id.clone(), target.clone())),
             },
             ActKind::Accept {
                 a,
@@ -236,24 +285,33 @@ pub fn derive(acts: &[Act]) -> State {
             } => {
                 for side in [a, b] {
                     if !by_id.contains_key(side) {
-                        state.dangling.push((act.id.clone(), side.clone()));
+                        canon.dangling.push((act.id.clone(), side.clone()));
                     }
                 }
-                state.tolerated.push(Tolerated {
+                canon.conflicts.push(Conflict {
                     a: a.clone(),
                     b: b.clone(),
-                    rationale: rationale.clone(),
-                    revisit: revisit.clone(),
+                    disposition: Disposition::Tolerated {
+                        rationale: rationale.clone(),
+                        revisit: revisit.clone(),
+                    },
                     at: act.ts_unix,
                 });
             }
-            ActKind::Dismiss { a, b, .. } => state.dismissed.push((a.clone(), b.clone())),
+            ActKind::Dismiss { a, b, rationale } => canon.conflicts.push(Conflict {
+                a: a.clone(),
+                b: b.clone(),
+                disposition: Disposition::Dismissed {
+                    rationale: rationale.clone(),
+                },
+                at: act.ts_unix,
+            }),
             ActKind::Adopt {
                 lineage,
                 generation,
                 source,
             } => {
-                state.ancestry = Some(Ancestry {
+                canon.ancestry = Some(Ancestry {
                     lineage: lineage.clone(),
                     generation: generation.clone(),
                     source: source.clone(),
@@ -264,9 +322,9 @@ pub fn derive(acts: &[Act]) -> State {
         }
     }
 
-    state.commitments = order
+    canon.commitments = order
         .into_iter()
         .filter_map(|id| by_id.remove(&id))
         .collect();
-    state
+    canon
 }

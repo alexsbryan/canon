@@ -6,6 +6,7 @@
 //!   0 supported / ok · 1 conflicts · 2 unaddressed or usage · 3 cannot judge
 
 mod cmds;
+mod profile;
 mod store;
 
 const HELP: &str = "\
