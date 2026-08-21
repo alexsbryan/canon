@@ -17,6 +17,7 @@ mod lineage;
 mod mcp;
 mod model;
 mod profile;
+mod rebase;
 mod store;
 mod tensions;
 #[cfg(test)]
@@ -98,6 +99,7 @@ fn main() {
         "adopt" => lineage::adopt(rest),
         "diff" => lineage::diff(rest),
         "upgrade" => lineage::upgrade(rest),
+        "rebase" => rebase::run(rest),
         "merge-driver" => lineage::merge_driver(rest),
         "tensions" => tensions::run(rest),
         "config" => cmds::config(rest),
