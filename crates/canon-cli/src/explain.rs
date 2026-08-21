@@ -49,7 +49,32 @@ pub fn resolve(canon: &Canon, needle: &str) -> Result<ActId, String> {
     }
 }
 
+/// Resolve a commitment OR a question by id or unique prefix.
+///
+/// `supersede` and `retract` take either, because answering a question is
+/// superseding it and withdrawing one is retracting it — the same two acts,
+/// not a second vocabulary.
+pub fn resolve_any(canon: &Canon, needle: &str) -> Result<ActId, String> {
+    let hits: Vec<&ActId> = canon
+        .commitments
+        .iter()
+        .map(|c| &c.id)
+        .chain(canon.questions.iter().map(|q| &q.id))
+        .filter(|id| id.as_str() == needle || id.as_str().starts_with(needle))
+        .collect();
+    match hits.len() {
+        1 => Ok(hits[0].clone()),
+        0 => Err(format!("nothing matching `{needle}`")),
+        n => Err(format!(
+            "`{needle}` matches {n} records — use more characters"
+        )),
+    }
+}
+
 pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, String> {
+    if let Some(q) = canon.question(id) {
+        return Ok(explain_question(canon, q));
+    }
     let c = canon
         .get(id)
         .ok_or_else(|| format!("no commitment `{id}`"))?;
@@ -147,6 +172,34 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     }
 
     Ok(Explanation { headline, lines })
+}
+
+fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
+    let mut lines = vec![format!("asked {} by {}", store::ymd(q.asked_at), q.actor)];
+    if let Some(p) = &q.proposal {
+        lines.push(format!("surfaced by the proposal: \"{p}\""));
+    }
+    match &q.status {
+        Status::Active => {
+            lines.push("status: OPEN — the canon does not cover this".into());
+            lines.push(format!(
+                "answer it:  canon supersede {} \"<the rule>\" -m \"<reason>\"",
+                q.id
+            ));
+        }
+        Status::Superseded { by } => {
+            let text = canon
+                .get(by)
+                .map(|c| c.text.as_str())
+                .unwrap_or("(unknown)");
+            lines.push(format!("status: ANSWERED by {by} — \"{text}\""));
+        }
+        Status::Retracted { at } => lines.push(format!("status: WITHDRAWN {}", store::ymd(*at))),
+    }
+    Explanation {
+        headline: format!("{}  ? {}", q.id, q.text),
+        lines,
+    }
 }
 
 #[cfg(test)]

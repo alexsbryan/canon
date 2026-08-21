@@ -38,6 +38,25 @@ pub struct Commitment {
     pub source: Option<String>,
 }
 
+/// Something the canon does not cover yet.
+///
+/// Shares [`Status`] with [`Commitment`] rather than carrying an enum of its
+/// own, because the three states are the same three states: open, answered by
+/// a commitment that superseded it, withdrawn. One vocabulary, so `why` and
+/// the renderers do not need a second set of branches.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Question {
+    pub id: ActId,
+    pub text: String,
+    /// `Active` is open. `Superseded { by }` is answered by that commitment.
+    /// `Retracted` is withdrawn.
+    pub status: Status,
+    pub asked_at: i64,
+    pub actor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proposal: Option<String>,
+}
+
 /// What was decided about a conflict.
 ///
 /// Three states, and the fold mints only the last two: `Open` describes a
@@ -109,6 +128,9 @@ pub struct Ancestry {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Canon {
     pub commitments: Vec<Commitment>,
+    /// What the canon does not cover. Answering one is superseding it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub questions: Vec<Question>,
     /// Conflicts someone has ruled on. Only `Tolerated` and `Dismissed`
     /// appear here — see [`Disposition::Open`].
     pub conflicts: Vec<Conflict>,
@@ -133,6 +155,17 @@ impl Canon {
 
     pub fn get(&self, id: &ActId) -> Option<&Commitment> {
         self.commitments.iter().find(|c| &c.id == id)
+    }
+
+    /// Questions nobody has answered or withdrawn. This is `canon open`.
+    pub fn open(&self) -> impl Iterator<Item = &Question> {
+        self.questions
+            .iter()
+            .filter(|q| matches!(q.status, Status::Active))
+    }
+
+    pub fn question(&self, id: &ActId) -> Option<&Question> {
+        self.questions.iter().find(|q| &q.id == id)
     }
 
     /// Is this pair already ruled on — carried knowingly, or dismissed?
@@ -228,7 +261,9 @@ pub fn derive(acts: &[Act]) -> Canon {
     // timestamp, which is also what keeps a merged log folding identically to
     // an unmerged one.
     let mut order: Vec<ActId> = Vec::new();
+    let mut q_order: Vec<ActId> = Vec::new();
     let mut by_id: BTreeMap<ActId, Commitment> = BTreeMap::new();
+    let mut questions: BTreeMap<ActId, Question> = BTreeMap::new();
     let mut canon = Canon::default();
     let live_acts = || {
         acts.iter()
@@ -238,6 +273,21 @@ pub fn derive(acts: &[Act]) -> Canon {
     };
 
     for act in live_acts() {
+        if let ActKind::Question { text, proposal } = &act.kind {
+            q_order.push(act.id.clone());
+            questions.insert(
+                act.id.clone(),
+                Question {
+                    id: act.id.clone(),
+                    text: text.clone(),
+                    status: Status::Active,
+                    asked_at: act.ts_unix,
+                    actor: act.actor.clone(),
+                    proposal: proposal.clone(),
+                },
+            );
+            continue;
+        }
         let (text, replaces, from, source) = match &act.kind {
             ActKind::Assert { text, from, source } => {
                 (text, Vec::new(), from.clone(), source.clone())
@@ -265,24 +315,34 @@ pub fn derive(acts: &[Act]) -> Canon {
     for act in live_acts() {
         // Attribution: everything except asserting and adopting is an
         // adjudication, and adjudications are expected to be human.
-        let adjudication = !matches!(act.kind, ActKind::Assert { .. } | ActKind::Adopt { .. });
+        let adjudication = !matches!(
+            act.kind,
+            ActKind::Assert { .. } | ActKind::Adopt { .. } | ActKind::Question { .. }
+        );
         if adjudication && !act.is_human() {
             canon.unattended.push(act.id.clone());
         }
 
         match &act.kind {
+            // A question is answered by superseding it with a commitment and
+            // withdrawn by retracting it: the same two acts, meaning the same
+            // two things, rather than a second vocabulary for questions.
             ActKind::Supersede { old, .. } => {
                 for o in old {
-                    match by_id.get_mut(o) {
-                        Some(c) => c.status = Status::Superseded { by: act.id.clone() },
-                        None => canon.dangling.push((act.id.clone(), o.clone())),
+                    match (by_id.get_mut(o), questions.get_mut(o)) {
+                        (Some(c), _) => c.status = Status::Superseded { by: act.id.clone() },
+                        (None, Some(q)) => q.status = Status::Superseded { by: act.id.clone() },
+                        (None, None) => canon.dangling.push((act.id.clone(), o.clone())),
                     }
                 }
             }
-            ActKind::Retract { target, .. } => match by_id.get_mut(target) {
-                Some(c) => c.status = Status::Retracted { at: act.ts_unix },
-                None => canon.dangling.push((act.id.clone(), target.clone())),
-            },
+            ActKind::Retract { target, .. } => {
+                match (by_id.get_mut(target), questions.get_mut(target)) {
+                    (Some(c), _) => c.status = Status::Retracted { at: act.ts_unix },
+                    (None, Some(q)) => q.status = Status::Retracted { at: act.ts_unix },
+                    (None, None) => canon.dangling.push((act.id.clone(), target.clone())),
+                }
+            }
             ActKind::Accept {
                 a,
                 b,
@@ -324,13 +384,17 @@ pub fn derive(acts: &[Act]) -> Canon {
                     at: act.ts_unix,
                 })
             }
-            ActKind::Assert { .. } | ActKind::Revert { .. } => {}
+            ActKind::Assert { .. } | ActKind::Revert { .. } | ActKind::Question { .. } => {}
         }
     }
 
     canon.commitments = order
         .into_iter()
         .filter_map(|id| by_id.remove(&id))
+        .collect();
+    canon.questions = q_order
+        .into_iter()
+        .filter_map(|id| questions.remove(&id))
         .collect();
     canon
 }

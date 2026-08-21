@@ -79,6 +79,21 @@ pub struct Candidate {
     pub source: String,
 }
 
+/// A chunk the endpoint could not answer for.
+///
+/// Recorded rather than fatal. One malformed reply out of twenty-four is a
+/// partial result, and a partial result reported as a whole one is the exact
+/// failure §18.3 names — but so is throwing away twenty-three good answers
+/// because the twenty-fourth came back wrong. The artifact carries both the
+/// answers and the holes, so a number scored from it can say how much of the
+/// document was actually read.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Unread {
+    pub chunk: usize,
+    pub source: String,
+    pub error: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Dropped {
     pub text: String,
@@ -102,6 +117,9 @@ pub struct DraftRun {
     /// Candidates the citation check refused. Kept, because "the extractor
     /// paraphrased nine times" is a measurement, not noise.
     pub dropped: Vec<Dropped>,
+    /// Chunks that produced no answer at all.
+    #[serde(default)]
+    pub unread: Vec<Unread>,
     /// Groups of duplicate candidate positions, as the reduce step found them.
     pub duplicates: Vec<Vec<usize>>,
     /// Candidate positions that survived the reduce, in order.
@@ -486,6 +504,7 @@ pub fn run(args: &[String]) -> i32 {
 
     let mut candidates: Vec<Candidate> = Vec::new();
     let mut dropped: Vec<Dropped> = Vec::new();
+    let mut unread: Vec<Unread> = Vec::new();
     for chunk in &chunks {
         eprint!("\rextracting {}/{}…", chunk.id + 1, chunks.len());
         let _ = std::io::stderr().flush();
@@ -494,17 +513,38 @@ pub fn run(args: &[String]) -> i32 {
                 candidates.extend(k);
                 dropped.extend(d);
             }
+            // One chunk's failure is not the document's. Record which
+            // passage went unread and keep going; the alternative throws away
+            // every good answer because one reply came back wrong.
             Err(e) => {
-                eprintln!();
-                return model::report(e);
+                eprintln!("\nwarning: {} produced no answer: {e}", chunk.source);
+                unread.push(Unread {
+                    chunk: chunk.id,
+                    source: chunk.source.clone(),
+                    error: e.to_string(),
+                });
             }
         }
+    }
+    if unread.len() == chunks.len() {
+        eprintln!("\nno chunk produced an answer.");
+        return 3;
     }
     eprintln!(
         "\r{} candidate(s), {} dropped for a bad citation",
         candidates.len(),
         dropped.len()
     );
+    if !unread.is_empty() {
+        // Loud, because every number computed from this run is a number about
+        // a fraction of the document.
+        eprintln!(
+            "WARNING: {} of {} passage(s) went unread — this run saw {:.0}% of the document",
+            unread.len(),
+            chunks.len(),
+            100.0 * (chunks.len() - unread.len()) as f64 / chunks.len() as f64
+        );
+    }
 
     let (groups, kept) = match dedupe(&client, &candidates) {
         Ok(v) => v,
@@ -543,6 +583,7 @@ pub fn run(args: &[String]) -> i32 {
         chunks: chunks.clone(),
         candidates: candidates.clone(),
         dropped,
+        unread,
         duplicates: groups,
         kept: kept.clone(),
         tensions: run_tensions,

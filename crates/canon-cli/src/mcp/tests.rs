@@ -121,12 +121,9 @@ fn an_unknown_method_is_a_jsonrpc_error() {
 #[test]
 fn an_unknown_tool_is_recoverable_not_fatal() {
     // isError:false so an agent that mistyped can read the reply and retry
-    // rather than treating the whole surface as broken.
-    let dir = std::env::temp_dir().join("canon-mcp-unknown-tool");
-    std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join("acts.jsonl"), "").unwrap();
-    std::env::set_var("CANON_DIR", &dir);
-
+    // rather than treating the whole surface as broken. No canon is set up
+    // here on purpose: the tool NAME is checked before a canon is located, so
+    // the reply names the real problem instead of "no canon found".
     let r = req(json!({
         "jsonrpc": "2.0", "id": 1, "method": "tools/call",
         "params": { "name": "canon_delete_everything", "arguments": {} }
@@ -138,21 +135,14 @@ fn an_unknown_tool_is_recoverable_not_fatal() {
         text.contains("canon_list"),
         "the reply names what is available"
     );
-    std::env::remove_var("CANON_DIR");
 }
 
 #[test]
 fn canon_why_without_an_id_is_an_error_the_agent_can_read() {
-    let dir = std::env::temp_dir().join("canon-mcp-why-noargs");
-    std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join("acts.jsonl"), "").unwrap();
-    std::env::set_var("CANON_DIR", &dir);
-
     let r = req(json!({
         "jsonrpc": "2.0", "id": 1, "method": "tools/call",
         "params": { "name": "canon_why", "arguments": {} }
     }))
     .unwrap();
     assert_eq!(r["result"]["isError"], true, "a bad argument IS an error");
-    std::env::remove_var("CANON_DIR");
 }

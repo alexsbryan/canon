@@ -530,3 +530,113 @@ fn the_fold_never_mints_an_open_disposition() {
         "derive() must not invent an Open conflict"
     );
 }
+
+fn ask(text: &str, ts: i64) -> Act {
+    Act::new(
+        ActKind::Question {
+            text: text.into(),
+            proposal: None,
+        },
+        ts,
+        "human:sam",
+    )
+}
+
+#[test]
+fn an_open_question_is_what_the_canon_does_not_cover() {
+    let st = Log::from_acts(vec![
+        assert_c("quiet hours at 11", 100),
+        ask("do quiet hours apply to the backyard?", 200),
+    ])
+    .derive();
+    assert_eq!(st.open().count(), 1);
+    assert_eq!(st.active().count(), 1, "a question is not a commitment");
+}
+
+#[test]
+fn a_question_is_answered_by_superseding_it_with_a_commitment() {
+    // No new act kind for answering: supersede already means "this replaces
+    // that", which is exactly what answering a question is.
+    let q = ask("do quiet hours apply to the backyard?", 100);
+    let answer = Act::new(
+        ActKind::Supersede {
+            text: "Quiet hours apply to the backyard at the same times.".into(),
+            old: vec![q.id.clone()],
+            rationale: "house meeting 2026-02-24".into(),
+        },
+        200,
+        "human:priya",
+    );
+    let st = Log::from_acts(vec![q.clone(), answer.clone()]).derive();
+
+    assert_eq!(st.open().count(), 0, "answered questions are not open");
+    assert_eq!(
+        st.question(&q.id).map(|x| x.status.clone()),
+        Some(Status::Superseded {
+            by: answer.id.clone()
+        })
+    );
+    // And the answer itself is a live commitment.
+    assert!(st.active().any(|c| c.id == answer.id));
+    assert!(st.dangling.is_empty(), "{:?}", st.dangling);
+}
+
+#[test]
+fn a_question_is_withdrawn_by_retracting_it() {
+    let q = ask("should we have a pet policy?", 100);
+    let st = Log::from_acts(vec![
+        q.clone(),
+        Act::new(
+            ActKind::Retract {
+                target: q.id.clone(),
+                rationale: "nobody wants a pet".into(),
+            },
+            200,
+            "human:sam",
+        ),
+    ])
+    .derive();
+    assert_eq!(st.open().count(), 0);
+    assert!(matches!(
+        st.question(&q.id).map(|x| &x.status),
+        Some(Status::Retracted { .. })
+    ));
+    assert!(st.dangling.is_empty(), "{:?}", st.dangling);
+}
+
+#[test]
+fn asking_is_not_adjudication_and_is_not_flagged_unattended() {
+    // An agent that notices a gap should be able to say so. Recording a
+    // question decides nothing, so it is not held to the human-authored bar
+    // that `accept` and `dismiss` are.
+    let st = Log::from_acts(vec![Act::new(
+        ActKind::Question {
+            text: "does this cover contractors?".into(),
+            proposal: Some("hire a contractor for the roof".into()),
+        },
+        100,
+        "agent:claude-code",
+    )])
+    .derive();
+    assert!(st.unattended.is_empty());
+    assert_eq!(st.open().count(), 1);
+    assert_eq!(
+        st.questions[0].proposal.as_deref(),
+        Some("hire a contractor for the roof")
+    );
+}
+
+#[test]
+fn superseding_a_question_that_is_not_in_the_log_is_still_reported() {
+    let st = Log::from_acts(vec![Act::new(
+        ActKind::Supersede {
+            text: "an answer to nothing".into(),
+            old: vec![ActId::from_raw("can-000000000000")],
+            rationale: String::new(),
+        },
+        100,
+        "human:sam",
+    )])
+    .derive();
+    assert_eq!(st.dangling.len(), 1);
+}

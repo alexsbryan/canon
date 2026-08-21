@@ -53,8 +53,14 @@ while [ "$i" -le "$RUNS" ]; do
 
   echo "--- run $i/$RUNS ---"
   START=$(date +%s)
-  "$BIN" draft --dry-run --from "$DOC" >/dev/null
-  echo "  $(( $(date +%s) - START ))s"
+  # A run that fails is reported and the bar continues: losing runs 2 and 3
+  # because run 1 died leaves no measurement at all, and a missing run is
+  # visible in the scorer's count.
+  if "$BIN" draft --dry-run --from "$DOC" >/dev/null; then
+    echo "  $(( $(date +%s) - START ))s"
+  else
+    echo "  FAILED after $(( $(date +%s) - START ))s (exit $?)"
+  fi
 
   # Name the artifact by run ordinal AND its own timestamp, so a re-run
   # appends rather than silently replacing evidence behind a published number.
