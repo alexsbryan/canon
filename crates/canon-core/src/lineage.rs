@@ -207,9 +207,12 @@ pub enum Fate {
     Retracted,
     /// Carried knowingly against another commitment.
     Accepted { rationale: String },
-    /// In the seed, and never in this canon. An adoption that skipped it, or
-    /// a line lost in a paste.
-    Never,
+    /// In the seed and not in this canon. Several causes, and the fold
+    /// cannot tell them apart: a line lost in a paste, an adoption that
+    /// skipped it, or an `upgrade` that held it back because this canon had
+    /// already changed the rule it replaced. Reported as the fact it is,
+    /// without a story about how it happened.
+    Absent,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -246,7 +249,7 @@ impl Divergence {
                 .iter()
                 .find(|c| c.from.as_ref() == Some(&s.id));
             let fate = match local {
-                None => Fate::Never,
+                None => Fate::Absent,
                 Some(c) => match &c.status {
                     Status::Retracted { .. } => Fate::Retracted,
                     Status::Superseded { by } => Fate::Superseded {

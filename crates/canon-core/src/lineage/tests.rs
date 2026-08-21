@@ -166,7 +166,7 @@ fn a_seed_commitment_that_never_landed_is_reported_not_ignored() {
     )])
     .derive();
     let d = Divergence::compute(&seed, &canon);
-    assert_eq!(d.count(|f| matches!(f, Fate::Never)), 2);
+    assert_eq!(d.count(|f| matches!(f, Fate::Absent)), 2);
     assert_eq!(d.count(|f| matches!(f, Fate::Untouched)), 1);
 }
 

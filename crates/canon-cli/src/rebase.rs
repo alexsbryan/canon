@@ -145,7 +145,7 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
                 command: Some("canon accept {} <other> -m \"<what this protects>\"".into()),
                 standalone: None,
             }),
-            Fate::Untouched | Fate::Never => {}
+            Fate::Untouched | Fate::Absent => {}
         }
     }
     for id in &d.added {
