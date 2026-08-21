@@ -1,0 +1,15 @@
+[workspace]
+members = ["crates/canon-core", "crates/canon-cli"]
+resolver = "2"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.95"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/alexsbryan/canon"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"

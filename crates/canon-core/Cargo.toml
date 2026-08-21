@@ -1,0 +1,16 @@
+[package]
+name = "canon-core"
+description = "The canon fold: acts, content-addressed ids, and derivation of current state. No IO, no network."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# DELIBERATE: no tokio, no reqwest, no filesystem access.
+# The fold's purity is enforced by this dependency list, not by discipline.
+# canon-core parses a &str and folds it. The CLI owns all IO.
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }

@@ -1,0 +1,17 @@
+[package]
+name = "canon-cli"
+description = "canon — hold a body of commitments, record what was decided, check proposals against them."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "canon"
+path = "src/main.rs"
+
+[dependencies]
+canon-core = { path = "../canon-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
