@@ -331,7 +331,7 @@ fn render_divergence(d: &Divergence, canon: &canon_core::Canon, seed: &Snapshot)
     let ret = d.count(|f| matches!(f, Fate::Retracted));
     let acc = d.count(|f| matches!(f, Fate::Accepted { .. }));
     let unt = d.count(|f| matches!(f, Fate::Untouched));
-    let nev = d.count(|f| matches!(f, Fate::Never));
+    let nev = d.count(|f| matches!(f, Fate::Absent));
 
     let mut out = format!(
         "adopted  {}@{}{}\n",
@@ -348,10 +348,12 @@ fn render_divergence(d: &Divergence, canon: &canon_core::Canon, seed: &Snapshot)
         d.added.len()
     ));
     if nev > 0 {
-        // Reported, never folded into "untouched": a rule that never landed
-        // is a hole in the adoption, not a rule you kept.
+        // Reported, never folded into "untouched": a rule of upstream's that
+        // is not here is not a rule you kept. Stated as the fact it is — the
+        // fold cannot tell a lost paste line from an upgrade held back, and
+        // wording it as an accident would be a guess.
         out.push_str(&format!(
-            "NEVER LANDED ({nev}) — the seed had these and this canon does not\n"
+            "NOT HERE ({nev}) — upstream has these and this canon does not\n"
         ));
     }
 
@@ -376,11 +378,8 @@ fn render_divergence(d: &Divergence, canon: &canon_core::Canon, seed: &Snapshot)
                     i.upstream, i.text
                 ));
             }
-            Fate::Never => {
-                out.push_str(&format!(
-                    "\nNEVER LANDED {}\n  \"{}\"\n",
-                    i.upstream, i.text
-                ));
+            Fate::Absent => {
+                out.push_str(&format!("\nNOT HERE    {}\n  \"{}\"\n", i.upstream, i.text));
             }
         }
     }
@@ -420,7 +419,7 @@ fn render_proposal(d: &Divergence, canon: &canon_core::Canon) -> String {
                 n += 1;
                 out.push_str(&format!("TENSION {}\n  \"{}\"\n", i.upstream, i.text));
             }
-            Fate::Untouched | Fate::Never => {}
+            Fate::Untouched | Fate::Absent => {}
         }
     }
     for id in &d.added {
@@ -616,7 +615,7 @@ fn fate_phrase(f: &Fate) -> &'static str {
         Fate::Superseded { .. } => "already superseded locally",
         Fate::Retracted => "already retracted locally",
         Fate::Accepted { .. } => "carried knowingly against another rule",
-        Fate::Never => "not present",
+        Fate::Absent => "not in this canon",
     }
 }
 
