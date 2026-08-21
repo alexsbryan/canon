@@ -4,7 +4,11 @@
 //!
 //! Exit codes are part of the contract, because CI and agents read them:
 //!   0 supported / ok · 1 conflicts · 2 unaddressed or usage · 3 cannot judge
+//!
+//! A canon on the `personal` profile never returns 1. See
+//! [`check::exit_code`].
 
+mod check;
 mod cmds;
 mod config;
 mod draft;
@@ -33,12 +37,14 @@ RECORD                                        (no model needed)
   accept <a> <b> -m \"<reason>\"           carry a contradiction knowingly
   dismiss <a> <b> [-m \"<reason>\"]        not actually a conflict
   undo <act-id> [-m \"<reason>\"]          revert an act; itself revertible
+  question \"<text>\"                     record what the canon does not cover
+  open                                   the open questions
   log                                    the raw acts
   mcp                                    serve the agent surface on stdio
   share                                  a pasteable snapshot
 
 ADJUDICATE                                    (needs an endpoint)
-  check \"<proposal>\"                     supported / conflicts / unaddressed
+  check \"<proposal>\"                     how a proposal stands (personal: stakes)
   tensions                               where your commitments conflict
   draft --from <paths>                   propose commitments from loose notes
 
@@ -77,15 +83,14 @@ fn main() {
         "dismiss" => cmds::dismiss(rest),
         "undo" => cmds::undo(rest),
         "log" => cmds::log(rest),
+        "question" => cmds::question(rest),
+        "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => cmds::share(rest),
         "tensions" => tensions::run(rest),
         "config" => cmds::config(rest),
         "draft" => draft::run(rest),
-        "check" => {
-            eprintln!("cannot judge: `{cmd}` is not wired up in this build yet.");
-            3
-        }
+        "check" => check::run(rest),
         "--version" | "-V" => {
             println!("canon {}", env!("CARGO_PKG_VERSION"));
             0

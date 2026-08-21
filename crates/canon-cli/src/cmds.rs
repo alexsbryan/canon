@@ -194,7 +194,7 @@ pub fn why(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let id = match crate::explain::resolve(&st, needle) {
+    let id = match crate::explain::resolve_any(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -216,7 +216,7 @@ pub fn supersede(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let old = match crate::explain::resolve(&st, pos[0]) {
+    let old = match crate::explain::resolve_any(&st, pos[0]) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -246,7 +246,7 @@ pub fn retract(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let target = match crate::explain::resolve(&st, needle) {
+    let target = match crate::explain::resolve_any(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -391,6 +391,7 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Accept { a, b, .. } => format!("accept     {a} / {b}"),
             ActKind::Dismiss { a, b, .. } => format!("dismiss    {a} / {b}"),
             ActKind::Revert { targets, .. } => format!("revert     {}", targets.len()),
+            ActKind::Question { text, .. } => format!("question   {text}"),
             ActKind::Adopt {
                 lineage,
                 generation,
@@ -446,6 +447,67 @@ pub fn share(_args: &[String]) -> i32 {
         println!("{}  ({})", c.text, c.id);
     }
     println!("--- {} live · adopt: canon adopt --paste", live.len());
+    0
+}
+
+/// Record something the canon does not cover.
+///
+/// No model, and no ceremony: noticing a gap should cost one line. It is
+/// answered by superseding it with a commitment, and withdrawn by retracting
+/// it — the acts that already mean those things.
+pub fn question(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(text) = pos.first() else {
+        return fail("usage: canon question \"<what the canon does not cover>\"");
+    };
+    let d = match dir() {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
+    match write(
+        &d,
+        ActKind::Question {
+            text: (*text).to_string(),
+            proposal: flag(args, "--from-proposal").map(str::to_string),
+        },
+    ) {
+        Ok(act) => {
+            println!("{}  ? {}", act.id, text);
+            println!(
+                "  answer it:  canon supersede {} \"<the rule>\" -m \"<reason>\"",
+                act.id
+            );
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+/// What the canon does not cover.
+pub fn open(args: &[String]) -> i32 {
+    let (_, _, st) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let open: Vec<_> = st.open().collect();
+    if has(args, "--json") {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&open).unwrap_or_default()
+        );
+        return 0;
+    }
+    if open.is_empty() {
+        println!("no open questions. `canon question \"<...>\"` records one.");
+        return 0;
+    }
+    for q in &open {
+        println!("{}  ? {}", q.id, q.text);
+        if let Some(p) = &q.proposal {
+            println!("      from: \"{p}\"");
+        }
+    }
+    println!("\n{} open", open.len());
     0
 }
 

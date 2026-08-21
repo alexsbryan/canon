@@ -14,11 +14,13 @@ pub mod act;
 pub mod fold;
 pub mod id;
 pub mod log;
+pub mod standing;
 
 pub use act::{Act, ActKind, FORMAT_VERSION};
-pub use fold::{derive, Ancestry, Canon, Commitment, Conflict, Disposition, Status};
+pub use fold::{derive, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Status};
 pub use id::{ActId, ID_PREFIX};
 pub use log::{Log, ParseError};
+pub use standing::{Bearing, Outcome, Pull, Standing};
 
 #[cfg(test)]
 mod tests;

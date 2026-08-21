@@ -65,6 +65,7 @@ the id of the act that introduced it.
 | `retract` | `target`, `rationale?` | Withdraws one, no replacement |
 | `accept` | `a`, `b`, `rationale`, `revisit?` | A contradiction carried knowingly |
 | `dismiss` | `a`, `b`, `rationale?` | Not actually a conflict |
+| `question` | `text`, `proposal?` | Something the canon does not cover |
 | `revert` | `targets[]`, `rationale?` | Tomb-stones prior acts |
 | `adopt` | `lineage`, `generation`, `source?` | Forked from a lineage |
 
@@ -111,6 +112,19 @@ proposed it. A `rationale` says why a person ruled the way they did.
 Implementations MUST NOT derive `open` from the log. A pair nobody ruled on
 left no act by definition; `open` exists for surfaces that *propose*
 conflicts, so that a proposed and a settled pair share one type.
+
+**5. A question is a commitment-shaped hole.** A `question` act records
+something the canon does not cover. It derives to a record with the SAME
+three statuses: `active` is open, `superseded{by}` is answered by that
+commitment, `retracted{at}` is withdrawn.
+
+Answering a question is superseding it. Withdrawing one is retracting it.
+Implementations MUST NOT add a separate answer or close act: the two that
+exist already mean the right thing, and a second vocabulary for the same
+two transitions is how a format grows a dialect.
+
+A `question` is not an adjudication. An implementation MUST NOT flag one
+authored by a non-human actor — noticing a gap decides nothing.
 
 ## Canonical ordering
 

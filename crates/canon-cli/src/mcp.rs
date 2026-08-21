@@ -34,7 +34,7 @@ pub mod tools {
     ///
     /// Pinned by `the_surface_is_read_only`. A tool that mutates a canon
     /// belongs in the CLI, where a person runs it.
-    pub const READ_ONLY_TOOLS: &[&str] = &["canon_list", "canon_why"];
+    pub const READ_ONLY_TOOLS: &[&str] = &["canon_list", "canon_why", "canon_open", "canon_check"];
 }
 
 // ── transport ───────────────────────────────────────────────
@@ -158,38 +158,75 @@ fn tool_descriptors() -> Vec<Value> {
                 "additionalProperties": false,
             },
         }),
+        json!({
+            "name": "canon_open",
+            "description": "What this canon does not cover: questions recorded and not yet \
+                            answered. Read it before assuming silence means permission.",
+            "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+        }),
+        json!({
+            "name": "canon_check",
+            "description": "How a proposal stands against the commitments in force, with the \
+                            commitments it cites. Costs one model call, so reach for it on a \
+                            consequential choice; for a small canon, canon_list is usually \
+                            enough. Returns stakes rather than a verdict on a personal canon.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "proposal": {
+                        "type": "string",
+                        "description": "The proposal to judge, as you would say it out loud.",
+                    }
+                },
+                "required": ["proposal"],
+                "additionalProperties": false,
+            },
+        }),
     ]
 }
 
 fn call(name: &str, args: &Value) -> Value {
+    // Name and arguments are checked BEFORE a canon is located. Neither needs
+    // one, and an agent that mistyped should get a reply it can act on even
+    // where there is no canon to read — "no tool named X" is more useful than
+    // "no canon found" when the problem is the tool name.
+    let arg = match name {
+        "canon_list" | "canon_open" => None,
+        "canon_why" => match args.get("id").and_then(Value::as_str) {
+            Some(v) => Some(v),
+            None => return content("canon_why requires an `id` argument.", true),
+        },
+        "canon_check" => match args.get("proposal").and_then(Value::as_str) {
+            Some(v) if !v.trim().is_empty() => Some(v),
+            _ => return content("canon_check requires a `proposal` argument.", true),
+        },
+        // Unknown tool is NOT a hard error: an agent that mistypes should be
+        // able to recover from the reply rather than treat the surface as
+        // broken.
+        other => {
+            return content(
+                format!(
+                    "no tool named `{other}`. Available: {}.",
+                    tools::READ_ONLY_TOOLS.join(", ")
+                ),
+                false,
+            )
+        }
+    };
     let dir = match locate() {
         Ok(d) => d,
         Err(e) => return content(e, true),
     };
-    match name {
-        "canon_list" => match render_list(&dir) {
-            Ok(s) => content(s, false),
-            Err(e) => content(e, true),
-        },
-        "canon_why" => {
-            let Some(id) = args.get("id").and_then(Value::as_str) else {
-                return content("canon_why requires an `id` argument.", true);
-            };
-            match render_why(&dir, id) {
-                Ok(s) => content(s, false),
-                Err(e) => content(e, true),
-            }
-        }
-        // Unknown tool is NOT a hard error: an agent that mistypes should be
-        // able to recover from the reply rather than treat the surface as
-        // broken.
-        other => content(
-            format!(
-                "no tool named `{other}`. Available: {}.",
-                tools::READ_ONLY_TOOLS.join(", ")
-            ),
-            false,
-        ),
+    let rendered = match name {
+        "canon_list" => render_list(&dir),
+        "canon_open" => render_open(&dir),
+        "canon_why" => render_why(&dir, arg.unwrap_or_default()),
+        "canon_check" => render_check(&dir, arg.unwrap_or_default()),
+        _ => unreachable!("validated above"),
+    };
+    match rendered {
+        Ok(s) => content(s, false),
+        Err(e) => content(e, true),
     }
 }
 
@@ -231,10 +268,58 @@ fn render_list(dir: &Path) -> Result<String, String> {
     Ok(out)
 }
 
+fn render_open(dir: &Path) -> Result<String, String> {
+    let canon = store::read(dir)?.derive();
+    let open: Vec<_> = canon.open().collect();
+    if open.is_empty() {
+        return Ok(
+            "No open questions. Note that this means nobody has RECORDED a gap — it is not a \
+             claim that the canon covers everything."
+                .into(),
+        );
+    }
+    let mut out = String::new();
+    for q in &open {
+        out.push_str(&format!("{}  {}\n", q.id, q.text));
+        if let Some(p) = &q.proposal {
+            out.push_str(&format!("    surfaced by: \"{p}\"\n"));
+        }
+    }
+    out.push_str(&format!("\n{} open question(s).", open.len()));
+    Ok(out)
+}
+
+/// The one tool here that costs a model call.
+///
+/// Still a read: it writes no act. An agent that concludes something should
+/// be recorded says so in chat, as a command a person can run.
+fn render_check(dir: &Path, proposal: &str) -> Result<String, String> {
+    let canon = store::read(dir)?.derive();
+    if canon.active().next().is_none() {
+        return Err(
+            "This canon has no commitments yet, so there is nothing to check against.".into(),
+        );
+    }
+    let profile = crate::profile::Profile::load(dir)?;
+    let client = crate::model::client_for(dir, false).map_err(|e| e.to_string())?;
+    let (standing, refused) =
+        crate::check::assess(&client, &canon, proposal).map_err(|e| e.to_string())?;
+    let mut out = crate::check::render(profile, &canon, &standing);
+    // Refusals travel to the agent too. A shorter answer with no explanation
+    // is indistinguishable from a canon that had less to say.
+    if !refused.is_empty() {
+        out.push_str(&format!(
+            "\n({} uncitable bearing(s) were refused and are not shown.)\n",
+            refused.len()
+        ));
+    }
+    Ok(out)
+}
+
 fn render_why(dir: &Path, needle: &str) -> Result<String, String> {
     let log = store::read(dir)?;
     let canon = log.derive();
-    let id = crate::explain::resolve(&canon, needle)?;
+    let id = crate::explain::resolve_any(&canon, needle)?;
     Ok(crate::explain::explain(&log, &canon, &id)?.render(""))
 }
 

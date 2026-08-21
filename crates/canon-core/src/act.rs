@@ -72,6 +72,25 @@ pub enum ActKind {
         #[serde(default, skip_serializing_if = "String::is_empty")]
         rationale: String,
     },
+    /// Something the canon does not cover, recorded so it can be found again.
+    ///
+    /// Added inside v1 rather than in a later version, because an unknown
+    /// `op` is refused rather than skipped (that is the point of the version
+    /// rule), which makes every new act kind a breaking change. At 0.0.1 with
+    /// nothing deployed the cost is zero; after the first adopter it is a
+    /// migration.
+    ///
+    /// A question is ANSWERED by superseding it with a commitment, and
+    /// WITHDRAWN by retracting it. Both acts already exist and already mean
+    /// the right thing, so neither needed inventing.
+    Question {
+        text: String,
+        /// The proposal that surfaced it, when `check` found nothing covering
+        /// one. Kept verbatim: months later "what was I actually asking?" is
+        /// the question that matters.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        proposal: Option<String>,
+    },
     /// This canon was forked from a lineage. Recorded as an ACT rather than as
     /// git metadata so ancestry survives a file that travels by paste.
     Adopt {
@@ -115,8 +134,8 @@ impl Act {
 
     /// True when this act was authored by a person.
     ///
-    /// Adjudication — everything except `Assert` and `Adopt` — is expected to
-    /// be human-authored. See [`crate::State::unattended`].
+    /// Adjudication — everything except `Assert`, `Question` and `Adopt` — is
+    /// expected to be human-authored. See [`crate::Canon::unattended`].
     pub fn is_human(&self) -> bool {
         self.actor.starts_with("human:")
     }
