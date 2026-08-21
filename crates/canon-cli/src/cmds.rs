@@ -5,7 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
-use canon_core::{Act, ActId, ActKind, Canon, Disposition, Log, Status};
+use canon_core::{Act, ActKind, Canon, Log};
 
 use crate::profile::Profile;
 use crate::store;
@@ -62,25 +62,6 @@ fn load() -> Result<(PathBuf, Log, Canon), String> {
 fn fail(e: impl std::fmt::Display) -> i32 {
     eprintln!("error: {e}");
     2
-}
-
-/// Resolve a possibly-abbreviated id against the canon. Users read ids off a
-/// listing and type a prefix; an ambiguous prefix is an error rather than a
-/// guess.
-fn resolve(st: &Canon, needle: &str) -> Result<ActId, String> {
-    let hits: Vec<&ActId> = st
-        .commitments
-        .iter()
-        .map(|c| &c.id)
-        .filter(|id| id.as_str() == needle || id.as_str().starts_with(needle))
-        .collect();
-    match hits.len() {
-        1 => Ok(hits[0].clone()),
-        0 => Err(format!("no commitment matching `{needle}`")),
-        n => Err(format!(
-            "`{needle}` matches {n} commitments — use more characters"
-        )),
-    }
 }
 
 fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
@@ -209,66 +190,17 @@ pub fn why(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let id = match resolve(&st, needle) {
+    let id = match crate::explain::resolve(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
-    let c = st.get(&id).expect("resolved");
-    println!("{}  {}", c.id, c.text);
-    println!("  asserted {} by {}", store::ymd(c.asserted_at), c.actor);
-    if let Some(src) = &c.source {
-        println!("  drafted from {src}");
-    }
-    if let Some(up) = &c.from {
-        println!("  inherited from upstream {up}");
-    }
-    for old in &c.replaces {
-        let prev = st.get(old).map(|p| p.text.as_str()).unwrap_or("(unknown)");
-        println!("  replaced {old}: \"{prev}\"");
-    }
-    match &c.status {
-        Status::Active => println!("  status: live"),
-        Status::Superseded { by } => {
-            let next = st.get(by).map(|p| p.text.as_str()).unwrap_or("(unknown)");
-            println!("  status: superseded by {by} — \"{next}\"");
+    match crate::explain::explain(&log, &st, &id) {
+        Ok(e) => {
+            print!("{}", e.render("  "));
+            0
         }
-        Status::Retracted { at } => println!("  status: retracted {}", store::ymd(*at)),
+        Err(e) => fail(e),
     }
-    // The rationale lives on the act, not the derived commitment.
-    for act in log.acts() {
-        match &act.kind {
-            ActKind::Supersede { old, rationale, .. }
-                if old.contains(&id) && !rationale.is_empty() =>
-            {
-                println!("  reason given: {rationale}")
-            }
-            ActKind::Retract { target, rationale } if target == &id && !rationale.is_empty() => {
-                println!("  reason given: {rationale}")
-            }
-            _ => {}
-        }
-    }
-    for c in st.conflicts.iter().filter(|c| c.a == id || c.b == id) {
-        let other = if c.a == id { &c.b } else { &c.a };
-        match &c.disposition {
-            Disposition::Tolerated { rationale, revisit } => {
-                println!("  carried against {other}: {rationale}");
-                if let Some(r) = revisit {
-                    println!("    revisit by {r}");
-                }
-            }
-            Disposition::Dismissed { rationale } => {
-                let why = if rationale.is_empty() {
-                    "detector noise"
-                } else {
-                    rationale
-                };
-                println!("  not in conflict with {other}: {why}");
-            }
-            Disposition::Open => println!("  open conflict with {other}"),
-        }
-    }
-    0
 }
 
 pub fn supersede(args: &[String]) -> i32 {
@@ -280,7 +212,7 @@ pub fn supersede(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let old = match resolve(&st, pos[0]) {
+    let old = match crate::explain::resolve(&st, pos[0]) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -310,7 +242,7 @@ pub fn retract(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let target = match resolve(&st, needle) {
+    let target = match crate::explain::resolve(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -343,7 +275,10 @@ pub fn accept(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let (a, b) = match (resolve(&st, pos[0]), resolve(&st, pos[1])) {
+    let (a, b) = match (
+        crate::explain::resolve(&st, pos[0]),
+        crate::explain::resolve(&st, pos[1]),
+    ) {
         (Ok(a), Ok(b)) => (a, b),
         (Err(e), _) | (_, Err(e)) => return fail(e),
     };
@@ -374,7 +309,10 @@ pub fn dismiss(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let (a, b) = match (resolve(&st, pos[0]), resolve(&st, pos[1])) {
+    let (a, b) = match (
+        crate::explain::resolve(&st, pos[0]),
+        crate::explain::resolve(&st, pos[1]),
+    ) {
         (Ok(a), Ok(b)) => (a, b),
         (Err(e), _) | (_, Err(e)) => return fail(e),
     };
