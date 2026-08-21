@@ -526,7 +526,7 @@ fn the_fold_never_mints_an_open_disposition() {
     assert!(
         !st.conflicts
             .iter()
-            .any(|c| c.disposition == Disposition::Open),
+            .any(|c| matches!(c.disposition, Disposition::Open { .. })),
         "derive() must not invent an Open conflict"
     );
 }

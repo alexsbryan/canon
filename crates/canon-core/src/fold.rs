@@ -48,7 +48,13 @@ pub struct Commitment {
 #[serde(tag = "disposition", rename_all = "snake_case")]
 pub enum Disposition {
     /// Proposed, never ruled on. Not derivable from the log.
-    Open,
+    ///
+    /// The reason belongs to the DETECTOR, not to a decision: it says why the
+    /// pair was flagged, in the words of whatever surfaced it. That is a
+    /// different thing from a `rationale`, which is why someone ruled the way
+    /// they did — so it gets a different name rather than the same one
+    /// carrying two meanings.
+    Open { reason: String },
     /// Carried knowingly. The rationale is required — a contradiction you
     /// keep on purpose must say what it protects.
     Tolerated {
