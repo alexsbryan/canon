@@ -48,6 +48,22 @@ impl ActId {
     }
 }
 
+/// A short content digest of arbitrary text.
+///
+/// Exposed because this crate already owns content addressing, and the
+/// alternative — a second hasher in the CLI — is two implementations of one
+/// idea (§10.6).
+pub fn short_digest(input: &str) -> String {
+    let digest = Sha256::digest(input.as_bytes());
+    digest
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>()
+        .chars()
+        .take(8)
+        .collect()
+}
+
 impl std::fmt::Display for ActId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.0)

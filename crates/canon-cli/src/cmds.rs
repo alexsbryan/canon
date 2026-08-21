@@ -412,44 +412,6 @@ pub fn log(args: &[String]) -> i32 {
     0
 }
 
-pub fn share(_args: &[String]) -> i32 {
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    // Name the snapshot after the directory holding the canon, so a pasted
-    // block says where it came from without anyone configuring anything.
-    let name = std::fs::read_to_string(d.join("name"))
-        .map(|s| s.trim().to_string())
-        .ok()
-        .filter(|s| !s.is_empty())
-        .or_else(|| {
-            d.parent()
-                .and_then(|p| p.file_name())
-                .map(|n| n.to_string_lossy().to_string())
-        })
-        .unwrap_or_else(|| "canon".into());
-    let live: Vec<_> = st.active().collect();
-
-    // A snapshot is not a log: it carries derived current state and drops
-    // supersession history and rationales, which name incidents and people.
-    // Enough to adopt, not enough to audit.
-    let profile = match Profile::load(&d) {
-        Ok(p) => p,
-        Err(e) => return fail(e),
-    };
-    println!(
-        "--- canon {name} · {} · snapshot {}",
-        profile.as_str(),
-        store::ymd(store::now())
-    );
-    for c in &live {
-        println!("{}  ({})", c.text, c.id);
-    }
-    println!("--- {} live · adopt: canon adopt --paste", live.len());
-    0
-}
-
 /// Record something the canon does not cover.
 ///
 /// No model, and no ceremony: noticing a gap should cost one line. It is
