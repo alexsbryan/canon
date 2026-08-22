@@ -459,3 +459,107 @@ fn a_time_of_day_in_words_is_a_time_not_a_count() {
     assert!(measures("no more than two consecutive nights").contains(&(2, "night".into())));
     assert!(spelled_times("no more than two consecutive nights").is_empty());
 }
+
+#[test]
+fn a_punctuated_meridiem_is_the_same_clock_time() {
+    // Charters and bylaws write "10 p.m." at least as often as "10 PM", and a
+    // parser that reads only the unpunctuated form sees NO time in the
+    // passage. Both halves of the guard then fail in the same document: a
+    // faithful rule is dropped for stating a measure its passage supposedly
+    // does not, and two rules that disagree about the hour fold into one.
+    assert_eq!(clock_times("quiet hours begin at 10:00 p.m."), vec!["10pm"]);
+    assert_eq!(
+        clock_times("the kitchen closes at 9 p.m. sharp"),
+        vec!["9pm"]
+    );
+    assert_eq!(
+        unstated_measure(
+            "Quiet hours begin at 10pm.",
+            "Quiet hours begin at 10:00 p.m. on weeknights."
+        ),
+        None
+    );
+    assert!(differs_by_measure(
+        "Quiet hours begin at 10 p.m.",
+        "Quiet hours begin at 11:00 PM."
+    ));
+}
+
+#[test]
+fn noon_and_midnight_are_clock_times() {
+    // "Quiet hours begin at midnight" against "Quiet hours begin at 11:00 PM"
+    // is a contradiction with no digit in one of its halves.
+    assert_eq!(spelled_times("quiet hours begin at midnight"), vec!["12am"]);
+    assert_eq!(spelled_times("the pool closes at noon"), vec!["12pm"]);
+    assert!(differs_by_measure(
+        "Quiet hours begin at midnight.",
+        "Quiet hours begin at 11:00 PM."
+    ));
+    assert_eq!(
+        unstated_measure(
+            "Quiet hours begin at 12am.",
+            "Quiet hours begin at midnight."
+        ),
+        None
+    );
+}
+
+#[test]
+fn a_twenty_four_hour_clock_is_the_same_instant() {
+    // A house that writes 22:00 states the same rule as one that writes
+    // 10:00 PM, and only the unambiguous hours are read: a bare 7:00 could be
+    // either half of the day, and guessing would invent a measure.
+    assert_eq!(clock_times("quiet hours begin at 22:00"), vec!["10pm"]);
+    assert_eq!(clock_times("the gate locks at 00:30"), vec!["12:30am"]);
+    assert_eq!(clock_times("the gate locks at 00:00"), vec!["12am"]);
+    assert_eq!(clock_times("the gate locks at 22:30"), vec!["10:30pm"]);
+    // Half an hour is a different rule, not the same one rounded.
+    assert!(differs_by_measure(
+        "Quiet hours begin at 10:30 PM.",
+        "Quiet hours begin at 10:00 PM."
+    ));
+    assert!(clock_times("the meeting starts at 7:00").is_empty());
+    assert_eq!(
+        unstated_measure(
+            "Quiet hours begin at 10:00 PM.",
+            "quiet hours begin at 22:00"
+        ),
+        None
+    );
+}
+
+#[test]
+fn a_fee_written_with_a_symbol_is_a_measure() {
+    // Without this the two fees never disagree: `$50` carries no unit word,
+    // so the guard reads no measure at all and folds a $50 rule into a $75
+    // one. The symbol IS the unit.
+    assert!(measures("a $50 late fee applies").contains(&(50, "dollar".into())));
+    assert!(measures("a 10% surcharge applies").contains(&(10, "percent".into())));
+    assert!(differs_by_measure(
+        "A late payment carries a $50 fee.",
+        "A late payment carries a $75 fee."
+    ));
+    assert_eq!(
+        unstated_measure(
+            "A late payment carries a $50 fee.",
+            "the late fee is fifty dollars"
+        ),
+        None
+    );
+}
+
+#[test]
+fn a_compound_number_word_is_one_number() {
+    // "a twenty-five dollar fee" tokenises to `twenty` and `five`, and read
+    // as two numbers it states neither the fee it names nor the one the
+    // passage does — so the faithful rule is dropped.
+    assert!(measures("a twenty-five dollar fee").contains(&(25, "dollar".into())));
+    assert!(measures("forty five minutes of quiet").contains(&(45, "minute".into())));
+    assert_eq!(
+        unstated_measure(
+            "A late payment carries a twenty-five dollar fee.",
+            "the fee is $25"
+        ),
+        None
+    );
+}
