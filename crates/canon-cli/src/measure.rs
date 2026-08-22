@@ -9,6 +9,14 @@
 //! commitments disagree about a number, and a second implementation of "is
 //! this the same measure" would be a second answer to that question.
 //!
+//! **What is left here is legacy, and is scheduled.** The fold guard moved
+//! to [`crate::quantify`], where a model reads the quantities and code
+//! compares the structure — because a list of units is always one document
+//! behind, and on a municipal noise code this one read `85 dBA` and `85 dBC`
+//! as stating no measure at all. What remains serves `unstated_measure`, and
+//! that is the next stage to become a resolver: quantify the rule, quantify
+//! its passage, and compare, rather than pattern-matching both.
+//!
 //! Every function here expects text already through [`normalize`].
 
 /// Whitespace-insensitive containment. Models reflow quoted text across line
@@ -335,93 +343,6 @@ pub(crate) fn unstated_measure(text: &str, chunk: &str) -> Option<String> {
     stated.into_iter().find(|time| !source_times.contains(time))
 }
 
-/// Every measure a rule states, as comparable strings.
-fn measure_set(s: &str) -> std::collections::BTreeSet<String> {
-    let n = normalize(s);
-    measures(&n)
-        .into_iter()
-        .map(|(v, u)| format!("{v} {u}"))
-        .chain(clock_times(&n))
-        .chain(spelled_times(&n))
-        .collect()
-}
-
-/// Do these two rules state different measures?
-///
-/// **This is the guard that keeps `draft` able to find an unmarked
-/// supersession at all.** Two rules that contradict each other look exactly
-/// like near-duplicates to a reduce step — same subject, different content —
-/// and folding them deletes the disagreement before anything can notice it.
-/// Observed: "Quiet hours run from 11:00 PM to 7:00 AM every night" and
-/// "Quiet hours begin at 10:00 PM from Sunday through Thursday" were grouped
-/// as duplicates, which on its own destroyed two of the eleven planted
-/// tensions in the bench fixture.
-///
-/// Only fires when BOTH rules state measures. A rule with no numbers in it
-/// may still be a duplicate of one that has them.
-pub(crate) fn differs_by_measure(a: &str, b: &str) -> bool {
-    let (ma, mb) = (measure_set(a), measure_set(b));
-    !ma.is_empty() && !mb.is_empty() && ma != mb
-}
-
-// ── pairs a reader would notice and a long list hides ───────
-
-/// Words too common to say two rules are about the same thing.
-const COMMON: &[&str] = &[
-    "the", "and", "for", "with", "that", "this", "must", "may", "not", "are", "any", "all", "from",
-    "have", "has", "will", "member", "members", "house", "each", "every", "their", "them", "when",
-    "who", "whoever", "than", "more", "less", "least", "most", "into", "out", "own", "one", "per",
-    "before", "after", "during", "until", "unless", "any", "other", "someone", "anyone",
-];
-
-/// What two rules are visibly about, as words worth matching on.
-fn subject_words(s: &str) -> std::collections::BTreeSet<String> {
-    words_of(&normalize(s))
-        .into_iter()
-        .map(|w| singular(&w))
-        // A number is the MEASURE, not the subject. Left in, "two consecutive
-        // nights" and "two days before the meeting" share a subject word and
-        // qualify as a disagreement about guests and agendas at once.
-        .filter(|w| as_number(w).is_none() && !w.chars().any(|c| c.is_ascii_digit()))
-        .filter(|w| w.chars().count() >= 3 && !COMMON.contains(&w.as_str()))
-        .collect()
-}
-
-/// Pairs of rules that state different measures about a shared subject,
-/// scored by how much subject they share.
-///
-/// **This is the half of conflict-finding that needs no model at all.** A
-/// reader spots "quiet hours start at 11 PM" against "quiet hours begin at 10
-/// PM" instantly; a model asked to weigh every pair in a list of sixty finds
-/// one in eleven, and blocks of twelve find five (`tensions::BATCH`). The
-/// casualty is attention, not judgement — so the pairs this finds are ones
-/// worth putting in front of the model TOGETHER, not verdicts to publish.
-/// Nothing here decides that a pair is a conflict: two rules can name
-/// different numbers and be perfectly compatible, which is exactly what the
-/// bench's labelled decoys are.
-///
-/// Returns positions into `texts`, most subject-overlap first.
-pub(crate) fn conflicting_pairs(texts: &[&str]) -> Vec<(usize, usize)> {
-    let subjects: Vec<_> = texts.iter().map(|t| subject_words(t)).collect();
-    let mut scored: Vec<(usize, usize, usize)> = Vec::new();
-    for a in 0..texts.len() {
-        for b in (a + 1)..texts.len() {
-            let shared = subjects[a].intersection(&subjects[b]).count();
-            if shared >= SUBJECT_MIN && differs_by_measure(texts[a], texts[b]) {
-                scored.push((a, b, shared));
-            }
-        }
-    }
-    // Most-shared first, then by position so the order is the same every run.
-    scored.sort_by(|x, y| y.2.cmp(&x.2).then(x.0.cmp(&y.0)).then(x.1.cmp(&y.1)));
-    scored.into_iter().map(|(a, b, _)| (a, b)).collect()
-}
-
-/// How much subject two rules must share before their differing numbers mean
-/// anything. Below this, "quiet hours end at 7 AM" and "rent is due on the
-/// 1st" qualify as a disagreement about a number.
-const SUBJECT_MIN: usize = 2;
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -511,20 +432,6 @@ month by signing the shared calendar at least three days ahead.";
     }
 
     #[test]
-    fn a_rule_with_no_measure_can_still_be_folded_into_one_that_has_them() {
-        // The guard fires only when BOTH state measures; otherwise it would keep
-        // every vague restatement of a timed rule as a separate commitment.
-        assert!(!differs_by_measure(
-            "Quiet hours run from 11:00 PM to 7:00 AM.",
-            "Quiet hours are observed overnight."
-        ));
-        assert!(differs_by_measure(
-            "Quiet hours run from 11:00 PM to 7:00 AM.",
-            "Quiet hours begin at 10:00 PM."
-        ));
-    }
-
-    #[test]
     fn a_hyphenated_measure_is_read_as_a_measure() {
         // "within any seven-day period" and "per 7 days" state the same limit. A
         // tokeniser that splits only on spaces sees no number in the first, and
@@ -565,10 +472,6 @@ month by signing the shared calendar at least three days ahead.";
             ),
             None
         );
-        assert!(differs_by_measure(
-            "Quiet hours begin at 10 p.m.",
-            "Quiet hours begin at 11:00 PM."
-        ));
     }
 
     #[test]
@@ -577,10 +480,6 @@ month by signing the shared calendar at least three days ahead.";
         // is a contradiction with no digit in one of its halves.
         assert_eq!(spelled_times("quiet hours begin at midnight"), vec!["12am"]);
         assert_eq!(spelled_times("the pool closes at noon"), vec!["12pm"]);
-        assert!(differs_by_measure(
-            "Quiet hours begin at midnight.",
-            "Quiet hours begin at 11:00 PM."
-        ));
         assert_eq!(
             unstated_measure(
                 "Quiet hours begin at 12am.",
@@ -600,10 +499,6 @@ month by signing the shared calendar at least three days ahead.";
         assert_eq!(clock_times("the gate locks at 00:00"), vec!["12am"]);
         assert_eq!(clock_times("the gate locks at 22:30"), vec!["10:30pm"]);
         // Half an hour is a different rule, not the same one rounded.
-        assert!(differs_by_measure(
-            "Quiet hours begin at 10:30 PM.",
-            "Quiet hours begin at 10:00 PM."
-        ));
         assert!(clock_times("the meeting starts at 7:00").is_empty());
         assert_eq!(
             unstated_measure(
@@ -621,10 +516,6 @@ month by signing the shared calendar at least three days ahead.";
         // one. The symbol IS the unit.
         assert!(measures("a $50 late fee applies").contains(&(50, "dollar".into())));
         assert!(measures("a 10% surcharge applies").contains(&(10, "percent".into())));
-        assert!(differs_by_measure(
-            "A late payment carries a $50 fee.",
-            "A late payment carries a $75 fee."
-        ));
         assert_eq!(
             unstated_measure(
                 "A late payment carries a $50 fee.",
@@ -651,60 +542,6 @@ month by signing the shared calendar at least three days ahead.";
     }
 
     #[test]
-    fn two_rules_disagreeing_about_the_same_subject_are_paired() {
-        let texts = vec![
-            "Quiet hours run from 11:00 PM to 7:00 AM every night.",
-            "Rent is due on the first day of the month.",
-            "Quiet hours begin at 10:00 PM from Sunday through Thursday.",
-        ];
-        assert_eq!(conflicting_pairs(&texts), vec![(0, 2)]);
-    }
-
-    #[test]
-    fn two_numbers_about_unrelated_things_are_not_a_pair() {
-        // The whole risk of a mechanical pass is that it floods: every rule
-        // in a house canon states some number, and "different number" alone
-        // is not the beginning of a disagreement.
-        let texts = vec![
-            "Quiet hours begin at 10:00 PM.",
-            "Rent is due on the fifth day of the month.",
-        ];
-        assert!(conflicting_pairs(&texts).is_empty());
-    }
-
-    #[test]
-    fn rules_that_agree_are_not_paired() {
-        let texts = vec![
-            "Quiet hours begin at 10:00 PM.",
-            "Quiet hours begin at 10 p.m. on weeknights.",
-        ];
-        assert!(conflicting_pairs(&texts).is_empty());
-    }
-
-    #[test]
-    fn the_most_related_pair_comes_first() {
-        let texts = vec![
-            "Overnight guests may stay two consecutive nights.",
-            "Quiet hours for overnight guests begin at 10:00 PM.",
-            "Overnight guests may stay four consecutive nights in the house.",
-        ];
-        let pairs = conflicting_pairs(&texts);
-        assert_eq!(pairs.first(), Some(&(0, 2)), "{pairs:?}");
-    }
-
-    #[test]
-    fn a_number_is_not_a_subject() {
-        // Both rules say "two", and they are about guests and about meeting
-        // agendas. Pairing them wastes the one focused comparison the
-        // mechanical pass buys.
-        let texts = vec![
-            "A single guest must not stay more than two consecutive nights.",
-            "Members add agenda items no less than two days before the meeting.",
-        ];
-        assert!(conflicting_pairs(&texts).is_empty());
-    }
-
-    #[test]
     fn a_weighting_letter_is_part_of_the_unit() {
         // Measured on real municipal text: an ordinance restated six permit
         // types changing only dB(A) to dB(C), and every one was folded into
@@ -715,15 +552,7 @@ month by signing the shared calendar at least three days ahead.";
         assert!(measures("not more than 85 dbcs").contains(&(85, "dbc".into())));
         assert!(measures("not greater than 85 decibels").contains(&(85, "decibel".into())));
         assert!(measures("140 db").contains(&(140, "db".into())));
-        assert!(differs_by_measure(
-            "Sound equipment may register not more than 85 dBAs.",
-            "Sound equipment may register not more than 85 dBCs."
-        ));
         // The same limit is still the same limit.
-        assert!(!differs_by_measure(
-            "Sound equipment may register not more than 85 dBCs.",
-            "No more than 85 dBC when measured at the property boundary."
-        ));
     }
 
     #[test]
@@ -738,88 +567,5 @@ month by signing the shared calendar at least three days ahead.";
             unstated_measure("Sound equipment may register up to 85 dBAs.", src),
             None
         );
-    }
-
-    /// Would the fold guard refuse the folds this artifact actually made?
-    ///
-    /// Replays `differs_by_measure` over the duplicate groups a real run
-    /// persisted, so a change to [`UNITS`] can be priced before an hour of
-    /// endpoint time is spent re-running the sweep.
-    ///
-    /// ```sh
-    /// CANON_RUN=<run.json> cargo test --bin canon -- --ignored --nocapture would_refuse
-    /// ```
-    #[test]
-    #[ignore = "needs a draft run artifact: set CANON_RUN"]
-    fn what_the_fold_guard_would_refuse_in_a_real_run() {
-        let path = std::env::var("CANON_RUN").expect("set CANON_RUN");
-        let run: serde_json::Value =
-            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-        let cands = run["candidates"].as_array().unwrap();
-        let text = |i: usize| cands[i]["text"].as_str().unwrap_or("").to_string();
-        let (mut refused, mut allowed) = (0, 0);
-        for g in run["duplicates"].as_array().unwrap() {
-            let m: Vec<usize> = g
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|v| v.as_u64().unwrap() as usize)
-                .collect();
-            let head = m[0];
-            for &other in &m[1..] {
-                if differs_by_measure(&text(head), &text(other)) {
-                    refused += 1;
-                    println!(
-                        "  WOULD KEEP APART:\n    {}\n    {}\n",
-                        text(head),
-                        text(other)
-                    );
-                } else {
-                    allowed += 1;
-                }
-            }
-        }
-        println!("{refused} fold(s) would now be refused, {allowed} still allowed");
-    }
-
-    /// What the mechanical pass proposes on a real canon, and what it costs.
-    ///
-    /// Reads a persisted `draft --dry-run` artifact rather than calling a
-    /// model, so the answer is about THIS code and nothing else (§18.4).
-    ///
-    /// ```sh
-    /// CANON_RUN=fixtures/maple-house/runs/qwen-27b/run-….json \
-    ///   cargo test --bin canon -- --ignored --nocapture proposes
-    /// ```
-    #[test]
-    #[ignore = "needs a draft run artifact: set CANON_RUN"]
-    fn what_the_mechanical_pass_proposes_on_a_real_canon() {
-        let path = std::env::var("CANON_RUN").expect("set CANON_RUN to a draft-run artifact");
-        let run: serde_json::Value =
-            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-        // `kept` is positions into `candidates`, which is the same shape the
-        // tool's own tensions step consumes.
-        let cands = run["candidates"].as_array().unwrap();
-        let kept: Vec<String> = run["kept"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|i| {
-                cands[i.as_u64().unwrap() as usize]["text"]
-                    .as_str()
-                    .unwrap()
-                    .to_string()
-            })
-            .collect();
-        let refs: Vec<&str> = kept.iter().map(String::as_str).collect();
-        let pairs = conflicting_pairs(&refs);
-        println!(
-            "\n{} rule(s) -> {} pair(s) proposed\n",
-            refs.len(),
-            pairs.len()
-        );
-        for (a, b) in &pairs {
-            println!("  {}\n  {}\n", refs[*a], refs[*b]);
-        }
     }
 }

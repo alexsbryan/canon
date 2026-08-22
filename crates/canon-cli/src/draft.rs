@@ -40,9 +40,10 @@ use canon_core::ActKind;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::measure::{differs_by_measure, normalize, unstated_measure};
+use crate::measure::{normalize, unstated_measure};
 use crate::model::{self, Client, ModelError};
 use crate::profile::Profile;
+use crate::quantify;
 use crate::store;
 use crate::tensions;
 
@@ -427,8 +428,8 @@ pub fn dedupe(
     user.push_str("\nReturn the groups of duplicates.");
     let got: Grouped = client.complete_json(DEDUPE_SYSTEM, &user, "groups", &dedupe_schema())?;
 
-    let mut groups: Vec<Vec<usize>> = Vec::new();
-    let mut folded: Vec<bool> = vec![false; candidates.len()];
+    // Clean the proposal up before asking anything about it.
+    let mut proposed: Vec<Vec<usize>> = Vec::new();
     for g in got.groups {
         let mut members: Vec<usize> = g
             .into_iter()
@@ -437,17 +438,47 @@ pub fn dedupe(
             .collect();
         members.sort_unstable();
         members.dedup();
-        // A rule stating different measures from the one it is being folded
-        // into is a contradiction, not a duplicate. Enforced here rather than
-        // asked of the model (§7.6): losing this is losing the whole
-        // unmarked-supersession category.
+        if members.len() >= 2 {
+            proposed.push(members);
+        }
+    }
+
+    // A rule stating a different quantity from the one it is being folded
+    // into is a contradiction, not a duplicate. Enforced in code rather than
+    // asked of the reduce step (§7.6): losing this is losing the whole
+    // unmarked-supersession category.
+    //
+    // The quantities are READ BY THE MODEL, one narrow question per rule,
+    // and compared here as structure. What stood here compared them with a
+    // hand-kept list of units, and on a municipal noise code `85 dBA` and
+    // `85 dBC` both parsed as stating no measure at all — the guard never
+    // fired and five planted supersessions were deleted. A list is always
+    // one document behind; see `quantify`.
+    //
+    // Only the rules some group wants to merge are read. Nothing is asked
+    // about a pair nobody proposed folding.
+    let mut involved: Vec<usize> = proposed.iter().flatten().copied().collect();
+    involved.sort_unstable();
+    involved.dedup();
+    let texts: Vec<&str> = involved
+        .iter()
+        .map(|i| candidates[*i].text.as_str())
+        .collect();
+    let read = quantify::quantify(client, &texts)?;
+    let quantities: std::collections::BTreeMap<usize, Vec<quantify::Quantity>> =
+        involved.into_iter().zip(read).collect();
+    let empty: Vec<quantify::Quantity> = Vec::new();
+    let of = |i: &usize| quantities.get(i).unwrap_or(&empty).as_slice();
+
+    let mut groups: Vec<Vec<usize>> = Vec::new();
+    let mut folded: Vec<bool> = vec![false; candidates.len()];
+    for mut members in proposed {
         if let Some(&head) = members.first() {
             members.retain(|m| {
-                let keep =
-                    *m == head || !differs_by_measure(&candidates[head].text, &candidates[*m].text);
+                let keep = *m == head || !quantify::differs_by_quantity(of(&head), of(m));
                 if !keep {
                     eprintln!(
-                        "\nkept apart, not folded — these state different measures:\n  {}\n  {}",
+                        "\nkept apart, not folded — these state different quantities:\n  {}\n  {}",
                         candidates[head].text, candidates[*m].text
                     );
                 }
