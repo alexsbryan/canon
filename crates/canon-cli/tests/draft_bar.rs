@@ -364,7 +364,22 @@ fn governance_bar() {
     let (rl, rh) = spread(&|s| s.recall(planted));
     let worst_decoys = scores.iter().map(|s| s.decoys.len()).max().unwrap_or(0);
 
-    println!("\nprecision  {p:.2}   (noise floor across runs: {pl:.2}–{ph:.2})");
+    // Precision counts every proposed pair the manifest does not name as a
+    // false positive. That is only a statement about the TOOL when the
+    // manifest labels every cross-section pair; where it does not, an
+    // unlabelled pair and a wrong one are indistinguishable, and printing a
+    // number anyway would be a measurement of the manifest's size (§18.3).
+    match truth["exhaustive"].as_bool() {
+        Some(true) => {
+            println!("\nprecision  {p:.2}   (noise floor across runs: {pl:.2}–{ph:.2})");
+        }
+        _ => println!(
+            "\nprecision  not scoreable — this manifest does not label every pair, \
+             so an unlabelled proposal cannot be told from a false one \
+             (raw {p:.2} over {} proposed)",
+            scores[0].proposed.len()
+        ),
+    }
     println!("recall     {r:.2}   (noise floor across runs: {rl:.2}–{rh:.2})");
     println!("decoys flagged, worst run: {worst_decoys} of {non}");
 

@@ -2,6 +2,7 @@
   "corpus_id": "des-moines-noise",
   "note": "Ground truth for Article IV (Noise Control) of the Des Moines, Iowa municipal code as codified from Ordinance 14,746 (2008-02-25), interleaved with Ordinances 16,064 (2021-10-18) and 16,127 (2022-05-23) which amend it. Sections keyed by code section number, or by amending ordinance plus section. Labels are derived mechanically by build.py from the council's own amendment pointers and the measure diff between the two readings \u2014 see PROVENANCE.md. Splits: train/dev tunable, test sacred.",
   "schema_version": 2,
+  "exhaustive": false,
   "tension_types": [
     "unmarked_supersession"
   ],
