@@ -1,5 +1,9 @@
-commit    d56efcc
-dirty     8 uncommitted file(s)
+built from  086b266 — the tree of that commit, still uncommitted when these runs were made
 model     Qwen3.8-27B-UD-Q6_K_XL
 endpoint  http://localhost:9741/v1
-binary    /private/tmp/claude-502/-Users-alexsbryan-dev-commonwealth-ai/c641ac56-80e2-46aa-aff6-8a46f467759b/scratchpad/canon-bar-binary
+binary    /private/tmp/claude-502/-Users-alexsbryan-dev-commonwealth-ai/14b19540-8a55-4f8d-b40f-480534931994/scratchpad/canon-bar-binary
+sweep3 instrument provenance
+head      82a0642b664c9fd3d8163bafb70d630cd78733a0
+diff-sha  940133fed4acec6b
+bin-sha   05b0c8f543229abf
+captured  2026-08-22T00:02:48Z

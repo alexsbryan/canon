@@ -1,0 +1,716 @@
+{
+  "schema": "canon-draft-run/v1",
+  "at": 1787358121,
+  "endpoint": "http://localhost:9741/v1",
+  "model": "Qwen3.8-27B-UD-Q6_K_XL",
+  "profile": "house",
+  "sources": [
+    "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md"
+  ],
+  "chunks": [
+    {
+      "id": 0,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:3-8",
+      "heading": "Maple House Charter, Article I — Overnight Guests",
+      "text": "Members may host overnight guests in their own private rooms. Any single\nguest may stay no more than two consecutive nights within any seven-day\nperiod, so that no guest gradually becomes an unofficial resident of the\nhouse. Whenever a guest is in the shared common areas, the hosting member\nmust accompany them. Each member is fully responsible for the conduct of\ntheir guests for the entire duration of the visit."
+    },
+    {
+      "id": 1,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:12-17",
+      "heading": "Maple House Charter, Article II — Quiet Hours",
+      "text": "Quiet hours are observed every night, running from 11:00 PM until 7:00 AM\nthe following morning. During quiet hours, conversation in the common areas\nmust be kept low, and any music, television, or video games must be played\nthrough headphones. A member who anticipates unavoidable late-night noise\nis required to give the rest of the house advance notice so that everyone\ncan reliably sleep."
+    },
+    {
+      "id": 2,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:21-25",
+      "heading": "Maple House Charter, Article III — Kitchen Cleanup",
+      "text": "The kitchen must be cleaned by whoever used it, immediately after that\nperson finishes cooking or eating. Cleaning means washing every dish you\nused, wiping down the counters and the stovetop, and taking out the trash\nwhen the bin is full. Leaving dirty dishes in the sink overnight is never\npermitted, no matter how late the hour or how tired the cook."
+    },
+    {
+      "id": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:29-33",
+      "heading": "Maple House Charter, Article IV — Common Spaces",
+      "text": "The living room, the dining room, and the back porch are common areas that\nbelong equally to every member of the house. No member may reserve a common\narea for their own exclusive use, even temporarily, and no member may treat\na common area as a personal extension of their bedroom. These shared spaces\nmust remain open and available to all members at all times."
+    },
+    {
+      "id": 4,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:37-41",
+      "heading": "Maple House Charter, Article V — Shared Chores",
+      "text": "All members share the household chores equally, following the rotating\nweekly schedule posted in the kitchen. Every member is assigned the same\nnumber of chore slots each month, and no member is exempt from the rotation\nfor any reason whatsoever. A member who cannot complete an assigned chore is\nrequired to arrange a direct swap with another member ahead of time."
+    },
+    {
+      "id": 5,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:45-49",
+      "heading": "Maple House Charter, Article VI — Pets",
+      "text": "No member may keep a pet of any kind in the house, with the single exception\nof fish kept in a tank no larger than twenty gallons. This rule exists to\nprotect members who have allergies and to avoid noise, odor, and damage to\nthe shared furnishings. A member who wishes to pet-sit an animal for someone\noutside the house must obtain unanimous consent from all members first."
+    },
+    {
+      "id": 6,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:53-57",
+      "heading": "Maple House Charter, Article VII — Smoking",
+      "text": "Smoking of any kind is forbidden everywhere inside the house, including\ninside a member's own private bedroom. The prohibition covers cigarettes,\ncigars, pipes, and vaporizers alike. It exists to keep the shared air clean\nand to reduce the risk of fire. Each member is responsible for ensuring that\ntheir visitors also refrain from smoking indoors during any visit."
+    },
+    {
+      "id": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:61-65",
+      "heading": "Maple House Charter, Article VIII — Rent and Dues",
+      "text": "Each member must pay their share of the rent on or before the first day of\nevery month by transferring it to the house account. The monthly house dues\nthat cover shared cleaning supplies and paper goods are due on that same day.\nA member who anticipates any difficulty paying on time is required to notify\nthe house treasurer before the first of the month."
+    },
+    {
+      "id": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:69-73",
+      "heading": "Maple House Charter, Article IX — Personal Belongings",
+      "text": "Members must keep their personal belongings in their own bedrooms or in\ntheir assigned storage space. A personal item left in a common area for more\nthan one full day may be moved by any other member to the owner's bedroom\ndoor. Perishable personal food left out in a common area may be thrown away\nafter a day. This keeps the shared spaces usable for everyone."
+    },
+    {
+      "id": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:77-81",
+      "heading": "Maple House Charter, Article X — House Decisions",
+      "text": "The house meets on the first Sunday of every month to make decisions\ntogether. A decision passes by a simple majority of the members present, and\na recorded decision amends or extends this Charter from the date it is made.\nAny member may place an item on the meeting agenda by posting it on the\nkitchen board at least two days before the meeting."
+    },
+    {
+      "id": 10,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:85-89",
+      "heading": "Decision — 2026-01-12 — Guest Logbook",
+      "text": "To keep track of who is in the house at any time, the members resolved that\nevery overnight guest must be signed into the guest logbook kept by the\nfront door, recording the guest's name and the dates of their stay. The\nhosting member is responsible for making the entry before the guest's first\nnight. This record is meant to help with safety and accountability."
+    },
+    {
+      "id": 11,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:93-97",
+      "heading": "Decision — 2026-02-10 — Weeknight Quiet Hours",
+      "text": "After repeated complaints about noise on work nights, the house met and\nresolved to move the start of quiet hours earlier during the week. Effective\nimmediately, quiet hours now begin at 10:00 PM on Sunday through Thursday\nnights, a full hour earlier than the Charter originally set. The 7:00 AM end\ntime and the Friday and Saturday start times are left unchanged."
+    },
+    {
+      "id": 12,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:101-105",
+      "heading": "Decision — 2026-02-24 — Backyard Quiet",
+      "text": "Following complaints about late gatherings outdoors, the house resolved that\nthe quiet-hours rule also applies to the backyard and the back porch, not\nonly to the indoor common areas. During quiet hours, members and any guests\nmust keep outdoor conversation low and must not run outdoor speakers. This\ndecision extends the existing quiet hours rather than changing their times."
+    },
+    {
+      "id": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:109-113",
+      "heading": "Decision — 2026-03-14 — Guest Policy Revisited",
+      "text": "Following a long discussion about privacy, crowding, and the shared cost of\nutilities, the house resolved to stop allowing overnight guests altogether.\nEffective this month, overnight guests are no longer permitted in the house\nat any time, for any number of nights, in any bedroom. Members may still\nhost visitors during the daytime, but every visitor must leave by 10:00 PM."
+    },
+    {
+      "id": 14,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:117-122",
+      "heading": "Decision — 2026-03-28 — Guest Parking",
+      "text": "To settle ongoing confusion about where visitors should leave their cars,\nthe house resolved to set aside the two marked spaces at the far end of the\ndriveway specifically for visitor and guest parking. Guests are welcome to\nleave a vehicle parked in those two spaces overnight without needing any\npermit. This decision is strictly about parking and changes nothing about\nwhether or how long guests may stay in the house."
+    },
+    {
+      "id": 15,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:126-130",
+      "heading": "Decision — 2026-04-02 — Cooking and Cleanup",
+      "text": "Recognizing that whichever member cooks dinner for the whole house already\ncontributes a great deal of effort, the house resolved that whoever cooks\nthe shared house dinner is excused from cleaning the kitchen on that night.\nOn those evenings, the work of washing the dishes, wiping the counters, and\ntaking out the trash falls instead to the members who sat down and ate."
+    },
+    {
+      "id": 16,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:134-138",
+      "heading": "Decision — 2026-04-18 — Fridge Labeling",
+      "text": "To cut down on food going to waste and on disputes over groceries, the house\nresolved that members must label their personal food in the shared\nrefrigerator with their name and the date it was placed there. Any unlabeled\nfood in the fridge may be treated as communal and eaten by anyone in the\nhouse. This decision adds to the kitchen rules rather than replacing them."
+    },
+    {
+      "id": 17,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:142-146",
+      "heading": "Decision — 2026-05-06 — Dining Room Reservations",
+      "text": "To make room for the occasional birthday or study group, the house resolved\nthat a member may reserve the dining room for their own private event up to\ntwice a month by signing the shared calendar at least three days ahead. For\nthe booked hours of a reserved event, the dining room is closed to the other\nmembers so that the host can use the space."
+    },
+    {
+      "id": 18,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:150-154",
+      "heading": "Decision — 2026-05-20 — Travel Chore Exemption",
+      "text": "Recognizing that several members travel frequently for work, the house\nresolved that any member who is away from the house for more than two\nconsecutive weeks is fully exempt from the chore rotation for the entire\nperiod they are gone. The remaining members will quietly cover the absent\nmember's chore slots, and the absent member owes no make-up chores on return."
+    },
+    {
+      "id": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:158-162",
+      "heading": "Decision — 2026-06-03 — House Cat",
+      "text": "After a heartfelt request and a long debate, the house resolved by majority\nvote to allow one house cat, to be adopted and cared for collectively by the\nmembers. The cat is permitted only if every current member gives written\napproval beforehand, and it must be kept out of the bedroom of any member who\nobjects on the grounds of allergies."
+    },
+    {
+      "id": 20,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:166-170",
+      "heading": "Decision — 2026-06-10 — Porch Smoking",
+      "text": "In response to requests from members who smoke, the house resolved that\nsmoking is now permitted outdoors on the back porch only, provided that the\nsmoker uses the sand bucket and sits at least ten feet away from any open\nwindow. Smoking of every kind remains completely forbidden everywhere inside\nthe house, exactly as before."
+    },
+    {
+      "id": 21,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:174-178",
+      "heading": "Decision — 2026-06-15 — Late Rent Fee",
+      "text": "To encourage everyone to pay on time, the house resolved that a member whose\nrent share has not arrived in the house account by the fifth day of the\nmonth owes an additional late fee of twenty-five dollars on top of the rent.\nThe treasurer will send a reminder to all members two days before the\nmonthly deadline."
+    },
+    {
+      "id": 22,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:182-187",
+      "heading": "Maple House Charter, Article XI — Quiet Study Hours",
+      "text": "The dining room is set aside as a silent study space every weeknight from\n7:00 PM until 9:00 PM. During those hours the dining room is reserved for\nquiet individual work and may not be used for meals, conversation, or\ngatherings. Members who need to eat during that window should use the\nkitchen or their own rooms so that the study hours stay undisturbed for\nthose who are working."
+    },
+    {
+      "id": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:191-196",
+      "heading": "Decision — 2026-06-22 — Thursday Movie Nights",
+      "text": "To give the house a shared social evening, the members resolved to hold a\nmovie night in the living room on Thursday evenings. On those nights the\nfilm and the conversation around it may run in the living room until\nmidnight, and any member who wishes to take part is welcome to stay up that\nlate. Members who would rather have quiet on a Thursday should plan around\nthe movie night."
+    }
+  ],
+  "candidates": [
+    {
+      "text": "Overnight guests are permitted only in the hosting member's private room.",
+      "quote": "Members may host overnight guests in their own private rooms.",
+      "chunk": 0,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:3-8"
+    },
+    {
+      "text": "A single guest may not stay for more than two consecutive nights during any seven-day period.",
+      "quote": "Any single guest may stay no more than two consecutive nights within any seven-day period",
+      "chunk": 0,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:3-8"
+    },
+    {
+      "text": "The hosting member must be present whenever a guest is in shared common areas.",
+      "quote": "Whenever a guest is in the shared common areas, the hosting member must accompany them.",
+      "chunk": 0,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:3-8"
+    },
+    {
+      "text": "Members are fully responsible for their guests' behavior throughout the entire visit.",
+      "quote": "Each member is fully responsible for the conduct of their guests for the entire duration of the visit.",
+      "chunk": 0,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:3-8"
+    },
+    {
+      "text": "Quiet hours run from 11:00 PM to 7:00 AM every night.",
+      "quote": "Quiet hours are observed every night, running from 11:00 PM until 7:00 AM the following morning.",
+      "chunk": 1,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:12-17"
+    },
+    {
+      "text": "Conversation in the common areas is kept low during quiet hours.",
+      "quote": "During quiet hours, conversation in the common areas must be kept low",
+      "chunk": 1,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:12-17"
+    },
+    {
+      "text": "Music, television, and video games are played through headphones during quiet hours.",
+      "quote": "and any music, television, or video games must be played through headphones.",
+      "chunk": 1,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:12-17"
+    },
+    {
+      "text": "Members anticipating unavoidable late-night noise provide advance notice to the rest of the house.",
+      "quote": "A member who anticipates unavoidable late-night noise is required to give the rest of the house advance notice so that everyone can reliably sleep.",
+      "chunk": 1,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:12-17"
+    },
+    {
+      "text": "Whoever uses the kitchen must clean it immediately after finishing cooking or eating.",
+      "quote": "The kitchen must be cleaned by whoever used it, immediately after that person finishes cooking or eating.",
+      "chunk": 2,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:21-25"
+    },
+    {
+      "text": "Kitchen cleaning requires washing every dish used, wiping down the counters and stovetop, and removing the trash when the bin is full.",
+      "quote": "Cleaning means washing every dish you used, wiping down the counters and the stovetop, and taking out the trash when the bin is full.",
+      "chunk": 2,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:21-25"
+    },
+    {
+      "text": "Dirty dishes are never to be left in the sink overnight.",
+      "quote": "Leaving dirty dishes in the sink overnight is never permitted",
+      "chunk": 2,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:21-25"
+    },
+    {
+      "text": "The living room, the dining room and the back porch belong equally to every member.",
+      "quote": "The living room, the dining room, and the back porch are common areas that belong equally to every member of the house.",
+      "chunk": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:29-33"
+    },
+    {
+      "text": "A member must not reserve a common area for exclusive use, even temporarily.",
+      "quote": "No member may reserve a common area for their own exclusive use, even temporarily",
+      "chunk": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:29-33"
+    },
+    {
+      "text": "A member must not treat a common area as a private extension of their bedroom.",
+      "quote": "no member may treat a common area as a personal extension of their bedroom",
+      "chunk": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:29-33"
+    },
+    {
+      "text": "Household chores are shared equally by all members according to a rotating weekly schedule that is posted in the kitchen.",
+      "quote": "All members share the household chores equally, following the rotating weekly schedule posted in the kitchen.",
+      "chunk": 4,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:37-41"
+    },
+    {
+      "text": "Each member receives an equal number of chore assignments every month.",
+      "quote": "Every member is assigned the same number of chore slots each month",
+      "chunk": 4,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:37-41"
+    },
+    {
+      "text": "No member may be excluded from the chore rotation under any circumstances.",
+      "quote": "no member is exempt from the rotation for any reason whatsoever",
+      "chunk": 4,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:37-41"
+    },
+    {
+      "text": "Any member unable to perform their assigned chore must coordinate a direct exchange with another member in advance.",
+      "quote": "A member who cannot complete an assigned chore is required to arrange a direct swap with another member ahead of time.",
+      "chunk": 4,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:37-41"
+    },
+    {
+      "text": "Members may not keep pets in the house except for fish kept in tanks no larger than twenty gallons.",
+      "quote": "No member may keep a pet of any kind in the house, with the single exception\nof fish kept in a tank no larger than twenty gallons.",
+      "chunk": 5,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:45-49"
+    },
+    {
+      "text": "Pet-sitting animals for people outside the house requires prior unanimous consent from all household members.",
+      "quote": "A member who wishes to pet-sit an animal for someone\noutside the house must obtain unanimous consent from all members first.",
+      "chunk": 5,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:45-49"
+    },
+    {
+      "text": "Smoking of any kind is prohibited in all areas within the house, including members' private bedrooms.",
+      "quote": "Smoking of any kind is forbidden everywhere inside the house, including\ninside a member's own private bedroom.",
+      "chunk": 6,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:53-57"
+    },
+    {
+      "text": "The smoking ban applies to cigarettes, cigars, pipes, and vaporizers.",
+      "quote": "The prohibition covers cigarettes,\ncigars, pipes, and vaporizers alike.",
+      "chunk": 6,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:53-57"
+    },
+    {
+      "text": "Members must ensure their visitors do not smoke indoors while visiting.",
+      "quote": "Each member is responsible for ensuring that\ntheir visitors also refrain from smoking indoors during any visit.",
+      "chunk": 6,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:53-57"
+    },
+    {
+      "text": "Rent is paid in full by transfer to the house account on or before the first day of each month.",
+      "quote": "Each member must pay their share of the rent on or before the first day of every month by transferring it to the house account.",
+      "chunk": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:61-65"
+    },
+    {
+      "text": "Monthly house dues for shared cleaning supplies and paper goods fall due on the first day of the month.",
+      "quote": "The monthly house dues that cover shared cleaning supplies and paper goods are due on that same day.",
+      "chunk": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:61-65"
+    },
+    {
+      "text": "Members anticipating payment difficulties must notify the house treasurer prior to the first day of the month.",
+      "quote": "A member who anticipates any difficulty paying on time is required to notify the house treasurer before the first of the month.",
+      "chunk": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:61-65"
+    },
+    {
+      "text": "Personal belongings are kept in the owner's bedroom or assigned storage space.",
+      "quote": "Members must keep their personal belongings in their own bedrooms or in\ntheir assigned storage space.",
+      "chunk": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:69-73"
+    },
+    {
+      "text": "Any member may move a personal item left in a common area to the owner's bedroom door if it has been there for more than one full day.",
+      "quote": "A personal item left in a common area for more\nthan one full day may be moved by any other member to the owner's bedroom\ndoor.",
+      "chunk": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:69-73"
+    },
+    {
+      "text": "Perishable personal food is thrown away after being left out in a common area for a day.",
+      "quote": "Perishable personal food left out in a common area may be thrown away\nafter a day.",
+      "chunk": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:69-73"
+    },
+    {
+      "text": "House meetings are held on the first Sunday of every month.",
+      "quote": "The house meets on the first Sunday of every month to make decisions together.",
+      "chunk": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:77-81"
+    },
+    {
+      "text": "Decisions pass by a simple majority of the members who are present at the meeting.",
+      "quote": "A decision passes by a simple majority of the members present",
+      "chunk": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:77-81"
+    },
+    {
+      "text": "Recorded decisions amend or extend the Charter starting from the date they are made.",
+      "quote": "a recorded decision amends or extends this Charter from the date it is made",
+      "chunk": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:77-81"
+    },
+    {
+      "text": "Members must post items to be placed on the meeting agenda on the kitchen board at least two dayss before the meeting.",
+      "quote": "Any member may place an item on the meeting agenda by posting it on the kitchen board at least two days before the meeting.",
+      "chunk": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:77-81"
+    },
+    {
+      "text": "Every overnight guest is signed into the guest logbook at the front door with their name and stay dates.",
+      "quote": "every overnight guest must be signed into the guest logbook kept by the front door, recording the guest's name and the dates of their stay",
+      "chunk": 10,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:85-89"
+    },
+    {
+      "text": "The hosting member makes the guest logbook entry before the guest’s first night.",
+      "quote": "The hosting member is responsible for making the entry before the guest's first night.",
+      "chunk": 10,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:85-89"
+    },
+    {
+      "text": "Quiet hours begin at 10:00 PM on Sunday, Monday, Tuesday, Wednesday, and Thursday.",
+      "quote": "quiet hours now begin at 10:00 PM on Sunday through Thursday nights",
+      "chunk": 11,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:93-97"
+    },
+    {
+      "text": "The quiet-hours rule applies to the backyard and the back porches in addition to the indoor common areas.",
+      "quote": "the quiet-hours rule also applies to the backyard and the back porch, not only to the indoor common areas",
+      "chunk": 12,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:101-105"
+    },
+    {
+      "text": "During quiet hours, all members and guests must keep outdoor conversations at a low volume and are prohibited from running outdoor speakers.",
+      "quote": "During quiet hours, members and any guests must keep outdoor conversation low and must not run outdoor speakers.",
+      "chunk": 12,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:101-105"
+    },
+    {
+      "text": "Overnight guests are not permitted in the house.",
+      "quote": "overnight guests are no longer permitted in the house at any time, for any number of nights, in any bedroom",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:109-113"
+    },
+    {
+      "text": "Every daytime visitor must leave the house by 10:00 PM.",
+      "quote": "every visitor must leave by 10:00 PM",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:109-113"
+    },
+    {
+      "text": "The two marked spaces at the far end are reserved exclusively for visitor and guest vehicles.",
+      "quote": "the house resolved to set aside the two marked spaces at the far end of the driveway specifically for visitor and guest parking",
+      "chunk": 14,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:117-122"
+    },
+    {
+      "text": "Guests may park their vehicles in these designated spaces overnight without requiring a permit.",
+      "quote": "Guests are welcome to leave a vehicle parked in those two spaces overnight without needing any permit.",
+      "chunk": 14,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:117-122"
+    },
+    {
+      "text": "The member who cooks the shared house dinner does not clean the kitchen on that evening.",
+      "quote": "whoever cooks the shared house dinner is excused from cleaning the kitchen on that night",
+      "chunk": 15,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:126-130"
+    },
+    {
+      "text": "On evenings when a specific member cooked dinner, the other members who ate are responsible for washing the dishes, wiping the counters and taking out the trash.",
+      "quote": "the work of washing the dishes, wiping the counters, and taking out the trash falls instead to the members who sat down and ate",
+      "chunk": 15,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:126-130"
+    },
+    {
+      "text": "Personal food stored in the shared refrigerator is labeled with the member's name and the placement date.",
+      "quote": "members must label their personal food in the shared refrigerator with their name and the date it was placed there",
+      "chunk": 16,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:134-138"
+    },
+    {
+      "text": "Unlabeled food found in the refrigerator is considered communal property that any household member may consume.",
+      "quote": "Any unlabeled food in the fridge may be treated as communal and eaten by anyone in the house.",
+      "chunk": 16,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:134-138"
+    },
+    {
+      "text": "A member may reserve the dining room for a private event up to twice per month by signing the shared calendar no less than three days in advance.",
+      "quote": "a member may reserve the dining room for their own private event up to twice a month by signing the shared calendar at least three days ahead",
+      "chunk": 17,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:142-146"
+    },
+    {
+      "text": "The dining room remains closed to all other members during the booked hours of any reserved event.",
+      "quote": "For the booked hours of a reserved event, the dining room is closed to the other members so that the host can use the space.",
+      "chunk": 17,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:142-146"
+    },
+    {
+      "text": "Any member away from the house for more than consecutive weeks is fully exempted from the chore rotation during their absence.",
+      "quote": "any member who is away from the house for more than two consecutive weeks is fully exempt from the chore rotation for the entire period they are gone",
+      "chunk": 18,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:150-154"
+    },
+    {
+      "text": "Remaining members must cover an absent member’s chore slots without complaint, and that member does not owe any makeup chores upon returning home.",
+      "quote": "The remaining members will quietly cover the absent member's chore slots, and the absent member owes no make-up chores on return.",
+      "chunk": 18,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:150-154"
+    },
+    {
+      "text": "The house allows exactly one house cat, which is adopted and cared for collectively.",
+      "quote": "the house resolved by majority vote to allow one house cat, to be adopted and cared for collectively by the members",
+      "chunk": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:158-162"
+    },
+    {
+      "text": "A house cat may enter the home only after every current member has given prior written approval.",
+      "quote": "The cat is permitted only if every current member gives written approval beforehand",
+      "chunk": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:158-162"
+    },
+    {
+      "text": "The house cat must be excluded from the bedrooms of any members who object due to allergies.",
+      "quote": "it must be kept out of the bedroom of any member who objects on the grounds of allergies",
+      "chunk": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:158-162"
+    },
+    {
+      "text": "Smoking is permitted outdoors on the back porch if the smoker uses the sand bucket and stays at least ten feet from any open window.",
+      "quote": "smoking is now permitted outdoors on the back porch only, provided that the smoker uses the sand bucket and sits at least ten feet away from any open window",
+      "chunk": 20,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:166-170"
+    },
+    {
+      "text": "All smoking is strictly prohibited throughout the interior of the house.",
+      "quote": "Smoking of every kind remains completely forbidden everywhere inside the house",
+      "chunk": 20,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:166-170"
+    },
+    {
+      "text": "A member whose rent share is not received by the fifth day of the month pays a late fee of twenty-five dollars.",
+      "quote": "a member whose rent share has not arrived in the house account by the fifth day of the month owes an additional late fee of twenty-five dollars on top of the rent",
+      "chunk": 21,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:174-178"
+    },
+    {
+      "text": "The treasurer sends a payment reminder to all members two days before each monthly deadline.",
+      "quote": "The treasurer will send a reminder to all members two days before the monthly deadline.",
+      "chunk": 21,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:174-178"
+    },
+    {
+      "text": "Every weeknight from 7:00 PM to 9:00 PM, the dining room serves as a silent study space.",
+      "quote": "The dining room is set aside as a silent study space every weeknight from\n7:00 PM until 9:00 PM.",
+      "chunk": 22,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:182-187"
+    },
+    {
+      "text": "From 7:00 PM to 9:00 PM on weeknights, the dining room must be kept quiet for individual work and cannot host meals, conversations, or gatherings.",
+      "quote": "During those hours the dining room is reserved for\nquiet individual work and may not be used for meals, conversation, or\ngatherings.",
+      "chunk": 22,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:182-187"
+    },
+    {
+      "text": "Movie nights are held in the living room on Thursdays.",
+      "quote": "the members resolved to hold a movie night in the living room on Thursday evenings",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:191-196"
+    },
+    {
+      "text": "During Thursday movie nights, activity in the living room may continue until midnight for participating members.",
+      "quote": "On those nights the film and the conversation around it may run in the living room until midnight, and any member who wishes to take part is welcome to stay up that late.",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md:191-196"
+    }
+  ],
+  "dropped": [
+    {
+      "text": "Quiet hours end at 7:00 AM.",
+      "quote": "The 7:00 AM end time ... are left unchanged.",
+      "chunk": 11,
+      "reason": "quote is not in the passage — paraphrased, not cited"
+    }
+  ],
+  "unread": [],
+  "duplicates": [
+    [
+      8,
+      9
+    ],
+    [
+      20,
+      54
+    ]
+  ],
+  "kept": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+  ],
+  "tensions": [
+    {
+      "a": 0,
+      "b": 2,
+      "reason": "A guest staying in the hosting member's private room is still a 'guest' who may enter shared common areas (e.g., to use the bathroom or kitchen), requiring the host to be present; however, if the host must leave their own room for an extended period due to work or other obligations while the guest remains in the house, they cannot simultaneously satisfy the requirement that guests are only permitted in the private room (implying containment) and the requirement of constant presence whenever the guest is in any common area."
+    },
+    {
+      "a": 7,
+      "b": 11,
+      "reason": "A member anticipating unavoidable late-night noise (such as a loud conversation or activity) provides advance notice, but this often implies occupying a specific space like the living room or back porch; however, reserving that common area for exclusive use during those hours violates the rule against reserving common areas, even temporarily, creating a conflict between notifying others of one's intended usage and the prohibition on exclusivity."
+    },
+    {
+      "a": 1,
+      "b": 3,
+      "reason": "A single guest may not stay for more than two consecutive nights (Commitment 2), yet members are fully responsible for their guests' behavior throughout the entire visit (Commitment 4). If a guest stays exactly two nights and then leaves only to return immediately after a one-night gap to extend their presence effectively beyond the limit while maintaining continuous behavioral impact, the host is forced to either enforce the strict time limit which might be seen as abandoning responsibility during a transitional period of 'visiting,' or allow an extended de facto stay that violates the duration rule."
+    },
+    {
+      "a": 9,
+      "b": 8,
+      "reason": "Dirty dishes must never be left in the sink overnight (Commitment 10), but whoever uses the kitchen must clean it immediately after finishing cooking or eating (Commitment 9). If a member finishes using the kitchen at 6:59 AM and goes back to bed until 7:01 AM, they have technically cleaned 'immediately' relative to their usage ending before quiet hours ended, yet leaving any residue for even two minutes into the morning could be interpreted as violating the spirit of not having dirty items present during the night if the cleaning was delayed past midnight."
+    },
+    {
+      "a": 4,
+      "b": 34,
+      "reason": "On a Tuesday night at 10:30 PM, the general rule states quiet hours have not yet begun (starting at 11:00 PM), while the specific weekday rule mandates they are already in effect (starting at 10:00 PM)."
+    },
+    {
+      "a": 0,
+      "b": 37,
+      "reason": "Commitment 1 explicitly permits overnight guests in a private room, while Commitment 14 states that overnight guests are not permitted in the house at all. A member wishing to host an overnight guest faces a direct contradiction where following one rule necessarily violates the other."
+    },
+    {
+      "a": 8,
+      "b": 41,
+      "reason": "Commitment 9 requires whoever uses the kitchen to clean it immediately after finishing cooking or eating, but Commitment 18 exempts the specific member who cooked the shared dinner from cleaning on that evening. The cook cannot both fulfill their immediate duty to clean and honor their exemption simultaneously."
+    },
+    {
+      "a": 11,
+      "b": 55,
+      "reason": "The rule that a member must not reserve a common area for exclusive use conflicts with the requirement that the dining room serves as a silent study space from 7:00 PM to 9:00 PM on weeknights. In this situation, members using the dining room exclusively for individual work are effectively reserving it and excluding others who might wish to eat or converse there."
+    },
+    {
+      "a": 11,
+      "b": 58,
+      "reason": "The prohibition against reserving common areas for exclusive use is in tension with allowing activity in the living room to continue until midnight during Thursday movie nights. If participating members occupy the living room for several hours past standard quiet hours (which start at 11:00 PM), they are holding that space for their specific group's entertainment, thereby preventing other non-participating members from using it freely as an equal shared area."
+    },
+    {
+      "a": 15,
+      "b": 16,
+      "reason": "A member is physically unable to perform their assigned chore and cannot find another willing participant for a direct exchange; the requirement that no member be excluded from the rotation under any circumstances conflicts with the mandate that an inability must be resolved via a pre-coordinated swap."
+    },
+    {
+      "a": 29,
+      "b": 18,
+      "reason": "The household votes on whether to allow pet-sitting for an outside animal while one member is absent from the meeting; the rule requiring unanimous consent for such activities contradicts the decision-making standard where decisions pass by simple majority of those present."
+    },
+    {
+      "a": 15,
+      "b": 47,
+      "reason": "A member who is away from the house for more than two consecutive weeks must be fully exempted from the chore rotation during their absence, which directly contradicts the requirement that no member may be excluded from the chore rotation under any circumstances."
+    },
+    {
+      "a": 17,
+      "b": 49,
+      "reason": "The rule prohibiting pets except for fish directly conflicts with the allowance of a house cat; in any situation where the household attempts to keep their adopted cat, they must violate one of these two commitments."
+    },
+    {
+      "a": 19,
+      "b": 52,
+      "reason": "The prohibition on smoking in all areas within the house contradicts the permission to smoke on the back porch if that porch is considered part of the house structure or interior space as defined by 'all areas'."
+    },
+    {
+      "a": 32,
+      "b": 37,
+      "reason": "The commitment that \"Every overnight guest is signed into the guest logbook\" presupposes the existence of overnight guests, which directly contradicts the rule that \"Overnight guests are not permitted in the house,\" making it impossible to fulfill the logging requirement without violating the prohibition."
+    },
+    {
+      "a": 33,
+      "b": 37,
+      "reason": "Requiring a hosting member to make an entry for an \"overnight guest\" before their first night creates a conflict with the absolute ban on allowing \"Overnight guests... in the house,\" as performing the required action necessitates admitting someone who is explicitly forbidden from staying."
+    },
+    {
+      "a": 35,
+      "b": 52,
+      "reason": "The quiet-hours rule explicitly applies to the back porches on Thursday nights starting at 10:00 PM, but smoking is permitted on the same porch until midnight if a sand bucket is used; these cannot both be fully honored when a member smokes after 10:00 PM."
+    },
+    {
+      "a": 28,
+      "b": 31,
+      "reason": "House meetings are held on the first Sunday of every month, while agenda items must be posted two days prior; this creates a tension in months where the first day is not a Sunday (e.g., January or February), as 'two days before' may fall on a weekend or holiday with no clear operational definition for posting deadlines relative to the fixed meeting date."
+    },
+    {
+      "a": 37,
+      "b": 40,
+      "reason": "Commitment 'Overnight guests are not permitted in the house' prohibits overnight stays for guests, while commitment 'Guests may park their vehicles in these designated spaces overnight without requiring a permit' explicitly allows and facilitates the presence of guest vehicles (and thus implies the presence or return of those guests) during the night."
+    },
+    {
+      "a": 45,
+      "b": 55,
+      "reason": "A member reserves the dining room for a private event on a Tuesday evening from 7:00 PM to 9:00 PM. The reservation rule requires the space to be closed and available for that specific use during those hours, while the silent study rule mandates it remain open as a quiet workspace with no gatherings or conversations allowed."
+    },
+    {
+      "a": 46,
+      "b": 56,
+      "reason": "The dining room is reserved by one member for a private dinner party on Wednesday night between 7:00 PM and 8:30 PM. The exclusion clause forbids other members from entering the room during booked hours, but the silent study policy explicitly prohibits hosting meals or gatherings in the dining room during that time slot."
+    },
+    {
+      "a": 55,
+      "b": 57,
+      "reason": "On a Thursday night between 7:00 PM and 9:00 PM, the dining room is required to be a silent study space while movie nights are held in the living room; if participants gather or converse loudly enough to disturb the silence mandated for the adjacent dining area during this specific overlap window, one rule must yield."
+    }
+  ]
+}

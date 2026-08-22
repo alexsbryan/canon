@@ -130,6 +130,45 @@ There is no `--accept-all`. A canon adopted wholesale is disengagement at
 t=0, so accepting one at a time is what makes onboarding the first
 governance session.
 
+### What it actually finds
+
+A vendored house charter with eleven planted contradictions and seven
+pairs that look like contradictions and are not. Three runs of one build
+against that document, scored by replay from the persisted run artifacts
+rather than by asking a model a second time:
+
+```text
+recall     0.64      7 of 11 planted tensions
+precision  0.47
+decoys     1 of 7 flagged
+reachable  11 of 11  survived extraction and dedupe
+```
+
+The spread across the three runs is zero, which proves the pipeline
+reproduces and not that the number is stable under anything else.
+
+**These are train-contaminated and are not a held-out estimate.**
+`truth.json` splits the eleven into train, dev and test and calls test
+sacred; the work that produced this build looked at test-split misses
+while choosing what to fix. What survives that is mechanism — that dedupe
+was folding two contradicting rules into one is a fact readable in the
+artifact, not a score. The rates are not, and one document on one model is
+not a general claim about yours.
+
+```sh
+# score the evidence in this repo
+CANON_BAR_RUNS=$PWD/fixtures/maple-house/runs/qwen-27b \
+  cargo test --test draft_bar -- --ignored --nocapture
+
+# or produce your own, against your own endpoint
+sh scripts/draft-bar.sh 3
+```
+
+`runs/qwen-27b-before-fold-guard/` is the same document through the build
+that preceded it, kept so the difference is checkable and not just
+claimed: dedupe folded the 10 PM rule into the 11 PM one and two planted
+tensions became unreachable.
+
 ## Sharing
 
 ```sh
