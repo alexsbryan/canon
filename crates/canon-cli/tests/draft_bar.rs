@@ -189,6 +189,35 @@ fn runs_dir() -> PathBuf {
     }
 }
 
+/// Runs sitting in subdirectories, named in the failure.
+///
+/// One directory is one instrument: a model, or a build. So "no runs here" is
+/// usually "the runs are in one of these", and a bar that will not say which
+/// reads as a broken bar rather than a wrong path — the reader's next move is
+/// to re-run the sweep they already ran.
+fn runs_one_level_down(dir: &Path) -> String {
+    let mut found = String::new();
+    for e in std::fs::read_dir(dir).into_iter().flatten().flatten() {
+        let p = e.path();
+        if !p.is_dir() {
+            continue;
+        }
+        let n = std::fs::read_dir(&p)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter(|f| f.path().extension().is_some_and(|x| x == "json"))
+            .count();
+        if n > 0 {
+            found.push_str(&format!("\n  CANON_BAR_RUNS={} ({n} run(s))", p.display()));
+        }
+    }
+    if found.is_empty() {
+        return String::new();
+    }
+    format!("\n\nRuns are one level down. Score one instrument, never a mean over two:{found}")
+}
+
 fn anchors() -> Value {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/maple-house/extraction-anchors.json");
@@ -233,9 +262,10 @@ fn maple_house_bar() {
     paths.sort();
     assert!(
         paths.len() >= MIN_RUNS,
-        "{} run(s) at {} — a single run is not a measurement (§18.5). Need {MIN_RUNS}.",
+        "{} run(s) at {} — a single run is not a measurement (§18.5). Need {MIN_RUNS}.{}",
         paths.len(),
-        dir.display()
+        dir.display(),
+        runs_one_level_down(&dir)
     );
 
     let scores: Vec<Score> = paths.iter().map(|p| score_run(p, &truth)).collect();
