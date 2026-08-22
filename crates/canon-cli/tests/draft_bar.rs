@@ -47,10 +47,23 @@ const MIN_RUNS: usize = 3;
 
 // ── scoring ─────────────────────────────────────────────────
 
-/// A section of the source document: `article:II` or `date:2026-02-10`.
+/// A section of the source document: `article:II`, `date:2026-02-10`,
+/// `sec:42-258(6)`, or `ord:16064/42-258(6)`.
+///
 /// `truth.json` keys every labeled pair by one of these, and they are unique
-/// within the document.
+/// within the document. The last two forms exist because a corpus built from
+/// municipal ordinances is keyed by the code section a document amends and by
+/// the ordinance that amends it — a charter article numeral cannot say which
+/// of two readings of the same section it means.
 fn section_key(heading: &str) -> Option<String> {
+    // `Sec. 42-258(6)` under an `Ordinance 16,064,` heading names the amending
+    // reading; the same section number without one names the codified reading.
+    if let Some(sec) = code_section(heading) {
+        return Some(match ordinance_number(heading) {
+            Some(ord) => format!("ord:{ord}/{sec}"),
+            None => format!("sec:{sec}"),
+        });
+    }
     if let Some(date) = heading.split_whitespace().find(|w| {
         let b = w.as_bytes();
         b.len() == 10
@@ -68,10 +81,38 @@ fn section_key(heading: &str) -> Option<String> {
     (!numeral.is_empty()).then(|| format!("article:{numeral}"))
 }
 
+/// `Sec. 42-258(6)` -> `42-258(6)`.
+fn code_section(heading: &str) -> Option<String> {
+    let after = heading.split("Sec. ").nth(1)?;
+    let sec: String = after
+        .chars()
+        .take_while(|c| c.is_ascii_digit() || matches!(c, '-' | '(' | ')'))
+        .collect();
+    (sec.contains('-')).then_some(sec)
+}
+
+/// `Ordinance 16,064,` -> `16064`. Commas are how a clerk writes it and are
+/// not part of the identity.
+fn ordinance_number(heading: &str) -> Option<String> {
+    let after = heading.split("Ordinance ").nth(1)?;
+    let num: String = after
+        .chars()
+        .take_while(|c| c.is_ascii_digit() || *c == ',')
+        .filter(|c| c.is_ascii_digit())
+        .collect();
+    (!num.is_empty()).then_some(num)
+}
+
 /// `{"article": "II"}` / `{"date": "2026-02-10"}` from the manifest.
 fn truth_key(side: &Value) -> Option<String> {
     if let Some(a) = side.get("article").and_then(Value::as_str) {
         return Some(format!("article:{a}"));
+    }
+    if let Some(sec) = side.get("section").and_then(Value::as_str) {
+        return Some(match side.get("ordinance").and_then(Value::as_str) {
+            Some(ord) => format!("ord:{ord}/{sec}"),
+            None => format!("sec:{sec}"),
+        });
     }
     side.get("date")
         .and_then(Value::as_str)
@@ -219,15 +260,22 @@ fn runs_one_level_down(dir: &Path) -> String {
 }
 
 fn anchors() -> Value {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/maple-house/extraction-anchors.json");
+    let path = match std::env::var("CANON_BAR_ANCHORS") {
+        Ok(p) => PathBuf::from(p),
+        Err(_) => PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/maple-house/extraction-anchors.json"),
+    };
     serde_json::from_str(&std::fs::read_to_string(&path).expect("extraction-anchors.json"))
         .expect("anchors JSON")
 }
 
 fn truth() -> Value {
-    let path =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/maple-house/truth.json");
+    let path = match std::env::var("CANON_BAR_TRUTH") {
+        Ok(p) => PathBuf::from(p),
+        Err(_) => {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/maple-house/truth.json")
+        }
+    };
     serde_json::from_str(&std::fs::read_to_string(&path).expect("truth.json")).expect("truth JSON")
 }
 
@@ -535,4 +583,60 @@ fn every_labeled_pair_in_the_manifest_maps_to_a_heading_in_the_document() {
             }
         }
     }
+}
+
+// ── keys ────────────────────────────────────────────────────
+
+#[test]
+fn a_charter_article_and_a_dated_decision_still_key_as_they_did() {
+    assert_eq!(
+        section_key("# Maple House Charter, Article II — Quiet Hours").as_deref(),
+        Some("article:II")
+    );
+    assert_eq!(
+        section_key("# Decision — 2026-02-10 — Weeknight Quiet Hours").as_deref(),
+        Some("date:2026-02-10")
+    );
+}
+
+#[test]
+fn an_ordinance_heading_keys_by_ordinance_not_by_its_date() {
+    // Load-bearing ordering. Every section of Ordinance 16,064 carries the
+    // same adoption date, so keying on the date would collapse sixteen
+    // distinct readings onto one key and score them as one pair.
+    assert_eq!(
+        section_key(r#"# Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(6), Type "F" permit"#)
+            .as_deref(),
+        Some("ord:16064/42-258(6)")
+    );
+    assert_eq!(
+        section_key(r#"# Ordinance 16,127, adopted 2022-05-23 — Sec. 42-258(17), Type "Q" permit"#)
+            .as_deref(),
+        Some("ord:16127/42-258(17)")
+    );
+}
+
+#[test]
+fn a_codified_section_and_its_amended_reading_are_different_keys() {
+    // The whole corpus turns on this: the same section number under two
+    // documents is two readings, and a scorer that cannot tell them apart
+    // cannot score an unmarked supersession at all.
+    let codified = section_key(r#"# Des Moines Municipal Code, Sec. 42-258(6) — Type "F" permit"#);
+    let amended =
+        section_key(r#"# Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(6), Type "F" permit"#);
+    assert_eq!(codified.as_deref(), Some("sec:42-258(6)"));
+    assert_ne!(codified, amended);
+}
+
+#[test]
+fn the_manifest_and_the_document_agree_on_key_shape() {
+    use serde_json::json;
+    assert_eq!(
+        truth_key(&json!({"section": "42-258(6)"})).as_deref(),
+        Some("sec:42-258(6)")
+    );
+    assert_eq!(
+        truth_key(&json!({"ordinance": "16064", "section": "42-258(6)"})).as_deref(),
+        Some("ord:16064/42-258(6)")
+    );
 }
