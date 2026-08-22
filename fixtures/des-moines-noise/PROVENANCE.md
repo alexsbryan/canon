@@ -97,8 +97,17 @@ scores nothing and says so nowhere (§18.1).
 
 ## Holdout status
 
-**Uncontaminated as of 2026-08-22.** No `canon` run has been scored against
-this corpus, and no individual failure on it has been inspected. `test`-split
+**Reachability read 2026-08-22; recall and precision not yet read.** The
+first scored run reported 3 of 9 tensions reachable, and the per-tension
+breakdown names individual pairs across all three splits — T3 (test) and T8
+(dev) among them. That is inspection, and it is recorded here rather than
+left unsaid.
+
+What it does NOT license: the mechanism those pairs failed by is visible in
+T1 and T4, both `train`, and any fix must be justified from those. The
+diagnosis is mechanical and identical across the six — a dB(C) reading
+folded into its dB(A) predecessor because `measure.rs` reads no decibel unit
+— so nothing about the `test` pairs informs it. `test`-split
 pairs are sacred: read the aggregate, never the instance. The first time a
 test-split miss is opened, this file must say so — Maple House's numbers are
 labelled train-contaminated for exactly that reason, and the whole value of a
