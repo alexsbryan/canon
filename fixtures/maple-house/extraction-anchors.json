@@ -1,0 +1,244 @@
+{
+  "note": "What must survive extraction for each planted tension to be FINDABLE AT ALL. If the load-bearing clause of either side is missing from the candidate set, no amount of comparison can find that tension, and a tensions-step number computed over such a set is measuring the wrong stage. Each anchor is the smallest phrase the tension turns on, taken from truth.json's own `why` and the source passage \u2014 NOT from anything an extractor happened to produce. Written before the extraction prompt was touched. Matching is case-insensitive over collapsed whitespace, against any candidate drawn from that section. Each `must` entry is a list of ALTERNATIVES and is satisfied by any one of them: the anchor asks whether the section yielded that RULE, not whether it used a particular word for it. An alternative may only be added when it is the same rule worded differently \u2014 'No member may be excluded from the chore rotation' for 'exempt' \u2014 never when it is merely a related rule.",
+  "schema_version": 1,
+  "anchors": {
+    "T1": [
+      {
+        "section": "article:I",
+        "must": [
+          [
+            "two consecutive nights",
+            "2 consecutive nights"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-03-14",
+        "must": [
+          [
+            "overnight guest"
+          ]
+        ]
+      }
+    ],
+    "T2": [
+      {
+        "section": "article:VI",
+        "must": [
+          [
+            "fish"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-06-03",
+        "must": [
+          [
+            "cat"
+          ]
+        ]
+      }
+    ],
+    "T3": [
+      {
+        "section": "article:IV",
+        "must": [
+          [
+            "exclusive",
+            "sole use",
+            "private use"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-05-06",
+        "must": [
+          [
+            "dining room"
+          ]
+        ]
+      }
+    ],
+    "T4": [
+      {
+        "section": "article:II",
+        "must": [
+          [
+            "11:00 pm",
+            "11pm",
+            "11 pm"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-06-22",
+        "must": [
+          [
+            "midnight",
+            "12:00 am"
+          ]
+        ]
+      }
+    ],
+    "T5": [
+      {
+        "section": "article:II",
+        "must": [
+          [
+            "11:00 pm",
+            "11pm",
+            "11 pm"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-02-10",
+        "must": [
+          [
+            "10:00 pm",
+            "10pm",
+            "10 pm"
+          ]
+        ]
+      }
+    ],
+    "T6": [
+      {
+        "section": "article:III",
+        "must": [
+          [
+            "kitchen"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-04-02",
+        "must": [
+          [
+            "cook"
+          ]
+        ]
+      }
+    ],
+    "T7": [
+      {
+        "section": "article:V",
+        "must": [
+          [
+            "exempt",
+            "exclud"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-05-20",
+        "must": [
+          [
+            "exempt",
+            "exclud"
+          ]
+        ]
+      }
+    ],
+    "T8": [
+      {
+        "section": "article:V",
+        "must": [
+          [
+            "exempt",
+            "exclud"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-04-02",
+        "must": [
+          [
+            "kitchen"
+          ]
+        ]
+      }
+    ],
+    "T9": [
+      {
+        "section": "article:IV",
+        "must": [
+          [
+            "exclusive",
+            "sole use",
+            "private use"
+          ]
+        ]
+      },
+      {
+        "section": "article:XI",
+        "must": [
+          [
+            "dining room"
+          ]
+        ]
+      }
+    ],
+    "T10": [
+      {
+        "section": "date:2026-02-10",
+        "must": [
+          [
+            "10:00 pm",
+            "10pm",
+            "10 pm"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-06-22",
+        "must": [
+          [
+            "midnight",
+            "12:00 am"
+          ]
+        ]
+      }
+    ],
+    "T11": [
+      {
+        "section": "article:XI",
+        "must": [
+          [
+            "dining room"
+          ]
+        ]
+      },
+      {
+        "section": "date:2026-05-06",
+        "must": [
+          [
+            "dining room"
+          ]
+        ]
+      }
+    ]
+  },
+  "fidelity": {
+    "note": "Numbers and units the source states, which a rule must not silently change. Observed failure: a candidate read 'at least three hours in advance' where the passage \u2014 and its own verbatim quote \u2014 said 'three days ahead'. The citation guard passed, because it checks that the quote is real, not that the rule matches it.",
+    "date:2026-05-06": [
+      "three days",
+      "twice a month"
+    ],
+    "date:2026-02-10": [
+      "10:00 pm",
+      "7:00 am"
+    ],
+    "article:II": [
+      "11:00 pm",
+      "7:00 am"
+    ],
+    "article:I": [
+      "two consecutive nights",
+      "seven-day"
+    ],
+    "article:VI": [
+      "twenty gallons"
+    ]
+  }
+}

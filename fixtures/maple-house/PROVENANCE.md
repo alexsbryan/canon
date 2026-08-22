@@ -34,6 +34,33 @@ advance. `truth.json` labels every one.
 Pairs are keyed by section: a charter article numeral, or a decision date.
 Both are unique within the document.
 
+## `extraction-anchors.json` was written here, not vendored
+
+`maple-house.md` and `truth.json` come from upstream. The anchors file does
+not: it is this repository's own instrument, and it answers a question
+`truth.json` does not ask.
+
+`truth.json` labels which SECTION PAIRS are in tension. That scores the
+comparison step and says nothing about the step before it. If the clause a
+tension turns on never survives extraction, no amount of comparison can find
+it, and a recall number computed over that candidate set is a statement
+about extraction wearing a comparison's clothes.
+
+So each anchor names the smallest phrase a tension depends on, taken from
+`truth.json`'s own `why` field and the source passage. `T5` reads *"Charter
+sets quiet hours at 11 PM; the decision silently moves the weeknight start to
+10 PM"* — so Article II must yield a rule containing `11:00 pm` and the
+2026-02-10 decision one containing `10:00 pm`, or T5 is unreachable before
+the comparison starts. Which is exactly what was happening.
+
+The `fidelity` section is the other half: measures the source states that a
+rule must not silently change. It exists because a candidate read *"at least
+three hours in advance"* while its own verbatim quote said *"three days
+ahead"* — the citation check passed it, because a citation proves the quote
+is real and not that the rule matches it.
+
+Both were written before the extraction prompt was touched.
+
 ## Not the corpus
 
 `recipe.toml` is deliberately not vendored. It configures an ingest pipeline

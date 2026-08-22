@@ -222,14 +222,210 @@ fn normalize(s: &str) -> String {
         .to_lowercase()
 }
 
+/// Units a rule measures things in. Deliberately short: these are the words
+/// that change what a rule MEANS when they are wrong.
+const UNITS: &[&str] = &[
+    "minute", "hour", "day", "night", "week", "month", "year", "gallon", "dollar",
+];
+
+/// Number words a rule might use where the passage used a digit, or the
+/// other way round. `twice a month` and `two times per month` are the same
+/// rule and must not be read as different ones.
+fn as_number(word: &str) -> Option<u32> {
+    const WORDS: &[(&str, u32)] = &[
+        ("once", 1),
+        ("one", 1),
+        ("single", 1),
+        ("twice", 2),
+        ("two", 2),
+        ("three", 3),
+        ("four", 4),
+        ("five", 5),
+        ("six", 6),
+        ("seven", 7),
+        ("eight", 8),
+        ("nine", 9),
+        ("ten", 10),
+        ("eleven", 11),
+        ("twelve", 12),
+        ("fifteen", 15),
+        ("twenty", 20),
+        ("thirty", 30),
+        ("sixty", 60),
+    ];
+    let w = word.trim_matches(|c: char| !c.is_ascii_alphanumeric());
+    if let Ok(n) = w.parse::<u32>() {
+        return Some(n);
+    }
+    WORDS.iter().find(|(s, _)| *s == w).map(|(_, n)| *n)
+}
+
+fn singular(word: &str) -> String {
+    let w: String = word
+        .trim_matches(|c: char| !c.is_ascii_alphanumeric())
+        .to_string();
+    w.strip_suffix('s').map(str::to_string).unwrap_or(w)
+}
+
+/// Every clock time in `s`, canonicalised: `11:00 PM`, `11 pm` and `11pm` all
+/// become `11pm`.
+fn clock_times(s: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let b: Vec<char> = s.chars().collect();
+    let mut i = 0;
+    while i < b.len() {
+        if !b[i].is_ascii_digit() {
+            i += 1;
+            continue;
+        }
+        let start = i;
+        while i < b.len() && b[i].is_ascii_digit() {
+            i += 1;
+        }
+        let hour: String = b[start..i].iter().collect();
+        if hour.len() > 2 {
+            continue;
+        }
+        let mut j = i;
+        // Optional `:mm`, then optional space, then am/pm.
+        if j < b.len() && b[j] == ':' {
+            j += 1;
+            while j < b.len() && b[j].is_ascii_digit() {
+                j += 1;
+            }
+        }
+        while j < b.len() && b[j] == ' ' {
+            j += 1;
+        }
+        let rest: String = b[j..b.len().min(j + 2)].iter().collect();
+        if rest == "am" || rest == "pm" {
+            out.push(format!("{hour}{rest}"));
+            i = j + 2;
+        }
+    }
+    out
+}
+
+/// How far apart a number and its unit may sit and still be one measure.
+/// "two consecutive nights" is a measure; a number three sentences from a
+/// unit is not.
+const MEASURE_GAP: usize = 2;
+
+/// Words that turn a number into a time of day rather than a count.
+/// "eleven at night" and "11 PM" are the same instant, and reading the first
+/// as a count of nights makes two identical rules look like a contradiction.
+const TIME_OF_DAY: &[(&str, &str)] = &[("night", "pm"), ("evening", "pm"), ("morning", "am")];
+
+/// Words, split on whitespace AND hyphens.
+///
+/// Hyphens matter: "within any seven-day period" states the same measure as
+/// "per 7 days", and a tokeniser that only splits on spaces sees no number at
+/// all in the first.
+fn words_of(s: &str) -> Vec<String> {
+    s.split(|c: char| c.is_whitespace() || c == '-')
+        .filter(|w| !w.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+/// Is this unit being used as a time of day — "at night", "in the morning"?
+fn is_time_of_day(words: &[String], unit_at: usize) -> bool {
+    let unit = singular(&words[unit_at]);
+    if !TIME_OF_DAY.iter().any(|(u, _)| *u == unit) {
+        return false;
+    }
+    words[..unit_at]
+        .iter()
+        .rev()
+        .take(2)
+        .any(|w| matches!(singular(w).as_str(), "at" | "in" | "the"))
+}
+
+/// Number-and-unit pairs in `s`, as `(value, unit)`. Times of day are not
+/// counts and are excluded — [`clock_times`] picks those up instead.
+fn measures(s: &str) -> Vec<(u32, String)> {
+    let words = words_of(s);
+    let mut out = Vec::new();
+    for i in 0..words.len() {
+        let Some(n) = as_number(&words[i]) else {
+            continue;
+        };
+        for j in (i + 1)..(i + 2 + MEASURE_GAP).min(words.len()) {
+            let u = singular(&words[j]);
+            if UNITS.contains(&u.as_str()) {
+                if !is_time_of_day(&words, j) {
+                    out.push((n, u));
+                }
+                break;
+            }
+        }
+    }
+    out
+}
+
+/// Times written in words: "eleven at night" -> `11pm`.
+fn spelled_times(s: &str) -> Vec<String> {
+    let words = words_of(s);
+    let mut out = Vec::new();
+    for i in 0..words.len() {
+        let Some(n) = as_number(&words[i]) else {
+            continue;
+        };
+        for j in (i + 1)..(i + 2 + MEASURE_GAP).min(words.len()) {
+            let u = singular(&words[j]);
+            if let Some((_, half)) = TIME_OF_DAY.iter().find(|(t, _)| *t == u) {
+                if is_time_of_day(&words, j) {
+                    out.push(format!("{n}{half}"));
+                }
+                break;
+            }
+        }
+    }
+    out
+}
+
+/// Does this rule state a measure its passage does not?
+///
+/// **The citation check proves the QUOTE is real. It does not prove the RULE
+/// matches it.** Observed against a live endpoint: a candidate read "at least
+/// three hours in advance" while its own verbatim quote said "three days
+/// ahead". A rule that misstates a time or a count is worse than a missing
+/// rule — it is a house rule contradicting the sentence printed beneath it,
+/// and the citation makes it look checked.
+///
+/// Narrow on purpose. Only NUMBER-AND-UNIT pairs and clock times are
+/// compared, so a rule that rewords "within any seven-day period" as "per
+/// week" survives — that is a paraphrase, not a different rule. What does not
+/// survive is a quantity the passage never states.
+fn unstated_measure(text: &str, chunk: &str) -> Option<String> {
+    let (t, c) = (normalize(text), normalize(chunk));
+    let source: Vec<(u32, String)> = measures(&c);
+    for (n, unit) in measures(&t) {
+        if !source.iter().any(|(m, u)| *m == n && *u == unit) {
+            return Some(format!("{n} {unit}(s)"));
+        }
+    }
+    let mut source_times = clock_times(&c);
+    source_times.extend(spelled_times(&c));
+    let mut stated = clock_times(&t);
+    stated.extend(spelled_times(&t));
+    stated.into_iter().find(|time| !source_times.contains(time))
+}
+
 // ── map: extract (one completion per chunk) ─────────────────
 
 const EXTRACT_SYSTEM: &str = "\
 You extract normative commitments from a passage.
 
 A commitment is a rule, a standard, or a stated value — something that says \
-how things should be. A fact, an event, or a one-off feeling is not a \
-commitment.
+how things should be.
+
+A passage often records a decision, and a decision that changes a rule \
+STATES a rule. Extract the rule it establishes, not the meeting that \
+established it: \"Quiet hours begin at 10:00 PM Sunday through Thursday\" is a \
+commitment; \"the house met and resolved to move quiet hours earlier\" is not. \
+When a passage changes one part of a rule and leaves the rest, the part that \
+changed is a commitment.
 
 For each one, return:
 - text: one self-contained sentence stating the rule as the holder would \
@@ -240,8 +436,12 @@ mornings.\" It must make sense with no passage in front of it.
 paraphrase, do not fix wording, do not shorten with ellipses.
 
 Rules:
-- Precision over recall. A passage stating no rule returns an empty list.
+- Extract every distinct rule the passage states. A passage stating no rule \
+returns an empty list.
 - Never state a commitment the passage does not.
+- Every number, time, day and unit in your sentence must be the one the \
+passage uses. Do not convert or round: if the passage says three days, the \
+rule says three days, never three hours.
 - A quote that is not word-for-word from the passage is a failure.";
 
 #[derive(Debug, Deserialize)]
@@ -314,10 +514,28 @@ pub fn extract(
     profile: Profile,
 ) -> Result<(Vec<Candidate>, Vec<Dropped>), ModelError> {
     let system = format!("{EXTRACT_SYSTEM}\n\n{}", voice(profile));
-    let user = format!(
-        "Passage:\n{}\n\nReturn the commitments this passage states.",
-        chunk.text
-    );
+    // The heading goes to the model as CONTEXT, not as citable text.
+    //
+    // The chunker has always recorded it and never sent it, which threw away
+    // what the document itself supplies. A minute headed "Decision —
+    // 2026-02-10 — Weeknight Quiet Hours" opens "After repeated complaints
+    // about noise on work nights, the house met and resolved…" — the body
+    // never names its own subject, and read cold the operative sentence looks
+    // like narrative.
+    //
+    // Quoting is still restricted to the body, because a rule evidenced only
+    // by a title is not evidenced.
+    let user = match &chunk.heading {
+        Some(h) => format!(
+            "Section title, for context only — do not quote from it: \"{h}\"\n\n\
+             Passage:\n{}\n\nReturn the commitments this passage states.",
+            chunk.text
+        ),
+        None => format!(
+            "Passage:\n{}\n\nReturn the commitments this passage states.",
+            chunk.text
+        ),
+    };
     let got: Extracted = client.complete_json(&system, &user, "commitments", &extract_schema())?;
     let haystack = normalize(&chunk.text);
     let mut kept = Vec::new();
@@ -325,21 +543,22 @@ pub fn extract(
     for c in got.commitments {
         let text = c.text.trim().to_string();
         let quote = c.quote.trim().to_string();
-        let reason = if text.is_empty() {
-            Some("empty commitment text")
+        let reason: Option<String> = if text.is_empty() {
+            Some("empty commitment text".into())
         } else if quote.chars().count() < QUOTE_MIN {
-            Some("quote too short to be evidence")
+            Some("quote too short to be evidence".into())
         } else if !haystack.contains(&normalize(&quote)) {
-            Some("quote is not in the passage — paraphrased, not cited")
+            Some("quote is not in the passage — paraphrased, not cited".into())
         } else {
-            None
+            unstated_measure(&text, &chunk.text)
+                .map(|m| format!("states `{m}`, which the passage does not"))
         };
         match reason {
             Some(r) => dropped.push(Dropped {
                 text,
                 quote,
                 chunk: chunk.id,
-                reason: r.into(),
+                reason: r,
             }),
             None => kept.push(Candidate {
                 text,
@@ -358,11 +577,44 @@ const DEDUPE_SYSTEM: &str = "\
 You group duplicate commitments.
 
 Two commitments are duplicates when they state the same rule, even in \
-different words. A general rule and a narrower rule are not duplicates. Two \
-rules about the same subject that say different things are not duplicates.
+different words. A general rule and a narrower rule are not duplicates.
+
+Two rules about the same subject that say DIFFERENT things are never \
+duplicates. If they state different times, counts or limits, that is a \
+contradiction — \"quiet hours start at 11 PM\" and \"quiet hours start at 10 \
+PM\" are two rules, not one, and collapsing them destroys the disagreement.
 
 Return one group per set of duplicates, as the numbers of its members. \
 A commitment with no duplicate is not returned.";
+
+/// Every measure a rule states, as comparable strings.
+fn measure_set(s: &str) -> std::collections::BTreeSet<String> {
+    let n = normalize(s);
+    measures(&n)
+        .into_iter()
+        .map(|(v, u)| format!("{v} {u}"))
+        .chain(clock_times(&n))
+        .chain(spelled_times(&n))
+        .collect()
+}
+
+/// Do these two rules state different measures?
+///
+/// **This is the guard that keeps `draft` able to find an unmarked
+/// supersession at all.** Two rules that contradict each other look exactly
+/// like near-duplicates to a reduce step — same subject, different content —
+/// and folding them deletes the disagreement before anything can notice it.
+/// Observed: "Quiet hours run from 11:00 PM to 7:00 AM every night" and
+/// "Quiet hours begin at 10:00 PM from Sunday through Thursday" were grouped
+/// as duplicates, which on its own destroyed two of the eleven planted
+/// tensions in the bench fixture.
+///
+/// Only fires when BOTH rules state measures. A rule with no numbers in it
+/// may still be a duplicate of one that has them.
+fn differs_by_measure(a: &str, b: &str) -> bool {
+    let (ma, mb) = (measure_set(a), measure_set(b));
+    !ma.is_empty() && !mb.is_empty() && ma != mb
+}
 
 #[derive(Debug, Deserialize)]
 struct Grouped {
@@ -412,6 +664,23 @@ pub fn dedupe(
             .collect();
         members.sort_unstable();
         members.dedup();
+        // A rule stating different measures from the one it is being folded
+        // into is a contradiction, not a duplicate. Enforced here rather than
+        // asked of the model (§7.6): losing this is losing the whole
+        // unmarked-supersession category.
+        if let Some(&head) = members.first() {
+            members.retain(|m| {
+                let keep =
+                    *m == head || !differs_by_measure(&candidates[head].text, &candidates[*m].text);
+                if !keep {
+                    eprintln!(
+                        "\nkept apart, not folded — these state different measures:\n  {}\n  {}",
+                        candidates[head].text, candidates[*m].text
+                    );
+                }
+                keep
+            });
+        }
         if members.len() < 2 {
             continue;
         }
