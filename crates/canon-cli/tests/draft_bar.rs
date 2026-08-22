@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! The Maple House bar — does standalone `draft` actually find planted
+//! The governance bar — does standalone `draft` actually find planted
 //! tensions, and can it tell a decoy from a conflict?
+//!
+//! Two corpora, never blended: `fixtures/maple-house` (a hand-written house
+//! charter, train-contaminated) and `fixtures/des-moines-noise` (municipal
+//! ordinances, labels the council wrote). `CANON_BAR_TRUTH` and
+//! `CANON_BAR_ANCHORS` choose which; a mean over both would be about
+//! neither.
 //!
 //! **This scores by REPLAY, never by re-running the model.** It reads the
 //! artifacts `canon draft --dry-run` persists to `.canon/draft-runs/*.json`
@@ -281,7 +287,7 @@ fn truth() -> Value {
 
 #[test]
 #[ignore = "needs draft runs: ./scripts/draft-bar.sh 3"]
-fn maple_house_bar() {
+fn governance_bar() {
     let truth = truth();
     let planted = truth["planted_tensions"].as_array().unwrap().len();
     let non = truth["expected_non_tensions"].as_array().unwrap().len();
@@ -318,7 +324,11 @@ fn maple_house_bar() {
 
     let scores: Vec<Score> = paths.iter().map(|p| score_run(p, &truth)).collect();
 
-    println!("\nMaple House bar — {planted} planted tensions, {non} labeled compatible pairs");
+    // Name the corpus the manifest names. A banner that says "Maple House"
+    // while scoring an ordinance is a number about the wrong document, and
+    // the reader has no way to tell (§18.3).
+    let corpus = truth["corpus_id"].as_str().unwrap_or("(unnamed corpus)");
+    println!("\n{corpus} bar — {planted} planted tensions, {non} labeled compatible pairs");
     println!("{} run(s) from {}\n", scores.len(), dir.display());
     println!(
         "{:<22} {:>5} {:>5} {:>7} {:>9} {:>6} {:>7} {:>6}",
