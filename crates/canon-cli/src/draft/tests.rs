@@ -122,6 +122,24 @@ fn a_quote_too_short_to_be_evidence_is_refused() {
     assert!(dropped[0].reason.contains("too short"));
 }
 
+/// What the reading pass answers for a batch of rules, 1-based.
+/// One scripted reading: `(rule number, [(value, unit, of, canonical)])`.
+type Reading<'a> = (usize, &'a [(&'a str, &'a str, &'a str, &'a str)]);
+
+fn read_as(rules: &[Reading]) -> String {
+    completion(
+        &json!({
+            "rules": rules.iter().map(|(n, qs)| json!({
+                "n": n,
+                "quantities": qs.iter()
+                    .map(|(v, u, o, c)| json!({ "value": v, "unit": u, "of": o, "canonical": c }))
+                    .collect::<Vec<_>>(),
+            })).collect::<Vec<_>>()
+        })
+        .to_string(),
+    )
+}
+
 fn candidate(text: &str) -> Candidate {
     Candidate {
         text: text.into(),
@@ -140,10 +158,17 @@ fn the_reduce_step_keeps_the_first_of_each_group_with_its_citation() {
         candidate("Kitchen is cleaned by whoever used it."),
         candidate("Quiet time begins at eleven at night."),
     ];
-    let mock = Mock::spawn(vec![(
-        200,
-        completion(&json!({ "groups": [[1, 3]] }).to_string()),
-    )]);
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "groups": [[1, 3]] }).to_string())),
+        // Both state the same hour, so nothing keeps them apart.
+        (
+            200,
+            read_as(&[
+                (1, &[("11", "PM", "quiet hours start", "23:00")]),
+                (2, &[("eleven", "at night", "quiet hours start", "23:00")]),
+            ]),
+        ),
+    ]);
     let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
     assert_eq!(groups, vec![vec![0, 2]]);
     assert_eq!(kept, vec![0, 1]);
@@ -295,10 +320,16 @@ fn two_rules_with_different_times_are_never_duplicates() {
         candidate("Quiet hours begin at 10:00 PM from Sunday through Thursday."),
     ];
     cands.push(candidate("Members keep the back porch tidy."));
-    let mock = Mock::spawn(vec![(
-        200,
-        completion(&json!({ "groups": [[1, 2]] }).to_string()),
-    )]);
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
+        (
+            200,
+            read_as(&[
+                (1, &[("11:00 PM", "", "quiet hours start", "23:00")]),
+                (2, &[("10:00 PM", "", "quiet hours start", "22:00")]),
+            ]),
+        ),
+    ]);
     let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
     assert!(
         groups.is_empty(),
@@ -315,10 +346,11 @@ fn a_genuine_reword_still_folds() {
         candidate("Smoking is prohibited anywhere inside the house."),
         candidate("No form of smoking occurs indoors."),
     ];
-    let mock = Mock::spawn(vec![(
-        200,
-        completion(&json!({ "groups": [[1, 2]] }).to_string()),
-    )]);
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
+        // Neither states a quantity, so nothing can keep them apart.
+        (200, read_as(&[(1, &[]), (2, &[])])),
+    ]);
     let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
     assert_eq!(groups, vec![vec![0, 1]]);
     assert_eq!(kept, vec![0]);
@@ -330,10 +362,30 @@ fn the_same_measure_stated_differently_still_folds() {
         candidate("A guest may stay no more than two consecutive nights in any seven-day period."),
         candidate("Guests stay at most 2 nights per 7 days."),
     ];
-    let mock = Mock::spawn(vec![(
-        200,
-        completion(&json!({ "groups": [[1, 2]] }).to_string()),
-    )]);
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
+        // "two consecutive nights" and "2 nights" are one limit, and the
+        // reading pass says so without anyone listing number words.
+        (
+            200,
+            read_as(&[
+                (
+                    1,
+                    &[
+                        ("2", "nights", "length of stay", "2 night"),
+                        ("7", "days", "period", "7 day"),
+                    ],
+                ),
+                (
+                    2,
+                    &[
+                        ("2", "nights", "length of stay", "2 night"),
+                        ("7", "days", "period", "7 day"),
+                    ],
+                ),
+            ]),
+        ),
+    ]);
     let (groups, _) = dedupe(&mock.client(), &cands).unwrap();
-    assert_eq!(groups, vec![vec![0, 1]], "same measures, one rule");
+    assert_eq!(groups, vec![vec![0, 1]], "same quantities, one rule");
 }

@@ -18,6 +18,7 @@ mod mcp;
 mod measure;
 mod model;
 mod profile;
+mod quantify;
 mod rebase;
 mod store;
 mod tensions;
