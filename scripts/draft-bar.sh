@@ -32,7 +32,12 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 # One directory per model: mixing two models' artifacts into one score
 # produces a mean about nothing.
 OUT=${CANON_BAR_OUT:-"$ROOT/fixtures/maple-house/runs"}
-DOC="$ROOT/fixtures/maple-house/maple-house.md"
+# One document per sweep. CANON_BAR_DOC points the bar at a different corpus;
+# CANON_BAR_PROFILE picks the voice extraction writes in, which is a property
+# of the document and not of the tool — a municipal code is a body governing
+# itself, so it reads as `house`, not `personal`.
+DOC=${CANON_BAR_DOC:-"$ROOT/fixtures/maple-house/maple-house.md"}
+PROFILE=${CANON_BAR_PROFILE:-house}
 ENDPOINT=${CANON_ENDPOINT:-http://localhost:9741/v1}
 MODEL=${CANON_MODEL:-primary}
 
@@ -54,6 +59,8 @@ mkdir -p "$OUT"
 {
   echo "commit    $(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
   echo "dirty     $(git -C "$ROOT" status --porcelain 2>/dev/null | wc -l | tr -d ' ') uncommitted file(s)"
+  echo "document  $DOC"
+  echo "profile   $PROFILE"
   echo "model     $MODEL"
   echo "endpoint  $ENDPOINT"
   echo "binary    $BIN"
@@ -68,7 +75,7 @@ while [ "$i" -le "$RUNS" ]; do
   # The fixture is a house charter, so the canon is a house canon: the
   # profile decides the voice extraction writes in, and a personal-profile
   # run over a charter produces "I observe quiet hours" instead of a rule.
-  "$BIN" init --profile house >/dev/null
+  "$BIN" init --profile "$PROFILE" >/dev/null
   "$BIN" config set endpoint "$ENDPOINT" >/dev/null
   "$BIN" config set model "$MODEL" >/dev/null
 
