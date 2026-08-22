@@ -248,10 +248,22 @@ fn as_number(word: &str) -> Option<u32> {
         ("ten", 10),
         ("eleven", 11),
         ("twelve", 12),
+        ("thirteen", 13),
+        ("fourteen", 14),
         ("fifteen", 15),
+        ("sixteen", 16),
+        ("seventeen", 17),
+        ("eighteen", 18),
+        ("nineteen", 19),
         ("twenty", 20),
         ("thirty", 30),
+        ("forty", 40),
+        ("fifty", 50),
         ("sixty", 60),
+        ("seventy", 70),
+        ("eighty", 80),
+        ("ninety", 90),
+        ("hundred", 100),
     ];
     let w = word.trim_matches(|c: char| !c.is_ascii_alphanumeric());
     if let Ok(n) = w.parse::<u32>() {
@@ -267,8 +279,61 @@ fn singular(word: &str) -> String {
     w.strip_suffix('s').map(str::to_string).unwrap_or(w)
 }
 
-/// Every clock time in `s`, canonicalised: `11:00 PM`, `11 pm` and `11pm` all
-/// become `11pm`.
+/// One number starting at `words[i]`, and how many words it spans.
+///
+/// `twenty-five` tokenises to two words and states one number. Read as two,
+/// a rule naming a twenty-five dollar fee states neither the fee it names nor
+/// the one its passage does, and the faithful rule is dropped.
+fn number_at(words: &[String], i: usize) -> Option<(u32, usize)> {
+    let n = as_number(&words[i])?;
+    if (20..=90).contains(&n) && n % 10 == 0 {
+        if let Some(u) = words.get(i + 1).and_then(|w| as_number(w)) {
+            if (1..=9).contains(&u) {
+                return Some((n + u, 2));
+            }
+        }
+    }
+    Some((n, 1))
+}
+
+/// The unit a symbol states on its own. `$50` names a currency with no
+/// currency word in it, and a guard that reads no measure there folds a $50
+/// rule into a $75 one.
+const SYMBOL_UNITS: &[(char, &str)] = &[('$', "dollar"), ('%', "percent")];
+
+/// A meridiem at `chars[j]`, punctuated or not: `pm`, `p.m.`, `p.m` all read
+/// as `pm`. Returns the half of the day and the position after it.
+///
+/// The trailing boundary check is load-bearing: without it `at 7 among the
+/// hedges` reads as 7am.
+fn meridiem_at(b: &[char], j: usize) -> Option<(&'static str, usize)> {
+    let half = match b.get(j)? {
+        'a' => "am",
+        'p' => "pm",
+        _ => return None,
+    };
+    let mut k = j + 1;
+    if b.get(k) == Some(&'.') {
+        k += 1;
+    }
+    if b.get(k) != Some(&'m') {
+        return None;
+    }
+    k += 1;
+    if b.get(k) == Some(&'.') {
+        k += 1;
+    }
+    match b.get(k) {
+        Some(c) if c.is_ascii_alphanumeric() => None,
+        _ => Some((half, k)),
+    }
+}
+
+/// Every clock time in `s`, canonicalised: `11:00 PM`, `11 pm`, `11 p.m.` and
+/// `23:00` all become `11pm`. Minutes appear only when they are not zero, so
+/// `10 pm` and `10:00 PM` are one time and `10:30 PM` is a different one.
+///
+/// Expects text already through [`normalize`].
 fn clock_times(s: &str) -> Vec<String> {
     let mut out = Vec::new();
     let b: Vec<char> = s.chars().collect();
@@ -287,21 +352,51 @@ fn clock_times(s: &str) -> Vec<String> {
             continue;
         }
         let mut j = i;
-        // Optional `:mm`, then optional space, then am/pm.
+        // Optional `:mm`. Minutes are kept, because 10:30 PM and 10:00 PM are
+        // two different rules about the same subject.
+        let mut minutes = String::new();
         if j < b.len() && b[j] == ':' {
             j += 1;
+            let m = j;
             while j < b.len() && b[j].is_ascii_digit() {
                 j += 1;
             }
+            minutes = b[m..j].iter().collect();
         }
+        let after_digits = j;
         while j < b.len() && b[j] == ' ' {
             j += 1;
         }
-        let rest: String = b[j..b.len().min(j + 2)].iter().collect();
-        if rest == "am" || rest == "pm" {
-            out.push(format!("{hour}{rest}"));
-            i = j + 2;
+        let mm = if minutes.trim_start_matches('0').is_empty() {
+            String::new()
+        } else {
+            format!(":{minutes}")
+        };
+        if let Some((half, end)) = meridiem_at(&b, j) {
+            out.push(format!("{hour}{mm}{half}"));
+            i = end;
+            continue;
         }
+        // No meridiem. A 24-hour clock is still a time, but only where it
+        // cannot be read as either half of the day: a bare 7:00 is ambiguous
+        // and guessing at it would invent a measure the document never
+        // stated.
+        if minutes.is_empty() {
+            continue;
+        }
+        let Ok(h) = hour.parse::<u32>() else {
+            continue;
+        };
+        let named = match h {
+            0 => Some(("12", "am")),
+            13..=23 => None,
+            _ => continue,
+        };
+        match named {
+            Some((h12, half)) => out.push(format!("{h12}{mm}{half}")),
+            None => out.push(format!("{}{mm}pm", h - 12)),
+        }
+        i = after_digits;
     }
     out
 }
@@ -346,11 +441,23 @@ fn is_time_of_day(words: &[String], unit_at: usize) -> bool {
 fn measures(s: &str) -> Vec<(u32, String)> {
     let words = words_of(s);
     let mut out = Vec::new();
-    for i in 0..words.len() {
-        let Some(n) = as_number(&words[i]) else {
+    let mut i = 0;
+    while i < words.len() {
+        let Some((n, used)) = number_at(&words, i) else {
+            i += 1;
             continue;
         };
-        for j in (i + 1)..(i + 2 + MEASURE_GAP).min(words.len()) {
+        // A symbol states its unit inside the same token, so there is no gap
+        // to scan.
+        if let Some((_, unit)) = SYMBOL_UNITS
+            .iter()
+            .find(|(c, _)| words[i].contains(*c) || words[i + used - 1].contains(*c))
+        {
+            out.push((n, (*unit).to_string()));
+            i += used;
+            continue;
+        }
+        for j in (i + used)..(i + used + 1 + MEASURE_GAP).min(words.len()) {
             let u = singular(&words[j]);
             if UNITS.contains(&u.as_str()) {
                 if !is_time_of_day(&words, j) {
@@ -359,6 +466,7 @@ fn measures(s: &str) -> Vec<(u32, String)> {
                 break;
             }
         }
+        i += used;
     }
     out
 }
@@ -367,11 +475,23 @@ fn measures(s: &str) -> Vec<(u32, String)> {
 fn spelled_times(s: &str) -> Vec<String> {
     let words = words_of(s);
     let mut out = Vec::new();
-    for i in 0..words.len() {
-        let Some(n) = as_number(&words[i]) else {
+    // `midnight` and `noon` name an instant with no digit in it, so a rule
+    // beginning quiet hours at midnight and one beginning them at 11:00 PM
+    // would otherwise not disagree about anything.
+    for w in &words {
+        match singular(w).as_str() {
+            "midnight" => out.push("12am".to_string()),
+            "noon" => out.push("12pm".to_string()),
+            _ => {}
+        }
+    }
+    let mut i = 0;
+    while i < words.len() {
+        let Some((n, used)) = number_at(&words, i) else {
+            i += 1;
             continue;
         };
-        for j in (i + 1)..(i + 2 + MEASURE_GAP).min(words.len()) {
+        for j in (i + used)..(i + used + 1 + MEASURE_GAP).min(words.len()) {
             let u = singular(&words[j]);
             if let Some((_, half)) = TIME_OF_DAY.iter().find(|(t, _)| *t == u) {
                 if is_time_of_day(&words, j) {
@@ -380,6 +500,7 @@ fn spelled_times(s: &str) -> Vec<String> {
                 break;
             }
         }
+        i += used;
     }
     out
 }
