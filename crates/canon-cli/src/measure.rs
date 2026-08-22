@@ -24,6 +24,10 @@ pub(crate) fn normalize(s: &str) -> String {
 /// that change what a rule MEANS when they are wrong.
 const UNITS: &[&str] = &[
     "minute", "hour", "day", "night", "week", "month", "year", "gallon", "dollar",
+    // Loudness. A weighting letter is part of the unit, not decoration:
+    // 85 dB(A) and 85 dB(C) permit different sound, so a rule restating one
+    // as the other states a different limit while looking like a copy.
+    "decibel", "db", "dba", "dbc",
 ];
 
 /// Number words a rule might use where the passage used a digit, or the
@@ -698,6 +702,84 @@ month by signing the shared calendar at least three days ahead.";
             "Members add agenda items no less than two days before the meeting.",
         ];
         assert!(conflicting_pairs(&texts).is_empty());
+    }
+
+    #[test]
+    fn a_weighting_letter_is_part_of_the_unit() {
+        // Measured on real municipal text: an ordinance restated six permit
+        // types changing only dB(A) to dB(C), and every one was folded into
+        // its predecessor as a duplicate because neither reading stated a
+        // measure this module could see. Five planted supersessions were
+        // destroyed at the reduce step before comparison ever ran.
+        assert!(measures("not more than 85 dbas").contains(&(85, "dba".into())));
+        assert!(measures("not more than 85 dbcs").contains(&(85, "dbc".into())));
+        assert!(measures("not greater than 85 decibels").contains(&(85, "decibel".into())));
+        assert!(measures("140 db").contains(&(140, "db".into())));
+        assert!(differs_by_measure(
+            "Sound equipment may register not more than 85 dBAs.",
+            "Sound equipment may register not more than 85 dBCs."
+        ));
+        // The same limit is still the same limit.
+        assert!(!differs_by_measure(
+            "Sound equipment may register not more than 85 dBCs.",
+            "No more than 85 dBC when measured at the property boundary."
+        ));
+    }
+
+    #[test]
+    fn a_rule_that_swaps_the_weighting_its_passage_states_is_refused() {
+        let src = "A type \"A\" permit may be issued for sound equipment registering not more \
+                   than 85 dBAs when measured at the real property boundary.";
+        assert_eq!(
+            unstated_measure("Sound equipment may register up to 85 dBCs.", src).as_deref(),
+            Some("85 dbc(s)")
+        );
+        assert_eq!(
+            unstated_measure("Sound equipment may register up to 85 dBAs.", src),
+            None
+        );
+    }
+
+    /// Would the fold guard refuse the folds this artifact actually made?
+    ///
+    /// Replays `differs_by_measure` over the duplicate groups a real run
+    /// persisted, so a change to [`UNITS`] can be priced before an hour of
+    /// endpoint time is spent re-running the sweep.
+    ///
+    /// ```sh
+    /// CANON_RUN=<run.json> cargo test --bin canon -- --ignored --nocapture would_refuse
+    /// ```
+    #[test]
+    #[ignore = "needs a draft run artifact: set CANON_RUN"]
+    fn what_the_fold_guard_would_refuse_in_a_real_run() {
+        let path = std::env::var("CANON_RUN").expect("set CANON_RUN");
+        let run: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        let cands = run["candidates"].as_array().unwrap();
+        let text = |i: usize| cands[i]["text"].as_str().unwrap_or("").to_string();
+        let (mut refused, mut allowed) = (0, 0);
+        for g in run["duplicates"].as_array().unwrap() {
+            let m: Vec<usize> = g
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_u64().unwrap() as usize)
+                .collect();
+            let head = m[0];
+            for &other in &m[1..] {
+                if differs_by_measure(&text(head), &text(other)) {
+                    refused += 1;
+                    println!(
+                        "  WOULD KEEP APART:\n    {}\n    {}\n",
+                        text(head),
+                        text(other)
+                    );
+                } else {
+                    allowed += 1;
+                }
+            }
+        }
+        println!("{refused} fold(s) would now be refused, {allowed} still allowed");
     }
 
     /// What the mechanical pass proposes on a real canon, and what it costs.
