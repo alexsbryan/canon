@@ -157,12 +157,17 @@ not a general claim about yours.
 
 ```sh
 # score the evidence in this repo
-CANON_BAR_RUNS=$PWD/fixtures/maple-house/runs/qwen-27b \
-  cargo test --test draft_bar -- --ignored --nocapture
+./scripts/score-bar.sh maple-house fixtures/maple-house/runs/qwen-27b
 
 # or produce your own, against your own endpoint
 sh scripts/draft-bar.sh 3
 ```
+
+There is a second corpus. `fixtures/des-moines-noise/` is Article IV of the
+Des Moines municipal code interleaved with two ordinances that amend it, and
+its labels are the council's own "Section X is amended" pointers rather than
+anything written for a bench. It is scored the same way and is deliberately
+kept separate — a mean over two corpora is a number about neither.
 
 `runs/qwen-27b-before-fold-guard/` is the same document through the build
 that preceded it, kept so the difference is checkable and not just
