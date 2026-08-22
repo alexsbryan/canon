@@ -364,6 +364,12 @@ truth = {
         "two readings — see PROVENANCE.md. Splits: train/dev tunable, test sacred."
     ),
     "schema_version": 2,
+    # This manifest labels the permit-type pairs the ordinances restate, plus
+    # a handful of decoys — NOT every cross-section pair in a 33-section
+    # document. So a proposal it does not name may be a genuine conflict
+    # nobody labelled, and precision computed against it would measure the
+    # manifest's size rather than the tool's discrimination.
+    "exhaustive": False,
     "tension_types": ["unmarked_supersession"],
     "planted_tensions": planted,
     "expected_non_tensions": non,
