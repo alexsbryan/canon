@@ -17,6 +17,7 @@ use canon_core::{ActId, Canon, Commitment, Conflict, Disposition};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
+use crate::measure;
 use crate::model::{self, Client, ModelError};
 
 const SYSTEM: &str = "\
@@ -147,7 +148,64 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Vec<Proposed>, Mod
         }
     }
     eprintln!("\r{passes} passes done, {} pair(s) proposed", out.len());
+
+    // Block-pairwise examines every pair, but examining is not noticing: a
+    // contradiction sitting among twenty-three unrelated rules is what the
+    // batch-size measurement above was measuring the loss of. These pairs are
+    // found with no model at all, and putting them in front of one TOGETHER
+    // costs a call or two and cannot invent a conflict — the model still
+    // decides, and rules may differ by a number and be perfectly compatible.
+    for idx in focus_passes(texts) {
+        for p in one_pass(client, texts, &idx)? {
+            if !out.iter().any(|q| is_same(q, &p)) {
+                out.push(p);
+            }
+        }
+    }
     Ok(out)
+}
+
+/// How many focused passes a canon is worth. Bounded because the pairs are
+/// quadratic in the worst case and each pass is a completion.
+const FOCUS_MAX_PASSES: usize = 3;
+
+/// The mechanically-flagged pairs, gathered into passes that keep both halves
+/// of a pair in the same one. Most-related pairs first, so a truncated run
+/// keeps the best of them.
+fn focus_passes(texts: &[&str]) -> Vec<Vec<usize>> {
+    let flagged = measure::conflicting_pairs(texts);
+    if flagged.is_empty() {
+        return Vec::new();
+    }
+    let mut passes: Vec<Vec<usize>> = Vec::new();
+    let mut cur: Vec<usize> = Vec::new();
+    for (a, b) in &flagged {
+        let add: Vec<usize> = [*a, *b].into_iter().filter(|i| !cur.contains(i)).collect();
+        if !cur.is_empty() && cur.len() + add.len() > BATCH {
+            passes.push(std::mem::take(&mut cur));
+        }
+        cur.extend(add);
+    }
+    if !cur.is_empty() {
+        passes.push(cur);
+    }
+    // A cap that is not reported reads as "everything was compared".
+    if passes.len() > FOCUS_MAX_PASSES {
+        eprintln!(
+            "{} pair(s) state different measures — comparing the {} most related, dropping {} pass(es)",
+            flagged.len(),
+            FOCUS_MAX_PASSES,
+            passes.len() - FOCUS_MAX_PASSES
+        );
+        passes.truncate(FOCUS_MAX_PASSES);
+    } else {
+        eprintln!(
+            "{} pair(s) state different measures about a shared subject — {} focused pass(es)",
+            flagged.len(),
+            passes.len()
+        );
+    }
+    passes
 }
 
 fn is_same(a: &Proposed, b: &Proposed) -> bool {
