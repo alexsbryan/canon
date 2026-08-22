@@ -230,3 +230,232 @@ fn the_extraction_asks_for_the_voice_the_canon_is_written_in() {
         assert!(!system.contains(reject), "{profile:?} prompt: {system}");
     }
 }
+
+// ── fidelity: the rule must state the passage's measures ────
+
+const RESERVE: &str = "To make room for the occasional birthday or study group, the house \
+resolved that a member may reserve the dining room for their own private event up to twice a \
+month by signing the shared calendar at least three days ahead.";
+
+#[test]
+fn a_rule_that_changes_a_unit_is_refused_even_with_a_perfect_quote() {
+    // Observed against a live endpoint. The quote was word-for-word — "by
+    // signing the shared calendar at least three days ahead" — and the rule
+    // said "three hours". The citation check passed it, because it proves the
+    // quote is real and not that the rule matches it.
+    assert_eq!(
+        unstated_measure(
+            "Reservations must be made by signing the shared calendar at least three hours in advance.",
+            RESERVE
+        )
+        .as_deref(),
+        Some("3 hour(s)")
+    );
+}
+
+#[test]
+fn a_faithful_rule_survives_the_measure_check() {
+    assert_eq!(
+        unstated_measure(
+            "Reservations are made by signing the shared calendar at least three days ahead.",
+            RESERVE
+        ),
+        None
+    );
+}
+
+#[test]
+fn a_number_word_and_its_digit_are_the_same_measure() {
+    // "up to twice a month" and "no more than 2 times per month" are one
+    // rule. Reading them as different ones would drop a good candidate, and
+    // a false drop costs exactly the recall this guard is meant to protect.
+    assert_eq!(
+        unstated_measure(
+            "A member may reserve the dining room 2 times per month.",
+            RESERVE
+        ),
+        None
+    );
+    assert_eq!(
+        unstated_measure(
+            "A member may reserve the dining room two times a month.",
+            RESERVE
+        ),
+        None
+    );
+    // But a different count is a different rule.
+    assert_eq!(
+        unstated_measure(
+            "A member may reserve the dining room four times a month.",
+            RESERVE
+        )
+        .as_deref(),
+        Some("4 month(s)")
+    );
+}
+
+#[test]
+fn a_reworded_unit_with_no_number_attached_is_not_a_measure() {
+    // "within any seven-day period" reworded as "per week" is a paraphrase,
+    // not a different rule. The guard compares number-and-unit PAIRS for
+    // exactly this reason.
+    let src = "Any single guest may stay no more than two consecutive nights within any \
+               seven-day period.";
+    assert_eq!(
+        unstated_measure("A guest may stay two nights per week.", src),
+        None
+    );
+}
+
+#[test]
+fn a_clock_time_the_passage_does_not_state_is_refused() {
+    let src = "Quiet hours are observed every night, running from 11:00 PM until 7:00 AM.";
+    assert_eq!(unstated_measure("Quiet hours run 11pm to 7am.", src), None);
+    assert_eq!(
+        unstated_measure("Quiet hours run 10pm to 7am.", src).as_deref(),
+        Some("10pm")
+    );
+}
+
+#[test]
+fn the_measure_check_is_wired_into_extraction() {
+    let chunks = chunk_text("house.md", DOC);
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted(&[(
+            "Quiet hours run from 10:00 PM to 7:00 AM.",
+            "Quiet hours run from 11:00 PM until 7:00 AM",
+        )]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert!(kept.is_empty(), "{kept:#?}");
+    assert!(
+        dropped[0].reason.contains("10pm"),
+        "{:?}",
+        dropped[0].reason
+    );
+}
+
+#[test]
+fn the_section_title_reaches_the_model_as_context_it_may_not_quote() {
+    // The chunker recorded the heading from the first commit and never sent
+    // it. A minute headed "Decision — 2026-02-10 — Weeknight Quiet Hours"
+    // opens "the house met and resolved…" and never names its own subject;
+    // read cold, its one operative sentence looks like narrative, and it was
+    // dropped.
+    let chunks = chunk_text("house.md", DOC);
+    let mock = Mock::spawn(vec![(200, extracted(&[]))]);
+    extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    let user = mock.requests()[0]["messages"][1]["content"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert!(user.contains("Article II — Quiet Hours"), "{user}");
+    assert!(user.contains("do not quote from it"), "{user}");
+}
+
+#[test]
+fn a_passage_with_no_heading_is_sent_plain() {
+    // Journals have no headings, and inventing a title would be inventing
+    // context the source does not have.
+    let chunks = chunk_text("journal.md", &format!("{}\n", "x".repeat(80)));
+    let mock = Mock::spawn(vec![(200, extracted(&[]))]);
+    extract(&mock.client(), &chunks[0], Profile::Personal).unwrap();
+    let user = mock.requests()[0]["messages"][1]["content"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert!(user.starts_with("Passage:"), "{user}");
+}
+
+// ── dedupe must not eat contradictions ──────────────────────
+
+#[test]
+fn two_rules_with_different_times_are_never_duplicates() {
+    // Observed in a real run: the reduce step folded the 2026-02-10 decision
+    // into the Article II charter rule. Both were extracted correctly; the
+    // fold alone destroyed planted tensions T5 and T10 — the entire
+    // unmarked-supersession category — before any comparison ran.
+    let mut cands = vec![
+        candidate("Quiet hours run from 11:00 PM to 7:00 AM every night."),
+        candidate("Quiet hours begin at 10:00 PM from Sunday through Thursday."),
+    ];
+    cands.push(candidate("Members keep the back porch tidy."));
+    let mock = Mock::spawn(vec![(
+        200,
+        completion(&json!({ "groups": [[1, 2]] }).to_string()),
+    )]);
+    let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
+    assert!(
+        groups.is_empty(),
+        "a contradiction is not a duplicate: {groups:?}"
+    );
+    assert_eq!(kept, vec![0, 1, 2], "both rules survive");
+}
+
+#[test]
+fn a_genuine_reword_still_folds() {
+    // The guard must not cost ordinary deduplication, or it trades one
+    // failure for another.
+    let cands = vec![
+        candidate("Smoking is prohibited anywhere inside the house."),
+        candidate("No form of smoking occurs indoors."),
+    ];
+    let mock = Mock::spawn(vec![(
+        200,
+        completion(&json!({ "groups": [[1, 2]] }).to_string()),
+    )]);
+    let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
+    assert_eq!(groups, vec![vec![0, 1]]);
+    assert_eq!(kept, vec![0]);
+}
+
+#[test]
+fn the_same_measure_stated_differently_still_folds() {
+    let cands = vec![
+        candidate("A guest may stay no more than two consecutive nights in any seven-day period."),
+        candidate("Guests stay at most 2 nights per 7 days."),
+    ];
+    let mock = Mock::spawn(vec![(
+        200,
+        completion(&json!({ "groups": [[1, 2]] }).to_string()),
+    )]);
+    let (groups, _) = dedupe(&mock.client(), &cands).unwrap();
+    assert_eq!(groups, vec![vec![0, 1]], "same measures, one rule");
+}
+
+#[test]
+fn a_rule_with_no_measure_can_still_be_folded_into_one_that_has_them() {
+    // The guard fires only when BOTH state measures; otherwise it would keep
+    // every vague restatement of a timed rule as a separate commitment.
+    assert!(!differs_by_measure(
+        "Quiet hours run from 11:00 PM to 7:00 AM.",
+        "Quiet hours are observed overnight."
+    ));
+    assert!(differs_by_measure(
+        "Quiet hours run from 11:00 PM to 7:00 AM.",
+        "Quiet hours begin at 10:00 PM."
+    ));
+}
+
+#[test]
+fn a_hyphenated_measure_is_read_as_a_measure() {
+    // "within any seven-day period" and "per 7 days" state the same limit. A
+    // tokeniser that splits only on spaces sees no number in the first, and
+    // the guard then reads two identical rules as a contradiction.
+    assert!(measures("within any seven-day period").contains(&(7, "day".into())));
+    assert!(measures("a twenty-gallon tank").contains(&(20, "gallon".into())));
+}
+
+#[test]
+fn a_time_of_day_in_words_is_a_time_not_a_count() {
+    // "eleven at night" is 11pm, not eleven nights.
+    assert!(measures("quiet time begins at eleven at night").is_empty());
+    assert_eq!(
+        spelled_times("quiet time begins at eleven at night"),
+        vec!["11pm"]
+    );
+    // But a real count of nights survives.
+    assert!(measures("no more than two consecutive nights").contains(&(2, "night".into())));
+    assert!(spelled_times("no more than two consecutive nights").is_empty());
+}

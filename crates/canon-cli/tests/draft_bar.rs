@@ -189,6 +189,13 @@ fn runs_dir() -> PathBuf {
     }
 }
 
+fn anchors() -> Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/maple-house/extraction-anchors.json");
+    serde_json::from_str(&std::fs::read_to_string(&path).expect("extraction-anchors.json"))
+        .expect("anchors JSON")
+}
+
 fn truth() -> Value {
     let path =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/maple-house/truth.json");
@@ -303,6 +310,150 @@ fn maple_house_bar() {
         worst_decoys < KILL_DECOY_CEILING,
         "KILL: {worst_decoys} of {non} labeled compatible pairs flagged as tensions — \
          standalone draft cannot tell a decoy from a conflict"
+    );
+}
+
+/// The extraction stage's own bar: is each planted tension FINDABLE AT ALL?
+///
+/// A tension whose load-bearing clause never made it out of the passage
+/// cannot be found by any amount of comparison, and a tensions-step recall
+/// number computed over such a candidate set is measuring the wrong stage.
+/// This separates the two so a bad number can be attributed.
+///
+/// Observed at the time this was written: the 2026-02-10 decision exists
+/// solely to move quiet hours to 10:00 PM, and extraction kept only the
+/// sentence saying what had NOT changed — putting T5 and T10 out of reach
+/// before the comparison started.
+#[test]
+#[ignore = "needs draft runs: ./scripts/draft-bar.sh 3"]
+fn extraction_coverage() {
+    let anchors = anchors();
+    let dir = runs_dir();
+    let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .unwrap_or_else(|e| panic!("no runs at {}: {e}", dir.display()))
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().is_some_and(|x| x == "json"))
+        .collect();
+    paths.sort();
+    assert!(!paths.is_empty(), "no runs at {}", dir.display());
+
+    let mut worst = usize::MAX;
+    for path in &paths {
+        let run: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let chunks = run["chunks"].as_array().unwrap();
+        let candidates = run["candidates"].as_array().unwrap();
+        let kept = run["kept"].as_array().unwrap();
+
+        // Everything a section contributed, in two haystacks: what
+        // extraction produced, and what survived the reduce step. Scoring
+        // only the survivors blames extraction for a dedupe fold — which is
+        // exactly what happened here, and it sent me editing the extraction
+        // prompt for a defect one stage later.
+        let section_of = |c: &Value| -> Option<String> {
+            chunks[c["chunk"].as_u64()? as usize]["heading"]
+                .as_str()
+                .and_then(section_key)
+        };
+        let kept_idx: std::collections::BTreeSet<usize> = kept
+            .iter()
+            .filter_map(|k| k.as_u64().map(|v| v as usize))
+            .collect();
+
+        let mut extracted: std::collections::BTreeMap<String, String> = Default::default();
+        let mut survived: std::collections::BTreeMap<String, String> = Default::default();
+        for (i, c) in candidates.iter().enumerate() {
+            let Some(sec) = section_of(c) else { continue };
+            let text = format!(" || {}", c["text"].as_str().unwrap_or("").to_lowercase());
+            extracted.entry(sec.clone()).or_default().push_str(&text);
+            if kept_idx.contains(&i) {
+                survived.entry(sec).or_default().push_str(&text);
+            }
+        }
+        // Any one alternative satisfies an anchor.
+        let has = |hay: &str, alts: &Value| -> bool {
+            alts.as_array()
+                .map(|a| {
+                    a.iter()
+                        .any(|m| hay.contains(&m.as_str().unwrap_or("").to_lowercase()))
+                })
+                .unwrap_or(false)
+        };
+
+        let mut findable = Vec::new();
+        let mut blocked = Vec::new();
+        let mut folded_away = Vec::new();
+        for (tid, sides) in anchors["anchors"].as_object().unwrap() {
+            let mut missing = Vec::new();
+            let mut lost_to_dedupe = Vec::new();
+            for side in sides.as_array().unwrap() {
+                let section = side["section"].as_str().unwrap_or("").to_string();
+                let ext = extracted.get(&section).cloned().unwrap_or_default();
+                let sur = survived.get(&section).cloned().unwrap_or_default();
+                for alts in side["must"].as_array().unwrap() {
+                    if !has(&ext, alts) {
+                        missing.push(format!("{section} never yielded {alts}"));
+                    } else if !has(&sur, alts) {
+                        // Extraction did its job and the reduce step undid it.
+                        lost_to_dedupe.push(format!("{section}: {alts} folded away"));
+                    }
+                }
+            }
+            if !missing.is_empty() {
+                blocked.push(format!("{tid}: {}", missing.join("; ")));
+            } else if !lost_to_dedupe.is_empty() {
+                folded_away.push(format!("{tid}: {}", lost_to_dedupe.join("; ")));
+            } else {
+                findable.push(tid.clone());
+            }
+        }
+        let total = anchors["anchors"].as_object().unwrap().len();
+        println!(
+            "\n{}  reachable {}/{total}   (extraction missed {}, dedupe folded {})",
+            path.file_name().unwrap().to_string_lossy(),
+            findable.len(),
+            blocked.len(),
+            folded_away.len()
+        );
+        for b in &blocked {
+            println!("  NEVER EXTRACTED  {b}");
+        }
+        for f in &folded_away {
+            println!("  FOLDED BY DEDUPE {f}");
+        }
+        worst = worst.min(findable.len());
+
+        // A rule stating a measure its passage does not is worse than a
+        // missing rule: the citation makes it look checked. The extractor
+        // refuses these, so any survivor is a regression.
+        for k in kept {
+            let c = &candidates[k.as_u64().unwrap() as usize];
+            let chunk = &chunks[c["chunk"].as_u64().unwrap() as usize];
+            let text = c["text"].as_str().unwrap_or("").to_lowercase();
+            let src = chunk["text"].as_str().unwrap_or("").to_lowercase();
+            for unit in ["hour", "day", "night", "week", "month", "year"] {
+                if text.contains(unit) && !src.contains(unit) {
+                    panic!(
+                        "a surviving rule states `{unit}`, absent from its passage:\n  {}\n  {}",
+                        c["text"], chunk["source"]
+                    );
+                }
+            }
+        }
+    }
+
+    let total = anchors["anchors"].as_object().unwrap().len();
+    println!("\nworst run: {worst}/{total} tensions were reachable at all");
+    // Extraction must not put the tensions bar out of reach before the
+    // comparison starts. Derived from the pre-registered recall floor rather
+    // than chosen: a ceiling below it makes that floor unreachable by
+    // construction, and a run that fails for THAT reason is not a statement
+    // about tension detection.
+    let need = (KILL_RECALL_FLOOR * total as f64).ceil() as usize;
+    assert!(
+        worst >= need,
+        "extraction left only {worst}/{total} tensions reachable — the recall floor of \
+         {KILL_RECALL_FLOOR:.2} needs at least {need}, so a tensions number here would be \
+         measuring extraction"
     );
 }
 
