@@ -15,6 +15,7 @@ mod draft;
 mod explain;
 mod lineage;
 mod mcp;
+mod measure;
 mod model;
 mod profile;
 mod rebase;
