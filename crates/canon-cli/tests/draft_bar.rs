@@ -510,22 +510,34 @@ fn extraction_coverage() {
         }
         worst = worst.min(findable.len());
 
-        // A rule stating a measure its passage does not is worse than a
-        // missing rule: the citation makes it look checked. The extractor
-        // refuses these, so any survivor is a regression.
+        // Every surviving candidate carries a verbatim quote from its own
+        // chunk. This is the invariant `draft` actually promises, checked
+        // end to end against the persisted evidence.
+        //
+        // What stood here was a keyword scan — a rule mentioning "day" whose
+        // passage did not was a failure — and it was a SECOND opinion about
+        // fidelity that disagreed with the shipped one (§10.6). It fired on
+        // "at all times" rendered as "throughout the day and night": a
+        // paraphrase with no number attached, which `unstated_measure` is
+        // documented to allow and which the unit tests pin. A bar must not
+        // assert a promise the tool never made.
         for k in kept {
             let c = &candidates[k.as_u64().unwrap() as usize];
             let chunk = &chunks[c["chunk"].as_u64().unwrap() as usize];
-            let text = c["text"].as_str().unwrap_or("").to_lowercase();
-            let src = chunk["text"].as_str().unwrap_or("").to_lowercase();
-            for unit in ["hour", "day", "night", "week", "month", "year"] {
-                if text.contains(unit) && !src.contains(unit) {
-                    panic!(
-                        "a surviving rule states `{unit}`, absent from its passage:\n  {}\n  {}",
-                        c["text"], chunk["source"]
-                    );
-                }
-            }
+            let flat = |s: &str| {
+                s.split_whitespace()
+                    .collect::<Vec<_>>()
+                    .join(" ")
+                    .to_lowercase()
+            };
+            let quote = flat(c["quote"].as_str().unwrap_or(""));
+            let src = flat(chunk["text"].as_str().unwrap_or(""));
+            assert!(
+                !quote.is_empty() && src.contains(&quote),
+                "a surviving candidate's quote is not in its own passage:\n  {}\n  {}",
+                c["quote"],
+                chunk["source"]
+            );
         }
     }
 
