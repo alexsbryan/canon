@@ -1,0 +1,955 @@
+                      ORDINANCE NO. 14,746
+
+
+AN ORDINANCE to amend the Municipal Code of the City of Des
+    Moines, Iowa, 2000, adopted by Ordinance No. 13,827, passed
+    June 5, 2000, by repealing Article IV, Noise Pollution,
+    Sections 42-246 through 42-270 thereof and adding and
+    enacting a new Article IV, Noise Control, Sections 42-246
+    through 42-267.
+
+Be It Ordained by the City Council of the City of Des Moines,
+     Iowa:
+
+    Section 1.    That the Municipal Code of the City of Des
+
+Moines, Iowa, 2000, adopted by Ordinance No. 13,827, passed June
+
+5, 2000, by repealing Article IV, Noise Pollution, Sections 42-
+
+246 through 42-270 thereof and adding and enacting a new Article
+
+IV, Noise Control, Sections 42-246 through 42-267, as follows:
+
+                    ARTICLE IV. Noise Control
+
+Sec. 42-246. Definitions.
+
+     Definitions of technical terms used in this article which
+are not defined in this section shall be obtained from
+publications of acoustical terminology issued by the American
+National Standards Institute (ANSI) or its successor body. The
+following words, terms and phrases, when used in this article,
+shall have the meanings ascribed to them in this section, except
+where the context clearly indicates a different meaning:
+     “Adverse Impact‖ shall mean such a state of facts as would
+lead a person of ordinary care and prudence to conclude that the
+economic, entertainment and philanthropic benefits to the
+community do not reasonably outweigh the quiet use and enjoyment
+of the affected property.
+     ―Ambient sound level‖ means the noise associated with a
+given environment, exclusive of a particular noise being tested,
+being usually a composite of sounds from many sources near and
+far, exclusive of intruding noises from isolated identifiable
+sources.
+     “A-weighted sound level‖ means the sound pressure level in
+decibels as measured on a sound level meter using the A-
+weighting network. The level is designated dB(a) or dBA.
+     “Construction‖   means  any   site  preparation,   assembly,
+erection, substantial repair, alteration, or similar action for
+or of public or private rights-of-way, structures, utilities or
+similar property.
+     “Decibel (dB)‖ means a logarithmic and dimensionless unit
+of measure often used in describing the amplitude of sound,
+equal to 20 times the logarithm to the base 10 of the ratio of
+the pressure of the sound measured to the reference pressure,
+which is 20 miscropascals (20 micronewtons per square meter).
+     “Demolition‖ means any dismantling, intentional destruction
+or removal of structures, utilities, public or private right-of-
+way surfaces, or similar property.
+     “Emergency‖ means any occurrence or set of circumstances
+involving actual or imminent physical or psychological trauma or
+property damage which demands immediate action.
+     “Emergency work‖ means any work performed for the purpose
+of alleviating or resolving an emergency.
+     “Equivalent A-weighted sound level (Leq)‖ means the constant
+sound level that, in a given situation and time period, conveys
+the same sound energy as the actual time-varying A-weighted
+sound. For the purpose of this article, a time period of one
+hour shall be used, unless the likely duration or intensity of
+the sound being measured makes a shorter time period reasonable.
+     “Impulsive sound‖ means sound of short duration, usually
+less than one second, with an abrupt onset and rapid decay.
+Examples of sources of impulsive sound include explosions, drop
+forge impacts, and the discharge of firearms.
+     “Motorboat‖ means any vessel which operates on water and
+which is propelled by a motor, including but not limited to
+boats, barges, amphibious craft, water ski towing devices and
+hovercraft.
+     “Motorcycle‖ means any motor vehicle having a saddle or
+seat for the use of the rider and designed to travel on not more
+than three wheels in contact with the ground. The term includes
+motorized bicycles and motor scooters.
+     “Motor vehicle‖ means any motor-operated vehicle licensed
+for use on the public highways, but not including a motorcycle.
+     “Noise‖ means any sound which disturbs humans or which
+causes   or  tends   to  cause   an   adverse    psychological or
+physiological effect on humans.
+     “Noise disturbance‖ means:
+          1)   Any sound which unreasonably endangers or injures
+          the health or safety or welfare of a human being; or
+          2)   Any sound which unreasonably disturbs a person of
+          normal sensitivities; or
+          3)   Any sound which unreasonably devalues or injures
+          personal or real property; or
+          4)   Any Sound which is in excess of decibel levels
+          set forth in this article.
+          5)   The   factors   which   may    be    considered in
+          determining whether a noise disturbance exists may
+          include, but are not limited to:
+               (a) The level of the noise;
+                     (b) The   level    and    intensity    of    any
+               background noise;
+                     (c) Whether the nature of the noise is
+               usual or unusual;
+                     (d) Whether the origin of the noise is
+               natural or unnatural;
+                     (e) The proximity of the source of the
+               noise to sleeping facilities;
+                     (f) The land use, nature and zoning of the
+               area from which the noise emanates and of the
+               area where the noise is received;
+                     (g) The time of day or night when the noise
+               occurs;
+                     (h) The duration of the noise;
+                     (i) Whether   the     noise    is   recurrent,
+               intermittent or constant.
+     “Noise sensitive area‖ means any area designated pursuant
+to section 42-263 of this article for the purpose of ensuring
+exceptional quiet and clearly posted with noise sensitive area
+signs, because of the noise sensitive activities conducted
+therein.
+     ―Notice of violation‖ shall include a notice of violation,
+a civil infraction and/or a criminal citation.
+     “Person‖ shall have the meaning prescribed by section 1-2
+of this Code and, in addition, means and includes any officer,
+employee, department, agency or instrumentality of the state or
+any political subdivision of the state.
+     “Person responsible” or “Responsible party‖ shall be the
+owners, employees or acting managers, agents, contract buyers,
+tenants, or lessees’ of all residential dwellings, commercial
+establishments, and/or real estate upon which a violation of
+this article is found and shall be jointly and severally
+responsible for compliance with this article at any location.
+     “Powered model vehicle‖ means any self-propelled airborne,
+waterborne, or land borne model plane, vessel, or vehicle, which
+is not designed to carry persons, including but not limited to
+any model airplane, boat, car or rocket.
+     “Public right-of-way‖ means any street, avenue, boulevard,
+highway, sidewalk, or alley or similar place which is owned or
+controlled by a governmental entity.
+     “Public space‖ means any real property, including any
+structure   thereon,   which  is  owned     or   controlled    by   a
+governmental entity.
+     “Pure tone‖ means any sound which can be distinctly heard
+as a single pitch or a set of single pitches.
+     “Real property boundary‖ means an imaginary line along the
+ground surface, and its vertical extension, which separates the
+real property owned by one person from that owned by another
+person,   but   not   including   intra-building    real  property
+divisions.
+     “Receiving land‖ means the use or occupancy of the property
+which receives the transmission of sound as defined in this
+section.
+     “Recreational vehicle‖ means any race car, motorcycle,
+snowmobile, all terrain vehicles or any other motorized vehicle
+equipped for use in racing or other recreational events or uses
+off of public rights-of-way on public or private property. For
+purposes of this article, a motor vehicle or motorized vehicle
+which is taking part in an organized racing, endurance, or other
+coordinated sporting event shall be deemed a recreational
+vehicle and shall be governed by the terms of subsection 42-
+259(C) of this article.
+     “Residential‖ means any property on which is located a
+building or structure used wholly or partially for living or
+sleeping purposes. This definition shall not include park
+custodial residences or school or college dormitories.
+     “Sound‖   means   an   oscillation   in   pressure,  particle
+displacement, particle velocity or other physical parameter, in
+a medium with internal forces that cause compression and
+rarefaction of that medium. The description of sound may include
+any characteristic of such sound, including duration, intensity
+and frequency.
+     “Sound equipment‖ means any radio, record player, stereo,
+television, tape deck or player, loudspeaker, amplifier, sound
+truck or other device for producing, reproducing, or amplifying
+sounds.
+     “Sound level‖ means the weighted sound pressure level
+obtained by the use of a sound level meter and frequency
+weighting network as specified in American National Standards
+Institute specifications for sound level meters. If the
+frequency weighting employed is not indicated, the A-weighting
+shall apply.
+     “Sound level meter‖ means an instrument which includes a
+microphone,   amplifier,   RMS   detector,   integrator  or   time
+averager, output or display meter, and weighting networks used
+to measure sound pressure levels, which complies with American
+National Standards Institute standards.
+
+Sec. 42-247. Title.
+
+     This article may be cited as the "Noise Control Ordinance
+of the City of Des Moines."
+
+Sec. 42-248. Statement of public policy.
+
+     The city council finds and declares that:
+(A)   Excessive noise is a serious hazard to the public health
+      and welfare and the quality of life in a close urban
+      society.
+(B)   A substantial body of science and technology exists by
+      which excessive noise can be substantially abated without
+      serious inconvenience to the public.
+           (C) Certain    noise-producing    equipment   in    this
+           community is essential to the quality of life in the
+           community and should be allowed to continue at
+           reasonable levels with moderate regulation.
+(D)   Each person has a right to an environment reasonably free
+      from   noise  which   jeopardizes   health  or   welfare   or
+      unnecessarily degrades the quality of life.
+(E)   It is the policy of this city to promote an environment
+      free from excessive noise, which unnecessarily jeopardizes
+      the health and welfare and degrades the quality of the
+      lives of the residents of this community, without unduly
+      prohibiting, limiting or otherwise regulating the function
+      of certain noise-producing equipment which is not amenable
+      to such controls and yet is essential to the economy and
+      quality of life of the community.
+
+
+Sec. 42-249. Purpose.
+
+     The purpose of this article is to establish standards for
+the control of excessive noise in the city by setting maximum
+permissible sound levels for various activities to protect the
+public health, safety and general welfare.
+
+Sec. 42-250. Scope.
+
+     This article shall apply to the control of all noise
+originating   within  the   city   limits  or   originating   from
+properties lying outside the city limits owned or controlled by
+the city, except where either:
+(A) A state or federal agency has adopted a different standard
+     or rule than that prescribed within this article and has so
+     preempted the regulation of noise from a particular source
+     as to render this article inapplicable thereto; or
+          (B) The city council has determined that, because of
+          public   acceptance   of   the  activity   producing   a
+          particular noise, such noise is deemed acceptable to
+          the city residents.
+
+Sec. 42-251. Exceptions to article.
+
+      This article shall not apply to the following:
+(A)   The emission of sound for the purpose of alerting persons
+      to the existence of an emergency.
+           (B) The emission of sound in the performance of
+           emergency work.
+(C)   Noncommercial    public   speaking   and   public    assembly
+      activities conducted on any private property, public space,
+      or public right-of-way, except those activities controlled
+      by section 42-257 of this article.
+           (D) The    un-amplified   human  voice,   except   those
+           activities controlled by subsection 42-256(A) of this
+           article.
+(E)   Agricultural activities, exclusive of those involving the
+      ownership or possession of animals or birds.
+(F)        Snowmobiles regulated by I.C. ch. 321G.
+       (G) Rail   and    air  transportation   and    public   mass
+       transportation vehicles.
+(H)   The emission of sound in connection with activities
+      conducted on the state fairgrounds during the annual state
+      fair and exposition.
+(I)   The emission of sound in the performance of military
+      operations, exclusive of travel by individuals to or from
+      military duty.
+(J)   The emission of sound in the legal discharge of weapons or
+      in fireworks displays licensed by the city.
+           (K) The emission of sound in the operation of snow
+           removal equipment.
+(L)   Parades or processions for which a parade permit has been
+      issued by the city.
+(M)     Marching bands and athletic events
+(N)   Government owned, operated, or contracted vehicles in the
+      performance of their official duties.
+
+Sec. 42-252. Noise disturbance prohibited.
+
+     No person shall make, continue or cause to be made         or
+continued any noise disturbance as defined in this article.
+
+Sec. 42-253. Ambient Noise Level
+
+     When noise level measurements are taken and the ambient
+noise level measurement exceeds the maximum permitted sound
+level, the maximum permitted sound level shall be increased to
+equal the ambient noise level.
+
+Sec. 42-254. Maximum permissible sound levels by receiving land
+use; immediate threat.
+
+(A)   Maximum permissible sound levels. With the exception of
+      sound levels elsewhere specifically authorized or allowed
+      in this article, no person shall make, continue, or cause
+      to be made or continued, any sound which exceeds the
+      following sound level limits at or within the real property
+      boundary of a receiving land use:
+
+           TABLE 1. SOUND LEVELS BY RECEIVING LAND USE
+
+Zoning Category of      Time                  Sound Level
+Receiving Land Use                            Limit, dBA
+
+Residential zones:       7:00 a.m. to 10:00   60
+R1-80 to R-6,R-HD       p.m.
+and a residential       10:00 p.m. to 7:00    50
+PUD                     a.m.
+Mixed    use     and    At all times          65
+commercial zones:
+PUD to C-4
+Industrial zones:       At all times          75
+M-1 to M-3
+Noise       sensitive   At all times          55
+area
+U-1 floodplain     or   At all times          65
+FW floodway
+
+
+
+
+           (1) For the purposes of this article, sound levels in
+           excess of the dBA listed in table 1 shall be deemed a
+           violation.
+           (2) This subsection shall not apply to:
+                a. Activities covered by the following sections
+               of this article: 42-255 (emergency signaling
+               devices);    42-258   (amplified   sound);   42-259
+               (motorized vehicles); 42-260 (construction); 42-261
+               (stationary non-emergency signaling devices); 42-
+               266 (noise covered by sound variance).
+                b. The operation of the following domestic power
+               tools or equipment between the hours of 7:00 a.m.
+               and 10:00 p.m.:
+                                 1. Electrical power tools.
+                                 2. Motor-powered,        muffler-
+                      equipped lawn, garden and tree trimming
+                      equipment.
+(B)   Immediate threat.
+                      (1) The official of any department charged
+                with enforcement of this article shall order an
+                immediate halt to any sound which exposes any
+              person, except those excluded under subsection
+              (2) of this section, to continuous sound levels
+              in excess of those shown in table 2 or to
+              impulsive sound levels in excess of those shown
+              in table 3. If the sound has not abated within a
+              reasonable length of time following issuance of
+              such an order, the official of any department
+              charged with enforcement of this article may
+              apply to the appropriate court for an injunction
+              to replace the order or may treat the violation
+              in the manner of other Code violations.
+         (2) No order under subsection (B)(1) of this section
+         shall be issued if the only persons exposed to sound
+         levels in excess of those listed in tables 2 and 3 are
+         exposed as a result of:
+                   a.   Trespass;
+              b.   Invitation upon private property by the
+             person causing or permitting the sound; or
+              c.   Employment by the person or contractor of
+             the person causing or permitting the sound.
+         (3) Any person subject to an order issued pursuant to
+         subsection (B)(1) of this section shall comply with
+         such order until:
+              a.   The sound is brought into compliance with
+              the order as determined by the noise control
+              division; or
+                        b.   A judicial order has superseded
+                   such order.
+
+                     TABLE 2. CONTINUOUS SOUND LEVELS WHICH POSE
+                AN
+              IMMEDIATE THREAT TO HEALTH AND WELFARE
+                       (Measured at 50 Feet)
+
+Sound Level                      Duration
+Limit (dBA)
+ 90                              24 hours
+
+ 93                              12 hours
+
+ 96                               6 hours
+
+ 99                               3 hours
+
+102                              1.5 hours
+105                              45 minutes
+
+108                              22 minutes
+
+
+          (5) Correction for character of sound. For any source
+          of sound which emits a pure tone, the maximum sound
+          level limits set forth in table 2 shall be reduced by
+          five dBA.
+          (6) Varying sound level. Where the sound level (dBA)
+          varies over the measuring period, the equivalent A-
+          weighted   (average)   sound  level   (Leq) shall  be
+          determined by figuring the time and intensity levels
+          for time periods set out in tables 2 and 3.
+
+          TABLE 3. IMPULSIVE SOUND LEVELS WHICH POSE AN
+              IMMEDIATE THREAT TO HEALTH AND WELFARE
+                       (Measured at 50 Feet)
+
+Sound Level                      Number of
+Limit (dB)                       Repetitions
+                                 Per 24-Hour
+                                 Period
+
+140                                1
+
+130                               10
+
+120                              100
+
+
+Sec. 42-255. Emergency signaling devices.
+
+(A)   No person shall operate or permit the intentional sounding
+      outdoors of any fire, burglar, or civil defense alarm,
+      siren, whistle or similar stationary emergency signaling
+      device, except for emergency purposes or for testing, as
+      provided in subsection (b) of this section.
+(B)   Testing of a stationary emergency signaling device shall
+      occur at the same time of day each time the test is
+      performed, but not before 9:00 a.m. or after 4:00 p.m. Any
+      such testing shall use only the minimum cycle test time. In
+      no case shall test times exceed 60 seconds.
+
+Sec. 42-256. Specific activities prohibited.
+
+(A)   Sales by hawking or barking. No person shall offer for sale
+      or sell anything by shouting or raised voice within any
+      residential or commercial area in the city.
+(B)   Loading and unloading. No person shall so load, unload,
+      open, close or handle boxes, crates, containers, building
+      materials, garbage cans, or similar objects between the
+      hours of 7:00 p.m. and 7:00 a.m. the following morning as
+      to create a noise disturbance across a residential real
+      property boundary or within a noise sensitive area. This
+      section shall not apply to activities covered by section
+      42-259 of this article.
+(C)   Vehicle or motorboat repairs and testing. No person shall
+      repair, rebuild, modify, or test any motor vehicle,
+      motorcycle, or motorboat in such a manner as to cause a
+      noise disturbance across a residential real property
+      boundary or outdoors within a noise sensitive area.
+(D)   Powered model vehicles. No person shall operate or permit
+      the operation of powered model vehicles in a public or
+      private space out-of-doors or within a noise sensitive area
+      between the hours of 10:00 p.m. and 7:00 a.m. the following
+      day.
+
+Sec. 42-257. Musical instruments and similar devices.
+
+     No person shall operate, play or permit the operation or
+playing of any drum, musical instrument or similar device which
+produces sound in such a manner as to create a noise disturbance
+across a residential real property boundary as defined in
+section 42-254 of this article or outdoors within a noise
+sensitive area.
+
+Sec. 42-258. Sound equipment and sound amplifying equipment.
+
+(A)   Permit required. No person shall, use, operate or cause to
+      be used or operated any sound equipment upon the public
+      right-of-way or in any building or upon any premises,
+      public or private, creating a noise disturbance unless such
+      person:
+           (1) First obtains a permit in accordance with this
+           section;
+           (2) Complies with the conditions imposed by the
+           permit, including the maximum permitted sound level
+           shown therein;
+           (3) Complies with the provisions of chapter 102 of
+           this Code, as it regulates street closings; and
+           (4) Complies with all other applicable subsections of
+           this section.
+(B)   "Sound equipment" requiring a permit shall not include:
+           (1) Equipment used for public health and safety
+           purposes.
+          (2) Church or clock carillons, bells or chimes.
+          (3) Automobile or boat radios, tape decks or players,
+          or other standard equipment used and intended for the
+          use and enjoyment of the vehicle occupants, provided
+          the sound emitting there from does not create a noise
+          disturbance or does not violate section 42-259.
+          (4) Un-amplified live music provided, sponsored, or
+          funded, in whole or in part, by a governmental entity.
+(C) Permit fees. A separate permit shall be required for each
+     type of activity described in subsection (E) of this
+     section, and permits shall be nontransferable. The permit
+     shall be conspicuously displayed on or immediately adjacent
+     to the sound equipment. A nonrefundable fee shall be paid
+     in the amount set in the schedule of fees adopted by the
+     City Council by resolution at the time of application for
+     the sound permit.
+(D) Information required on permit application. Application for
+     the permit required in this section shall be made in
+     writing to the zoning enforcement officer, accompanied by
+     the required permit fee and the following information:
+          (1) The type of permit requested.
+     (2) The name and address of the applicant.
+          (3) The purpose for which the sound equipment will be
+          used.
+          (4) The location where the sound equipment will be
+          used.
+          (5) Designation of the days of use and proposed hours
+          of operation of the sound equipment.
+          (6) A general description of the sound equipment,
+          including the license number of any motor vehicle upon
+          which it is to be operated.
+          (7) The name(s) and phone number(s) of the person(s)
+          responsible for the use of the permit.
+     If the application contains the required information and is
+accompanied by the required fee, and the proposed use of the
+sound   equipment   complies  with   the   standards  and   other
+requirements of this section and all other applicable laws and
+ordinances, the zoning enforcement officer shall issue the
+appropriate permit.
+(E) Application standards. The following are general standards
+     for the type of permit:
+          (1) Type ―A‖ permit. A type “A” permit may be issued
+          for sound equipment emitting music or human speech
+          registering not more than 85 dBAs when measured at the
+          real property boundary of the permitted property or at
+          a distance of 50 feet from the sound equipment if
+          issued in conjunction with a street closing. A type
+          “A” permit may be issued only in areas of the city
+          zoned for commercial and/or mixed use and only between
+the hours of 9:00 a.m. and 10:00 p.m., except the C-3,
+C-3R and DR zoned areas which shall be between the
+hours of 9:00 a.m. and 10:00 p.m. Sunday through
+Thursday, and between the hours of 9:00 a.m. and 12:00
+a.m. on Friday and Saturday, the Sunday of Memorial
+Day weekend, Labor Day weekend and the Fourth of July
+should it fall on a Sunday. A type “A” permit will be
+issued for a thirty day period to be used on eight
+days during the permitted time, with the days of use
+to be designated on the permit application.
+(2) Type ―B‖ permit—parks located in residential
+zones. A type “B” permit may be used for sound
+equipment emitting music or human speech registering
+not more than 65 dBAs when measured at the real
+property boundary or at a distance of 50 feet from the
+sound equipment, whichever distance is closer to the
+sound equipment.    Sound equipment permitted under a
+type “B” permit may be used only in public parks owned
+and operated by the city or public grounds owned and
+operated by another governmental body, located in a
+residentially zoned district from 9:00 a.m. to the
+time the park closes for events authorized and
+approved by the park and recreation board or other
+body having jurisdiction over the park or public
+grounds. A type “B” permit will be issued for one day
+up to one week with the days to be designated on the
+permit application.
+(3) Type ―C‖ permit—church or school grounds. A type
+“C” permit may be issued for sound equipment emitting
+music or human speech registering not more than 65
+dBAs when measured at the real property boundary or
+when measured at a distance of 50 feet from the sound
+equipment, whichever distance is closer to the sound
+equipment. Sound equipment permitted under a type “C”
+permit may be used only on church grounds, school
+grounds, or in conjunction with a school sponsored
+activity, from 9:00 a.m. to 10:00 p.m. for events
+authorized and approved by the church or school
+authorities having jurisdiction of the grounds.      A
+type “C” permit will be issued for one day up to one
+week with the days to be designated on the permit
+application.
+(4) Type ―D‖ permit--residential events. A type “D”
+permit may be issued for sound equipment emitting
+music or human speech registering not more than 65
+dBAs when measured at the real property boundary of
+the permitted property or 50 feet from the sound
+equipment,   whichever   distance  is   closer.  Sound
+equipment permitted under a type “D” permit may be
+           used only pursuant to a permitted street closing under
+           chapter 102 of this Code, from 9:00 a.m. to 10:00 p.m.
+           A type “D” permit will be issued for one day up to one
+           week with the days to be designate on the permit
+           application.
+           (5) Type ―E‖ permit – background sound equipment.    A
+           type “E” permit may be issued for sound equipment to
+           be used in an outdoor area in conjunction with an
+           approved business use emitting music or human speech,
+           excluding live music, registering not more then 65
+           dBAs, or below the ambient level, when measured at the
+           property boundary, edge of designated seating area or
+           50 feet from the sound equipment which ever is closer.
+           Sound equipment permitted under a type “E” permit may
+           be used only during regular hours of business
+           operation. A type “E” permit will be issued up to one
+           year.
+(F)   Commercial advertising.     No sound equipment shall be
+      permitted to be used on public streets or public places or
+      in any building or upon any premises if the sound may be
+      plainly audible from any public street or public place
+      within the city when any such use is for commercial
+      advertising purposes or for the purpose of attracting the
+      attention of the public to any building or structure for
+      monetary gain.
+(H)   Denial or revocation.
+           (1) Denial of sound permit. The director of the
+           community development department may, upon hearing,
+           deny an application for a sound permit if any person
+           responsible for monitoring the terms and conditions of
+           the sound permit at the premises has been issued two
+           or more notices of violation of this article in a
+           previous 12-month period, the director shall forward
+           the information to the city clerk to schedule a
+           hearing for consideration of denial of the sound
+           permit.
+           (2) Revocation.    The   director  of   the  community
+           development department may, upon hearing, revoke a
+           sound permit issued pursuant to this article upon the
+           second notice of violation issued in a twelve month
+           period to persons responsible for monitoring the terms
+           and conditions of the sound permit, the director shall
+           forward the information to the city clerk to schedule
+           a hearing for consideration of revocation of the sound
+           permit.
+           (3) Revocation    hearing-adverse   impact.   If   the
+           director of the community development department
+           receives written statements or a petition from 25
+           percent or more of the occupants of single family or
+          duplex residences and the owner or manager of multiple
+          residence structures including hotels, who claim to be
+          adversely   affected   by   the  operation   of   sound
+          amplification equipment under a valid sound permit and
+          who live within 200 feet measured from property line
+          to property line of the property where such sound
+          permit is valid, the director shall forward the
+          information to the city clerk to schedule a hearing
+          for consideration of revocation of the sound permit.
+
+
+Sec. 42-259. Motorized vehicles.
+
+(A)   No person shall operate the engine, or auxiliary engine, of
+      a motor vehicle with a manufacturer's gross vehicle weight
+      rating of 10,000 pounds or more for a period longer than 20
+      minutes while such vehicle is standing and located within
+      150 feet of property zoned and used for residential
+      purposes. This subsection shall not apply to delivery or
+      pickup vehicles that require the operation of the engine to
+      unload or load their vending loads.
+(B)   No person shall operate a motor vehicle or a combination of
+      vehicles of a type subject to registration at any time or
+      under any condition in such manner as to exceed the noise
+      limit listed in this subsection for the category of motor
+      vehicle, such noise to be measured at a distance of fifty
+      (50) feet from the vehicle.
+
+                    NOISE LIMIT IN RELATION TO
+                         LEGAL SPEED LIMIT
+
+Type of Vehicle         35 mph              Over
+                        or Less             35 mph
+                        dBA                 dBA
+
+Any motor vehicle       88                  92
+with                a
+manufacturer's
+gross         vehicle
+weight    rating   of
+10,000 lbs. or more
+and any combination
+of vehicles towed
+by     such     motor
+vehicle
+Any motorcycle          82                  86
+Any   other    motor   76                   82
+vehicle   and    any
+combination       of
+motor       vehicles
+towed by such motor
+vehicle
+
+This subsection applies to the total noise from a vehicle or
+combination of vehicles and shall not be construed as limiting
+or precluding the enforcement of any other section of this Code
+relating to motor vehicle mufflers or noise control.
+(C)       (1) No person shall operate a recreational vehicle or
+          permit the operation of one or more recreational
+          vehicles, individually or in a group, or in an
+          organized racing event on public or private property
+          in such a manner that the sound level exceeds that set
+          forth in Sec. 42-254(A) Table 1.
+          (2) No person shall operate or permit the operation
+          of any recreational vehicle(s), on public or private
+          land between the hours of 10:00 p.m. and 7:00 a.m.
+          (3) This section shall not apply to recreational
+          vehicles when legally operated upon the public
+          streets.
+(D) No person operating or in control of a motor vehicle,
+     recreational vehicle, watercraft, or vessel shall operate
+     or permit the operation of a sound system in the vehicle so
+     as to produce a vibration or sound that is clearly
+     detectable at a distance of fifty (50) feet from the
+     vehicle between the hours of 7:00 a.m. and 7:00 p.m. or
+     clearly detectable at a distance of twenty-five (25) feet
+     from the vehicle between the hours of 7:00 p.m. to 7:00
+     a.m.
+
+Sec. 42-260. Construction.
+
+     No person shall operate or permit the operation of any
+tools or equipment in construction, drilling or demolition work
+or in preventive maintenance work for public service utilities
+between the hours of 10:00 p.m. and 7:00 a.m.
+
+Sec. 42-261. Stationary non-emergency signaling devices.
+
+(A)   No person shall operate or permit the sounding of any
+      stationary bell, chime, siren, whistle, or similar device,
+      intended primarily for non-emergency purposes, from any
+      place for more than one minute in any hourly period.
+(B)   Devices used in conjunction with places of religious
+      worship shall be exempt from the operation of this section.
+Sec. 42-262. Animals and birds.
+
+     No person shall own, possess or harbor any animal or bird
+which frequently or for continued duration emits sounds native
+to the species which are a noise disturbance across a
+residential real property boundary or within a noise sensitive
+area.
+
+Sec. 42-263. Enforcement.
+
+(A)   The noise control program established by this article shall
+      be implemented, administered, and enforced by the community
+      development and police departments.
+(B)   The sections of this article which prohibit the making,
+      continuing, or causing the making or continuing of a noise
+      disturbance across a real property boundary or within a
+      noise sensitive area shall be enforced upon receipt of
+      complaint made or filed with city officials by a person
+      disturbed by such noise disturbance or by direction of the
+      chief of police or his or her designee. Certification by an
+      official charged with enforcement of this article that such
+      complaint was made shall be sufficient to establish the
+      fact of such complaint.
+(C)   To implement and enforce this article, the community
+      development department and the police department shall have
+      the additional power to:
+           (1) Conduct research, monitoring, and other studies
+           related to sound.
+           (2) Upon presentation of proper credentials, enter
+           and inspect any private property or place and inspect
+           any report or records at any reasonable time when
+           granted permission by the owner or by some other
+           person with apparent authority to act for the owner.
+           (3) Issue sound variances pursuant to section 42-264
+           of this article.
+           (4) Deny sound permits or seek a revocation of a
+           sound permit.
+      (5) Prepare recommendations for consideration by the city
+           council, after publication of notice and public
+           hearing, for establishing the boundaries of noise
+           sensitive areas.
+           (6) The sound source or any component thereof may be
+           impounded pending the resolution of any violations
+           charged under this article.
+(D)   The measurement of sound or noise shall be made with a
+      sound level meter meeting the standards prescribed by the
+      American National Standards Institute or its successor
+      body. Measurements shall be taken so as to be in compliance
+      with the specifications for a valid test as set out by the
+      product manufacture. Training will be administered by the
+      product manufacture representative or any departmental
+      employee(s) who has attended such training.
+
+Sec. 42-264. Application for sound variances.
+
+(A)   Any person desiring to exceed the permitted sound levels or
+      the number of days a permit is valid for as set out in this
+      article may apply to the community development department
+      for a variance from such regulations.
+(B)   All applicants for such variances shall apply in writing to
+      the community development department. Such application
+      shall be submitted at least 30 days prior to the proposed
+      date for the needed sound permit variance.
+(C)   All variance applications shall contain the following
+      information:
+           (1) The name and address of the applicant;
+           (2) If the application is made on behalf of an
+           organization,    the   name   and   address   of   that
+           organization;
+           (3) The name and phone number of a contact person;
+           (4) The proposed dates for which a variance is
+           required;
+           (5) A description of the event and its potential
+           cause for excessive noise;
+           (6) The times the event will generate excessive
+           noise; and
+           (7) Information which would demonstrate that bringing
+           the source of sound or activity for which the sound
+           permit variance is sought into compliance would
+           constitute an unreasonable hardship on the applicant,
+           on the community, or on other persons.
+(D)   An application for a sound permit variance shall be
+      submitted    to   the   community   development   department
+      accompanied by a nonrefundable fee of $100.00 to cover the
+      cost of processing the application.
+(E)   Upon receipt of an application for a sound permit variance,
+      the director of the community development department or his
+      or her designee shall determine what property interests may
+      be affected by the granting of a sound permit variance,
+      including but not limited to:
+           (1) The occupants of surrounding single-family or
+           duplex residences located in an area that includes the
+           next two homes in any direction or those within 200
+           feet of the noise source, whichever is less; or
+           (2) The    owner   or  manager   of  multiple-residence
+           structures, including hotels, within such areas.
+(F)   The director of the community development department shall
+      notify such property owners or occupants as identified in
+      subsection (E) of this section in writing and delivered by
+      the U.S. Postal Service, ordinary mail, of the application
+      for a sound permit variance and shall give them ten days to
+      give written cause why the variance should not be granted.
+(G)   If the director of the community development department
+      receives written statements from 25 percent or more
+      occupants who claim to be adversely affected by allowance
+      of the sound permit variance, the director shall forward
+      the information to the city clerk to schedule an
+      administrative hearing to consider the application for a
+      variance.
+
+Sec. 42-265. Scheduling of hearing on sound variances denials
+and revocations.
+
+     The City Clerk, upon receipt from the director of the
+community development department of a request for a hearing on a
+sound variance, or a denial or a revocation of a sound permit,
+shall schedule a hearing as soon as is practical and shall send
+by the regular U.S. Postal Service a notice of the time, date
+and location of the hearing to the applicant, the permit holder
+and/or all persons who filed an adverse impact statement and all
+property owners previously notified at least ten (10) days prior
+to the hearing.
+
+Sec. 42-266. Conduct of administrative         hearing   on   sound
+variances denials and permit revocations.
+
+(A)   The administrative hearing shall be conducted before the
+      hearing officer designated by the city manager.
+           (1) Variance.     The sole issue before the hearing
+           officer shall be whether the granting of the variance
+           shall create an adverse impact on the health, safety,
+           and welfare of persons or property affected. The
+           applicant for a variance shall carry the burden of
+           establishing that an adverse impact shall not be
+           created by the granting of a variance.
+           (2) Denial or Revocation.     The sole issue before the
+           hearing officer shall be whether the conditions set
+           out in a sound permit have been violated and whether
+           the issuance or continuance of a permit will create an
+           adverse impact on the health, safety and welfare of
+           persons or property affected by the violation. If the
+           hearing officer determines that the violations of a
+           permit created and adverse impact or were a violation
+           of the permit a permit may be denied or revoked and/or
+           the conditions of a permit may be reduced so as to
+           eliminate the adverse impact.
+           (3) The department, the person requesting the hearing
+           and any person who feels adversely impacted by a sound
+           permit   may  be   represented   by  counsel,   examine
+           witnesses and present evidence.
+           (4) The hearing officer shall issue a written
+           determination to be sent to the applicant for the
+           variance, the permit holder and/or the community
+           development department director.       A copy of the
+           decision will be kept on file with the city clerk.
+      (5) The proceedings at the administrative hearing shall be
+           tape recorded by the hearing officer. Such tape
+           recording and all exhibits entered shall serve as the
+           official record of the administrative hearing for
+           appeal purposes. The hearing officer shall retain the
+           official record until the time for filing a notice of
+           appeal has expired. If a notice of appeal is timely
+           filed, the hearing officer shall retain the official
+           record of the administrative hearing until the appeal
+           has been acted upon.
+(B)   Should the hearing officer revoke the sound permit the
+      property location will not be granted another sound permit
+      for another six (6) months from the date of the decision or
+      final decision if appealed.
+
+Sec. 42-267.   Right of appeal of hearing officer’s decision and
+process.
+
+(A)   The decision of the hearing officer under this article may
+      be appealed to the city council by either the director of
+      the community development department, the applicant for the
+      revoked or denied permit, the applicant for a sound
+      variance, or any impacted resident, provided that such
+      entity or person files a written notice of appeal with the
+      city clerk’s office within seven days of the hearing
+      officer’s decision.   Failure to file a written notice of
+      appeal within such period shall be deemed a waiver of the
+      right to appeal the hearing officer’s decision to the city
+      council.
+(B)   The appeal of the decision of the hearing officer shall be
+      considered and a decision rendered by the city council
+      within 14 days of the filing of the written notice of
+      appeal.    The time for considering the appeal may be
+      extended for good cause. The appeal process shall consist
+      of a review by the city council of the transcript of the
+      tape recorded record of the administrative hearing.      No
+      additional evidence may be presented as part of the appeal.
+      The sole issue before the council shall be whether the
+      decision of the hearing officer was supported by sufficient
+      evidence. The decision of the city council is final.
+Sec. 42-268. Penalty.
+
+     Any person who fails to perform an act required by the
+provisions of this article, or who commits an act prohibited by
+the provisions of this article, shall be guilty of a simple
+misdemeanor or a municipal infraction punishable by a criminal
+or a civil penalty as provided by section 1-15.
+
+    Sec. 2.      This ordinance shall be in full force and effect
+
+from and after its passage and publication as provided by law.
+
+FORM APPROVED:
+
+
+
+Douglas P. Philiph, Assistant City Attorney
+
+T.M. Franklin Cownie, Mayor
+
+
+
+Attest:
+
+         I, Diane Rauh, City Clerk of the City of Des Moines,
+    Iowa, hereby certify that the above and foregoing is a true
+    copy of an ordinance (Roll Call No. 08-329), passed by the
+    City Council of said City at a meeting held February 25,
+    2008 signed by the Mayor on February 25, 2008 and published
+    as provided by law in the Business Record on March 10,
+    2008. Authorized by Publication Order No. 6056.
+
+
+
+
+                               Diane Rauh, City Clerk
+

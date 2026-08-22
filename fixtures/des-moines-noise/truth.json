@@ -1,0 +1,189 @@
+{
+  "corpus_id": "des-moines-noise",
+  "note": "Ground truth for Article IV (Noise Control) of the Des Moines, Iowa municipal code as codified from Ordinance 14,746 (2008-02-25), interleaved with Ordinances 16,064 (2021-10-18) and 16,127 (2022-05-23) which amend it. Sections keyed by code section number, or by amending ordinance plus section. Labels are derived mechanically by build.py from the council's own amendment pointers and the measure diff between the two readings \u2014 see PROVENANCE.md. Splits: train/dev tunable, test sacred.",
+  "schema_version": 2,
+  "tension_types": [
+    "unmarked_supersession"
+  ],
+  "planted_tensions": [
+    {
+      "id": "T1",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": {
+        "section": "42-258(1)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(1)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"A\" permit with different measures: level 85 dBA -> 85 dBC."
+    },
+    {
+      "id": "T2",
+      "type": "unmarked_supersession",
+      "split": "dev",
+      "a": {
+        "section": "42-258(2)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(2)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"B\" permit with different measures: level 65 dBA -> 65 dBC."
+    },
+    {
+      "id": "T3",
+      "type": "unmarked_supersession",
+      "split": "test",
+      "a": {
+        "section": "42-258(3)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(3)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"C\" permit with different measures: level 65 dBA -> 65 dBC."
+    },
+    {
+      "id": "T4",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": {
+        "section": "42-258(4)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(4)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"D\" permit with different measures: level 65 dBA -> 65 dBC."
+    },
+    {
+      "id": "T5",
+      "type": "unmarked_supersession",
+      "split": "dev",
+      "a": {
+        "section": "42-258(5)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(5)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"E\" permit with different measures: level 65 dBA -> 65 dBC."
+    },
+    {
+      "id": "T6",
+      "type": "unmarked_supersession",
+      "split": "test",
+      "a": {
+        "section": "42-258(6)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(6)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"F\" permit with different measures: feet 50 -> 75; hours 11:00p.m. / 12:30a.m. / 9:00a.m. -> 10:00p.m. / 11:00p.m. / 9:00a.m.; level 100 dBA -> 112 dBC."
+    },
+    {
+      "id": "T7",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": {
+        "section": "42-258(7)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(7)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"G\" permit with different measures: days 30 -> 30 / 7; level 100 dBA -> 112 dBC."
+    },
+    {
+      "id": "T8",
+      "type": "unmarked_supersession",
+      "split": "dev",
+      "a": {
+        "section": "42-258(8)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(8)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"H\" permit with different measures: level 85 dBA -> 85 dBC."
+    },
+    {
+      "id": "T9",
+      "type": "unmarked_supersession",
+      "split": "test",
+      "a": {
+        "section": "42-258(9)"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(9)"
+      },
+      "why": "Ordinance 16,064 restates the Type \"I\" permit with different measures: feet (none stated) -> 125; hours 10:00p.m. / 9:00a.m. -> 10:00p.m. / 11:00p.m. / 9:00a.m.; level 85 decibels -> 114 dBC."
+    }
+  ],
+  "expected_non_tensions": [
+    {
+      "id": "N1",
+      "split": "test",
+      "a": {
+        "section": "42-254"
+      },
+      "b": {
+        "ordinance": "16127",
+        "section": "42-258(17)"
+      },
+      "why": "decoy: the permit allows levels far above the Table 1 night limit, but Sec. 42-254(a) opens \"with the exception of sound levels elsewhere specifically authorized or allowed in this article\" \u2014 a permit is that exception."
+    },
+    {
+      "id": "N2",
+      "split": "train",
+      "a": {
+        "section": "42-257"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(6)"
+      },
+      "why": "decoy: Sec. 42-257 and the permit subsection share the article's vocabulary (sound, music, hours, measurement) but govern different conduct, and no ordinance in this document amends Sec. 42-257."
+    },
+    {
+      "id": "N3",
+      "split": "dev",
+      "a": {
+        "section": "42-259"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(7)"
+      },
+      "why": "decoy: Sec. 42-259 and the permit subsection share the article's vocabulary (sound, music, hours, measurement) but govern different conduct, and no ordinance in this document amends Sec. 42-259."
+    },
+    {
+      "id": "N4",
+      "split": "test",
+      "a": {
+        "section": "42-262"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(1)"
+      },
+      "why": "decoy: Sec. 42-262 and the permit subsection share the article's vocabulary (sound, music, hours, measurement) but govern different conduct, and no ordinance in this document amends Sec. 42-262."
+    },
+    {
+      "id": "N5",
+      "split": "train",
+      "a": {
+        "section": "42-256"
+      },
+      "b": {
+        "ordinance": "16064",
+        "section": "42-258(2)"
+      },
+      "why": "decoy: Sec. 42-256 and the permit subsection share the article's vocabulary (sound, music, hours, measurement) but govern different conduct, and no ordinance in this document amends Sec. 42-256."
+    }
+  ]
+}
