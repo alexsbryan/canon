@@ -1,0 +1,52 @@
+// The same eight principles, in an institution that is not a house.
+
+// ── 1. Clearly defined boundaries → module ownership ─────────
+{"step":"who","name":"who-owns-the-parser","principle":1,"strength":"mechanism","scope":"engine.parser"}
+{"step":"check","name":"the-owner-decides-the-parser","principle":1,"strength":"mechanism","scope":"engine.parser","actor":"human:omar","about":"parser arena","proposal":"switch the parser to an arena allocator","positions":[{"citing":"@parser-alloc","pull":"toward","because":"an arena is one allocation per document"}]}
+{"step":"check","name":"a-committer-elsewhere-does-not","principle":1,"strength":"mechanism","scope":"engine.parser","actor":"human:eli","about":"parser arena","proposal":"switch the parser to an arena allocator","positions":[{"citing":"@parser-alloc","pull":"toward","because":"an arena is one allocation per document"}]}
+
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"forked-from-the-engineering-canon","principle":2,"strength":"affordance"}
+
+// ── 3. Collective-choice arrangements ────────────────────────
+{"step":"act","name":"the-parser-owner-changes-the-parsers-rule","at":"2025-08-01","by":"human:omar","op":"policy","scope":"engine.parser","text":"Parser changes need two objections to stop.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"the-parser-under-its-new-rule","principle":3,"strength":"mechanism","scope":"engine.parser","actor":"human:eli","about":"parser arena","proposal":"switch the parser to an arena allocator","positions":[{"actor":"human:tess","pull":"against","because":"an arena makes lifetimes viral through the API"}]}
+
+// ── 4. Monitors accountable to appropriators ─────────────────
+{"step":"act","at":"2025-08-10","by":"agent:depbot","op":"position","about":"bump serde to 1.0.210","citing":"@wire-break","pull":"against","because":"the bump changes a derived representation that crosses the wire"}
+{"step":"act","name":"the-bot-tries-to-adjudicate","at":"2025-08-11","by":"agent:depbot","as":"bot-dismiss","op":"dismiss","a":"@wire-break","b":"@parser-alloc","rationale":"not a real conflict"}
+{"step":"unattended","name":"the-bots-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"the-new-year","at":"2026-01-05"}
+{"step":"overdue","name":"the-bots-commit-rights-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"the-bots-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:depbot"}
+
+// ── 5. Graduated sanctions → an escalating review bar ────────
+{"step":"check","name":"wire-break-first","principle":5,"strength":"mechanism","scope":"engine.wire","about":"renaming a wire field","proposal":"rename the `actor` field on the grant body","positions":[{"citing":"@wire-break","pull":"against","because":"old readers cannot parse the renamed field"}]}
+{"step":"act","at":"2026-01-06","by":"human:noor","op":"decided","about":"renaming a wire field","outcome":"conflicts","authority":"ask-one","rationale":"shipped with a reader shim"}
+{"step":"check","name":"wire-break-second","principle":5,"strength":"mechanism","scope":"engine.wire","about":"renaming a wire field","proposal":"rename the `commit` field on the draw body","positions":[{"citing":"@wire-break","pull":"against","because":"old readers cannot parse the renamed field"}]}
+{"step":"act","at":"2026-01-07","by":"human:noor","op":"decided","about":"renaming a wire field","outcome":"conflicts","authority":"ask-panel","rationale":"the team agreed one more, then no more"}
+{"step":"check","name":"wire-break-third","principle":5,"strength":"mechanism","scope":"engine.wire","about":"renaming a wire field","proposal":"rename the `scope` field on the policy body","positions":[{"citing":"@wire-break","pull":"against","because":"old readers cannot parse the renamed field"}]}
+
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"before-the-conflict","principle":6,"strength":"mechanism"}
+{"step":"check","name":"unwrap-against-the-parser","principle":6,"strength":"mechanism","about":"unwrap in the fast path","proposal":"unwrap the already-validated header in the parser hot loop","positions":[{"citing":"@no-unwrap","pull":"against","because":"an unwrap in a library takes the caller down with it"},{"citing":"@parser-alloc","pull":"toward","because":"the check is the remaining per-token cost"}]}
+{"step":"act","at":"2026-01-08","by":"human:omar","op":"accept","a":"@no-unwrap","b":"@parser-alloc","rationale":"the header is validated one frame earlier and the branch is measurable; revisit when the validator moves","revisit":"2026-07-01"}
+{"step":"state","name":"after-the-conflict","principle":6,"strength":"mechanism"}
+
+// ── 7. Rights to organize not undermined ─────────────────────
+{"step":"lineage","name":"the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+
+// ── 8. Nested enterprises → crate, then module ───────────────
+{"step":"who","name":"the-crate-above-the-module","principle":8,"strength":"mechanism","scope":"engine"}
+{"step":"who","name":"the-module-inside-the-crate","principle":8,"strength":"mechanism","scope":"engine.wire"}
+
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"amending-a-convention","about":"indentation","proposal":"switch to tabs","amends":"@tabs","positions":[{"actor":"human:sena","pull":"toward","because":"tabs are configurable per reader"}]}
+{"step":"check","name":"amending-a-principle","about":"unwrap policy","proposal":"allow unwrap where a comment argues it cannot fail","amends":"@no-unwrap","positions":[{"actor":"human:sena","pull":"toward","because":"the argument is checkable in review"}]}
+
+// ── the reversible attribute ─────────────────────────────────
+{"step":"check","name":"an-irreversible-change-nothing-supports","about":"drop the v1 reader","proposal":"delete the v1 reader and the migration path with it","reversible":false,"positions":[]}
+{"step":"check","name":"the-same-change-behind-a-flag","about":"drop the v1 reader","proposal":"delete the v1 reader and the migration path with it","reversible":true,"positions":[]}
+
+// ── silence ──────────────────────────────────────────────────
+{"step":"check","name":"a-judgement-call-is-not-a-gap","about":"how much comment is enough","proposal":"require a doc comment on every public item","positions":[]}

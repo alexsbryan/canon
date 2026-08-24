@@ -1596,3 +1596,25 @@ fn a_voice_record_credits_the_citer_and_not_only_the_cited() {
     assert_eq!(canon.voice_of("agent:claude").positions.len(), 1);
     assert_eq!(canon.voice_of("human:alex").positions.len(), 0);
 }
+
+#[test]
+fn holding_a_scope_and_its_parent_makes_you_one_decider_and_not_two() {
+    // "Who decides this?" is a question about PEOPLE. Somebody granted the
+    // house and then the kitchen appeared twice, which reads as a larger
+    // group than the house has — and quorum is counted off this list.
+    let canon = Log::from_acts(vec![
+        grant("human:dana", "house", None, 100),
+        grant("human:dana", "house.kitchen", None, 101),
+        grant("human:sam", "house", None, 102),
+    ])
+    .derive();
+    let who = canon.who_decides(&scope("house.kitchen"), 200);
+    assert_eq!(who.len(), 2);
+    assert_eq!(who[0].actor, "human:dana");
+    assert_eq!(
+        who[0].scope.as_str(),
+        "house.kitchen",
+        "and at the narrowest standing they hold, which is what subsidiarity routes on"
+    );
+    assert!(canon.standing_of("human:sam", &scope("house.kitchen"), 200));
+}

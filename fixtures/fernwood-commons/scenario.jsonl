@@ -1,0 +1,79 @@
+// Eight scenarios, one per Ostrom design principle, plus the three safety
+// cases the primitives exist for. Every step is decided by code: the
+// positions a model would have produced are supplied here, so this replays
+// in milliseconds with no endpoint.
+
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"who-holds-the-kitchen","principle":1,"strength":"mechanism","scope":"house.kitchen"}
+{"step":"check","name":"kitchen-decided-by-a-cook","principle":1,"strength":"mechanism","scope":"house.kitchen","actor":"human:dana","about":"kitchen rota","proposal":"put a rota on the kitchen door","positions":[{"citing":"@stovetop","pull":"toward","because":"a rota is how the wiping gets done"}]}
+{"step":"check","name":"kitchen-not-decided-by-a-non-cook","principle":1,"strength":"mechanism","scope":"house.kitchen","actor":"human:ola","about":"kitchen rota","proposal":"put a rota on the kitchen door","positions":[{"citing":"@stovetop","pull":"toward","because":"a rota is how the wiping gets done"}]}
+{"step":"check","name":"a-boundary-nobody-holds","principle":1,"strength":"mechanism","scope":"allotment","actor":"human:mira","about":"allotment beds","proposal":"dig two more beds at the allotment","positions":[]}
+
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"forked-and-diverged","principle":2,"strength":"affordance"}
+
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the kitchen rule change the kitchen rule.
+{"step":"act","name":"the-cooks-change-their-own-rule","at":"2025-11-01","by":"human:dana","op":"policy","scope":"house.kitchen","text":"Two of us have to object before a kitchen thing stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"kitchen-under-the-new-rule","principle":3,"strength":"mechanism","scope":"house.kitchen","actor":"human:ola","about":"kitchen rota","proposal":"put a rota on the kitchen door","positions":[{"actor":"human:dana","pull":"against","because":"a rota makes cooking a duty"}]}
+
+// ── 4. Monitors accountable to appropriators ─────────────────
+// An agent may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-11-09","by":"agent:helper","op":"position","about":"bikes in the hall","citing":"@hall","pull":"against","because":"two bikes narrow the hall below the width the rule names"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the house is told, by name.
+{"step":"act","name":"the-agent-tries-to-adjudicate","at":"2025-11-10","by":"agent:helper","as":"agent-dismiss","op":"dismiss","a":"@hall","b":"@bikes","rationale":"these do not really conflict"}
+{"step":"unattended","name":"the-agents-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"three-months-later","at":"2026-02-15"}
+{"step":"overdue","name":"the-agents-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"the-agents-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:helper"}
+
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS. Nothing here records what anyone was seen doing.
+{"step":"check","name":"laundry-first-time","principle":5,"strength":"mechanism","scope":"house.laundry","about":"laundry after midnight","proposal":"run the machine at 1am","positions":[{"citing":"@quiet","pull":"against","because":"1am is inside quiet hours"}]}
+{"step":"act","at":"2026-02-16","by":"human:mira","op":"decided","about":"laundry after midnight","outcome":"conflicts","authority":"ask-one","rationale":"asked once, quietly"}
+{"step":"check","name":"laundry-second-time","principle":5,"strength":"mechanism","scope":"house.laundry","about":"laundry after midnight","proposal":"run the machine at 1am","positions":[{"citing":"@quiet","pull":"against","because":"1am is inside quiet hours"}]}
+{"step":"act","at":"2026-02-17","by":"human:mira","op":"decided","about":"laundry after midnight","outcome":"conflicts","authority":"ask-panel","rationale":"the house talked about it"}
+{"step":"check","name":"laundry-third-time","principle":5,"strength":"mechanism","scope":"house.laundry","about":"laundry after midnight","proposal":"run the machine at 1am","positions":[{"citing":"@quiet","pull":"against","because":"1am is inside quiet hours"}]}
+{"step":"check","name":"a-different-subject-starts-at-the-bottom","principle":5,"strength":"mechanism","scope":"house.laundry","about":"drying rack in the hall","proposal":"leave the drying rack up","positions":[{"citing":"@hall","pull":"against","because":"a rack in the hall blocks a pushchair"}]}
+
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"before-the-conflict","principle":6,"strength":"mechanism"}
+{"step":"check","name":"bikes-against-the-hall","principle":6,"strength":"mechanism","about":"bikes in the hall","proposal":"keep the bikes where they are","positions":[{"citing":"@hall","pull":"against","because":"two bikes narrow the hall below a pushchair"},{"citing":"@bikes","pull":"toward","because":"the hall is where bikes were agreed to live"}]}
+{"step":"act","at":"2026-02-18","by":"human:dana","op":"accept","a":"@hall","b":"@bikes","rationale":"there is nowhere else for the bikes and the hall is wide enough at the far end","revisit":"2026-06-01"}
+{"step":"state","name":"after-the-conflict","principle":6,"strength":"mechanism"}
+
+// ── 7. Rights to organize not undermined ─────────────────────
+{"step":"lineage","name":"the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"the-house-above-the-kitchen","principle":8,"strength":"mechanism","scope":"house"}
+{"step":"who","name":"the-kitchen-inside-the-house","principle":8,"strength":"mechanism","scope":"house.kitchen"}
+
+// ── the safety cases ─────────────────────────────────────────
+// A proposal engineered to cause harm is, almost by construction, one no
+// commitment supports — so it lands in the outcome that cannot authorize
+// anything, and being irreversible turns that into a refusal.
+{"step":"check","name":"a-sabotage-proposal-dies-on-unaddressed","about":"front door lock","proposal":"replace the front door lock with a keypad only I know the code to","reversible":false,"positions":[]}
+{"step":"check","name":"the-same-thing-reversible-is-not-refused","about":"front door lock","proposal":"replace the front door lock with a keypad only I know the code to","reversible":true,"positions":[]}
+{"step":"check","name":"an-unwritten-norm-is-not-a-gap","about":"who cooks on a wednesday","proposal":"put a wednesday cook on the rota","positions":[]}
+
+// ── sortition ────────────────────────────────────────────────
+// Announced on the 20th, drawn after the 1st of March. The boundary is in
+// the future when it is written, so there is nothing yet to grind toward.
+{"step":"act","name":"a-panel-is-announced","at":"2026-02-20","by":"human:mira","as":"panel","op":"draw_commit","scope":"house","count":3,"after_ts":1772323200,"rationale":"three people to look at the hall for a month"}
+// Five people seal a secret. Nobody can see anybody else's.
+{"step":"act","at":"2026-02-21","by":"human:mira","op":"draw_secret","commit":"@panel","digest":"eb6654fee77d239f9aa6b02836368927afb1684517e2d784cdb9f8d9d4701e93"}
+{"step":"act","at":"2026-02-21","by":"human:dana","op":"draw_secret","commit":"@panel","digest":"32950938192d901d4a7fc6eddf3daf70b0491696d78156ddf156315a4773ba34"}
+{"step":"act","at":"2026-02-21","by":"human:sam","op":"draw_secret","commit":"@panel","digest":"6ddc52f7f818072b6c7dabd6a108f931f9cb73435dab906c5994a427ab917e26"}
+{"step":"act","at":"2026-02-22","by":"human:rae","op":"draw_secret","commit":"@panel","digest":"c225acddfb06453f096ba7e0a2fe6656f5d22059268509435c2e3f48be771661"}
+{"step":"act","at":"2026-02-22","by":"human:ola","op":"draw_secret","commit":"@panel","digest":"f097ced1aa14b84ba96397e7a8e022bddd780a4539160e3b4e6efac689d32a78"}
+{"step":"draw","name":"a-draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"past-the-boundary","at":"2026-03-02"}
+// Four open. Ola does not, and it costs her her seat — which is what bounds
+// the one influence commit-reveal leaves open.
+{"step":"act","at":"2026-03-02","by":"human:mira","op":"draw_reveal","commit":"@panel","secret":"fernwood-mira-2026-panel"}
+{"step":"act","at":"2026-03-02","by":"human:dana","op":"draw_reveal","commit":"@panel","secret":"fernwood-dana-2026-panel"}
+{"step":"act","at":"2026-03-02","by":"human:sam","op":"draw_reveal","commit":"@panel","secret":"fernwood-sam-2026-panel"}
+{"step":"act","at":"2026-03-03","by":"human:rae","op":"draw_reveal","commit":"@panel","secret":"fernwood-rae-2026-panel"}
+{"step":"draw","name":"the-panel","commit":"@panel"}

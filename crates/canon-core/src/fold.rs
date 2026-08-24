@@ -282,6 +282,12 @@ impl Canon {
                 .cmp(&a.scope.depth())
                 .then_with(|| a.actor.cmp(&b.actor))
         });
+        // One row per PERSON, at the narrowest standing they hold over this.
+        // Somebody who holds both `house` and `house.kitchen` is one decider,
+        // not two, and listing them twice makes the answer to "who decides
+        // this?" read as a longer group than the house actually has.
+        let mut seen = std::collections::BTreeSet::new();
+        found.retain(|g| seen.insert(g.actor.clone()));
         found
     }
 
