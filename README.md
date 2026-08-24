@@ -47,8 +47,11 @@ all, which is enforced by its dependency list rather than by discipline.
 **Most of it needs no model.** `add`, `list`, `why`, `supersede`,
 `retract`, `accept`, `dismiss`, `undo`, `question`, `open`, `log`,
 `share`, `adopt`, `diff --upstream` and the merge driver are all the
-fold. Only `check`, `tensions`, `draft` and `rebase` call a model, and
-they take any OpenAI-compatible endpoint:
+fold — and so is every governance verb: `who`, `grant`, `withdraw`,
+`scope`, `policy`, `position`, `decide`, `rank`, `horizon`, `overdue`,
+`silence`, `voice`, `leave`, `draw` and `replay`. Only `check`,
+`tensions`, `draft` and `rebase` call a model, and they take any
+OpenAI-compatible endpoint:
 
 ```sh
 canon config set endpoint http://localhost:8080/v1   # any llama.cpp server
@@ -69,9 +72,15 @@ CONFLICT
   can-0e50f4ee  "One implementation per threshold, scorer, schema and key."
                 asserted 2026-08-21, in force, never superseded
                 because: the proposal adds a second scorer
+
+ask one person with standing
+  default: at least one commitment pulls against
 ```
 
-Exit 1. The answer always cites a rule you can read, because a bearing
+Exit 1. Two answers, not one: **how it stands** against what you hold,
+and **what you may then do** about it. The first is a fact about the
+evidence; the second is a decision your community made in advance, and
+it is the line below. The answer always cites a rule you can read, because a bearing
 that names no commitment or gives no reason is refused before it is
 rendered — the difference between *the agent misread the rule* and *the
 rule is wrong* is a correction versus an amendment, and you cannot tell
@@ -82,6 +91,50 @@ returns exit 1. It reports which commitments have a stake and which way
 each pulls, including contradictions you already chose to carry. A tool
 that ruled on someone's inner life would do harm the codebase profile
 cannot.
+
+## How you decide is in the canon, not in the tool
+
+`canon` holds no opinion about how many objections make a conflict, who
+may decide what, or what happens when nothing bears on a proposal. Those
+have defensible ranges of answers, communities differ, and a library that
+answered them would be a product.
+
+So the rule is an act like any other:
+
+```sh
+canon policy set consent --cautious -m "One reasoned objection stops a thing. \
+  Anything we cannot undo is not decided by silence."
+canon who house.kitchen        # answerable without asking a person
+canon overdue                  # what has gone past its date
+```
+
+Defaults are extraordinarily sticky and most adopters never change them,
+so whatever ships as default *is* the governance for nearly everyone.
+Calling that loosely held describes an intention rather than an outcome.
+The mitigation costs nothing because the machinery already exists: a
+policy in the ledger is subject to `check`, to tension detection, to
+`supersede` with a rationale, and to a visible diff against the lineage
+it was forked from. A default you can run `canon why` against is loosely
+held; one in a TOML file is not.
+
+**Ostrom's eight design principles are the acceptance test**, and they
+clear on six mechanisms and two affordances — the same marks in a
+twelve-person house and in a codebase. `fixtures/fernwood-commons` and
+`fixtures/eleven-principles` replay one scenario per principle in under
+half a second with no endpoint, because the decision layer is pure:
+
+```sh
+canon replay fixtures/fernwood-commons
+canon replay fixtures/fernwood-commons --policy default   # the counterfactual
+```
+
+The second form is worth having on its own: *what would another rule have
+done to the last six months?* is the question a group actually has before
+changing how it decides.
+
+`PRIMITIVES.md` is the argument — nine primitives, the line between
+mechanism and policy, eighteen technologies of political economy tested
+against them, and the threat model for the one that needed designing.
 
 ## The agent surface
 
