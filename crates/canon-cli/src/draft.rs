@@ -11,7 +11,9 @@
 //!
 //! ```text
 //! chunk (paragraph split, heading-aware)      no model
-//! map: extract per chunk, keep the chunk id   N completions
+//! sentence split, per chunk                   no model
+//! map: extract per chunk, cite by position    N completions
+//! support: read each rule and its citation    2 x ceil(N/10) completions
 //! reduce: group duplicates                    1 completion
 //! accept one at a time                        no model
 //! tensions over what was accepted             1 completion
@@ -20,10 +22,20 @@
 //! Two invariants are structural rather than remembered.
 //!
 //! **Every candidate carries its source passage or it is not shown.** The map
-//! step must return the words it extracted from, verbatim, and a quote that
-//! is not in the chunk drops the candidate. That is cite-or-abstain applied
-//! to onboarding: a drafted commitment with no citation is the model
-//! inventing a value the user never held.
+//! step answers with the POSITION of the sentence it read, and the code cuts
+//! the citation out of the chunk ([`crate::locate`]) — so "the quote is not
+//! in the passage" stops being a check that fires and becomes a state that
+//! cannot be reached. What can still fail is an index pointing at a sentence
+//! the passage does not have, and that is refused and counted. Either way it
+//! is cite-or-abstain applied to onboarding: a drafted commitment with no
+//! citation is the model inventing a value the user never held.
+//!
+//! **A rule must be carried by the sentence it cites.** The citation proves
+//! the words are the passage's; whether the RULE matches them is a second
+//! question, answered by reading the quantities out of both and comparing
+//! structure ([`crate::quantify`]). That reading is done once per rule and
+//! used twice — here, and by the fold guard, which needs the same answer to
+//! refuse to merge two rules stating different limits.
 //!
 //! **The reduce step never mints text.** It returns groups of positions, and
 //! the first member of each group survives with its own citation intact. A
@@ -40,11 +52,12 @@ use canon_core::ActKind;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::measure::{normalize, unstated_measure};
+use crate::locate;
 use crate::model::{self, Client, ModelError};
 use crate::profile::Profile;
 use crate::quantify;
 use crate::store;
+use crate::subject;
 use crate::tensions;
 
 /// Target chunk size in characters. Big enough that a rule and its rationale
@@ -54,8 +67,6 @@ const CHUNK_TARGET: usize = 1500;
 /// Below this, a paragraph is not worth a completion of its own — it is
 /// merged forward instead.
 const CHUNK_MIN: usize = 40;
-/// A quote shorter than this cannot be evidence of anything.
-const QUOTE_MIN: usize = 20;
 
 // ── the artifact ────────────────────────────────────────────
 
@@ -133,6 +144,42 @@ pub struct DraftRun {
     pub kept: Vec<usize>,
     /// Tensions proposed over `kept`, in `kept` positions.
     pub tensions: Vec<RunTension>,
+    /// How many comparison passes the run attempted.
+    #[serde(default)]
+    pub tension_passes: usize,
+    /// Passes that produced no answer, each naming itself and why. A tension
+    /// count taken from a run with entries here is a count over a FRACTION of
+    /// the pairs, and a reader who cannot see that is being misled (§18.3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tension_passes_unread: Vec<String>,
+    /// The stage that ended this run early, if one did.
+    ///
+    /// A run with this set is EVIDENCE, never a measurement: the stages after
+    /// it never ran, so every count in it is a count about a pipeline that
+    /// stopped. The bar refuses to score one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub failed: Option<String>,
+}
+
+/// Write what a run produced before the stage that ended it, then report.
+///
+/// A run that dies at the comparison step has already spent every extraction
+/// call it made — thirty-three minutes of them, on the sweep that prompted
+/// this. Discarding that makes the next attempt pay for it again and leaves
+/// nobody able to see what the run actually held. The artifact is marked
+/// `failed`, so it reads as evidence and can never be scored as a result.
+fn abandon(dir: &Path, artifact: &mut DraftRun, stage: &str, e: ModelError) -> i32 {
+    artifact.failed = Some(format!("{stage}: {e}"));
+    match persist(dir, artifact) {
+        Ok(p) => eprintln!(
+            "the {stage} step failed. What ran before it is kept at {}",
+            p.display()
+        ),
+        Err(w) => {
+            eprintln!("the {stage} step failed, and the partial run could not be written: {w}")
+        }
+    }
+    model::report(e)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -230,22 +277,29 @@ commitment; \"the house met and resolved to move quiet hours earlier\" is not. \
 When a passage changes one part of a rule and leaves the rest, the part that \
 changed is a commitment.
 
-For each one, return:
+The passage is given as numbered sentences, one per line. Each is marked \
+[n]. The markers are not part of the text.
+
+For each commitment, return:
+- first: the marker of the sentence that states the rule
+- last: the marker of the last sentence the rule runs to — the same as first \
+when one sentence states it
 - text: one self-contained sentence stating the rule as the holder would \
 write it in a list of their own commitments. Never write about the author — \
 \"Mornings are protected.\", not \"The speaker intends to protect their \
 mornings.\" It must make sense with no passage in front of it.
-- quote: the words from the passage it came from, copied exactly. Do not \
-paraphrase, do not fix wording, do not shorten with ellipses.
 
 Rules:
 - Extract every distinct rule the passage states. A passage stating no rule \
 returns an empty list.
+- Point at the fewest sentences that state the rule, and never more than \
+three.
+- first and last must be markers this passage has. Never write one it does \
+not.
 - Never state a commitment the passage does not.
 - Every number, time, day and unit in your sentence must be the one the \
 passage uses. Do not convert or round: if the passage says three days, the \
-rule says three days, never three hours.
-- A quote that is not word-for-word from the passage is a failure.";
+rule says three days, never three hours.";
 
 #[derive(Debug, Deserialize)]
 struct Extracted {
@@ -253,12 +307,23 @@ struct Extracted {
     commitments: Vec<ExtractedOne>,
 }
 
+/// Where the rule is, then what it says.
+///
+/// The order is load-bearing under constrained decoding: the model settles on
+/// a position in the passage BEFORE it writes the sentence, which is the
+/// grounding the old `quote` field supplied by making it retype the source.
+/// Pointing is the cheaper way to get it.
 #[derive(Debug, Deserialize)]
 struct ExtractedOne {
+    /// 1-based marker of the first sentence, as [`locate::numbered`] wrote
+    /// it. Defaults to 0 — not a position — so an answer that omits the
+    /// field is refused rather than read as "the first sentence".
+    #[serde(default)]
+    first: usize,
+    #[serde(default)]
+    last: usize,
     #[serde(default)]
     text: String,
-    #[serde(default)]
-    quote: String,
 }
 
 fn extract_schema() -> Value {
@@ -270,10 +335,11 @@ fn extract_schema() -> Value {
                 "items": {
                     "type": "object",
                     "properties": {
+                        "first": { "type": "integer" },
+                        "last": { "type": "integer" },
                         "text": { "type": "string" },
-                        "quote": { "type": "string" },
                     },
-                    "required": ["text", "quote"],
+                    "required": ["first", "last", "text"],
                     "additionalProperties": false,
                 },
             },
@@ -308,15 +374,20 @@ fn voice(profile: Profile) -> &'static str {
     }
 }
 
-/// Extract from one chunk, keeping only candidates whose quote is actually in
-/// the chunk. The check is the citation guarantee, and it is code rather than
-/// an instruction to the model (§7.6).
+/// Extract from one chunk, cutting each citation out of the chunk at the
+/// position the model pointed to.
+///
+/// The citation guarantee is code, not an instruction to the model (§7.6) —
+/// and since the words are copied rather than repeated, it is now a property
+/// of the construction rather than a check that has to pass.
 pub fn extract(
     client: &Client,
     chunk: &Chunk,
     profile: Profile,
 ) -> Result<(Vec<Candidate>, Vec<Dropped>), ModelError> {
     let system = format!("{EXTRACT_SYSTEM}\n\n{}", voice(profile));
+    let spans = locate::sentences(&chunk.text);
+    let shown = locate::numbered(&chunk.text, &spans);
     // The heading goes to the model as CONTEXT, not as citable text.
     //
     // The chunker has always recorded it and never sent it, which threw away
@@ -326,52 +397,117 @@ pub fn extract(
     // never names its own subject, and read cold the operative sentence looks
     // like narrative.
     //
-    // Quoting is still restricted to the body, because a rule evidenced only
-    // by a title is not evidenced.
+    // A rule evidenced only by a title is not evidenced, and that restriction
+    // used to be a sentence in the prompt. It is now the shape of the input:
+    // only the body is numbered, so the title has no position to cite.
     let user = match &chunk.heading {
         Some(h) => format!(
-            "Section title, for context only — do not quote from it: \"{h}\"\n\n\
-             Passage:\n{}\n\nReturn the commitments this passage states.",
-            chunk.text
+            "Section title, for context only — it has no marker and cannot be \
+             cited: \"{h}\"\n\nPassage:\n{shown}\nReturn the commitments this \
+             passage states."
         ),
-        None => format!(
-            "Passage:\n{}\n\nReturn the commitments this passage states.",
-            chunk.text
-        ),
+        None => format!("Passage:\n{shown}\nReturn the commitments this passage states."),
     };
     let got: Extracted = client.complete_json(&system, &user, "commitments", &extract_schema())?;
-    let haystack = normalize(&chunk.text);
     let mut kept = Vec::new();
     let mut dropped = Vec::new();
+    let refuse = |text: String, quote: String, reason: String| Dropped {
+        text,
+        quote,
+        chunk: chunk.id,
+        reason,
+    };
     for c in got.commitments {
         let text = c.text.trim().to_string();
-        let quote = c.quote.trim().to_string();
-        let reason: Option<String> = if text.is_empty() {
-            Some("empty commitment text".into())
-        } else if quote.chars().count() < QUOTE_MIN {
-            Some("quote too short to be evidence".into())
-        } else if !haystack.contains(&normalize(&quote)) {
-            Some("quote is not in the passage — paraphrased, not cited".into())
-        } else {
-            unstated_measure(&text, &chunk.text)
-                .map(|m| format!("states `{m}`, which the passage does not"))
-        };
-        match reason {
-            Some(r) => dropped.push(Dropped {
-                text,
-                quote,
-                chunk: chunk.id,
-                reason: r,
-            }),
-            None => kept.push(Candidate {
-                text,
-                quote,
-                chunk: chunk.id,
-                source: chunk.source.clone(),
-            }),
+        if text.is_empty() {
+            dropped.push(refuse(text, String::new(), "empty commitment text".into()));
+            continue;
         }
+        // A citation that could not be cut carries no quote to report, so the
+        // reason names the position that was asked for and the ones on offer.
+        let quote = match locate::cite(&chunk.text, &spans, c.first, c.last) {
+            Ok(q) => q,
+            Err(e) => {
+                dropped.push(refuse(text, String::new(), e.to_string()));
+                continue;
+            }
+        };
+        // The citation proves the words are the passage's. Whether the RULE
+        // matches them is a different reading over different text, and it is
+        // its own stage — see `support`.
+        kept.push(Candidate {
+            text,
+            quote,
+            chunk: chunk.id,
+            source: chunk.source.clone(),
+        });
     }
     Ok((kept, dropped))
+}
+
+// ── support: does the citation carry the rule's numbers? ────
+
+/// What the support stage hands on.
+///
+/// `candidates` and `quantities` are the same length and the same order, and
+/// the reduce step indexes both. Splitting a candidate from its reading would
+/// judge every later rule against the one before it, with no symptom until a
+/// fold goes wrong — so they travel together.
+#[derive(Debug, Default)]
+pub struct Supported {
+    pub candidates: Vec<Candidate>,
+    pub quantities: Vec<Vec<quantify::Quantity>>,
+    /// Refused, each naming the number its citation did not carry.
+    pub dropped: Vec<Dropped>,
+}
+
+/// Read every rule and every citation, drop the rules their own citation does
+/// not support, and hand the rule readings on.
+///
+/// One reading of each rule, used twice. The fold guard needs to know what a
+/// rule states in order to refuse to merge it with one stating something
+/// else; this guard needs the same answer to check it against the sentence it
+/// cites. Two readings would be two answers to one question (§10.6), so the
+/// quantities travel with the survivors instead of being asked for again.
+///
+/// A rule and its citation are read TOGETHER — see
+/// [`quantify::quantify_pairs`]. Read in separate passes they need not
+/// canonicalise the same instant the same way, and a rule was refused for
+/// stating a time its own citation stated.
+pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported, ModelError> {
+    if candidates.is_empty() {
+        return Ok(Supported::default());
+    }
+    // Each rule is read alongside its own citation, in one call, because the
+    // canonical form the comparison depends on is only agreed within a call.
+    let pairs: Vec<(&str, &str)> = candidates
+        .iter()
+        .map(|c| (c.text.as_str(), c.quote.as_str()))
+        .collect();
+    let read = quantify::quantify_pairs(client, &pairs)?;
+
+    let mut kept = Vec::new();
+    let mut quantities = Vec::new();
+    let mut dropped = Vec::new();
+    for (c, (rule, cited)) in candidates.into_iter().zip(read) {
+        match quantify::unsupported(&rule, &cited) {
+            Some(m) => dropped.push(Dropped {
+                text: c.text,
+                quote: c.quote,
+                chunk: c.chunk,
+                reason: format!("states `{m}`, which its citation does not"),
+            }),
+            None => {
+                kept.push(c);
+                quantities.push(rule);
+            }
+        }
+    }
+    Ok(Supported {
+        candidates: kept,
+        quantities,
+        dropped,
+    })
 }
 
 // ── reduce: group duplicates (one completion) ───────────────
@@ -417,6 +553,7 @@ fn dedupe_schema() -> Value {
 pub fn dedupe(
     client: &Client,
     candidates: &[Candidate],
+    quantities: &[Vec<quantify::Quantity>],
 ) -> Result<(Vec<Vec<usize>>, Vec<usize>), ModelError> {
     if candidates.len() < 2 {
         return Ok((Vec::new(), (0..candidates.len()).collect()));
@@ -455,34 +592,57 @@ pub fn dedupe(
     // fired and five planted supersessions were deleted. A list is always
     // one document behind; see `quantify`.
     //
-    // Only the rules some group wants to merge are read. Nothing is asked
-    // about a pair nobody proposed folding.
-    let mut involved: Vec<usize> = proposed.iter().flatten().copied().collect();
-    involved.sort_unstable();
-    involved.dedup();
-    let texts: Vec<&str> = involved
-        .iter()
-        .map(|i| candidates[*i].text.as_str())
-        .collect();
-    let read = quantify::quantify(client, &texts)?;
-    let quantities: std::collections::BTreeMap<usize, Vec<quantify::Quantity>> =
-        involved.into_iter().zip(read).collect();
+    // The reading arrives with the candidates, from `support`, which already
+    // had to ask what every rule states. Asking again here would be a second
+    // answer to one question, and the two could disagree (§10.6).
     let empty: Vec<quantify::Quantity> = Vec::new();
-    let of = |i: &usize| quantities.get(i).unwrap_or(&empty).as_slice();
+    let of = |i: &usize| quantities.get(*i).unwrap_or(&empty).as_slice();
+
+    // The second guard: the SAME number about a DIFFERENT thing. A permit
+    // schedule restates one sentence per permit type, so type "B" and type
+    // "C" state 65 dBAs at 50 feet in almost the same words — the reduce step
+    // proposes them as duplicates and the quantity guard has no grounds to
+    // refuse. Folding them deleted the type "C" commitment and the planted
+    // supersession against it; the Des Moines bar measured 10 of 11 reachable
+    // with extraction missing none.
+    //
+    // Read per GROUP rather than per candidate, because two rules only name
+    // one thing the same way when one call names them both — the lesson
+    // `quantify_pairs` paid for. See `subject`.
+    let group_texts: Vec<Vec<&str>> = proposed
+        .iter()
+        .map(|g| g.iter().map(|i| candidates[*i].text.as_str()).collect())
+        .collect();
+    let subjects = subject::same_thing(client, &group_texts)?;
 
     let mut groups: Vec<Vec<usize>> = Vec::new();
     let mut folded: Vec<bool> = vec![false; candidates.len()];
-    for mut members in proposed {
+    for (gi, mut members) in proposed.into_iter().enumerate() {
         if let Some(&head) = members.first() {
+            let rep = &subjects[gi];
+            let head_rep = rep.first().copied().unwrap_or(0);
+            let mut at = 0usize;
             members.retain(|m| {
-                let keep = *m == head || !quantify::differs_by_quantity(of(&head), of(m));
-                if !keep {
+                let here = at;
+                at += 1;
+                if *m == head {
+                    return true;
+                }
+                if quantify::differs_by_quantity(of(&head), of(m)) {
                     eprintln!(
                         "\nkept apart, not folded — these state different quantities:\n  {}\n  {}",
                         candidates[head].text, candidates[*m].text
                     );
+                    return false;
                 }
-                keep
+                if rep.get(here).copied().unwrap_or(here) != head_rep {
+                    eprintln!(
+                        "\nkept apart, not folded — these govern different things:\n  {}\n  {}",
+                        candidates[head].text, candidates[*m].text
+                    );
+                    return false;
+                }
+                true
             });
         }
         if members.len() < 2 {
@@ -692,6 +852,44 @@ pub fn run(args: &[String]) -> i32 {
         candidates.len(),
         dropped.len()
     );
+
+    // From here the artifact exists and every exit writes it. A stage that
+    // fails costs its own work and nothing before it.
+    let mut artifact = DraftRun {
+        schema: RUN_SCHEMA.into(),
+        at: store::now(),
+        endpoint: client.endpoint().to_string(),
+        model: client.model().to_string(),
+        profile: profile.as_str().to_string(),
+        sources: sources.iter().map(|(p, _)| p.clone()).collect(),
+        chunks: chunks.clone(),
+        candidates: candidates.clone(),
+        dropped: dropped.clone(),
+        unread: unread.clone(),
+        duplicates: Vec::new(),
+        kept: Vec::new(),
+        tensions: Vec::new(),
+        tension_passes: 0,
+        tension_passes_unread: Vec::new(),
+        failed: None,
+    };
+
+    // Every rule read once, checked against its own citation, and the reading
+    // carried forward to the fold guard.
+    let supported = match support(&client, candidates) {
+        Ok(v) => v,
+        Err(e) => return abandon(&dir, &mut artifact, "support", e),
+    };
+    if !supported.dropped.is_empty() {
+        eprintln!(
+            "{} candidate(s) dropped for stating a number their citation does not",
+            supported.dropped.len()
+        );
+    }
+    dropped.extend(supported.dropped);
+    let (candidates, quantities) = (supported.candidates, supported.quantities);
+    artifact.candidates = candidates.clone();
+    artifact.dropped = dropped.clone();
     if !unread.is_empty() {
         // Loud, because every number computed from this run is a number about
         // a fraction of the document.
@@ -703,10 +901,12 @@ pub fn run(args: &[String]) -> i32 {
         );
     }
 
-    let (groups, kept) = match dedupe(&client, &candidates) {
+    let (groups, kept) = match dedupe(&client, &candidates, &quantities) {
         Ok(v) => v,
-        Err(e) => return model::report(e),
+        Err(e) => return abandon(&dir, &mut artifact, "dedupe", e),
     };
+    artifact.duplicates = groups.clone();
+    artifact.kept = kept.clone();
     if !groups.is_empty() {
         eprintln!("{} duplicate group(s) folded", groups.len());
     }
@@ -715,37 +915,27 @@ pub fn run(args: &[String]) -> i32 {
     // In a dry run nothing is accepted, so tensions runs over every surviving
     // candidate — that is what the bar scores. In a real run it runs over what
     // the person accepted, below.
-    let run_tensions: Vec<RunTension> = if dry_run {
+    let compared = if dry_run {
         match tensions::detect_over(&client, &kept_texts) {
-            Ok(v) => v
-                .into_iter()
-                .map(|p| RunTension {
-                    a: p.a,
-                    b: p.b,
-                    reason: p.reason,
-                })
-                .collect(),
-            Err(e) => return model::report(e),
+            Ok(v) => v,
+            Err(e) => return abandon(&dir, &mut artifact, "tensions", e),
         }
     } else {
-        Vec::new()
+        tensions::Compared::default()
     };
+    let run_tensions: Vec<RunTension> = compared
+        .pairs
+        .into_iter()
+        .map(|p| RunTension {
+            a: p.a,
+            b: p.b,
+            reason: p.reason,
+        })
+        .collect();
 
-    let artifact = DraftRun {
-        schema: RUN_SCHEMA.into(),
-        at: store::now(),
-        endpoint: client.endpoint().to_string(),
-        model: client.model().to_string(),
-        profile: profile.as_str().to_string(),
-        sources: sources.iter().map(|(p, _)| p.clone()).collect(),
-        chunks: chunks.clone(),
-        candidates: candidates.clone(),
-        dropped,
-        unread,
-        duplicates: groups,
-        kept: kept.clone(),
-        tensions: run_tensions,
-    };
+    artifact.tensions = run_tensions;
+    artifact.tension_passes = compared.passes;
+    artifact.tension_passes_unread = compared.unread;
     let path = match persist(&dir, &artifact) {
         Ok(p) => p,
         Err(e) => return crate::cmds::fail(e),

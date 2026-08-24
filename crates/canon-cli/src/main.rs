@@ -14,13 +14,14 @@ mod config;
 mod draft;
 mod explain;
 mod lineage;
+mod locate;
 mod mcp;
-mod measure;
 mod model;
 mod profile;
 mod quantify;
 mod rebase;
 mod store;
+mod subject;
 mod tensions;
 #[cfg(test)]
 mod testing;

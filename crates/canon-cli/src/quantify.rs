@@ -60,19 +60,41 @@ impl Quantity {
     /// so a missing field can only ever make two quantities look DIFFERENT —
     /// which keeps a rule out of a fold rather than silently into one.
     fn key(&self) -> (String, String) {
-        let flat = |s: &str| {
-            s.split_whitespace()
-                .collect::<Vec<_>>()
-                .join(" ")
-                .to_lowercase()
-        };
-        let c = if self.canonical.trim().is_empty() {
+        (self.measure(), flat(&self.of))
+    }
+
+    /// Does this state a number at all?
+    ///
+    /// A reading pass sometimes answers with an entry whose value and unit
+    /// are both blank — an object where the model had nothing to put. That
+    /// states nothing, and every consumer here compares measures, so letting
+    /// it through means "no number" gets compared as though it were one. It
+    /// cost two of three candidates on a live smoke run: both Type "F"
+    /// permits were refused for stating `` that their citation did not.
+    fn states_a_number(&self) -> bool {
+        !self.measure().is_empty()
+    }
+
+    /// The measure alone, without what it measures.
+    ///
+    /// Falls back to the as-written value when no canonical form came back,
+    /// so a missing field can only ever make two quantities look DIFFERENT —
+    /// which keeps a rule out of a fold rather than silently into one.
+    fn measure(&self) -> String {
+        flat(&if self.canonical.trim().is_empty() {
             format!("{} {}", self.value, self.unit)
         } else {
             self.canonical.clone()
-        };
-        (flat(&c), flat(&self.of))
+        })
     }
+}
+
+/// Case and spacing are noise; the words are not.
+fn flat(s: &str) -> String {
+    s.split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
 }
 
 const SYSTEM: &str = "\
@@ -153,29 +175,67 @@ fn schema() -> Value {
 /// and not the attention cliff `tensions::BATCH` is guarding.
 const BATCH: usize = 10;
 
-/// The quantities each rule states, in the order given.
+/// A rule's quantities and its citation's, read in one call.
+pub type PairReading = (Vec<Quantity>, Vec<Quantity>);
+
+/// Read two texts TOGETHER, so they are canonicalised against each other.
 ///
-/// A rule the model does not answer for comes back empty rather than
-/// missing, so a caller can never silently line up the wrong answers.
-pub fn quantify(client: &Client, rules: &[&str]) -> Result<Vec<Vec<Quantity>>, ModelError> {
-    let mut out: Vec<Vec<Quantity>> = vec![Vec::new(); rules.len()];
-    for (b, block) in rules.chunks(BATCH).enumerate() {
-        let mut user = String::from("Rules:\n");
-        for (i, r) in block.iter().enumerate() {
-            user.push_str(&format!("{}. {}\n", i + 1, r));
+/// **Canonical form is only agreed within one call.** The prompt asks that
+/// two texts stating the same limit produce the same canonical string, and
+/// the model can only honour that for texts it can see at once. Reading a
+/// rule in one call and its citation in another and then comparing the
+/// results assumes a stability the design never offered — and it does not
+/// hold: a live smoke run refused a permit for stating `9:00 a.m.` that its
+/// own citation stated too, because one pass wrote `9:00 a.m.` and the other
+/// `09:00`. Both readings were correct; only the comparison was wrong.
+///
+/// Pairs are independent of one another, so they still batch. The pairing is
+/// structural rather than a parity trick on [`BATCH`]: each call carries
+/// whole pairs because they are chunked as pairs.
+pub fn quantify_pairs(
+    client: &Client,
+    pairs: &[(&str, &str)],
+) -> Result<Vec<PairReading>, ModelError> {
+    let mut out = Vec::with_capacity(pairs.len());
+    for block in pairs.chunks(BATCH / 2) {
+        let mut flat: Vec<&str> = Vec::with_capacity(block.len() * 2);
+        for (a, b) in block {
+            flat.push(a);
+            flat.push(b);
         }
-        user.push_str("\nList the quantities each rule states.");
-        let got: Quantified = client.complete_json(SYSTEM, &user, "quantities", &schema())?;
-        for r in got.rules {
-            if r.n >= 1 && r.n <= block.len() {
-                out[b * BATCH + r.n - 1] = r.quantities;
-            } else {
-                eprintln!(
-                    "\nwarning: dropped quantities for rule {} — only 1..{} were offered",
-                    r.n,
-                    block.len()
-                );
-            }
+        let read = read_block(client, &flat)?;
+        let mut it = read.into_iter();
+        while let (Some(a), Some(b)) = (it.next(), it.next()) {
+            out.push((a, b));
+        }
+    }
+    Ok(out)
+}
+
+/// One reading call over at most [`BATCH`] texts, answers in the order given.
+///
+/// A text the model does not answer for comes back empty rather than missing,
+/// so a caller can never silently line up the wrong answers.
+fn read_block(client: &Client, block: &[&str]) -> Result<Vec<Vec<Quantity>>, ModelError> {
+    let mut out: Vec<Vec<Quantity>> = vec![Vec::new(); block.len()];
+    let mut user = String::from("Rules:\n");
+    for (i, r) in block.iter().enumerate() {
+        user.push_str(&format!("{}. {}\n", i + 1, r));
+    }
+    user.push_str("\nList the quantities each rule states.");
+    let got: Quantified = client.complete_json(SYSTEM, &user, "quantities", &schema())?;
+    for mut r in got.rules {
+        if r.n >= 1 && r.n <= block.len() {
+            // Filtered here, at the one place a model's answer becomes data,
+            // rather than defended against by each consumer.
+            r.quantities.retain(Quantity::states_a_number);
+            out[r.n - 1] = r.quantities;
+        } else {
+            eprintln!(
+                "\nwarning: dropped quantities for rule {} — only 1..{} were offered",
+                r.n,
+                block.len()
+            );
         }
     }
     Ok(out)
@@ -204,6 +264,42 @@ pub fn differs_by_quantity(a: &[Quantity], b: &[Quantity]) -> bool {
         }
     }
     false
+}
+
+/// A quantity the rule states that its own citation does not.
+///
+/// The citation proves the WORDS are the passage's; it does not prove the
+/// RULE matches them. Observed against a live endpoint: a candidate read "at
+/// least three hours in advance" while its verbatim quote said "three days
+/// ahead". A commitment that misstates a number is worse than a missing one —
+/// it contradicts the sentence printed beneath it, and the citation makes it
+/// look checked.
+///
+/// Compared on the MEASURE alone, never on what it measures. A rule may
+/// reword what a number counts — "within any seven-day period" as "per week"
+/// — and that is a paraphrase, not a different rule. A number the citation
+/// never states is not a paraphrase of anything.
+///
+/// This was a hand-kept list of units and number words in `measure.rs` until
+/// 2026-08-22. On a municipal noise code that list read `85 dBA` and `85 dBC`
+/// as stating no measure at all, so the guard could not fire in either
+/// direction. Both sides are read by the model now and compared here as
+/// structure — the same reading the fold guard uses, so there is one answer
+/// to "what does this state" (§10.6).
+pub fn unsupported(rule: &[Quantity], cited: &[Quantity]) -> Option<String> {
+    let have: Vec<String> = cited.iter().map(Quantity::measure).collect();
+    rule.iter().find(|q| !have.contains(&q.measure())).map(|q| {
+        // Name what was COMPARED. Reporting `value unit` printed an empty
+        // string for a reading whose value and unit were blank but whose
+        // canonical form was not — so the refusal said the rule stated ``,
+        // and the mismatch it was actually about was invisible.
+        let written = format!("{} {}", q.value, q.unit);
+        if written.trim().is_empty() {
+            q.measure()
+        } else {
+            written.trim().to_string()
+        }
+    })
 }
 
 #[cfg(test)]
