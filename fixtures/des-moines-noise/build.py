@@ -11,13 +11,22 @@ and the measure diff between the two readings is mechanical.
 
 Labelling rule, applied by this script and by nothing else:
 
-  a permit type present in BOTH the codified article and an amending
+  a permit SUBJECT present in both the codified article and an amending
   ordinance, whose restatement CHANGES any stated measure (sound level or its
   weighting, distance, hours, counts, days)      -> planted tension
   ...whose stated measures are all identical     -> expected non-tension
-  a permit type only an ordinance states         -> an addition, not paired
+  a subject only an ordinance states             -> an addition, not paired
   a base section no ordinance here amends        -> expected non-tension,
                                                     paired for shared vocabulary
+
+The unit is the SUBJECT, not the type letter. This script paired by letter
+until 2026-08-22 and it missed a whole supersession: the codified Type "F"
+covers the Simon Estes Riverfront Amphitheater AND the Brenton Skating Plaza,
+and Ordinance 16,064 keeps Brenton under "F" while moving Simon Estes to a new
+Type "N" at 100 dBA -> 100 dBC with the Sunday-to-Thursday close pulled from
+11:00 p.m. to 10:00 p.m. Read by letter that is two unrelated permits. The
+same split happens to Waterworks Park, which becomes Type "I" (the Lauridsen
+Amphitheater) and Type "M" (the park field, with the Zoo parcel).
 
 Run: python3 build.py
 """
@@ -35,6 +44,13 @@ def load(name):
     t = (SRC / name).read_text(encoding="utf-8", errors="replace")
     t = t.replace("“", '"').replace("”", '"')
     t = t.replace("‘", "'").replace("’", "'").replace("―", '"')
+    # Pagination the extractor leaves behind. The form feed is the same class
+    # of artifact as the page number and was not being removed: it sits at the
+    # head of a page's first line, so `(11) Type "K" permit` began with \f and
+    # no line-anchored pattern could see it. Ordinance 16,064's Type "J" ran
+    # on into Type "K" for exactly that reason. Every form feed in all four
+    # sources is at a line start, so dropping them never joins two lines.
+    t = t.replace("\f", "")
     t = re.sub(r"\n\s*Page \d+\s*\n", "\n", t)
     t = re.sub(r"\n{3,}", "\n\n", t)
     return t
@@ -61,6 +77,37 @@ def code_section(text, sec):
     return m.group(1).strip().rstrip("."), tidy(body)
 
 
+# Where a permit subsection ends.
+#
+# It used to end at `pos + 2200` characters, which is not a boundary any
+# document has, and two of the twenty-seven blocks were wrong because of it.
+# The codified Type "J" swallowed subsections (f) Commercial advertising and
+# (h) Denial or revocation whole — 1,975 characters where the permit is 745 —
+# so a rule about advertising was filed under a construction permit, and the
+# two readings of "J" no longer matched, which cost the pair its label. The
+# Type "Q" of Ordinance 16,127 swallowed the clerk's certification and was
+# then cut mid-sentence. Type "G" cleared the cap by 58 characters and was
+# correct by luck.
+#
+# A subsection ends where the document says it does: at the next permit, at a
+# sibling of the lettered subsection holding the permit list, at the enacting
+# sections an ordinance closes with, at its signature block, or at the next
+# section of the code. There is no character cap; a block that finds no
+# terminator runs to the end of its source, which is the only case where that
+# is the right answer.
+BLOCK_END = re.compile(
+    r"""^[ \t]*(?:
+          \(\d{1,2}\)[ \t]*Type     # the next permit in the list
+        | \([a-z]\)[ \t]+\w         # (f) Commercial advertising.
+        | Section[ \t]+\d+\.        # Section 2. This ordinance shall...
+        | FORM[ \t]+APPROVED         # the signature block
+        | Attest:                    # the clerk's certification
+        | Sec\.[ \t]*42-\d+\.       # the next section of the code
+    )""",
+    re.M | re.X,
+)
+
+
 def permit_blocks(text):
     """`(6) Type "F" permit ...` subsections, keyed by letter."""
     marks = [
@@ -68,9 +115,11 @@ def permit_blocks(text):
         for m in re.finditer(r'\((\d{1,2})\)\s*Type\s*"?\s*([A-Z])\s*"?\s*[Pp]ermit', text)
     ]
     out = {}
-    for i, (pos, num, letter) in enumerate(marks):
-        end = marks[i + 1][0] if i + 1 < len(marks) else min(pos + 2200, len(text))
-        out[letter] = (num, tidy(text[pos:end]))
+    for pos, num, letter in marks:
+        rest = text[pos:]
+        # From 1, so the marker opening this block cannot terminate it.
+        end = BLOCK_END.search(rest, 1)
+        out[letter] = (num, tidy(rest[: end.start() if end else len(rest)]))
     return out
 
 
@@ -218,7 +267,7 @@ def alternatives(cat, value):
     return [value]
 
 
-def anchor_sides(letter, d, bnum, anum):
+def anchor_sides(b, a, d):
     # ONE requirement per side, satisfied by ANY of the measures the council
     # changed. A side is reachable when its rule carries any one of them —
     # requiring all three would report a tension unreachable because the
@@ -233,12 +282,12 @@ def anchor_sides(letter, d, bnum, anum):
     b_must = [sorted(set(b_alts))] if b_alts else []
     # A side with nothing distinctive still has to yield the rule at all.
     if not a_must:
-        a_must.append([f'type "{letter}" permit', f"type {letter} permit"])
+        a_must.append([f'type "{b["letter"]}" permit', f'type {b["letter"]} permit'])
     if not b_must:
-        b_must.append([f'type "{letter}" permit', f"type {letter} permit"])
+        b_must.append([f'type "{a["letter"]}" permit', f'type {a["letter"]} permit'])
     return (
-        {"section": f"sec:42-258({bnum})", "must": a_must},
-        {"section": f"ord:16064/42-258({anum})", "must": b_must},
+        {"section": b["key"], "must": a_must},
+        {"section": a["key"], "must": b_must},
     )
 
 
@@ -250,19 +299,83 @@ base_p = permit_blocks(code)
 amd_p = permit_blocks(o64)
 q_p = permit_blocks(o127)
 
+# ── what each permit authorises ─────────────────────────────
+#
+# The council amends a permit by SUBJECT — the venue or the conduct it covers
+# — and the type letter is only a slot in a list that gets renumbered. Every
+# entry below is the subject the council's own line names, quoted beside it,
+# and nothing here is inferred from a permit's body. Read them against
+# `des-moines-noise.md`; that is the whole audit.
+#
+# Two readings state the same rule when their subjects overlap.
+SUBJECTS = {
+    # Codified article, from Ordinance 14,746 (2008).
+    ("base", "A"): {"street-closing"},          # '(1) Type "A" permit.' — street closing, commercial/mixed use
+    ("base", "B"): {"residential-park"},        # "Parks located in residential zones"
+    ("base", "C"): {"church-school"},           # "Church or school grounds"
+    ("base", "D"): {"residential-event"},       # "Residential events"
+    ("base", "E"): {"background-commercial"},   # "Background sound equipment"
+    ("base", "F"): {"simon-estes", "brenton-plaza"},
+    #                                             "Simon Estes Riverfront Amphitheater and Brenton Skating Plaza"
+    ("base", "G"): {"special-event"},           # "Special event live performances"
+    ("base", "H"): {"farmers-market"},          # "Farmer's Market"
+    ("base", "I"): {"waterworks-park"},         # "Waterworks Park"
+    ("base", "J"): {"night-construction"},      # "Night construction"
+    # Ordinance 16,064 (2021). K through P have no codified counterpart.
+    ("16064", "A"): {"street-closing"},         # '(1) Type "A" permit.' — street closing, now incl. industrial
+    ("16064", "B"): {"residential-park"},       # "parks located in residential zones"
+    ("16064", "C"): {"church-school"},          # "church or school grounds"
+    ("16064", "D"): {"residential-event"},      # "residential events"
+    ("16064", "E"): {"background-commercial"},  # "background sound equipment"
+    ("16064", "F"): {"brenton-plaza"},          # "Brenton Skating Plaza" — Simon Estes moved out, to "N"
+    ("16064", "G"): {"special-event"},          # "Special Event Live Performances"
+    ("16064", "H"): {"farmers-market"},         # "Farmer's Market"
+    ("16064", "I"): {"waterworks-lauridsen"},   # "Waterworks Park - Lauridsen Amphitheater"
+    ("16064", "J"): {"night-construction"},     # "night construction"
+    ("16064", "K"): {"event-route"},            # "an event whose route is on city streets, trails and/or other public right-of-way"
+    ("16064", "L"): {"private-recreation"},     # "a privately held recreational area more than 40 acres in area"
+    ("16064", "M"): {"zoo-parcel", "waterworks-field"},
+    #                                             "Zoo and Water Works Park" / "the Blank Park Zoo Foundation Parcel and Water Works Park field"
+    ("16064", "N"): {"simon-estes"},            # "Simon Estes Riverfront Amphitheater"
+    ("16064", "O"): {"riverview-amphitheater"}, # "Riverview Amphitheater"
+    ("16064", "P"): {"botanical-center"},       # "Botanical Center"
+    # Ordinance 16,127 (2022).
+    ("16127", "Q"): {"900-mulberry"},           # "900 Mulberry Street"
+}
+
+# A place inside a larger place the codified article covered whole. The 2008
+# article permits "Waterworks Park"; the 2021 ordinance addresses two named
+# parts of it separately. Both parts are that permit restated, and neither is
+# the other.
+WITHIN = {
+    "waterworks-lauridsen": "waterworks-park",
+    "waterworks-field": "waterworks-park",
+}
+
+
+def overlap(a, b):
+    """Do two subject sets name any of the same place or conduct?"""
+    def same(x, y):
+        return x == y or WITHIN.get(x) == y or WITHIN.get(y) == x
+
+    return any(same(x, y) for x in a for y in b)
+
+
 # ── the document ────────────────────────────────────────────
-doc, keys = [], {}
+doc, keys, built = [], {}, []
 
 GENERAL = ["42-251", "42-254", "42-256", "42-257", "42-259", "42-262"]
 for sec in GENERAL:
     title, body = code_section(code, sec)
     body = restore_tables(body, sec)
     doc.append(f'# Des Moines Municipal Code, Sec. {sec} — {title}\n\n{body}\n')
+    built.append((f"Sec. {sec}", body))
     keys[f"sec:{sec}"] = title
 
 for letter, (num, body) in sorted(base_p.items()):
     sec = f"42-258({num})"
     doc.append(f'# Des Moines Municipal Code, Sec. {sec} — Type "{letter}" permit\n\n{body}\n')
+    built.append((f'Sec. {sec} Type "{letter}" permit', body))
     keys[f"sec:{sec}"] = f'Type "{letter}" permit'
 
 for letter, (num, body) in sorted(amd_p.items()):
@@ -270,6 +383,7 @@ for letter, (num, body) in sorted(amd_p.items()):
     doc.append(
         f'# Ordinance 16,064, adopted {ORD_DATES["16064"]} — Sec. {sec}, Type "{letter}" permit\n\n{body}\n'
     )
+    built.append((f'Ord 16,064 Sec. {sec} Type "{letter}" permit', body))
     keys[f"ord:16064/{sec}"] = f'Type "{letter}" permit'
 
 for letter, (num, body) in sorted(q_p.items()):
@@ -277,7 +391,25 @@ for letter, (num, body) in sorted(q_p.items()):
     doc.append(
         f'# Ordinance 16,127, adopted {ORD_DATES["16127"]} — Sec. {sec}, Type "{letter}" permit\n\n{body}\n'
     )
+    built.append((f'Ord 16,127 Sec. {sec} Type "{letter}" permit', body))
     keys[f"ord:16127/{sec}"] = f'Type "{letter}" permit'
+
+# A code section owns its own lettered subsections — Sec. 42-254 really does
+# contain "(a) Maximum permissible sound levels." and "(b) Immediate threat."
+# A permit is one item of a list and owns nothing below itself.
+SECTION_END = re.compile(
+    r"^[ \t]*(?:Section[ \t]+\d+\.|FORM[ \t]+APPROVED|Attest:|Sec\.[ \t]*42-\d+\.)", re.M
+)
+
+# No section may carry text belonging to another one. This is the check the
+# 2,200-character cap needed and did not have: it fires on the exact input
+# that was wrong, rather than on a length that happened to look suspicious.
+for _head, _body in built:
+    _end = BLOCK_END if "permit" in _head else SECTION_END
+    _stray = _end.search(_body, 1)
+    if _stray:
+        _line = _body[_stray.start(): _body.find("\n", _stray.start())]
+        raise SystemExit(f"{_head} runs past its own end into: {_line!r}")
 
 (HERE / "des-moines-noise.md").write_text("\n".join(doc), encoding="utf-8")
 
@@ -286,45 +418,68 @@ planted, non, unlabelled = [], [], []
 anchors = {}
 SPLIT = ["train", "dev", "test"]
 
-shared = sorted(set(base_p) & set(amd_p))
-for i, letter in enumerate(shared):
-    bnum, bbody = base_p[letter]
-    anum, abody = amd_p[letter]
-    d = diff(measures(bbody), measures(abody))
-    a_side = {"section": f"42-258({bnum})"}
-    b_side = {"ordinance": "16064", "section": f"42-258({anum})"}
-    if not d and not (states_a_measure(measures(bbody)) or states_a_measure(measures(abody))):
+# Every reading of every permit, keyed the way truth.json keys a side.
+READINGS = []
+for _src, _blocks in (("base", base_p), ("16064", amd_p), ("16127", q_p)):
+    for _letter, (_num, _body) in sorted(_blocks.items()):
+        _sec = f"42-258({_num})"
+        READINGS.append({
+            "src": _src, "letter": _letter, "sec": _sec, "body": _body,
+            "key": f"sec:{_sec}" if _src == "base" else f"ord:{_src}/{_sec}",
+            "side": {"section": _sec} if _src == "base" else {"ordinance": _src, "section": _sec},
+        })
+
+undeclared = [(r["src"], r["letter"]) for r in READINGS if (r["src"], r["letter"]) not in SUBJECTS]
+if undeclared:
+    raise SystemExit(f"no subject declared for {undeclared} — every reading must be placed")
+
+# An ordinance amends the codified article, so a pair runs base -> later
+# reading. Two later readings of one subject would be the ordinances amending
+# each other, which none of these do.
+restated = [
+    (b, a)
+    for b in READINGS if b["src"] == "base"
+    for a in READINGS if a["src"] != "base"
+    if overlap(SUBJECTS[(b["src"], b["letter"])], SUBJECTS[(a["src"], a["letter"])])
+]
+
+for i, (b, a) in enumerate(restated):
+    d = diff(measures(b["body"]), measures(a["body"]))
+    if not d and not (states_a_measure(measures(b["body"])) or states_a_measure(measures(a["body"]))):
         # Neither reading states a measure this script can read, so "no measure
         # changed" is a vacuous test, not a finding. A rule that cannot see a
         # change must not vote that there was none (ARCH_PRINCIPLES §18.3).
-        if same_words(bbody, abody):
+        if same_words(b["body"], a["body"]):
             non.append({
-                "id": f"N{len(non)+1}", "split": SPLIT[i % 3], "a": a_side, "b": b_side,
-                "why": (f'compatible: the ordinance re-enacts the Type "{letter}" permit '
+                "id": f"N{len(non)+1}", "split": SPLIT[i % 3],
+                "a": b["side"], "b": a["side"],
+                "why": (f'compatible: the ordinance re-enacts the Type "{b["letter"]}" permit '
                         "word for word, changing only typography."),
             })
         else:
-            unlabelled.append((letter, "states no readable measure and the wording changed"))
+            unlabelled.append((b["letter"], "states no readable measure and the wording changed"))
         continue
     if d:
         changed = "; ".join(
             f"{k} {' / '.join(old) or '(none stated)'} -> {' / '.join(new) or '(none stated)'}"
             for k, (old, new) in sorted(d.items())
         )
+        moved = "" if b["letter"] == a["letter"] else f' as the Type "{a["letter"]}" permit'
         planted.append({
             "id": f"T{len(planted)+1}",
             "type": "unmarked_supersession",
             "split": SPLIT[i % 3],
-            "a": a_side, "b": b_side,
-            "why": f'Ordinance 16,064 restates the Type "{letter}" permit with different measures: {changed}.',
+            "a": b["side"], "b": a["side"],
+            "why": (f'Ordinance {a["src"][:2]},{a["src"][2:]} restates the Type "{b["letter"]}" '
+                    f'permit{moved} with different measures: {changed}.'),
         })
-        anchors[planted[-1]["id"]] = list(anchor_sides(letter, d, bnum, anum))
+        anchors[planted[-1]["id"]] = list(anchor_sides(b, a, d))
     else:
         non.append({
             "id": f"N{len(non)+1}",
             "split": SPLIT[i % 3],
-            "a": a_side, "b": b_side,
-            "why": f'compatible: the ordinance re-enacts the Type "{letter}" permit with every stated measure unchanged.',
+            "a": b["side"], "b": a["side"],
+            "why": f'compatible: the ordinance re-enacts the Type "{b["letter"]}" permit with every stated measure unchanged.',
         })
 
 # A permit is an authorised exception to the general table, not a contradiction
@@ -364,12 +519,32 @@ truth = {
         "two readings — see PROVENANCE.md. Splits: train/dev tunable, test sacred."
     ),
     "schema_version": 2,
-    # This manifest labels the permit-type pairs the ordinances restate, plus
-    # a handful of decoys — NOT every cross-section pair in a 33-section
-    # document. So a proposal it does not name may be a genuine conflict
-    # nobody labelled, and precision computed against it would measure the
-    # manifest's size rather than the tool's discrimination.
+    # Still false for the DOCUMENT: nothing here labels a pair between two of
+    # the six general sections, or between a general section and a permit. A
+    # proposal naming one of those may be a genuine conflict nobody labelled,
+    # and precision computed over it would measure the manifest's size rather
+    # than the tool's discrimination.
     "exhaustive": False,
+    # It IS false for the document and true for a REGION of it, and those are
+    # different facts. Inside the permit block every cross-section pair is
+    # accounted for: the pairs named above are the readings that restate one
+    # another, and every other pair of members is compatible because a permit
+    # authorises one venue or one kind of conduct, and two permits with
+    # different subjects have nothing to disagree about. That claim rests on
+    # the SUBJECTS map at the top of this script — 27 entries, each quoting
+    # the council's own subject line — and it is why the map has to be read
+    # rather than trusted. See PROVENANCE.md.
+    "exhaustive_within": {
+        "region": "every permit subsection of Sec. 42-258, in all three readings",
+        "members": sorted(r["key"] for r in READINGS),
+        "unlabelled_means": "compatible",
+        "why": (
+            "A permit is one authorisation for one venue or one kind of conduct. Two "
+            "readings restate the same rule when their subjects overlap, and every such "
+            "pair in this region is labelled above; a pair of members that is not named "
+            "is two different authorisations and cannot contradict."
+        ),
+    },
     "tension_types": ["unmarked_supersession"],
     "planted_tensions": planted,
     "expected_non_tensions": non,
