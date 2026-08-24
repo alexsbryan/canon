@@ -25,9 +25,19 @@ the codified article with the ordinances that amend it is **our construction**,
 and it is the point: it reproduces the shape a real body of commitments takes
 when a decision changes a rule and nobody goes back to strike the old one.
 
-What is *not* ours: the text, the dates, and the pairing. The council said
-which section each ordinance amends. We did not choose which rules relate to
-which.
+What is *not* ours: the text and the dates.
+
+The **pairing is ours in one respect**, and this file said otherwise until
+2026-08-22. The council numbers its permits `(1)`…`(17)` and lettered `A`…`Q`,
+and where a letter keeps its subject the pairing is the council's. But
+Ordinance 16,064 *splits* two of them, and no line in it says so. The codified
+Type "F" covers the Simon Estes Riverfront Amphitheater **and** the Brenton
+Skating Plaza; the ordinance keeps Brenton under "F" and re-enacts Simon Estes
+as a new Type "N". The codified Type "I" covers Waterworks Park; the ordinance
+addresses the Lauridsen Amphitheater as "I" and the park field as "M". Reading
+those pairs off the subject lines is **our reading of the council's words**,
+recorded in the `SUBJECTS` map at the top of `build.py` with each entry quoting
+the line it came from. It is 27 lines and it is meant to be read.
 
 ## Tables were re-rendered, and only their association was restored
 
@@ -56,39 +66,85 @@ One more artifact is repaired: a section number wrapped mid-token
 could ever match its own passage. `section 42- 258 (e)` is left as it stands —
 that space is in the ordinance itself.
 
+## Where a subsection ends
+
+`permit_blocks` used to end a permit at `pos + 2200` characters, which is not
+a boundary any document has, and two of the twenty-seven blocks were wrong:
+
+- The codified Type **"J"** swallowed subsections `(f) Commercial advertising`
+  and `(h) Denial or revocation` whole — 1,975 characters where the permit is
+  740 — so rules about advertising and permit revocation were filed under a
+  night-construction permit, and the two readings of "J" no longer matched
+  each other, which cost that pair its label.
+- Type **"Q"** of Ordinance 16,127 swallowed the clerk's certification and was
+  then cut mid-sentence.
+- Type **"G"** cleared the cap by 58 characters and was correct by luck.
+
+A block now ends where the document says it does: at the next permit, at a
+sibling of the lettered subsection holding the permit list, at the enacting
+`Section N.` an ordinance closes with, at its signature block, or at the next
+section of the code. There is no character cap. `build.py` then **asserts**
+that no emitted section contains a marker belonging to another one, so this
+cannot come back quietly.
+
+One artifact was hiding the boundary: `pdftotext` writes a form feed at the
+head of each page's first line, and `(11) Type "K" permit` began with one, so
+no line-anchored pattern could see it. `load()` strips form feeds now, next to
+the `Page N` lines it already stripped.
+
 ## The labelling rule
 
-Applied by `build.py`, by nothing else, and auditable by re-reading it:
+Applied by `build.py`, by nothing else, and auditable by re-reading it. **The
+unit is the SUBJECT, not the type letter** — see the split above:
 
-- A permit type stated in **both** the codified article and an amending
+- A permit **subject** stated in **both** the codified article and an amending
   ordinance, whose restatement **changes any measure** it states — sound level
   or its weighting, distance, hours, counts, days — is a **planted tension**
   (`unmarked_supersession`).
 - Whose measures are **all identical**, and whose wording matches but for
   typography, is an **expected non-tension**: the ordinance re-enacted it.
-- Stated only by an ordinance: an **addition**, not paired.
+- A subject stated only by an ordinance: an **addition**, not paired.
 - A base section no ordinance here amends: an **expected non-tension**, paired
   for its heavy shared vocabulary.
 
-**Where the rule refuses to vote.** Type "J" (night construction) states no
-measure this script can read, and its wording changed. "No measure changed" is
-then a vacuous test rather than a finding, so Type J is **excluded from the
-manifest** rather than labelled — a check that cannot see a change must not
-report that there was none (`ARCH_PRINCIPLES` §18.3). `build.py` prints it on
-every run.
+Pairing by letter cost the manifest two tensions — the F→N and I→M splits —
+and both are the corpus's own `unmarked_supersession` pattern. It also left
+Type "J" unlabelled, but that was the block boundary rather than the rule.
 
-`build.py` also asserts that every key in the manifest resolves to exactly one
+`build.py` asserts that every key in the manifest resolves to exactly one
 heading in the document. A manifest pointing at a section that does not exist
-scores nothing and says so nowhere (§18.1).
+scores nothing and says so nowhere (§18.1). It also asserts that every reading
+has a declared subject, so a permit added to a source cannot slip through
+unpaired.
+
+## What the manifest is complete about
+
+`exhaustive` is **false** for the document and that is not going to change:
+nothing here labels a pair between two of the six general sections, or between
+a general section and a permit. 177 of the 528 cross-section pairs are in that
+condition.
+
+`exhaustive_within` names where it **is** complete — the 27 permit
+subsections, 351 pairs. Twelve are labelled above; the other 339 are
+compatible by the rule that makes the region exhaustive: *a permit authorises
+one venue or one kind of conduct, and two permits with different subjects have
+nothing to disagree about*. That claim is only as good as the `SUBJECTS` map,
+which is why the map quotes the council for every entry.
+
+The bar divides precision by the pairs inside that region and **reports how
+many proposals landed outside it**. Outside a complete region an unlabelled
+proposal and a wrong one are the same observation, and dividing by them would
+measure the manifest's size rather than the tool (§18.3).
 
 ## What this corpus is weak at
 
-- **Six of the nine tensions are the same pattern** — a level restated in
+- **Six of the eleven tensions are the same pattern** — a level restated in
   dB(C) where the article said dB(A), the number unchanged. That is a real
   substantive change, since the weighting curves differ, but it means the
-  corpus tests one narrow discrimination six times. Types F, G and I are the
-  varied ones (level *and* distance, level *and* days, level *and* both).
-- **It is 3.8× the size of Maple House** (38KB, 33 sections) and past the
+  corpus tests one narrow discrimination six times (Types A, B, C, D, E, H).
+  The five varied ones are F, F→N, G, I and I→M, which move a distance, a
+  clock time or a day count as well as the level.
+- **It is 3.4× the size of Maple House** (35KB, 33 sections) and past the
   ~60-commitment ceiling the spec names for `tensions`. Expect the comparison
   stage to cost substantially more than one call per block.
 - **Register.** This is drafted legal prose, not a household charter. Poor
@@ -97,11 +153,19 @@ scores nothing and says so nowhere (§18.1).
 
 ## Holdout status
 
-**Reachability read 2026-08-22; recall and precision not yet read.** The
-first scored run reported 3 of 9 tensions reachable, and the per-tension
-breakdown names individual pairs across all three splits — T3 (test) and T8
-(dev) among them. That is inspection, and it is recorded here rather than
-left unsaid.
+**Every number read before 2026-08-22 is void, and the reason is in this
+file.** The corpus those runs scored had a night-construction permit carrying
+two foreign subsections, a permit carrying a clerk's certification and cut
+mid-sentence, and a manifest missing two of its eleven supersessions. A number
+taken against a wrong answer key is not a smaller number, it is not a number.
+The runs are not kept.
+
+What was read, and is retained only as a record of what was inspected:
+reachability on the old corpus reported 3 of 9, and the per-tension breakdown
+named individual pairs across all three splits — T3 (test) and T8 (dev) among
+them. That is inspection, and it is recorded here rather than left unsaid.
+**T-ids have since been reassigned** (the manifest went from 9 planted to 11),
+so those identifiers no longer name the same pairs.
 
 What it does NOT license: the mechanism those pairs failed by is visible in
 T1 and T4, both `train`, and any fix must be justified from those. The

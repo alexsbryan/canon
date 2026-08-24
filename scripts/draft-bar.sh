@@ -92,7 +92,13 @@ while [ "$i" -le "$RUNS" ]; do
 
   # Name the artifact by run ordinal AND its own timestamp, so a re-run
   # appends rather than silently replacing evidence behind a published number.
+  # An unmatched glob is a literal path here, and `cp` failing under `set -e`
+  # aborted the whole sweep — so one failed run cost the two behind it, which
+  # is precisely what the comment above says this loop avoids. Observed on a
+  # Des Moines sweep: run 1 died in the comparison stage and runs 2 and 3
+  # never started, leaving nothing to score.
   for f in "$CANON_DIR/draft-runs/"*.json; do
+    [ -e "$f" ] || { echo "  (no artifact: this run produced nothing)"; break; }
     cp "$f" "$OUT/run-$(basename "$f")"
   done
   rm -rf "$SCRATCH"

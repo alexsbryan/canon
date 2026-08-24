@@ -134,6 +134,55 @@ fn pair(a: &str, b: &str) -> (String, String) {
     }
 }
 
+/// Where a manifest is complete enough to divide by.
+///
+/// `exhaustive: true` claims the whole document. `exhaustive_within` claims a
+/// named REGION and says nothing about the rest — which is the honest shape
+/// for a corpus built from one article of a municipal code, where the permit
+/// block can be accounted for pair by pair and the general sections cannot.
+///
+/// The distinction is load-bearing for precision and irrelevant to recall. A
+/// planted tension is found or it is not, wherever it sits; but a proposal the
+/// manifest does not name is only a FALSE one where the manifest names
+/// everything, and counting it as false anywhere else measures the manifest
+/// (§18.3).
+enum Region {
+    Document,
+    Within {
+        name: String,
+        members: BTreeSet<String>,
+    },
+    Undeclared,
+}
+
+impl Region {
+    fn read(truth: &Value) -> Self {
+        if truth["exhaustive"].as_bool() == Some(true) {
+            return Region::Document;
+        }
+        let w = &truth["exhaustive_within"];
+        match (w["region"].as_str(), w["members"].as_array()) {
+            (Some(name), Some(members)) => Region::Within {
+                name: name.to_string(),
+                members: members
+                    .iter()
+                    .filter_map(|m| m.as_str().map(str::to_string))
+                    .collect(),
+            },
+            _ => Region::Undeclared,
+        }
+    }
+
+    /// Is this pair one the manifest promises to have labelled?
+    fn holds(&self, p: &(String, String)) -> bool {
+        match self {
+            Region::Document => true,
+            Region::Within { members, .. } => members.contains(&p.0) && members.contains(&p.1),
+            Region::Undeclared => false,
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 struct Score {
     run: String,
@@ -144,18 +193,32 @@ struct Score {
     /// cross-section pairs, so scoring an intra-section pair either way would
     /// be scoring against a label that does not exist.
     proposed: BTreeSet<(String, String)>,
+    /// The subset of `proposed` sitting inside the region the manifest calls
+    /// complete. This, not `proposed`, is what precision divides by.
+    judged: BTreeSet<(String, String)>,
+    /// Proposed pairs the manifest makes no promise about. Reported, never
+    /// silently folded into either side of the ratio.
+    outside: usize,
     intra_section: usize,
     unmapped: usize,
+    /// Comparison passes the run attempted, and how many came back unusable.
+    /// A tension count from a run with unread passes is a count over a
+    /// FRACTION of the pairs, and precision and recall both inherit that.
+    passes: usize,
+    passes_unread: usize,
     hits: BTreeSet<String>,
+    /// Planted tensions found INSIDE the region — precision's numerator, so
+    /// that it can never exceed its own denominator.
+    hits_judged: usize,
     decoys: BTreeSet<String>,
 }
 
 impl Score {
     fn precision(&self) -> f64 {
-        if self.proposed.is_empty() {
+        if self.judged.is_empty() {
             return 0.0;
         }
-        self.hits.len() as f64 / self.proposed.len() as f64
+        self.hits_judged as f64 / self.judged.len() as f64
     }
     fn recall(&self, planted: usize) -> f64 {
         if planted == 0 {
@@ -165,7 +228,7 @@ impl Score {
     }
 }
 
-fn score_run(path: &Path, truth: &Value) -> Score {
+fn score_run(path: &Path, truth: &Value, region: &Region) -> Score {
     let raw = std::fs::read_to_string(path).expect("read run");
     let run: Value = serde_json::from_str(&raw).expect("run is JSON");
     assert_eq!(
@@ -190,6 +253,11 @@ fn score_run(path: &Path, truth: &Value) -> Score {
         run: path.file_name().unwrap().to_string_lossy().into(),
         candidates: kept.len(),
         dropped: run["dropped"].as_array().map(Vec::len).unwrap_or(0),
+        passes: run["tension_passes"].as_u64().unwrap_or(0) as usize,
+        passes_unread: run["tension_passes_unread"]
+            .as_array()
+            .map(Vec::len)
+            .unwrap_or(0),
         ..Score::default()
     };
     for t in run["tensions"].as_array().expect("tensions") {
@@ -204,15 +272,25 @@ fn score_run(path: &Path, truth: &Value) -> Score {
             s.intra_section += 1;
             continue;
         }
-        s.proposed.insert(pair(&a, &b));
+        let p = pair(&a, &b);
+        if region.holds(&p) {
+            s.judged.insert(p.clone());
+        } else {
+            s.outside += 1;
+        }
+        s.proposed.insert(p);
     }
 
     for p in truth["planted_tensions"].as_array().expect("planted") {
         let (Some(a), Some(b)) = (truth_key(&p["a"]), truth_key(&p["b"])) else {
             continue;
         };
-        if s.proposed.contains(&pair(&a, &b)) {
+        let key = pair(&a, &b);
+        if s.proposed.contains(&key) {
             s.hits.insert(p["id"].as_str().unwrap_or("?").to_string());
+            if s.judged.contains(&key) {
+                s.hits_judged += 1;
+            }
         }
     }
     for p in truth["expected_non_tensions"].as_array().expect("non") {
@@ -314,6 +392,30 @@ fn governance_bar() {
         .filter(|p| p.extension().is_some_and(|x| x == "json"))
         .collect();
     paths.sort();
+
+    // A run that stopped at a stage is evidence, not a measurement: the
+    // stages after it never ran. `draft` keeps those artifacts on purpose
+    // rather than discarding the work, so the bar has to be the thing that
+    // refuses them — silently averaging one in would publish a number over a
+    // pipeline that did not finish (§18.3).
+    let abandoned: Vec<(PathBuf, String)> = paths
+        .iter()
+        .filter_map(|p| {
+            let raw = std::fs::read_to_string(p).ok()?;
+            let v: Value = serde_json::from_str(&raw).ok()?;
+            let why = v["failed"].as_str()?.to_string();
+            Some((p.clone(), why))
+        })
+        .collect();
+    if !abandoned.is_empty() {
+        println!("\nnot scored — these runs stopped before the pipeline finished:");
+        for (p, why) in &abandoned {
+            println!("  {}  {why}", p.file_name().unwrap().to_string_lossy());
+        }
+        let keep: BTreeSet<&PathBuf> = abandoned.iter().map(|(p, _)| p).collect();
+        paths.retain(|p| !keep.contains(p));
+    }
+
     assert!(
         paths.len() >= MIN_RUNS,
         "{} run(s) at {} — a single run is not a measurement (§18.5). Need {MIN_RUNS}.{}",
@@ -322,7 +424,11 @@ fn governance_bar() {
         runs_one_level_down(&dir)
     );
 
-    let scores: Vec<Score> = paths.iter().map(|p| score_run(p, &truth)).collect();
+    let region = Region::read(&truth);
+    let scores: Vec<Score> = paths
+        .iter()
+        .map(|p| score_run(p, &truth, &region))
+        .collect();
 
     // Name the corpus the manifest names. A banner that says "Maple House"
     // while scoring an ordinance is a number about the wrong document, and
@@ -331,16 +437,17 @@ fn governance_bar() {
     println!("\n{corpus} bar — {planted} planted tensions, {non} labeled compatible pairs");
     println!("{} run(s) from {}\n", scores.len(), dir.display());
     println!(
-        "{:<22} {:>5} {:>5} {:>7} {:>9} {:>6} {:>7} {:>6}",
-        "run", "cand", "drop", "pairs", "precision", "recall", "hits", "decoy"
+        "{:<22} {:>5} {:>5} {:>7} {:>7} {:>9} {:>6} {:>7} {:>6}",
+        "run", "cand", "drop", "pairs", "judged", "precision", "recall", "hits", "decoy"
     );
     for s in &scores {
         println!(
-            "{:<22} {:>5} {:>5} {:>7} {:>9.2} {:>6.2} {:>7} {:>6}",
+            "{:<22} {:>5} {:>5} {:>7} {:>7} {:>9.2} {:>6.2} {:>7} {:>6}",
             s.run,
             s.candidates,
             s.dropped,
             s.proposed.len(),
+            s.judged.len(),
             s.precision(),
             s.recall(planted),
             s.hits.len(),
@@ -369,12 +476,26 @@ fn governance_bar() {
     // manifest labels every cross-section pair; where it does not, an
     // unlabelled pair and a wrong one are indistinguishable, and printing a
     // number anyway would be a measurement of the manifest's size (§18.3).
-    match truth["exhaustive"].as_bool() {
-        Some(true) => {
+    let outside: usize = scores.iter().map(|s| s.outside).sum();
+    match &region {
+        Region::Document => {
             println!("\nprecision  {p:.2}   (noise floor across runs: {pl:.2}–{ph:.2})");
         }
-        _ => println!(
-            "\nprecision  not scoreable — this manifest does not label every pair, \
+        Region::Within { name, members } => {
+            println!("\nprecision  {p:.2}   (noise floor across runs: {pl:.2}–{ph:.2})");
+            println!(
+                "           over {name} — {} sections, every pair of them labelled",
+                members.len()
+            );
+            // Said out loud every time. A ratio taken over part of a document
+            // reads exactly like one taken over all of it, and the reader
+            // cannot tell which they are holding unless it says so.
+            println!(
+                "           {outside} proposed pair(s) reached outside that region and are NOT scored"
+            );
+        }
+        Region::Undeclared => println!(
+            "\nprecision  not scoreable — this manifest names no region it labels completely, \
              so an unlabelled proposal cannot be told from a false one \
              (raw {p:.2} over {} proposed)",
             scores[0].proposed.len()
@@ -401,7 +522,21 @@ fn governance_bar() {
     );
     let intra: usize = scores.iter().map(|s| s.intra_section).sum();
     let unmapped: usize = scores.iter().map(|s| s.unmapped).sum();
-    println!("excluded: {intra} intra-section pair(s), {unmapped} unmappable\n");
+    println!("excluded: {intra} intra-section pair(s), {unmapped} unmappable, {outside} outside the labelled region");
+
+    // Said before the bars, because it qualifies every number above it. A run
+    // that could not weigh some of its pairs did not measure what the reader
+    // thinks it measured (§18.3).
+    let unread: usize = scores.iter().map(|s| s.passes_unread).sum();
+    let attempted: usize = scores.iter().map(|s| s.passes).sum();
+    if unread > 0 {
+        println!(
+            "WARNING: {unread} of {attempted} comparison pass(es) across these runs went unread — \n\
+             \x20        every number above is over {:.0}% of the pairs, not all of them",
+            100.0 * (attempted - unread) as f64 / attempted.max(1) as f64
+        );
+    }
+    println!();
 
     // The pre-registered bars, applied last so the numbers print either way.
     assert!(
@@ -529,11 +664,17 @@ fn extraction_coverage() {
         // chunk. This is the invariant `draft` actually promises, checked
         // end to end against the persisted evidence.
         //
-        // What stood here was a keyword scan — a rule mentioning "day" whose
-        // passage did not was a failure — and it was a SECOND opinion about
-        // fidelity that disagreed with the shipped one (§10.6). It fired on
-        // "at all times" rendered as "throughout the day and night": a
-        // paraphrase with no number attached, which `unstated_measure` is
+        // Since the citation is cut from the chunk at a position the model
+        // pointed to, this can no longer fail on a well-formed run — which is
+        // the point of checking it here rather than trusting it. What it
+        // still catches is the chunk id and the citation disagreeing, which
+        // would misattribute a rule to a section it never came from.
+        //
+        // What stood here before was a keyword scan — a rule mentioning "day"
+        // whose passage did not was a failure — and it was a SECOND opinion
+        // about fidelity that disagreed with the shipped one (§10.6). It
+        // fired on "at all times" rendered as "throughout the day and night":
+        // a paraphrase with no number attached, which the measure guard is
         // documented to allow and which the unit tests pin. A bar must not
         // assert a promise the tool never made.
         for k in kept {

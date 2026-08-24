@@ -13,7 +13,7 @@ birds.
 (7) Rail and air transportation and public mass transportation vehicles.
 (8) The emission of sound in connection with activities conducted on the state fairgrounds during
 the annual state fair and exposition.
- (9) The emission of sound in the performance of military operations, exclusive of travel by
+(9) The emission of sound in the performance of military operations, exclusive of travel by
 individuals to or from military duty.
 (10) The emission of sound in the legal discharge of weapons or in fireworks displays licensed by
 the city.
@@ -208,7 +208,7 @@ distance is closer to the sound equipment. Sound equipment permitted under a typ
 may be used only in public parks owned and operated by the city or public grounds owned and
 operated by another governmental body, located in a residentially zoned district from 9:00 a.m.
 to the time the park closes for events authorized and approved by the park and recreation board
- or other body having jurisdiction over the park or public grounds. A type "B" permit will be
+or other body having jurisdiction over the park or public grounds. A type "B" permit will be
 issued for one day up to one week with the days to be designated on the permit application.
 
 # Des Moines Municipal Code, Sec. 42-258(3) — Type "C" permit
@@ -273,7 +273,7 @@ located in the C-3, C-3A, C-3B, C-3R or RD zoned districts this type permit is n
 number or time span,
 c. If the applicant has no address in the C-3, C-3A, C-3B, C-3R or RD zoned district, then
 either a business in the properly zoned district, or a community organization affiliated with
- businesses located in the C-3, C-3A, C-3B, C-3R or RD zoned districts must sponsor the
+businesses located in the C-3, C-3A, C-3B, C-3R or RD zoned districts must sponsor the
 event,
 d. This type permit may not be issued if another type "G" permit has already been issued
 within 1,000 feet of a given location and covering the same time on any day.
@@ -315,23 +315,6 @@ schedule which has been approved by the community development director and has b
 determined to advance the overall welfare of city residents, provided that the residential
 structure is being built for occupation by low or moderate income persons. Application for a type
 "J" permit shall be processed pursuant to sections 42-264 through 42-267 of this article.
-(f) Commercial advertising. No sound equipment shall be permitted to be used on public streets or
-public places or in any building or upon any premises if the sound may be plainly audible from any
-public street or public place within the city when any such use is for commercial advertising purposes
-or for the purpose of attracting the attention of the public to any building or structure for monetary
-gain.
-(h) Denial or revocation.
-(1) Denial of sound permit. The director of the community development department may, upon
-hearing, deny an application for a sound permit and shall forward the information relied upon to
-the city clerk to schedule a hearing for consideration of denial using the following criteria and
-standards:
-a. Whether police have stopped activities sponsored by the same applicant or in the same
-location for public safety purposes such as riot, disorderly conduct or other crimes;
-b. Whether the sponsor, applicant, or their employees have violated the Des Moines
-Municipal Code at past events requiring a sound permit;
- c. Whether the applicant(s) have paid the city all fees due and owing under any chapter of the
-Des Moines Municipal Code; and
-d. If any person responsible for monitoring the terms and
 
 # Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(1), Type "A" permit
 
@@ -359,7 +342,7 @@ feet from the sound equipment, whichever distance is closer to the sound
 equipment. Sound equipment permitted under a type "B" permit may be used only
 in public parks owned and operated by the city or public grounds owned and
 operated by another governmental body, located in a residentially zoned district
- from 9:00 a.m. to the time the park closes for events authorized and approved by
+from 9:00 a.m. to the time the park closes for events authorized and approved by
 the park and recreation board or other body having jurisdiction over the park or
 public grounds. A type "B" permit will be issued for one day up to one week with
 the days to be designated on the permit application.
@@ -421,7 +404,7 @@ a. The special event or live performance is located in the Downtown areas and
 the East Village Steet Closure area,
 b. This type permit will only be issued two times per year per address to
 include a street closing abutting the sponsoring business and only if 30 days
- has elapsed from the effective date of a previous type "G" permit for the
+has elapsed from the effective date of a previous type "G" permit for the
 same location, however, if the street closing is sponsored by the Court
 Avenue Business Association, Downtown Community Alliance, Historic
 East Village, or any other community organization affiliated with
@@ -538,7 +521,7 @@ agreement entered into with the Parks and Recreation Department, emitting music
 or human speech, registering not more than 105 dBC 50 feet from the speakers
 which shall be the established front of house for purposes of noise control
 measurements. This permit is effective between the hours of 9:00 a.m. to 10:00
- p.m. Sunday through Thursday and 9:00 a.m. to 11:00 p.m. on Friday and Saturday,
+p.m. Sunday through Thursday and 9:00 a.m. to 11:00 p.m. on Friday and Saturday,
 the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July
 should it fall on a Sunday.
 
@@ -552,26 +535,6 @@ and 9:00 a.m. to 11:00 p.m. on Friday and Saturday, the Sunday of Memorial Day
 weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.
 
 ....
-
-Section 2. This ordinance shall be in full force and effect from and after its passage and
-
-publication as provided by law.
-
-FORM APPROVED:
-
-_________________________
-Judy K. Parks-Kruse
-Assistant City Attorney
-
-T. M. Franklin Cownie, Mayor
-
-Attest: I, P. Kay Cmelik, City Clerk of the City of Des Moines, Iowa, hereby certify that the above
-and foregoing is a true copy of an Ordinance (Roll Call No. 21-1620), passed by the City Council
-of said City at the meeting held on October 18, 2021 and signed by the Mayor on October 18, 2021
-and published and provided by law in the Business Record on November 5, 2021 Authorized by
-Publication Order No. 11704.
-
-P. Kay Cmelik, City Clerk
 
 # Ordinance 16,127, adopted 2022-05-23 — Sec. 42-258(17), Type "Q" permit
 
@@ -591,20 +554,5 @@ on the permit application. All speaker systems shall face SW 9 th Street. The
 promoter or event coordinator shall have a sound level meter and comply with
 section 42- 258 (e) of this article. The event coordinator and/or the production
 company shall provide the adjacent residents or their designated representative the
- sound level meter readings within three (3) business days after the readings are
+sound level meter readings within three (3) business days after the readings are
 requested.
-
-Section 2. This ordinance shall be in full force and effect from and after its passage and
-
-publication as provided by law.
-
-FORM APPROVED:
-
-Gary D. Goudelock Jr., Assistant City Attorney
-
-T.M. Franklin Cownie, Mayor
-
-Attest: I, P. Kay Cmelik, City Clerk of the City of Des Moines, Iowa, hereby certify that the above
-and foregoing is a true copy of an Ordinance (Roll Call No. 22-0805), passed by the City Council
-of said City at the meeting held on May 23, 2022, and signed by the Mayor on May 23, 2022, and
-published and provided by law in the Business Record on J
