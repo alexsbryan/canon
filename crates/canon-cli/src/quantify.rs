@@ -129,7 +129,7 @@ struct Quantified {
 struct RuleQuantities {
     /// 1-based position in the batch, so a dropped or reordered answer is
     /// detectable rather than silently misattributed.
-    n: usize,
+    n: crate::model::Pos,
     #[serde(default)]
     quantities: Vec<Quantity>,
 }
@@ -253,7 +253,9 @@ fn read_block(client: &Client, block: &[&str]) -> Result<Vec<Vec<Quantity>>, Mod
         "List the quantities each rule states.",
     )?;
     for mut r in got.rules {
-        let Some(at) = offered.at(r.n) else { continue };
+        let Some(at) = r.n.get().and_then(|n| offered.at(n)) else {
+            continue;
+        };
         // Filtered here, at the one place a model's answer becomes data,
         // rather than defended against by each consumer.
         r.quantities.retain(Quantity::states_a_number);

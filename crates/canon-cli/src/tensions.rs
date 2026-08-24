@@ -42,8 +42,8 @@ struct Found {
 
 #[derive(Debug, Deserialize)]
 struct Pair {
-    a: usize,
-    b: usize,
+    a: crate::model::Pos,
+    b: crate::model::Pos,
     #[serde(default)]
     reason: String,
 }
@@ -352,7 +352,11 @@ fn one_pass(client: &Client, texts: &[&str], idx: &[usize]) -> Result<Vec<Propos
     let mut out: Vec<Proposed> = Vec::new();
     for p in found.tensions {
         let in_range = |n: usize| n >= 1 && n <= idx.len();
-        if !in_range(p.a) || !in_range(p.b) {
+        // Zero is not a position the model was offered, so a sentinel that
+        // is not a position at all lands on the same refusal as one that is
+        // simply wrong — and the warning below still names what was said.
+        let (pa, pb) = (p.a.get().unwrap_or(0), p.b.get().unwrap_or(0));
+        if !in_range(pa) || !in_range(pb) {
             eprintln!(
                 "\nwarning: dropped a proposed tension naming commitment {} and {} — only 1..{} were offered",
                 p.a,
@@ -363,7 +367,7 @@ fn one_pass(client: &Client, texts: &[&str], idx: &[usize]) -> Result<Vec<Propos
         }
         // Back to positions in the caller's list, which is what identity is
         // attached to. A pass never returns its own numbering.
-        let (a, b) = (idx[p.a - 1], idx[p.b - 1]);
+        let (a, b) = (idx[pa - 1], idx[pb - 1]);
         if a == b {
             eprintln!("\nwarning: dropped a proposed tension of a commitment with itself");
             continue;

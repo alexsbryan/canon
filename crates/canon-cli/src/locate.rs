@@ -31,6 +31,20 @@ use std::ops::Range;
 
 use crate::resolver::{Mark, Offered};
 
+/// What the units of a passage turned out to be.
+///
+/// **Recorded, not just decided.** Which basis a passage was read on changes
+/// what a citation into it means — one sentence of an argument, or one row of
+/// a table — so a run that cannot say which was used cannot be read properly
+/// afterwards (§9.1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Basis {
+    /// Prose: sentence ends, plus the units the document marks itself.
+    Sentences,
+    /// One unit per line, because prose splitting found no structure at all.
+    Lines,
+}
+
 /// A citation shorter than this cannot be evidence of anything.
 pub const QUOTE_MIN: usize = 20;
 
@@ -102,7 +116,55 @@ impl fmt::Display for Miscited {
 /// when `.`, `!` or `?` is followed by whitespace and then something that
 /// starts a sentence. A period closing a one-letter token does not end
 /// anything, which is what keeps `9:00 a.m.` and `I.C. ch. 321G` whole.
-pub fn sentences(text: &str) -> Vec<Range<usize>> {
+/// The units of a passage, and what they turned out to be.
+///
+/// **A line is the unit every text format has, and this is the fallback.**
+/// The prose splitter below cuts on sentence ends and on the units a document
+/// marks itself — `|`, `#`, `>`, list markers, `(a)`, `1.`. YAML `key: value`,
+/// a CSV row, a line of code and a log line match none of those, so a passage
+/// of any of them came out as ONE unit. Measured: a 1,820-character block of
+/// CSV rows produced a single unit, the model was shown one giant `[1]`, cited
+/// it, and `cite` handed back all 1,819 characters as the quote. Valid, in
+/// range, and useless as evidence — a degraded answer wearing a good answer's
+/// clothes, which is the failure §18.3 names. It was silent because it never
+/// dropped anything; the same collapse in chat was LOUD (the model assumed
+/// more units existed, cited past the end, and its candidates were refused)
+/// and that is the only reason it was ever noticed.
+///
+/// The condition is a binary structural fact rather than a tuned threshold:
+/// prose splitting either found structure or found none. Falling back only
+/// when it found NONE cannot make a citation worse — [`SPAN_MAX`] already
+/// refuses a span too wide to be evidence and [`QUOTE_MIN`] one too narrow,
+/// so the worst a line unit can do is be narrower than a reader would have
+/// drawn, which those two guards already police.
+pub fn units(text: &str) -> (Vec<Range<usize>>, Basis) {
+    let spans = prose_units(text);
+    let lines = text.lines().filter(|l| !l.trim().is_empty()).count();
+    if spans.len() == 1 && lines > 1 {
+        let by_line = line_units(text);
+        // Only when it actually buys a coordinate system. One line that
+        // happens to be long is genuinely one unit.
+        if by_line.len() > 1 {
+            return (by_line, Basis::Lines);
+        }
+    }
+    (spans, Basis::Sentences)
+}
+
+/// One unit per line, blank lines dropped.
+fn line_units(text: &str) -> Vec<Range<usize>> {
+    let mut out = Vec::new();
+    let mut at = 0usize;
+    for line in text.split_inclusive('\n') {
+        if let Some(r) = trimmed(text, at..at + line.len()) {
+            out.push(r);
+        }
+        at += line.len();
+    }
+    out
+}
+
+fn prose_units(text: &str) -> Vec<Range<usize>> {
     let mut cuts: Vec<usize> = vec![0, text.len()];
 
     // Structure the document already marks.

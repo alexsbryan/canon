@@ -24,6 +24,7 @@ mod quantify;
 mod rebase;
 mod replay;
 mod resolver;
+mod seen;
 mod sources;
 mod store;
 mod subject;
@@ -48,9 +49,9 @@ canon — the rules you already have, and what was decided about them
   why <id>                               what replaced what, when, and why
   log                                    the raw acts, oldest first
 
-Nobody writes one of these a rule at a time. `draft` reads a folder of docs,
-meeting notes and Slack exports and proposes what it found, each with the
-passage it came from. `--resume` finishes a long review later.
+Nobody writes one of these a rule at a time. `draft` reads a folder — anything
+in it that is text, in whatever format you keep it — or a pipe: `cat whatever |
+canon draft --from - --dry-run --json`. `--resume` finishes a review later.
 
 `draft` and `check` need a model; everything else folds a text file.
 A canon on the `personal` profile never returns a verdict and never exits 1.
@@ -113,6 +114,13 @@ ADJUDICATE                                    (needs an endpoint)
   check \"<proposal>\"                     how a proposal stands (personal: stakes)
   tensions                               where your commitments conflict
   draft --from <paths>                   propose commitments from loose notes
+        --from -                         read the document from stdin
+        --as <name>                      what to call it in the citations
+        --from-git --since 1y            commit bodies as the source
+        --dry-run [--json]               propose, write nothing
+        --resume                         finish a review, no model call
+        --include-ignored                read what .gitignore covers
+        --max-chunks <n>                 read at most n passages this run
 
 CONFIGURE
   config show                            what this canon is configured with

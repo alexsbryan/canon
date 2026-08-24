@@ -40,7 +40,7 @@ fn every_citation_is_a_slice_of_its_passage() {
     // singly and in every legal combination, because the promise is that no
     // input produces a citation the passage does not contain.
     for text in [ORDINANCE, EXCEPTIONS, TABLE] {
-        let spans = sentences(text);
+        let spans = units(text).0;
         assert!(!spans.is_empty(), "no sentences in:\n{text}");
         for first in 1..=spans.len() {
             for last in first..=(first + SPAN_MAX - 1).min(spans.len()) {
@@ -60,7 +60,7 @@ fn spans_ascend_and_never_overlap() {
     // A coordinate system is only one if the positions are disjoint and
     // ordered: `[3]` in the prompt must be the third thing a reader sees.
     for text in [ORDINANCE, EXCEPTIONS, TABLE] {
-        let spans = sentences(text);
+        let spans = units(text).0;
         for w in spans.windows(2) {
             assert!(w[0].end <= w[1].start, "{:?} overlaps {:?}", w[0], w[1]);
         }
@@ -74,7 +74,7 @@ fn the_model_is_shown_the_positions_the_code_copies_from() {
     // else, an index would name one sentence and copy another — a citation
     // that is verbatim and about the wrong rule, which is worse than a
     // paraphrase because nothing downstream can see it.
-    let spans = sentences(ORDINANCE);
+    let spans = units(ORDINANCE).0;
     let shown = numbered(ORDINANCE, &spans);
     let flat = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
     for (i, line) in shown.lines().enumerate() {
@@ -94,7 +94,7 @@ fn the_model_is_shown_the_positions_the_code_copies_from() {
 fn a_span_carries_the_document_between_its_sentences() {
     // Sentences 1 and 2 are cited together; what separated them in the
     // source comes along, so the result is still one contiguous slice.
-    let spans = sentences(ORDINANCE);
+    let spans = units(ORDINANCE).0;
     let quoted = cite(ORDINANCE, &spans, 1, 2).unwrap();
     assert!(quoted.starts_with("(2) Type \"B\" permit"), "{quoted}");
     assert!(quoted.contains("whichever\ndistance is closer"), "{quoted}");
@@ -107,7 +107,7 @@ fn a_span_carries_the_document_between_its_sentences() {
 fn a_sentence_wrapped_by_the_pdf_extractor_stays_one_sentence() {
     // The line breaks here are the extractor's, not the drafter's. Cutting
     // on them would number fragments and every citation would be a clause.
-    let spans = sentences(ORDINANCE);
+    let spans = units(ORDINANCE).0;
     let s = &ORDINANCE[spans[1].clone()];
     assert!(s.starts_with("A type \"B\" permit may be used"), "{s}");
     assert!(s.ends_with("closer to the sound equipment."), "{s}");
@@ -118,7 +118,7 @@ fn a_sentence_wrapped_by_the_pdf_extractor_stays_one_sentence() {
 fn the_documents_own_numbering_starts_a_sentence() {
     // "…apply to the following:" ends in a colon, so nothing in prose marks
     // the boundary. The list markers do, and they are the document's.
-    let spans = sentences(EXCEPTIONS);
+    let spans = units(EXCEPTIONS).0;
     let text = |i: usize| &EXCEPTIONS[spans[i].clone()];
     let all: Vec<&str> = spans.iter().map(|s| &EXCEPTIONS[s.clone()]).collect();
     assert_eq!(spans.len(), 4, "{all:#?}");
@@ -132,11 +132,11 @@ fn an_abbreviation_does_not_end_a_sentence() {
     // `I.C. ch. 321G` is one citation to the Iowa Code, and `9:00 a.m.` is
     // one clock time. A splitter that cut on either would leave `I.` as a
     // citable position.
-    let spans = sentences(EXCEPTIONS);
+    let spans = units(EXCEPTIONS).0;
     let last = &EXCEPTIONS[spans[3].clone()];
     assert_eq!(last, "(6) Snowmobiles regulated by I.C. ch. 321G.");
 
-    let spans = sentences(ORDINANCE);
+    let spans = units(ORDINANCE).0;
     let joined: Vec<&str> = spans.iter().map(|s| &ORDINANCE[s.clone()]).collect();
     assert!(
         joined
@@ -150,7 +150,7 @@ fn an_abbreviation_does_not_end_a_sentence() {
 fn a_table_row_is_a_position_of_its_own() {
     // A limit lives in one row. Citing the whole table would evidence every
     // limit equally, which is to evidence none of them.
-    let spans = sentences(TABLE);
+    let spans = units(TABLE).0;
     let rows: Vec<&str> = spans
         .iter()
         .map(|s| &TABLE[s.clone()])
@@ -166,7 +166,7 @@ fn a_table_row_is_a_position_of_its_own() {
 #[test]
 fn a_decimal_point_ends_nothing() {
     let text = "The fee is 42.50 dollars per event. Payment is due on filing.";
-    let spans = sentences(text);
+    let spans = units(text).0;
     assert_eq!(spans.len(), 2, "{spans:#?}");
     assert_eq!(
         &text[spans[0].clone()],
@@ -179,7 +179,7 @@ fn prose_with_no_markers_still_splits() {
     // Journals and charters have none of an ordinance's structure. The
     // sentence rule has to carry them on its own.
     let text = "Quiet hours run from 11:00 PM until 7:00 AM. During quiet hours, music must\nbe played through headphones.";
-    let spans = sentences(text);
+    let spans = units(text).0;
     assert_eq!(spans.len(), 2, "{spans:#?}");
     assert_eq!(
         &text[spans[1].clone()],
@@ -191,7 +191,7 @@ fn prose_with_no_markers_still_splits() {
 
 #[test]
 fn an_index_the_passage_does_not_have_is_refused() {
-    let spans = sentences(EXCEPTIONS);
+    let spans = units(EXCEPTIONS).0;
     let err = cite(EXCEPTIONS, &spans, 12, 12).unwrap_err();
     assert_eq!(
         err,
@@ -210,7 +210,7 @@ fn an_index_the_passage_does_not_have_is_refused() {
 fn a_backwards_span_is_refused_rather_than_swapped() {
     // Reordering the model's answer would be repairing an answer nobody can
     // see is broken (§18.3). It is refused, counted, and reported.
-    let spans = sentences(EXCEPTIONS);
+    let spans = units(EXCEPTIONS).0;
     assert_eq!(
         cite(EXCEPTIONS, &spans, 3, 2).unwrap_err(),
         Miscited::Backwards { first: 3, last: 2 }
@@ -219,7 +219,7 @@ fn a_backwards_span_is_refused_rather_than_swapped() {
 
 #[test]
 fn a_citation_wider_than_the_cap_is_refused() {
-    let spans = sentences(ORDINANCE);
+    let spans = units(ORDINANCE).0;
     assert_eq!(
         cite(ORDINANCE, &spans, 1, 4).unwrap_err(),
         Miscited::TooWide { n: 4 }
@@ -230,7 +230,7 @@ fn a_citation_wider_than_the_cap_is_refused() {
 #[test]
 fn a_span_too_short_to_be_evidence_is_refused() {
     let text = "Be quiet.\n\nQuiet hours run from 11:00 PM until 7:00 AM.";
-    let spans = sentences(text);
+    let spans = units(text).0;
     assert_eq!(
         cite(text, &spans, 1, 1).unwrap_err(),
         Miscited::TooShort { chars: 9 }
@@ -243,7 +243,7 @@ fn a_passage_with_no_sentence_break_is_one_position() {
     // Never zero: a chunk the segmenter cannot cut is still citable whole,
     // which is the citation the chunk id already carries.
     let text = "no terminator anywhere in this passage at all";
-    let spans = sentences(text);
+    let spans = units(text).0;
     assert_eq!(spans.len(), 1);
     assert_eq!(&text[spans[0].clone()], text);
 }
@@ -273,7 +273,7 @@ fn an_enumerator_stays_with_the_item_it_labels() {
     // `1.` cut from `Electrical power tools.` leaves a position that is a
     // marker and a position that is a rule with no number, and the model can
     // cite either.
-    let spans = sentences(ENUMERATED);
+    let spans = units(ENUMERATED).0;
     let all: Vec<&str> = spans.iter().map(|s| &ENUMERATED[s.clone()]).collect();
     assert!(all.contains(&"1. Electrical power tools."), "{all:#?}");
     assert!(
@@ -288,7 +288,7 @@ fn a_sentence_ending_in_a_number_still_ends() {
     // The counterexample to the rule above: same shape, mid-line, and a real
     // sentence boundary. Position is the only thing that separates them.
     let text = "…sound levels in excess of those shown in table 3. If the sound has not abated                 within a reasonable time, the official may apply to the court.";
-    let spans = sentences(text);
+    let spans = units(text).0;
     assert_eq!(spans.len(), 2, "{spans:#?}");
     assert!(text[spans[0].clone()].ends_with("shown in table 3."));
 }
@@ -297,7 +297,7 @@ fn a_sentence_ending_in_a_number_still_ends() {
 fn a_wrapped_line_starting_with_a_short_word_is_not_a_marker() {
     // `door.` opening a line read as an enumerator, which cut the verb off
     // the rule it belonged to and made the rule uncitable in one piece.
-    let spans = sentences(WRAPPED);
+    let spans = units(WRAPPED).0;
     let all: Vec<&str> = spans.iter().map(|s| &WRAPPED[s.clone()]).collect();
     assert_eq!(all.len(), 2, "{all:#?}");
     assert!(
@@ -305,4 +305,105 @@ fn a_wrapped_line_starting_with_a_short_word_is_not_a_marker() {
         "{all:#?}"
     );
     assert!(!all.iter().any(|s| s.trim() == "door."), "{all:#?}");
+}
+
+// ── the coordinate system on text that is not prose ─────────
+
+#[test]
+fn a_passage_with_no_prose_structure_is_cited_by_line() {
+    // **The silent collapse this closes.** The prose splitter cuts on
+    // sentence ends and on units a document marks itself — `|`, `#`, `>`,
+    // list markers, `(a)`, `1.`. YAML `key: value`, a CSV row, a line of code
+    // and a log line match none of them, so each of these came out as ONE
+    // unit: the model was shown a single giant `[1]`, cited it, and got the
+    // whole passage back as its quote. In range, verbatim, and useless as
+    // evidence.
+    for (name, text) in [
+        (
+            "yaml",
+            "review:\n  required: true\n  approvers: 2\ndeploy:\n  freeze: friday",
+        ),
+        (
+            "code",
+            "fn merge(a: &Log, b: &Log) -> Log {\n    let mut out = a.clone();\n    out.extend(b);\n    out\n}",
+        ),
+        (
+            "csv",
+            "rule,owner,since\nquiet-hours,mira,2024\nrent-due,dana,2023\nno-smoking,sam,2021",
+        ),
+        (
+            "log",
+            "10:02 deploy blocked: friday freeze\n10:04 override requested by mira\n10:05 denied, policy 3.1",
+        ),
+    ] {
+        let (spans, basis) = units(text);
+        assert_eq!(basis, Basis::Lines, "{name} should fall back to lines");
+        assert_eq!(
+            spans.len(),
+            text.lines().filter(|l| !l.trim().is_empty()).count(),
+            "{name}: one unit per line"
+        );
+        // And a citation into it is now evidence rather than the whole
+        // thing. A span, because one line is often too short to evidence
+        // anything on its own — which SPAN_MAX allows for and QUOTE_MIN
+        // still polices, so the fallback cannot smuggle a fragment through.
+        let quoted = cite(text, &spans, 1, 2).unwrap_or_else(|e| panic!("{name}: {e}"));
+        assert!(
+            quoted.len() < text.len(),
+            "{name}: cite(1,2) returned {} of {} chars",
+            quoted.len(),
+            text.len()
+        );
+    }
+}
+
+#[test]
+fn a_line_too_short_to_be_evidence_is_still_refused() {
+    // The fallback gives the model a coordinate system; it does not lower
+    // the bar for what counts as a citation. `  required: true` is fourteen
+    // characters and evidences nothing, so it is refused exactly as a
+    // too-short sentence would be.
+    let yaml = "review:\n  required: true\n  approvers: 2\ndeploy:\n  freeze: friday";
+    let (spans, basis) = units(yaml);
+    assert_eq!(basis, Basis::Lines);
+    assert!(
+        matches!(cite(yaml, &spans, 2, 2), Err(Miscited::TooShort { .. })),
+        "a fourteen-character line is not evidence"
+    );
+}
+
+#[test]
+fn prose_is_still_read_as_prose() {
+    // The fallback fires only when prose splitting found NOTHING. Anything
+    // it did find structure in must be untouched, or every citation in every
+    // existing corpus moves.
+    for (name, text) in [
+        (
+            "prose",
+            "The house is quiet at 11pm. Rent is due on the first. Sam waters the plants.",
+        ),
+        (
+            "wrapped prose",
+            "The house is quiet at eleven in the evening, which the\ncommittee agreed last spring. Rent is due on the first.",
+        ),
+        ("markdown", "- Quiet at 11pm\n- Rent on the 1st\n- No smoking"),
+        (
+            "chat",
+            "> mira: heating off at 11\n> dana: fine by me\n> sam: recycling sunday",
+        ),
+    ] {
+        let (spans, basis) = units(text);
+        assert_eq!(basis, Basis::Sentences, "{name}");
+        assert!(spans.len() > 1, "{name}: {} unit(s)", spans.len());
+    }
+}
+
+#[test]
+fn one_long_line_is_one_unit_and_stays_that_way() {
+    // A line that happens to be long is genuinely one unit. Falling back
+    // here would buy no coordinate system and would only lose the basis.
+    let text = "a".repeat(400);
+    let (spans, basis) = units(&text);
+    assert_eq!(basis, Basis::Sentences);
+    assert_eq!(spans.len(), 1);
 }

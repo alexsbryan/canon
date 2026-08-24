@@ -60,8 +60,8 @@ struct Partitioned {
 struct RuleSame {
     /// 1-based position in the group, so a dropped or reordered answer is
     /// detectable rather than silently misattributed.
-    n: usize,
-    same_as: usize,
+    n: crate::model::Pos,
+    same_as: crate::model::Pos,
 }
 
 fn schema() -> Value {
@@ -74,7 +74,7 @@ fn schema() -> Value {
                     "type": "object",
                     "properties": {
                         "n": { "type": "integer" },
-                        "same_as": { "type": "integer" },
+                        "same_as": { "type": "integer", "minimum": 1 },
                     },
                     "required": ["n", "same_as"],
                     "additionalProperties": false,
@@ -145,10 +145,18 @@ fn partition(client: &Client, group: &[&str]) -> Result<Vec<usize>, ModelError> 
         "For each rule, which is the smallest-numbered rule governing the same thing?",
     )?;
     for r in got.rules {
-        let Some(at) = offered.at(r.n) else { continue };
-        // A representative past the end, or past this member, names nothing
-        // the model was shown. Left as itself, which refuses the fold.
-        if let Some(to) = r.same_as.checked_sub(1).filter(|i| *i <= at) {
+        let Some(at) = r.n.get().and_then(|n| offered.at(n)) else {
+            continue;
+        };
+        // A representative past the end, past this member, or not a position
+        // at all names nothing the model was shown. Left as itself, which
+        // refuses the fold.
+        if let Some(to) = r
+            .same_as
+            .get()
+            .and_then(|n| n.checked_sub(1))
+            .filter(|i| *i <= at)
+        {
             rep[at] = to;
         }
     }

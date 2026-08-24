@@ -23,6 +23,7 @@ const VALUED: &[&str] = &[
     "-m",
     "--about",
     "--after",
+    "--as",
     "--amends",
     "--authority",
     "--citing",
@@ -34,6 +35,7 @@ const VALUED: &[&str] = &[
     "--from-proposal",
     "--graduated",
     "--horizon",
+    "--max-chunks",
     "--objections",
     "--of",
     "--secret",
@@ -131,6 +133,7 @@ pub fn init(args: &[String]) -> i32 {
     if let Err(e) = std::fs::write(base.join(store::FILE), "") {
         return fail(e);
     }
+    store::ignore_local(&base);
     // **The whole tool, in three lines, at the moment somebody needs it.**
     // This is the n+1 explanation: if the next person cannot be handed the
     // thing in two sentences it does not spread, and `canon --help` is

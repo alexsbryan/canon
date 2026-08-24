@@ -20,6 +20,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::config::Config;
@@ -457,21 +458,135 @@ fn is_schema_refusal(e: &ModelError) -> bool {
     d.contains("json_schema") || d.contains("response_format") || d.contains("schema")
 }
 
+/// A position a model answered with, before anything trusts it.
+///
+/// Every one of these indexes something the model was SHOWN — a sentence
+/// marker, a rule's number in the list it was given, a commitment's place in
+/// the offered set. Each reader already refuses one that is out of range,
+/// because a position naming something that was not offered is not an answer.
+///
+/// **What none of them survived was a position that would not deserialize.**
+/// A model with no way to say "none of them" reaches for a sentinel: a
+/// Qwen3-family 4B answers `same_as: -1` for a rule that duplicates nothing,
+/// and a `usize` field turns that into an error that kills the whole call —
+/// twenty-six candidates thrown away because one of them was unique. That is
+/// the same failure §18.3 names, arriving through the type system: a partial
+/// answer reported as no answer.
+///
+/// So the wire type is signed and [`Pos::get`] is the only way to an index.
+/// It answers `None` for anything that is not a position, which lands on the
+/// refusal each reader already has. Artifact structs canon writes itself
+/// stay `usize` — nothing there came off a wire.
+/// `Default` is zero, which is deliberately NOT a position: the markers a
+/// model is shown are 1-based, so a field the answer omitted is refused by
+/// the same range check that refuses one it got wrong.
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+pub struct Pos(i64);
+
+impl Pos {
+    /// The position, or `None` when the answer was not one.
+    pub fn get(self) -> Option<usize> {
+        usize::try_from(self.0).ok()
+    }
+}
+
+impl std::fmt::Display for Pos {
+    /// Prints what the model actually said, so a warning about a position
+    /// out of range can name the sentinel rather than a substitute for it.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// The reasoning channels a server may leave sitting in the content.
+///
+/// A closed set of transport wrappers, so it is a list rather than a pattern
+/// (§2.1). Widening it to "anything in angle brackets" would start eating
+/// document text.
+const REASONING: &[&str] = &["think", "thinking", "reasoning"];
+
 /// Decode the assistant's content into JSON.
 ///
 /// Tolerates a fenced code block, because `json_object` mode on several
 /// servers wraps the object in one. That is decoding a known transport
 /// wrapper around the same JSON — not parsing prose, and not a third rung.
+///
+/// Tolerates a reasoning wrapper for the same reason. A reasoning model
+/// behind an OpenAI-shaped endpoint may deliver its thinking in `content`
+/// instead of a field of its own, and then the answer arrives correct and
+/// unparseable. Measured on a Qwen3-family 4B on this endpoint: extraction
+/// succeeded on all 24 passages of the Maple House fixture and the run died
+/// at the reduce step, three times identically, because the reply was the
+/// right JSON followed by a stray `</think>`.
 fn decode(content: &str) -> Result<Value, ModelError> {
-    let mut s = content.trim();
-    if let Some(rest) = s.strip_prefix("```") {
-        let rest = rest.strip_prefix("json").unwrap_or(rest);
-        s = rest.trim().trim_end_matches("```").trim();
+    let s = unfence(content.trim());
+    let first = match serde_json::from_str(s) {
+        Ok(v) => return Ok(v),
+        Err(e) => e,
+    };
+    for reading in readings(s) {
+        if let Ok(v) = serde_json::from_str(unfence(reading.trim())) {
+            reasoning_channel_notice();
+            return Ok(v);
+        }
     }
-    serde_json::from_str(s).map_err(|e| ModelError::Malformed {
-        detail: e.to_string(),
+    Err(ModelError::Malformed {
+        detail: first.to_string(),
         raw: cap(content),
     })
+}
+
+fn unfence(s: &str) -> &str {
+    let Some(rest) = s.strip_prefix("```") else {
+        return s;
+    };
+    let rest = rest.strip_prefix("json").unwrap_or(rest);
+    rest.trim().trim_end_matches("```").trim()
+}
+
+/// Every reading of `s` with a reasoning wrapper taken off, best first.
+///
+/// Two shapes turn up, both from one cause — the endpoint puts reasoning in
+/// the content rather than in a field of its own:
+///
+/// ```text
+/// <think>…</think>{"a":1}    a complete block, then the answer
+/// {"a":1}</think>            the server consumed the OPEN tag and the model
+///                            closed after answering
+/// ```
+///
+/// Each reading is TRIED, never chosen: whichever one parses is the answer,
+/// and a reply where none parses is malformed and says so with the raw text.
+/// That is what keeps this from being a guess about where the answer is.
+fn readings(s: &str) -> Vec<&str> {
+    let mut out = Vec::new();
+    for tag in REASONING {
+        let (open, close) = (format!("<{tag}>"), format!("</{tag}>"));
+        let Some(i) = s.rfind(&close) else { continue };
+        out.push(&s[i + close.len()..]);
+        let before = &s[..i];
+        out.push(match before.rfind(&open) {
+            Some(j) => &before[j + open.len()..],
+            None => before,
+        });
+    }
+    out
+}
+
+/// Said once per process, not once per call.
+///
+/// It is a property of the endpoint, so twenty-four passages would print it
+/// twenty-four times and teach the person to skip the warnings. Silence
+/// would be worse: a reply being unwrapped is a decision, and a decision
+/// nobody can see is not finished (§9.1).
+fn reasoning_channel_notice() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        eprintln!(
+            "note: this endpoint returns reasoning inside the reply. \
+             canon is reading the answer out of it."
+        );
+    });
 }
 
 fn cap(s: &str) -> String {

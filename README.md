@@ -199,14 +199,74 @@ Set `CANON_DIR` to point it somewhere specific.
 ```sh
 canon draft --from ~/house-docs   # a folder, recursively
 canon draft --from-git --since 1y # or the commit messages
+cat whatever | canon draft --from - --as '#eng' --dry-run --json
 canon draft --resume              # finish a long review later
 ```
 
-Point it at a folder. It reads `.md`, `.txt`, and Slack or Discord `.json`
-exports, and **it tells you what it did not read** — how many files and of
-what kind. A directory with some readable files used to drop the rest in
-silence, so a Slack export sitting beside three documents was never opened
-by anyone and two rules that existed only in chat were never seen.
+Point it at a folder. **There is no format list.** Anything under it that
+is text gets read, whatever it is called — `.org`, `.rst`, `.eml`, a
+`NOTES` file with no extension, a transcript someone pasted into a `.log`.
+A canon lives in whatever its group already writes in, and a reader that
+knows four extensions works on the corpora its authors happened to test
+against.
+
+Three things a walk passes over, each reported and each with a way round
+it: files the project itself calls generated (`git check-ignore`, so the
+authority is your own `.gitignore` rather than a list of build directories
+we guessed at — `--include-ignored` reads them anyway), structured data
+that holds no conversation (a lockfile read as prose proposes commitments
+cited to dependency names), and anything too big to be writing. Naming a
+file directly reads it regardless — a walk is a guess about intent and
+`--from thatfile` is not.
+
+**And it tells you what it did not read** — how many files and why. A
+directory with some readable files used to drop the rest in silence, so a
+Slack export sitting beside three documents was never opened by anyone and
+two rules that existed only in chat were never seen.
+
+`--from -` reads stdin, which is the whole integration surface. Anything
+that can emit text can feed a canon, and `canon` carries no connector, no
+vendor schema and no endpoint of its own. `--as` names the source so the
+citation reads `#eng-decisions:3-4` rather than `stdin:3-4`, which matters
+most on a live feed where the passage has scrolled away by the time anyone
+reads the candidate. Pipe it with `--dry-run --json`, then
+`canon draft --resume` to review what it found with no second model run.
+
+### The shape canon reads best
+
+Every candidate cites a POSITION in its passage, so a passage has to have
+positions. `canon` finds them two ways, in this order:
+
+1. **Prose** — sentence ends, plus the units a document marks itself: `|`
+   table rows, `#` headings, `>` quotes, `- * +` list items, `(a)`, `1.`
+2. **Lines** — one unit per line, used when prose splitting found no
+   structure at all.
+
+The second exists because YAML `key: value`, a CSV row, a line of code and a
+log line match none of the first. Before the fallback, a passage of any of
+them was ONE unit: the model saw a single giant `[1]`, cited it, and the
+"quote" it got back was all 1,819 characters of the passage. In range,
+verbatim, and useless as evidence. `draft` now says which basis it used —
+`3 of 24 passage(s) are line-oriented` — and the run artifact records it
+per passage, because a citation into a table row means something different
+from a citation into an argument.
+
+**So the shape that always works is: one unit per line, a blank line between
+passages.** That is what the built-in chat reader emits (`> who: said what`,
+blank line on a conversation gap), and it is the whole contract. An agent
+piping anything — a diff, a ticket export, a transcript, a system nobody
+has heard of — gets first-class citations by rendering into that shape in
+about five lines, and needs nothing from `canon` to do it. Pipe something
+unshaped and it still works; you just get line units and a note saying so.
+
+**A feed you read twice does not ask twice.** `.canon/seen` records the
+passages already extracted from and the candidates you declined, so
+re-pointing at a growing channel costs the new material rather than the
+whole history, and a rule you said no to is not proposed again tomorrow.
+It is ingest hygiene, not part of the canon: nothing in it is an act,
+`check` never consults it, and deleting it costs a re-extraction and
+changes no commitment. `[s]kip` records nothing — skip means not now, and
+only `[r]eject` means no.
 
 Chat is not prose and is not chunked as though it were. Messages are
 rendered with who said them and cut into bursts on a time gap, so a

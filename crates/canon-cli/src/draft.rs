@@ -45,7 +45,7 @@
 //! And there is no `--accept-all`: a canon adopted wholesale is disengagement
 //! at t=0, so onboarding *is* the first governance session.
 
-use std::io::{BufRead, Write};
+use std::io::{BufRead, Read as _, Write};
 use std::path::{Path, PathBuf};
 
 use canon_core::ActKind;
@@ -56,6 +56,7 @@ use crate::locate;
 use crate::model::{self, Client, ModelError};
 use crate::profile::Profile;
 use crate::quantify;
+use crate::seen::{Seen, Why};
 use crate::sources::{self, Gathered, Source};
 use crate::store;
 use crate::subject;
@@ -84,6 +85,17 @@ pub struct Chunk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heading: Option<String>,
     pub text: String,
+    /// Read one unit per line, because prose splitting found no structure in
+    /// it ([`locate::Basis::Lines`]). Recorded because it changes what a
+    /// citation into this passage MEANS — one row of a table, not one
+    /// sentence of an argument — and a run that cannot say which cannot be
+    /// read properly afterwards.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub by_line: bool,
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 /// What kind of act a candidate would become.
@@ -160,7 +172,7 @@ pub struct Dropped {
 /// Everything a run consumed and produced, persisted so the bar re-scores by
 /// REPLAY rather than by re-running the model (§18.4). A run that cannot be
 /// re-scored without a second inference call is not instrumented.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DraftRun {
     pub schema: String,
     pub at: i64,
@@ -197,6 +209,17 @@ pub struct DraftRun {
     /// the pairs, and a reader who cannot see that is being misled (§18.3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tension_passes_unread: Vec<String>,
+    /// Passages skipped because this canon had already read them.
+    ///
+    /// A count taken from a run with this set is a count over what was NEW,
+    /// not over the document — and a reader who cannot see that is being
+    /// misled about coverage the same way `unread` would mislead them.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub already_read: usize,
+    /// Passages `--max-chunks` refused to read. A cap nobody was told about
+    /// reads as coverage (§18.5).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub capped: usize,
     /// The stage that ended this run early, if one did.
     ///
     /// A run with this set is EVIDENCE, never a measurement: the stages after
@@ -204,6 +227,10 @@ pub struct DraftRun {
     /// stopped. The bar refuses to score one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub failed: Option<String>,
+}
+
+fn is_zero(n: &usize) -> bool {
+    *n == 0
 }
 
 /// Write what a run produced before the stage that ended it, then report.
@@ -236,12 +263,25 @@ pub struct RunTension {
 
 // ── chunking (no model) ─────────────────────────────────────
 
-/// Split text into chunks on blank lines, never merging across a heading.
+/// Split text into chunks at the first boundary past [`CHUNK_TARGET`].
 ///
 /// Format-agnostic by default: a paragraph break is a chunk boundary in any
 /// plain text. The heading rule costs nothing on unstructured prose (there
 /// are no headings to find) and keeps one article, one decision, or one dated
 /// journal entry whole where the text does have structure.
+///
+/// **A LINE BREAK is a boundary too, and that is what bounds this.** Cutting
+/// only on blank lines and headings means text with neither never cuts at
+/// all: measured, 500 CSV rows became one chunk of 15,279 characters and 500
+/// log lines one chunk of 18,389 — each sent to the model as a single
+/// completion, and a 2 MB log would have been one prompt. `CHUNK_TARGET` was
+/// a flush threshold with nothing above it.
+///
+/// So the rule is uniform: a chunk ends at the first boundary of ANY kind —
+/// heading, blank line, or line break — once it is big enough to be worth its
+/// own completion. A single line longer than the target has no boundary
+/// inside it and stays whole, which is honest: the alternative is cutting
+/// mid-sentence, and a citation must be a contiguous slice of its passage.
 pub fn chunk_text(path: &str, text: &str) -> Vec<Chunk> {
     let lines: Vec<&str> = text.lines().collect();
     let mut chunks: Vec<Chunk> = Vec::new();
@@ -267,6 +307,9 @@ pub fn chunk_text(path: &str, text: &str) -> Vec<Chunk> {
             source: format!("{path}:{start}-{end}"),
             heading: h.clone(),
             text: body,
+            // Set by the caller, which is where the coordinate system is
+            // built. `chunk_text` takes no view on how a passage is read.
+            by_line: false,
         });
     };
 
@@ -290,6 +333,14 @@ pub fn chunk_text(path: &str, text: &str) -> Vec<Chunk> {
             }
             cur.push('\n');
             continue;
+        }
+        // The line break before this line is a boundary, and the chunk is
+        // already big enough. Taking it here rather than waiting for a blank
+        // line is what keeps a file that has none from being one chunk.
+        if cur.trim().chars().count() >= CHUNK_TARGET {
+            flush(&mut cur, start, end, &cur_heading);
+            cur_heading = heading.clone();
+            start = no;
         }
         if cur.trim().is_empty() {
             start = no;
@@ -375,9 +426,9 @@ struct ExtractedOne {
     /// it. Defaults to 0 — not a position — so an answer that omits the
     /// field is refused rather than read as "the first sentence".
     #[serde(default)]
-    first: usize,
+    first: crate::model::Pos,
     #[serde(default)]
-    last: usize,
+    last: crate::model::Pos,
     #[serde(default)]
     text: String,
     /// Unreadable or absent reads as `rule`, which is the kind that has to
@@ -451,7 +502,7 @@ pub fn extract(
     profile: Profile,
 ) -> Result<(Vec<Candidate>, Vec<Dropped>), ModelError> {
     let system = format!("{EXTRACT_SYSTEM}\n\n{}", voice(profile));
-    let spans = locate::sentences(&chunk.text);
+    let (spans, _) = locate::units(&chunk.text);
     let shown = locate::numbered(&chunk.text, &spans);
     // The heading goes to the model as CONTEXT, not as citable text.
     //
@@ -490,7 +541,15 @@ pub fn extract(
         }
         // A citation that could not be cut carries no quote to report, so the
         // reason names the position that was asked for and the ones on offer.
-        let quote = match locate::cite(&chunk.text, &spans, c.first, c.last) {
+        let (Some(first), Some(last)) = (c.first.get(), c.last.get()) else {
+            dropped.push(refuse(
+                text,
+                String::new(),
+                format!("citation [{}-{}] is not a position", c.first, c.last),
+            ));
+            continue;
+        };
+        let quote = match locate::cite(&chunk.text, &spans, first, last) {
             Ok(q) => q,
             Err(e) => {
                 dropped.push(refuse(text, String::new(), e.to_string()));
@@ -773,6 +832,7 @@ pub fn dedupe(
 
 fn read_sources(args: &[String]) -> Result<Gathered, String> {
     let mut got = Gathered::default();
+    let include_ignored = crate::cmds::has(args, "--include-ignored");
     if crate::cmds::has(args, "--from-git") {
         let since = crate::cmds::flag(args, "--since").unwrap_or("1y");
         for (name, text) in read_git(since)? {
@@ -780,14 +840,19 @@ fn read_sources(args: &[String]) -> Result<Gathered, String> {
         }
     }
     for p in from_paths(args) {
-        sources::gather(Path::new(&p), &mut got)?;
+        if p == "-" {
+            got.sources.push(read_stdin(args)?);
+            continue;
+        }
+        sources::gather(Path::new(&p), &mut got, include_ignored)?;
     }
     if got.sources.is_empty() {
         // A run with nothing to read says what it looked at, or "nothing to
         // draft from" is indistinguishable from "your folder is the wrong
         // kind of folder".
         let mut msg = String::from(
-            "nothing to draft from — `canon draft --from <paths>` or `--from-git --since 1y`",
+            "nothing to draft from — `canon draft --from <paths>`, `--from -` for stdin, \
+             or `--from-git --since 1y`",
         );
         if let Some(note) = got.skipped_note() {
             msg.push_str(&format!("\n{note}"));
@@ -805,9 +870,47 @@ fn from_paths(args: &[String]) -> Vec<String> {
     };
     args[i + 1..]
         .iter()
-        .take_while(|a| !a.starts_with('-'))
+        // A bare `-` is a path here, not a flag: it means stdin. Without
+        // this it is taken for the next option and `--from -` reads nothing.
+        .take_while(|a| a.as_str() == "-" || !a.starts_with('-'))
         .cloned()
         .collect()
+}
+
+/// Whatever was piped in, as one source.
+///
+/// **This is the whole integration surface, and it is deliberately not an
+/// API.** `cat anything | canon draft --from - --json` connects canon to any
+/// system that can emit text, which is all of them, and costs this tool no
+/// connector, no vendor schema and no endpoint of its own. A Slack
+/// integration would have supported Slack; this supports whatever the person
+/// already has an agent for, including the systems nobody has heard of yet.
+///
+/// `--as` names the source, so a citation reads `#eng-decisions:3-4` rather
+/// than `stdin:3-4` — which matters most on a feed, where the passage is
+/// gone by the time anyone reads the candidate.
+fn read_stdin(args: &[String]) -> Result<Source, String> {
+    let mut text = String::new();
+    std::io::stdin()
+        .read_to_string(&mut text)
+        .map_err(|e| format!("reading stdin: {e}"))?;
+    if text.trim().is_empty() {
+        return Err("nothing arrived on stdin".to_string());
+    }
+    // Sniffed exactly the way a file is, so piping a chat export works
+    // without anyone having to declare that it is one.
+    let head = text.trim_start();
+    if head.starts_with('{') || head.starts_with('[') {
+        if let Some(rendered) = sources::render_chat(&text) {
+            text = rendered;
+        }
+    }
+    Ok(Source {
+        name: crate::cmds::flag(args, "--as")
+            .unwrap_or("stdin")
+            .to_string(),
+        text,
+    })
 }
 
 /// Commit bodies as source text. Extends `store::actor`'s shell-out pattern
@@ -852,7 +955,7 @@ fn read_git(since: &str) -> Result<Vec<(String, String)>, String> {
 /// The run artifact already holds every candidate and every citation, so this
 /// costs NO model call. Anything already in the canon is skipped, so resuming
 /// twice cannot write a thing twice.
-fn resume(dir: &Path, profile: Profile) -> i32 {
+fn resume(dir: &Path, profile: Profile, seen: &mut Seen) -> i32 {
     let runs = dir.join(RUNS_DIR);
     let mut found: Vec<PathBuf> = match std::fs::read_dir(&runs) {
         Ok(rd) => rd
@@ -879,7 +982,7 @@ fn resume(dir: &Path, profile: Profile) -> i32 {
     // Already in the canon, by its own words. Text is what a person edited
     // and what they will recognise; an id would not survive the `[e]dit`
     // path that rewrites the text before it is written.
-    let remaining = remaining(&run, &canon);
+    let remaining = remaining(&run, &canon, seen);
     println!(
         "resuming {} — {} of {} left, no model call",
         latest.file_name().unwrap_or_default().to_string_lossy(),
@@ -890,7 +993,7 @@ fn resume(dir: &Path, profile: Profile) -> i32 {
         println!("nothing left to review.");
         return 0;
     }
-    match review(dir, &run.candidates, &remaining) {
+    match review(dir, &run.candidates, &remaining, seen) {
         Ok(a) if a.is_empty() => {
             println!("nothing accepted.");
             0
@@ -903,14 +1006,18 @@ fn resume(dir: &Path, profile: Profile) -> i32 {
     }
 }
 
-/// Candidates from a run that are not already in the canon.
+/// Candidates from a run that are neither already in the canon nor already
+/// declined.
 ///
 /// Matched **by text**, because text is what a person recognises and what
 /// they may have rewritten on the `[e]dit` path before it was written. An id
 /// would not survive that edit, so resuming would offer the same candidate
 /// again in the words the model chose, which is the one wording the person
 /// has already rejected.
-fn remaining(run: &DraftRun, canon: &canon_core::Canon) -> Vec<usize> {
+///
+/// The canon answers for what was accepted. Only [`Seen`] answers for what
+/// was turned down — without it, resuming re-asks every rejection.
+fn remaining(run: &DraftRun, canon: &canon_core::Canon, seen: &Seen) -> Vec<usize> {
     let already: std::collections::BTreeSet<&str> = canon
         .active()
         .map(|c| c.text.as_str())
@@ -923,7 +1030,7 @@ fn remaining(run: &DraftRun, canon: &canon_core::Canon) -> Vec<usize> {
         .filter(|i| {
             run.candidates
                 .get(*i)
-                .is_some_and(|c| !already.contains(c.text.as_str()))
+                .is_some_and(|c| !already.contains(c.text.as_str()) && !seen.was_rejected(&c.text))
         })
         .collect()
 }
@@ -936,6 +1043,18 @@ pub fn run(args: &[String]) -> i32 {
         return 2;
     }
     let dry_run = crate::cmds::has(args, "--dry-run");
+    // **Refused before anything is spent.** The review loop reads its
+    // answers from stdin and so does `--from -`, so the two together read
+    // the document, pay for every extraction call, then take end-of-input as
+    // "quit" and accept nothing. The person gets a bill and an empty canon.
+    // There is no coherent non-dry stdin flow to allow instead: accepting is
+    // one at a time on purpose, and there is no --accept-all.
+    if !dry_run && from_paths(args).iter().any(|p| p == "-") {
+        eprintln!("error: `--from -` reads the document from stdin, and so does the review.");
+        eprintln!("  Use `--dry-run --json` to see what a pipe produces, then");
+        eprintln!("  `canon draft --resume` to review it without a second model run.");
+        return 2;
+    }
     let dir = match crate::cmds::dir() {
         Ok(d) => d,
         Err(e) => return crate::cmds::fail(e),
@@ -944,8 +1063,17 @@ pub fn run(args: &[String]) -> i32 {
         Ok(p) => p,
         Err(e) => return crate::cmds::fail(e),
     };
+    // A dry run READS the set — a preview should not re-offer what you
+    // already declined — and writes nothing to it, or you would preview a
+    // folder, decide to keep three, run it for real and be told there is
+    // nothing there.
+    let mut seen = if dry_run {
+        Seen::preview(&dir)
+    } else {
+        Seen::load(&dir)
+    };
     if crate::cmds::has(args, "--resume") {
-        return resume(&dir, profile);
+        return resume(&dir, profile, &mut seen);
     }
     let gathered = match read_sources(args) {
         Ok(s) => s,
@@ -963,11 +1091,66 @@ pub fn run(args: &[String]) -> i32 {
     for src in sources {
         chunks.extend(chunk_text(&src.name, &src.text));
     }
+    let found = chunks.len();
+    // **What makes pointing at a growing feed affordable.** Extraction is one
+    // completion per passage, so re-reading a channel every morning costs the
+    // whole channel every morning unless the passages already read are
+    // dropped here.
+    chunks.retain(|c| !seen.was_read(&c.text));
+    let already_read = found - chunks.len();
+    if chunks.is_empty() {
+        if found == 0 {
+            return crate::cmds::fail("nothing readable in those sources");
+        }
+        // Nothing new is a RESULT, not an error: an agent polling a feed
+        // gets this most of the time, and it has to be cheap and quiet. Same
+        // artifact shape either way, so a caller parses one schema (§10.6).
+        let quiet = DraftRun {
+            schema: RUN_SCHEMA.into(),
+            at: store::now(),
+            profile: profile.as_str().to_string(),
+            sources: sources.iter().map(|s| s.name.clone()).collect(),
+            skipped: gathered.skipped.clone(),
+            already_read: found,
+            ..Default::default()
+        };
+        if crate::cmds::has(args, "--json") {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&quiet).unwrap_or_default()
+            );
+        } else {
+            println!("nothing new — all {found} passage(s) have been read before.");
+        }
+        return 0;
+    }
+    if already_read > 0 {
+        eprintln!("{already_read} passage(s) already read — skipping");
+    }
+    // Loud AND recorded: a capped run is a run about a fraction of the
+    // sources, and a cap the reader cannot see reads as coverage (§18.5).
+    let capped = match crate::cmds::flag(args, "--max-chunks").map(str::parse::<usize>) {
+        Some(Err(e)) => return crate::cmds::fail(format!("--max-chunks: {e}")),
+        Some(Ok(n)) if chunks.len() > n => {
+            let dropped = chunks.len() - n;
+            chunks.truncate(n);
+            eprintln!("--max-chunks {n}: {dropped} passage(s) left for a later run");
+            dropped
+        }
+        _ => 0,
+    };
     for (i, c) in chunks.iter_mut().enumerate() {
         c.id = i;
+        c.by_line = locate::units(&c.text).1 == locate::Basis::Lines;
     }
-    if chunks.is_empty() {
-        return crate::cmds::fail("nothing readable in those sources");
+    // Said out loud, because it changes what every citation from this run
+    // points at. Silence is how the collapse this replaces went unnoticed.
+    let by_line = chunks.iter().filter(|c| c.by_line).count();
+    if by_line > 0 {
+        eprintln!(
+            "{by_line} of {} passage(s) are line-oriented — cited by line, not by sentence",
+            chunks.len()
+        );
     }
 
     let client = match model::client_for(&dir, crate::cmds::has(args, "--allow-remote")) {
@@ -991,6 +1174,12 @@ pub fn run(args: &[String]) -> i32 {
             Ok((k, d)) => {
                 candidates.extend(k);
                 dropped.extend(d);
+                // Only on an answer. A chunk that errored must stay unseen,
+                // or one bad reply blinds this canon to that passage for
+                // good.
+                if let Err(e) = seen.record(&chunk.text, Why::Read) {
+                    eprintln!("\nwarning: {e}");
+                }
             }
             // One chunk's failure is not the document's. Record which
             // passage went unread and keep going; the alternative throws away
@@ -1027,6 +1216,8 @@ pub fn run(args: &[String]) -> i32 {
         // Recorded so a re-score can tell "the extractor found nothing there"
         // from "nothing there was ever opened" (§18.3).
         skipped: gathered.skipped.clone(),
+        already_read,
+        capped,
         chunks: chunks.clone(),
         candidates: candidates.clone(),
         dropped: dropped.clone(),
@@ -1146,7 +1337,7 @@ pub fn run(args: &[String]) -> i32 {
     eprintln!("run recorded at {}", path.display());
 
     // ── one at a time ───────────────────────────────────────
-    let accepted = match review(&dir, &candidates, &kept) {
+    let accepted = match review(&dir, &candidates, &kept, &mut seen) {
         Ok(a) => a,
         Err(e) => return crate::cmds::fail(e),
     };
@@ -1192,6 +1383,7 @@ fn review(
     dir: &Path,
     candidates: &[Candidate],
     kept: &[usize],
+    seen: &mut Seen,
 ) -> Result<Vec<canon_core::ActId>, String> {
     let stdin = std::io::stdin();
     let mut lines = stdin.lock().lines();
@@ -1231,6 +1423,15 @@ fn review(
                         continue;
                     }
                 }
+            }
+            "r" | "reject" => {
+                // Recorded, so the same feed does not ask again tomorrow.
+                // `[s]kip` deliberately records nothing: skip means not now,
+                // and only reject means no.
+                if let Err(e) = seen.record(&c.text, Why::Rejected) {
+                    eprintln!("  warning: {e}");
+                }
+                continue;
             }
             "q" | "quit" => break,
             _ => continue,

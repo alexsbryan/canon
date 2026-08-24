@@ -53,7 +53,7 @@ struct Mapped {
 
 #[derive(Debug, Deserialize)]
 struct MappedOne {
-    change: usize,
+    change: crate::model::Pos,
     #[serde(default)]
     fate: String,
     #[serde(default)]
@@ -220,7 +220,12 @@ fn map_changes(
 
     let mut out = Vec::new();
     for m in mapped.changes {
-        let Some(change) = (m.change >= 1).then(|| changes.get(m.change - 1)).flatten() else {
+        let Some(change) = m
+            .change
+            .get()
+            .filter(|n| *n >= 1)
+            .and_then(|n| changes.get(n - 1))
+        else {
             eprintln!(
                 "warning: dropped a mapping for change {} — only 1..{} exist",
                 m.change,
