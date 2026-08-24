@@ -971,7 +971,7 @@ pub fn run(args: &[String]) -> i32 {
         println!("nothing accepted.");
         return 0;
     }
-    println!("\n{} commitment(s) accepted.", accepted.len());
+    println!("\n{} accepted.", profile.count(accepted.len()));
 
     // ── the moment it has to produce ────────────────────────
     let Ok(canon) = store::read(&dir).map(|l| l.derive()) else {

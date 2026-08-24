@@ -72,15 +72,9 @@ CONFLICT
   can-0e50f4ee  "One implementation per threshold, scorer, schema and key."
                 asserted 2026-08-21, in force, never superseded
                 because: the proposal adds a second scorer
-
-ask one person with standing
-  default: at least one commitment pulls against
 ```
 
-Exit 1. Two answers, not one: **how it stands** against what you hold,
-and **what you may then do** about it. The first is a fact about the
-evidence; the second is a decision your community made in advance, and
-it is the line below. The answer always cites a rule you can read, because a bearing
+Exit 1. The answer always cites a rule you can read, because a bearing
 that names no commitment or gives no reason is refused before it is
 rendered — the difference between *the agent misread the rule* and *the
 rule is wrong* is a correction versus an amendment, and you cannot tell
@@ -92,6 +86,15 @@ each pulls, including contradictions you already chose to carry. A tool
 that ruled on someone's inner life would do harm the codebase profile
 cannot.
 
+## Two verbs is the whole tool
+
+`canon add "<a rule>"` and `canon check "<an idea>"`. That is what you
+hand the next person. `canon --help` is six verbs, not forty-seven, and
+`canon init` prints the three you need before you have read anything.
+
+Everything below this line is optional, and stays out of the way until a
+group asks for it. `canon help all` is the one door.
+
 ## How you decide is in the canon, not in the tool
 
 `canon` holds no opinion about how many objections make a conflict, who
@@ -99,7 +102,23 @@ may decide what, or what happens when nothing bears on a proposal. Those
 have defensible ranges of answers, communities differ, and a library that
 answered them would be a product.
 
-So the rule is an act like any other:
+Until a group adopts one, the tool does not mention any of it — `check`
+names the rule you are up against and the act that would settle it, and
+stops. The moment somebody runs `canon policy set`, it starts also saying
+what you may then do, because by then that is something the group decided
+rather than a restatement of the verdict above it:
+
+```
+THIS NEEDS AN AMENDMENT
+  it runs against a rule the house already has:
+  ...
+  amend it:  canon supersede can-dbdc4161 "<the new rule>" -m "<why>"
+
+not under this policy
+  consent: 1 reasoned objection(s); one is enough
+```
+
+The rule itself is an act like any other:
 
 ```sh
 canon policy set consent --cautious -m "One reasoned objection stops a thing. \

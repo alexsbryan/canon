@@ -30,8 +30,35 @@ mod tensions;
 #[cfg(test)]
 mod testing;
 
+/// What a new person is shown.
+///
+/// **Six verbs, because the other forty-one are the reason this does not
+/// spread.** A tool somebody has to be introduced to twice is one that stops
+/// at the person who installed it. Everything past `check` is something a
+/// group grows into — most never will — and it is one command away.
 const HELP: &str = "\
-canon — a body of commitments, and what was decided about them
+canon — the rules you already have, and what was decided about them
+
+USAGE
+  canon <command> [args]
+
+  init [--profile personal|code|house]   start one in this directory
+  add \"<text>\"                           write one down
+  check \"<proposal>\"                     does it clash with one?
+  list                                   what is live now
+  why <id>                               what replaced what, when, and why
+  log                                    the raw acts, oldest first
+
+Only `check` needs a model. Everything above it is a fold over a text file.
+A canon on the `personal` profile never returns a verdict and never exits 1.
+
+  canon help all    who decides what, how you decide, what has gone stale,
+                    forking and merging, drawing lots, the agent surface
+";
+
+/// Everything. Reached by `canon help all`, never by accident.
+const HELP_ALL: &str = "\
+canon — every verb. The short list is `canon --help`.
 
 USAGE
   canon <command> [args]
@@ -111,7 +138,10 @@ ON THE PERSONAL PROFILE
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
-        print!("{HELP}");
+        // `canon help all` is the only way to the long form. Somebody who
+        // typed `canon` by accident gets six verbs, not forty-seven.
+        let all = args.iter().skip(1).any(|a| a == "all" || a == "--all");
+        print!("{}", if all { HELP_ALL } else { HELP });
         std::process::exit(if args.is_empty() { 2 } else { 0 });
     }
     let (cmd, rest) = args.split_first().unwrap();
@@ -165,4 +195,99 @@ fn main() {
         }
     };
     std::process::exit(code);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{HELP, HELP_ALL};
+
+    /// **The n+1 test, as a test.**
+    ///
+    /// If the next person cannot be handed this tool in two sentences it does
+    /// not spread, and a help screen re-grows one verb at a time with nobody
+    /// noticing. This is the thing that notices.
+    #[test]
+    fn the_short_help_stays_short_and_stays_plain() {
+        let lines = HELP.lines().count();
+        assert!(
+            lines <= 20,
+            "the short help is {lines} lines — it is growing back into the long one"
+        );
+        let verbs = HELP
+            .lines()
+            .filter(|l| l.starts_with("  ") && !l.starts_with("    "))
+            .count();
+        assert!(verbs <= 8, "{verbs} verbs in the short help");
+
+        // Words a housemate has never met. Every one of these is real and
+        // useful and belongs in `canon help all`, where somebody has asked.
+        for jargon in [
+            "standing",
+            "subsidiarity",
+            "sortition",
+            "quorum",
+            "horizon",
+            "authority",
+            "annotation",
+            "scope",
+        ] {
+            assert!(
+                !HELP.to_lowercase().contains(jargon),
+                "the short help says `{jargon}`"
+            );
+        }
+        // And it names the one door to everything else, or the rest is lost.
+        assert!(HELP.contains("canon help all"));
+    }
+
+    #[test]
+    fn every_verb_the_dispatcher_knows_is_documented_somewhere() {
+        // The long help is allowed to be long. It is NOT allowed to be
+        // incomplete — a verb nobody can find is a verb nobody uses, and the
+        // short list only works if the full one is actually full.
+        for verb in [
+            "init",
+            "add",
+            "list",
+            "why",
+            "supersede",
+            "retract",
+            "accept",
+            "dismiss",
+            "undo",
+            "log",
+            "question",
+            "open",
+            "who",
+            "grant",
+            "withdraw",
+            "scope",
+            "policy",
+            "position",
+            "decide",
+            "rank",
+            "horizon",
+            "overdue",
+            "draw",
+            "silence",
+            "voice",
+            "leave",
+            "replay",
+            "share",
+            "adopt",
+            "diff",
+            "upgrade",
+            "rebase",
+            "tensions",
+            "config",
+            "draft",
+            "check",
+            "mcp",
+        ] {
+            assert!(
+                HELP_ALL.contains(verb),
+                "`{verb}` dispatches but is in no help text"
+            );
+        }
+    }
 }

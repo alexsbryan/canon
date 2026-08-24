@@ -355,14 +355,34 @@ fn render_verdict(
             }
         }
     }
-    out.push_str(&authority_line(decision));
-    out
+    // **Only once this community has adopted a rule of its own.**
+    //
+    // Under the shipped default the authority is a pure function of the
+    // outcome — supported means act, anything else means ask a person — so
+    // printing it restates the verdict a reader just read, in vocabulary they
+    // have never met. A fresh house canon was telling housemates to "ask one
+    // person with standing" when nobody had been granted standing and the
+    // word had not appeared anywhere they had been.
+    //
+    // The moment somebody runs `canon policy set`, the authority stops being
+    // a restatement and starts being the thing the group decided, so it
+    // prints — including when it agrees with them, because a rule that is
+    // invisible whenever it agrees is one nobody notices they are governed
+    // by. Progressive disclosure falls out of the ledger rather than out of a
+    // flag somebody has to remember to set.
+    //
+    // `--json` is unaffected. An agent reading the payload wants the ladder
+    // whether or not a person would have found it noise.
+    if !canon.policies.is_empty() {
+        out.push_str(&authority_line(decision));
+    }
+    // Exactly one trailing newline. The per-citation affordances end with a
+    // blank line so they separate from each other, which used to be followed
+    // by the authority line and now sometimes ends the output.
+    format!("{}\n", out.trim_end())
 }
 
 /// What the community's own rule says you may now do, and which rule said so.
-///
-/// Always rendered, including under the default: a policy that is invisible
-/// when it agrees with you is one nobody notices they are governed by.
 fn authority_line(decision: &Decision) -> String {
     let what = match decision.authority {
         Authority::Act => "act",
@@ -498,7 +518,10 @@ pub fn run(args: &[String]) -> i32 {
         Err(e) => return crate::cmds::fail(e),
     };
     if canon.active().next().is_none() {
-        eprintln!("this canon has no live commitments — nothing to check against.");
+        eprintln!(
+            "this canon has no live {} — nothing to check against.\n  canon add \"<the first one>\"",
+            profile.nouns()
+        );
         return 2;
     }
     // Before the endpoint, not after: a mistyped scope should cost nothing.
