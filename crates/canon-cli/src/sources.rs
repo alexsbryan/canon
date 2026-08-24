@@ -6,14 +6,40 @@
 //! things actually get decided — and onboarding is pointing at that folder.
 //! Which makes the reader the first thing a new user's trust rests on.
 //!
-//! **The rule this module exists to hold: a file that was not read is
-//! reported.** Before this, pointing at a directory containing nothing
-//! readable failed loudly and pointing at one containing *some* readable files
-//! dropped the rest in silence — so a folder of documents plus a Slack export
-//! read as "3 source(s)" with no mention of the fourth, and two rules that
-//! existed only in chat were never seen by anyone. That asymmetry is exactly
-//! the defaulted absence §18.3 forbids, in the one place a new user has no way
-//! to check the work.
+//! **There is no format list, and that is the whole design.** An earlier
+//! version read `.md`, `.txt` and JSON chat exports and passed over the rest,
+//! which meant the tool worked on the corpora we happened to test it against
+//! and quietly ignored everyone else's. A canon lives in whatever its group
+//! already writes in: `.org`, `.rst`, `.eml`, a `NOTES` file with no
+//! extension, a transcript pasted into a `.log`. So readability is decided by
+//! the BYTES. Text is read. Anything that is not valid UTF-8 is skipped and
+//! reported.
+//!
+//! Three things a walk still passes over, each reported and each with a way
+//! round it:
+//!
+//! - **What the project itself calls generated** — `git check-ignore`, so the
+//!   authority is the person's own `.gitignore` and not a list of build
+//!   directories we guessed at. Without it, pointing at any checked-out repo
+//!   reads its `target/` or `node_modules/`. `--include-ignored` reads them.
+//! - **Structured data**, which is not writing. A file that parses as whole
+//!   JSON and holds no conversation is a lockfile or an export, and a
+//!   `package-lock.json` read as prose produces commitments cited to
+//!   dependency names. This is a test of the CONTENT, so it catches a `.lock`
+//!   that happens to be JSON and lets a `.json` full of minutes through.
+//! - **A file larger than [`MAX_BYTES`]**, which is a log or a database
+//!   rather than anybody's writing.
+//!
+//! A file NAMED directly is read whatever it is — the person said so. Only a
+//! walk filters, because a walk is a guess about intent.
+//!
+//! **The rule underneath all of it: a file that was not read is reported.**
+//! Pointing at a directory containing *some* readable files used to drop the
+//! rest in silence — so a folder of documents plus a Slack export read as
+//! "3 source(s)" with no mention of the fourth, and two rules that existed
+//! only in chat were never seen by anyone. That asymmetry is exactly the
+//! defaulted absence §18.3 forbids, in the one place a new user has no way to
+//! check the work.
 //!
 //! Chat is not prose, and is not chunked as though it were. A channel export
 //! is a stream of short lines by different people; the paragraph splitter
@@ -22,16 +48,17 @@
 //! conversation boundaries and a citation quotes the exchange a rule was
 //! actually decided in.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 
 use serde_json::Value;
 
-/// Extensions read as prose, verbatim.
-pub const PROSE: &[&str] = &["md", "markdown", "txt", "text"];
-
-/// Extensions probed as a chat export.
-pub const CHAT: &[&str] = &["json", "jsonl"];
+/// Past this, a walk passes a file over: it is a log, a dump or a database,
+/// not writing. Reported when it happens, and naming the file directly reads
+/// it regardless.
+pub const MAX_BYTES: u64 = 2 * 1024 * 1024;
 
 /// A gap this long starts a new burst, and therefore a new chunk.
 ///
@@ -79,36 +106,58 @@ impl Gathered {
         for (why, n) in &self.skipped {
             out.push_str(&format!("  {n} x {why}\n"));
         }
-        out.push_str("  canon reads .md .txt and Slack/Discord .json exports.");
+        // Named, because a report with no way out of it is a dead end.
+        out.push_str(
+            "  Naming a file directly reads it whatever it is; \
+             --include-ignored reads what .gitignore covers.",
+        );
         Some(out)
     }
 }
 
 /// Read one path — a file or a directory tree — into sources.
-pub fn gather(root: &Path, into: &mut Gathered) -> Result<(), String> {
-    if root.is_dir() {
-        let base = root.to_path_buf();
-        return walk(&base, &base, into);
+///
+/// `include_ignored` overrides the `.gitignore` filter that a walk applies.
+pub fn gather(root: &Path, into: &mut Gathered, include_ignored: bool) -> Result<(), String> {
+    if !root.is_dir() {
+        let name = root
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| root.to_string_lossy().to_string());
+        // No size cap and no structure test: the person named this file.
+        return match read_one(root, &name, None) {
+            Ok(s) => {
+                into.sources.push(s);
+                Ok(())
+            }
+            Err(why) => Err(format!("{}: {why}", root.display())),
+        };
     }
-    let name = root
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
-        .unwrap_or_else(|| root.to_string_lossy().to_string());
-    // A file named EXPLICITLY is read whatever its extension — the person
-    // said so. Only a walk filters, because a walk is a guess about intent.
-    match read_one(root, &name) {
-        Some(s) => into.sources.push(s),
-        None => {
-            return Err(format!(
-                "{} is not readable as prose or as a chat export",
-                root.display()
-            ))
+
+    let base = root.to_path_buf();
+    let mut found: Vec<(PathBuf, String)> = Vec::new();
+    walk(&base, &base, &mut found)?;
+    // One `git check-ignore` for the whole walk rather than one per file: a
+    // repo of any size makes that thousands of processes.
+    let generated = if include_ignored {
+        BTreeSet::new()
+    } else {
+        ignored(&base, &found)
+    };
+    for (path, rel) in found {
+        if generated.contains(&rel) {
+            into.skip("ignored by .gitignore");
+            continue;
+        }
+        match read_one(&path, &rel, Some(MAX_BYTES)) {
+            Ok(s) => into.sources.push(s),
+            Err(why) => into.skip(why),
         }
     }
     Ok(())
 }
 
-fn walk(base: &Path, dir: &Path, into: &mut Gathered) -> Result<(), String> {
+fn walk(base: &Path, dir: &Path, found: &mut Vec<(PathBuf, String)>) -> Result<(), String> {
     let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)
         .map_err(|e| format!("reading {}: {e}", dir.display()))?
         .filter_map(|e| e.ok().map(|e| e.path()))
@@ -124,13 +173,13 @@ fn walk(base: &Path, dir: &Path, into: &mut Gathered) -> Result<(), String> {
             .to_string_lossy()
             .to_string();
         // Hidden directories are infrastructure, not notes: `.git` alone
-        // would bury a run in objects. Not counted as skipped — nobody meant
-        // them.
+        // would bury a run in objects, and `.canon` is the tool's own state.
+        // Not counted as skipped — nobody meant them.
         if name.starts_with('.') {
             continue;
         }
         if path.is_dir() {
-            walk(base, &path, into)?;
+            walk(base, &path, found)?;
             continue;
         }
         let rel = path
@@ -138,42 +187,111 @@ fn walk(base: &Path, dir: &Path, into: &mut Gathered) -> Result<(), String> {
             .unwrap_or(&path)
             .to_string_lossy()
             .to_string();
-        let ext = path
-            .extension()
-            .map(|e| e.to_string_lossy().to_ascii_lowercase())
-            .unwrap_or_default();
-        if !PROSE.contains(&ext.as_str()) && !CHAT.contains(&ext.as_str()) {
-            into.skip(if ext.is_empty() {
-                "with no extension".to_string()
-            } else {
-                format!(".{ext}")
-            });
-            continue;
-        }
-        match read_one(&path, &rel) {
-            Some(s) => into.sources.push(s),
-            // A `.json` that is not a chat export is a real skip and says so
-            // — "we read json" and "we read YOUR json" are different claims.
-            None => into.skip(format!(".{ext} that is not a chat export")),
-        }
+        found.push((path, rel));
     }
     Ok(())
 }
 
-fn read_one(path: &Path, name: &str) -> Option<Source> {
-    let text = std::fs::read_to_string(path).ok()?;
-    let ext = path
-        .extension()
-        .map(|e| e.to_string_lossy().to_ascii_lowercase())
-        .unwrap_or_default();
-    if CHAT.contains(&ext.as_str()) {
-        let rendered = render_chat(&text)?;
-        return Some(Source {
-            name: name.to_string(),
-            text: rendered,
-        });
+/// Which of these paths the project itself calls generated.
+///
+/// Shelling out to `git check-ignore` rather than carrying a list of build
+/// directories: `target/`, `node_modules/`, `_build/`, `.venv/` and whatever
+/// this year's toolchain emits are already enumerated, correctly, in the
+/// repo's own `.gitignore`. A guessed list is a whitelist wearing a different
+/// hat — it works on the ecosystems we thought of.
+///
+/// No git, or a folder outside a repo, means nothing is declared generated
+/// and nothing is skipped. That is silence rather than a failure: a folder
+/// that never declared a `.gitignore` has not withheld anything.
+///
+/// **Asked in names relative to `base`, with git run from `base`.** Feeding
+/// it the paths as built — which are relative to the CWD whenever `--from`
+/// was — and running git from `base` makes it resolve `notes/x.md` inside
+/// `notes/`, match nothing, and skip nothing: gitignore filtering that
+/// silently does not happen, which is the defaulted absence §18.3 forbids.
+/// Relative names remove the distinction rather than papering over it, so
+/// there is no absolute-vs-relative case left to get wrong.
+fn ignored(base: &Path, found: &[(PathBuf, String)]) -> BTreeSet<String> {
+    if found.is_empty() {
+        return BTreeSet::new();
     }
-    Some(Source {
+    let Ok(mut child) = Command::new("git")
+        .args(["check-ignore", "--stdin", "-z"])
+        .current_dir(base)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+    else {
+        return BTreeSet::new();
+    };
+    let Some(mut sink) = child.stdin.take() else {
+        return BTreeSet::new();
+    };
+    let payload: Vec<u8> = found
+        .iter()
+        .flat_map(|(_, rel)| {
+            let mut b = rel.as_bytes().to_vec();
+            b.push(0);
+            b
+        })
+        .collect();
+    // Written from its own thread. git answers as it reads, so a walk whose
+    // paths exceed the pipe buffer — about 64 KiB, which is a few thousand
+    // files — deadlocks if one thread tries to do both.
+    let writer = std::thread::spawn(move || {
+        let _ = sink.write_all(&payload);
+    });
+    let out = child.wait_with_output();
+    let _ = writer.join();
+    let Ok(out) = out else {
+        return BTreeSet::new();
+    };
+    // git echoes back the names it was given, so these are the same relative
+    // names `found` holds and compare equal without normalising.
+    out.stdout
+        .split(|b| *b == 0)
+        .filter(|s| !s.is_empty())
+        .map(|s| String::from_utf8_lossy(s).into_owned())
+        .collect()
+}
+
+/// Read a file, or say why it was passed over.
+///
+/// `limit` is `None` for a file the person named and `Some` for one a walk
+/// found. The structure test is likewise only applied to a walk: naming
+/// `decisions.json` reads it.
+fn read_one(path: &Path, name: &str, limit: Option<u64>) -> Result<Source, String> {
+    if let Some(max) = limit {
+        let len = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+        if len > max {
+            return Err(format!("larger than {} MiB", max / (1024 * 1024)));
+        }
+    }
+    let bytes = std::fs::read(path).map_err(|e| format!("unreadable ({e})"))?;
+    // The one readability test. Not an extension, not a magic number: can
+    // these bytes be shown to a person as text.
+    let text = String::from_utf8(bytes).map_err(|_| "not text".to_string())?;
+    if text.trim().is_empty() {
+        return Err("empty".to_string());
+    }
+    // Chat is sniffed from the content, so an export named `#general.txt`
+    // reads as chat and a `.json` full of minutes does not have to be.
+    let head = text.trim_start();
+    if head.starts_with('{') || head.starts_with('[') {
+        if let Some(rendered) = render_chat(&text) {
+            return Ok(Source {
+                name: name.to_string(),
+                text: rendered,
+            });
+        }
+        // Structured data that holds no conversation is machine output, and
+        // reading it as prose produces commitments cited to dependency names.
+        if limit.is_some() && serde_json::from_str::<Value>(&text).is_ok() {
+            return Err("structured data, not a chat export".to_string());
+        }
+    }
+    Ok(Source {
         name: name.to_string(),
         text,
     })

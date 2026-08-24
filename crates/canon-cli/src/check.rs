@@ -58,7 +58,7 @@ struct Judged {
 
 #[derive(Debug, Deserialize)]
 struct JudgedOne {
-    commitment: usize,
+    commitment: crate::model::Pos,
     #[serde(default)]
     pull: String,
     #[serde(default)]
@@ -110,7 +110,12 @@ pub fn assess(
 
     let mut positions = Vec::new();
     for b in judged.bearings {
-        let Some(c) = offered.at(b.commitment).and_then(|i| live.get(i)) else {
+        let Some(c) = b
+            .commitment
+            .get()
+            .and_then(|n| offered.at(n))
+            .and_then(|i| live.get(i))
+        else {
             continue;
         };
         let pull = match b.pull.trim().to_ascii_lowercase().as_str() {

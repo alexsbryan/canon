@@ -40,6 +40,33 @@ pub fn read(dir: &Path) -> Result<Log, String> {
 
 /// Append one act. Append-only: we never rewrite the file, so a concurrent
 /// writer's line is never lost and git sees an additive diff.
+/// What inside `.canon` belongs to this machine rather than to the group.
+///
+/// **The canon is meant to be committed.** `acts.jsonl` is a text file people
+/// put in git, merge, and resolve with `canon merge-driver` — that is the
+/// point of a text log. Two things beside it are NOT the group's: `seen` is
+/// one person's ingest state, and `draft-runs/` is the evidence from their
+/// model runs. Committed, they conflict on every pull and tell the rest of
+/// the team which candidates somebody personally declined.
+///
+/// Written on `init`, and again the first time a `seen` file appears, because
+/// most canons already exist by then. Never overwritten: a group that has
+/// edited this file meant to.
+pub fn ignore_local(dir: &Path) {
+    let path = dir.join(".gitignore");
+    if path.exists() {
+        return;
+    }
+    let _ = std::fs::write(
+        &path,
+        "# The canon itself is meant to be committed. These two are not:\n\
+         # `seen` is this machine's ingest state and `draft-runs/` is the\n\
+         # evidence from its model runs. Neither is an act.\n\
+         seen\n\
+         draft-runs/\n",
+    );
+}
+
 pub fn append(dir: &Path, act: &Act) -> Result<(), String> {
     let path = dir.join(FILE);
     let line = serde_json::to_string(act).map_err(|e| e.to_string())?;

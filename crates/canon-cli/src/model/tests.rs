@@ -176,3 +176,81 @@ fn locality_is_decided_conservatively() {
         assert_eq!(err.exit_code(), 2);
     }
 }
+
+// ── a reasoning wrapper is a transport shell, not an answer ──
+
+#[test]
+fn a_reply_that_closes_a_thought_after_answering_still_decodes() {
+    // Measured, not imagined: a Qwen3-family 4B on this endpoint extracted
+    // all 24 passages of the Maple House fixture and then killed the run at
+    // the reduce step, three times identically, with the right JSON followed
+    // by a stray `</think>`. The server had consumed the opening tag.
+    let v = decode("{\n  \"rules\": [{\"n\": 1, \"same_as\": 2}]\n}\n</think>").unwrap();
+    assert_eq!(v["rules"][0]["n"], 1);
+}
+
+#[test]
+fn a_reply_that_thinks_before_answering_still_decodes() {
+    let v = decode("<think>the second restates the first</think>\n{\"rules\":[]}").unwrap();
+    assert!(v["rules"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn the_other_channel_names_decode_too() {
+    for tag in ["thinking", "reasoning"] {
+        let raw = format!("<{tag}>weighing it up</{tag}>{{\"ok\":true}}");
+        assert_eq!(decode(&raw).unwrap()["ok"], true, "{tag}");
+    }
+}
+
+#[test]
+fn a_fenced_answer_inside_a_thought_decodes() {
+    let v = decode("<think>x</think>\n```json\n{\"ok\":true}\n```").unwrap();
+    assert_eq!(v["ok"], true);
+}
+
+#[test]
+fn prose_with_no_json_in_it_is_still_malformed() {
+    // The wrapper is unwrapped; the reply is not hunted through. A reply
+    // with no JSON anywhere must fail loudly and carry its raw text, or a
+    // broken endpoint reads as an empty answer (§18.3).
+    let e = decode("<think>I am not going to answer that</think> sorry").unwrap_err();
+    assert!(matches!(e, ModelError::Malformed { .. }), "{e:?}");
+    let e = decode("no json here at all").unwrap_err();
+    assert!(matches!(e, ModelError::Malformed { .. }), "{e:?}");
+}
+
+// ── a position a model answered with ────────────────────────
+
+#[test]
+fn a_sentinel_position_is_refused_and_not_fatal() {
+    // Measured on this endpoint: a Qwen3-family 4B answers `same_as: -1` for
+    // a rule that duplicates nothing. As a `usize` field that was a
+    // deserialization error which killed the whole reduce call and threw
+    // away twenty-six good candidates — a partial answer reported as no
+    // answer, which is the failure §18.3 names.
+    #[derive(Debug, serde::Deserialize)]
+    struct Reply {
+        n: Pos,
+        same_as: Pos,
+    }
+    let r: Reply = serde_json::from_str(r#"{"n":2,"same_as":-1}"#).unwrap();
+    assert_eq!(r.n.get(), Some(2));
+    assert_eq!(r.same_as.get(), None, "-1 is not a position");
+    // And a warning about it can still say what the model actually answered.
+    assert_eq!(r.same_as.to_string(), "-1");
+}
+
+#[test]
+fn an_omitted_position_is_not_the_first_one() {
+    // Zero is deliberately not a position: markers are 1-based, so a field
+    // the answer left out is refused by the same range check that refuses
+    // one it got wrong — never read as "the first sentence".
+    #[derive(Debug, serde::Deserialize)]
+    struct Reply {
+        #[serde(default)]
+        first: Pos,
+    }
+    let r: Reply = serde_json::from_str("{}").unwrap();
+    assert_eq!(r.first.get(), Some(0));
+}

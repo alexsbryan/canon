@@ -301,22 +301,22 @@ fn a_directory_is_read_in_a_stable_order() {
     std::fs::create_dir_all(root.join("sub")).unwrap();
     std::fs::create_dir_all(root.join(".git")).unwrap();
     for (p, body) in [
-        ("b.md", "second"),
-        ("a.md", "first"),
-        ("notes.bin", "binary"),
-        ("sub/c.txt", "third"),
-        (".git/config", "not notes"),
+        ("b.md", "second".as_bytes()),
+        ("a.md", "first".as_bytes()),
+        ("notes.bin", &[0xff, 0xfe, 0x00][..]),
+        ("sub/c.txt", "third".as_bytes()),
+        (".git/config", "not notes".as_bytes()),
     ] {
         std::fs::write(root.join(p), body).unwrap();
     }
     let mut got = crate::sources::Gathered::default();
-    crate::sources::gather(&root, &mut got).unwrap();
+    crate::sources::gather(&root, &mut got, false).unwrap();
     let names: Vec<String> = got.sources.iter().map(|s| s.name.clone()).collect();
     assert_eq!(names, vec!["a.md", "b.md", "sub/c.txt"], "{names:?}");
     // And the one it passed over is REPORTED. A folder with some readable
     // files used to drop the rest in silence, which is how a Slack export
     // sitting beside three documents was never opened by anyone.
-    assert_eq!(got.skipped.get(".bin"), Some(&1), "{:?}", got.skipped);
+    assert_eq!(got.skipped.get("not text"), Some(&1), "{:?}", got.skipped);
 }
 
 #[test]
@@ -644,6 +644,8 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         profile: "house".into(),
         sources: vec!["ordinance.md".into()],
         skipped: Default::default(),
+        already_read: 0,
+        capped: 0,
         chunks,
         candidates,
         dropped: Vec::new(),
@@ -843,7 +845,7 @@ fn resuming_offers_only_what_is_not_already_in_the_canon() {
 
     let empty = Log::default().derive();
     assert_eq!(
-        remaining(&run, &empty),
+        remaining(&run, &empty, &Seen::default()),
         vec![0, 1, 2, 3],
         "nothing done yet"
     );
@@ -880,7 +882,7 @@ fn resuming_offers_only_what_is_not_already_in_the_canon() {
     // All three kinds count as done, not just the commitments — otherwise
     // resuming re-offers every question somebody already answered.
     assert_eq!(
-        remaining(&run, &canon),
+        remaining(&run, &canon, &Seen::default()),
         vec![1],
         "only the bikes rule is left"
     );
@@ -912,5 +914,81 @@ fn resuming_offers_only_what_is_not_already_in_the_canon() {
             .collect::<Vec<_>>(),
     )
     .derive();
-    assert!(remaining(&run, &after).iter().all(|i| *i != 1));
+    assert!(remaining(&run, &after, &Seen::default())
+        .iter()
+        .all(|i| *i != 1));
+}
+
+#[test]
+fn a_candidate_already_declined_is_never_offered_again() {
+    // The canon answers for what was ACCEPTED. Without the seen set nothing
+    // answers for what was turned down, so re-pointing at the same feed asks
+    // again — every morning — about the rule you already said no to.
+    let mut run = in_flight(Vec::new(), Vec::new());
+    run.candidates = vec![
+        candidate("Bikes live in the hall."),
+        candidate("Quiet hours begin at 10pm."),
+    ];
+    run.kept = vec![0, 1];
+    let canon = canon_core::Log::default().derive();
+
+    let d = std::env::temp_dir().join("canon-draft-declined");
+    let _ = std::fs::remove_dir_all(&d);
+    std::fs::create_dir_all(&d).unwrap();
+    let mut seen = Seen::load(&d);
+    seen.record("Quiet hours begin at 10pm.", crate::seen::Why::Rejected)
+        .unwrap();
+
+    assert_eq!(remaining(&run, &canon, &seen), vec![0]);
+    // And it survives the process that recorded it.
+    assert_eq!(remaining(&run, &canon, &Seen::load(&d)), vec![0]);
+}
+
+#[test]
+fn text_with_no_blank_line_still_chunks() {
+    // **Measured before the ceiling existed:** 500 CSV rows became ONE chunk
+    // of 15,279 characters and 500 log lines one of 18,389, each sent to the
+    // model as a single completion — a 2 MB log would have been one prompt.
+    // `CHUNK_TARGET` was a flush threshold with nothing above it, and text
+    // with no blank line and no heading never reached a boundary at all.
+    for (name, text) in [
+        (
+            "csv",
+            (0..500)
+                .map(|i| format!("rule-{i},owner-{i},2024,active\n"))
+                .collect::<String>(),
+        ),
+        (
+            "log",
+            (0..500)
+                .map(|i| format!("10:{:02} event {i} policy 3.1 evaluated\n", i % 60))
+                .collect::<String>(),
+        ),
+    ] {
+        let chunks = chunk_text("probe", &text);
+        let biggest = chunks
+            .iter()
+            .map(|c| c.text.chars().count())
+            .max()
+            .unwrap_or(0);
+        assert!(chunks.len() > 1, "{name}: {} chunk(s)", chunks.len());
+        assert!(
+            biggest < CHUNK_TARGET * 2,
+            "{name}: biggest chunk is {biggest} chars"
+        );
+        // Every chunk is a contiguous run of whole lines, so a citation is
+        // still a slice of the source.
+        for c in &chunks {
+            assert!(!c.text.is_empty());
+        }
+    }
+}
+
+#[test]
+fn one_line_longer_than_the_target_is_left_whole() {
+    // There is no boundary inside it. Cutting anyway would put a citation
+    // across two passages, which is the one thing `cite` cannot express.
+    let text = format!("{}\n", "word ".repeat(CHUNK_TARGET));
+    let chunks = chunk_text("probe", &text);
+    assert_eq!(chunks.len(), 1, "{} chunk(s)", chunks.len());
 }
