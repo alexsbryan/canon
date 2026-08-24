@@ -52,7 +52,10 @@ use crate::standing::{Outcome, Pull, Source, Standing};
 /// answer *milder* — the escalation is one-way by construction, which is the
 /// same reason `Withdraw` cannot carve a hole out of a broader grant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+// Kebab, so the wire spelling and the spelling a person types at the CLI are
+// the same five words. `ask_one` on disk and `ask-one` in a command would be
+// one value with two names, which is where a mapping table quietly appears.
+#[serde(rename_all = "kebab-case")]
 pub enum Authority {
     /// Go ahead. The canon already decided this.
     Act,

@@ -1,0 +1,88 @@
+{
+  "who-holds-the-kitchen": {
+    "policy": "subsidiarity",
+    "deciders": ["agent:helper", "human:dana", "human:sam", "human:arjun", "human:ben", "human:ines", "human:juno", "human:kit", "human:lila", "human:mira", "human:ola", "human:rae", "human:theo"]
+  },
+  "kitchen-decided-by-a-cook": {
+    "outcome": "supported",
+    "authority": "act",
+    "because": "including you",
+    "cites": ["@stovetop"]
+  },
+  "kitchen-not-decided-by-a-non-cook": {
+    "outcome": "supported",
+    "authority": "ask-one",
+    "because": "not you"
+  },
+  "a-boundary-nobody-holds": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "nobody holds standing over `allotment`"
+  },
+
+  "forked-and-diverged": {
+    "lineage": "coliving-commons",
+    "generation": "g3",
+    "inherited": 3,
+    "local": 5
+  },
+
+  "kitchen-under-the-new-rule": {
+    "outcome": "supported",
+    "authority": "act",
+    "rule": "threshold",
+    "because": "1 against, 2 needed",
+    "voices": ["human:dana"]
+  },
+
+  "the-agents-adjudication-is-surfaced": { "unattended": ["@agent-dismiss"] },
+  "the-agents-standing-lapsed": { "count": 1, "targets": ["@agent-grant"] },
+  "the-agents-record-is-queryable": { "positions": 1, "decided": 0 },
+
+  "laundry-first-time": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "because": "0 prior decision(s)",
+    "cites": ["@quiet"]
+  },
+  "laundry-second-time": { "outcome": "conflicts", "authority": "ask-panel", "because": "1 prior decision(s)" },
+  "laundry-third-time": { "outcome": "conflicts", "authority": "refuse", "because": "2 prior decision(s)" },
+  "a-different-subject-starts-at-the-bottom": { "outcome": "conflicts", "authority": "ask-one", "because": "0 prior decision(s) about `drying rack in the hall`" },
+
+  "before-the-conflict": { "acts": 36, "tolerated": 0 },
+  "bikes-against-the-hall": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "because": "one is enough",
+    "cites": ["@hall", "@bikes"]
+  },
+  "after-the-conflict": { "acts": 37, "tolerated": 1, "live": 8 },
+
+  "the-fork-keeps-what-it-wrote": { "generation": "g3", "local": 5, "inherited": 3 },
+
+  "the-house-above-the-kitchen": {
+    "policy": "cautious/consent",
+    "deciders": ["human:arjun", "human:ben", "human:dana", "human:ines", "human:juno", "human:kit", "human:lila", "human:mira", "human:ola", "human:rae", "human:sam", "human:theo"]
+  },
+  "the-kitchen-inside-the-house": {
+    "policy": "threshold",
+    "deciders": ["human:dana", "human:sam", "human:arjun", "human:ben", "human:ines", "human:juno", "human:kit", "human:lila", "human:mira", "human:ola", "human:rae", "human:theo"]
+  },
+
+  "a-sabotage-proposal-dies-on-unaddressed": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "cautious: irreversible",
+    "cites": []
+  },
+  "the-same-thing-reversible-is-not-refused": { "outcome": "unaddressed", "authority": "act-and-notify" },
+  "an-unwritten-norm-is-not-a-gap": { "outcome": "unaddressed", "silence": true },
+
+  "a-draw-before-anyone-opened-refuses": { "error": "nobody opened a secret, so there is no seed — and there is no default seed" },
+  "the-panel": {
+    "pool": 11,
+    "withheld": ["human:ola"],
+    "seats": ["human:juno", "human:theo", "human:sam"],
+    "seed": "abe5d69a5c5fca4036817c121e9eb7d18e34e692e1d01079ae3b3c2ca0ce5e66"
+  }
+}

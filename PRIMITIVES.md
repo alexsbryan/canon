@@ -1,9 +1,31 @@
 # The primitives — what a governance library must expose, and what it must not
 
-**Status: design, ahead of implementation.** Each primitive below is marked
-`BUILT`, `PARTIAL` or `NOT BUILT`. A document that reads like a description of
-working software while describing an intention is the same defect as a green
-test that never ran, so the marks are load-bearing and must be kept honest.
+**Status: all nine BUILT.** Each primitive below is marked `BUILT`, `PARTIAL`
+or `NOT BUILT`. A document that reads like a description of working software
+while describing an intention is the same defect as a green test that never
+ran, so the marks are load-bearing and must be kept honest.
+
+**The acceptance test is Ostrom's eight design principles, and it clears.**
+`crates/canon-cli/tests/governance_bar.rs` replays two fixtures — a twelve-person
+house and a codebase — asserting one scenario per principle in each, and prints
+this:
+
+```
+1   clearly defined boundaries             mechanism
+2   congruence with local conditions       affordance
+3   collective-choice arrangements         mechanism
+4   monitors accountable to appropriators  mechanism
+5   graduated sanctions                    mechanism
+6   rapid low-cost conflict resolution     mechanism
+7   rights to organize not undermined      affordance
+8   nested enterprises                     mechanism
+```
+
+Six mechanisms, two affordances, the same marks in both institutions. It runs
+inside `cargo test` in under half a second because the governance layer reaches
+no model: `Log -> Canon -> policy -> Decision` is pure, and a fixture that ever
+needed an endpoint would mean the split between extraction and decision had
+been broken.
 
 Companion to `SPEC.md`, which fixes the wire format. This fixes the *shape* —
 which questions the library answers and which it refuses to answer on a

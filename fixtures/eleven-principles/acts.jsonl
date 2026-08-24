@@ -1,0 +1,55 @@
+// The eleven-principles project — a codebase canon, `code` profile.
+// The TRANSFER TEST: the same eight design principles in an institution that
+// is not a house. Boundaries become module ownership, nesting becomes
+// crate-then-module, graduated sanctions become an escalating review bar, and
+// congruence becomes a fork of a shared engineering canon.
+
+// ── forked from a shared engineering canon ──
+{"at":"2025-06-01","by":"human:priya","op":"adopt","lineage":"rust-service-canon","generation":"g7","source":"https://example.org/rust-service-canon"}
+
+// ── inherited ──
+{"at":"2025-06-02","by":"human:priya","as":"no-unwrap","op":"assert","text":"No unwrap in library code; a library that panics takes its caller with it.","from":"can-eng000000001"}
+{"at":"2025-06-02","by":"human:priya","as":"review","op":"assert","text":"Nothing lands on main without a second pair of eyes.","from":"can-eng000000002"}
+{"at":"2025-06-02","by":"human:priya","as":"one-decider","op":"assert","text":"One implementation per threshold, scorer, schema and key.","from":"can-eng000000003"}
+
+// ── written here ──
+{"at":"2025-06-10","by":"human:omar","as":"wire-break","op":"assert","text":"A wire format change is a breaking change until every reader is upgraded."}
+{"at":"2025-06-10","by":"human:omar","as":"parser-alloc","op":"assert","text":"The parser allocates once per document, not once per token."}
+{"at":"2025-06-11","by":"human:tess","as":"tabs","op":"assert","text":"Four spaces, never tabs."}
+{"at":"2025-06-11","by":"human:tess","as":"test-names","op":"assert","text":"A test is named for the failure it prevents, not for the function it calls."}
+
+// ── which module owns what (Ostrom 1, 8) ──
+{"at":"2025-06-12","by":"human:priya","op":"scoped","commitment":"@parser-alloc","scope":"engine.parser"}
+{"at":"2025-06-12","by":"human:priya","op":"scoped","commitment":"@wire-break","scope":"engine.wire"}
+
+// ── rank: what is a principle, and what is only a convention (entrenchment) ──
+{"at":"2025-06-13","by":"human:priya","op":"rank","commitment":"@no-unwrap","rank":"principle"}
+{"at":"2025-06-13","by":"human:priya","op":"rank","commitment":"@one-decider","rank":"principle"}
+{"at":"2025-06-13","by":"human:priya","op":"rank","commitment":"@wire-break","rank":"principle"}
+{"at":"2025-06-13","by":"human:priya","op":"rank","commitment":"@tabs","rank":"convention"}
+
+// ── standing ──
+{"at":"2025-06-03","by":"human:priya","op":"grant","holder":"human:priya","scope":"engine","rationale":"maintainer"}
+{"at":"2025-06-03","by":"human:priya","op":"grant","holder":"human:omar","scope":"engine"}
+{"at":"2025-06-03","by":"human:priya","op":"grant","holder":"human:tess","scope":"engine"}
+{"at":"2025-06-03","by":"human:priya","op":"grant","holder":"human:noor","scope":"engine"}
+{"at":"2025-06-03","by":"human:priya","op":"grant","holder":"human:eli","scope":"engine"}
+{"at":"2025-06-03","by":"human:priya","op":"grant","holder":"human:sena","scope":"engine"}
+{"at":"2025-06-04","by":"human:priya","op":"grant","holder":"human:omar","scope":"engine.parser","rationale":"wrote it, maintains it"}
+{"at":"2025-06-04","by":"human:priya","op":"grant","holder":"human:noor","scope":"engine.wire","rationale":"owns the format"}
+
+// A bot with commit rights, and an END DATE on them. No new mechanism: an
+// agent's authority is a scope grant with a horizon, like anybody else's.
+{"at":"2025-06-05","by":"human:priya","as":"bot-grant","op":"grant","holder":"agent:depbot","scope":"engine.deps","horizon":1767225600,"rationale":"dependency bumps only, until the new year"}
+
+// ── how this project decides ──
+// Amending a principle takes the group; a convention does not. And nothing
+// that cannot be rolled back is decided by silence.
+{"at":"2025-06-06","by":"human:priya","as":"project-policy","op":"policy","text":"One reasoned objection stops a change. Amending a principle takes the group. Anything we cannot roll back is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+// The parser is its owner's to decide.
+{"at":"2025-06-07","by":"human:priya","as":"parser-policy","op":"policy","scope":"engine.parser","text":"Whoever owns the module decides the module.","rule":{"rule":"subsidiarity"}}
+// Repeated breakage of the same contract escalates the review bar.
+{"at":"2025-06-08","by":"human:priya","as":"wire-policy","op":"policy","scope":"engine.wire","text":"Break the wire once and a reviewer signs it off. Twice and the group does. Three times and the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+
+// ── left unwritten on purpose ──
+{"at":"2025-06-20","by":"human:tess","op":"silence","about":"how much comment is enough","rationale":"every rule anyone proposed would have been worse than the judgement people already exercise, and a line count would be gamed the week it landed"}

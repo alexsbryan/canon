@@ -22,6 +22,7 @@ mod model;
 mod profile;
 mod quantify;
 mod rebase;
+mod replay;
 mod resolver;
 mod store;
 mod subject;
@@ -67,6 +68,8 @@ GOVERN                                        (no model needed)
   silence \"<subject>\" -m \"<why>\"         unwritten on purpose, not by neglect
   voice [<actor>]                        what someone raised, and what came of it
   leave <scope> [-m \"<question>\"]        step out, and leave the question behind
+  replay <dir> [--policy <rule>]         replay a scenario; --policy asks
+                                         what another rule would have done
 
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
@@ -138,6 +141,7 @@ fn main() {
         "silence" => govern::silence(rest),
         "voice" => govern::voice(rest),
         "leave" => govern::leave(rest),
+        "replay" => replay::run(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),

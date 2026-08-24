@@ -1,0 +1,59 @@
+// Fernwood Commons — a twelve-person house, forked from a network canon.
+// Written by hand in the seed dialect: `at`, `by`, an optional label `as`,
+// and `@label` wherever an act id belongs. `canon replay` resolves the
+// labels and mints real content-addressed acts.
+
+// ── ancestry (Ostrom 2, 7, 8) ────────────────────────────────
+{"at":"2025-09-01","by":"human:mira","op":"adopt","lineage":"coliving-commons","generation":"g3","source":"https://example.org/coliving-commons"}
+
+// ── inherited from the network canon; `from` names the upstream act ──
+{"at":"2025-09-02","by":"human:mira","as":"quiet","op":"assert","text":"Between 11pm and 7am the house is quiet.","from":"can-up0000000001"}
+{"at":"2025-09-02","by":"human:mira","as":"guests","op":"assert","text":"A guest staying more than three nights is raised with the house first.","from":"can-up0000000002"}
+{"at":"2025-09-02","by":"human:mira","as":"shared-cost","op":"assert","text":"Anything bought for the whole house is agreed before it is bought.","from":"can-up0000000003"}
+
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-09-14","by":"human:dana","as":"hall","op":"assert","text":"The hall stays clear enough to get a pushchair through."}
+{"at":"2025-09-14","by":"human:dana","as":"bikes","op":"assert","text":"Bikes live in the hall, against the left wall."}
+{"at":"2025-09-15","by":"human:sam","as":"stovetop","op":"assert","text":"Whoever cooks wipes the stovetop before leaving the kitchen."}
+{"at":"2025-09-15","by":"human:sam","as":"kitchen-door","op":"assert","text":"The kitchen door is never locked."}
+{"at":"2025-09-16","by":"human:rae","as":"front-door","op":"assert","text":"Everyone who lives here can open the front door."}
+
+// ── which commitments belong to the kitchen (Ostrom 1, 8) ──
+{"at":"2025-09-17","by":"human:sam","op":"scoped","commitment":"@stovetop","scope":"house.kitchen"}
+{"at":"2025-09-17","by":"human:sam","op":"scoped","commitment":"@kitchen-door","scope":"house.kitchen"}
+
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:mira","scope":"house","rationale":"founding member"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:rae","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:ola","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:theo","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:juno","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:kit","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:ines","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:ben","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:lila","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:arjun","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:dana","scope":"house"}
+{"at":"2025-09-03","by":"human:mira","op":"grant","holder":"human:sam","scope":"house"}
+
+// The people who actually cook hold the kitchen, and it nests under the
+// house — which is Ostrom's eighth principle costing nothing extra.
+{"at":"2025-09-04","by":"human:mira","op":"grant","holder":"human:dana","scope":"house.kitchen","rationale":"cooks most nights"}
+{"at":"2025-09-04","by":"human:mira","op":"grant","holder":"human:sam","scope":"house.kitchen","rationale":"cooks most nights"}
+
+// A machine with standing, and an END DATE on it (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so.
+{"at":"2025-09-05","by":"human:mira","as":"agent-grant","op":"grant","holder":"agent:helper","scope":"house.kitchen","horizon":1769817600,"rationale":"drafts the rota; three months, then we look again"}
+
+// ── how this house decides (Ostrom 3) ──
+{"at":"2025-09-06","by":"human:mira","as":"house-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"consent"}}}
+{"at":"2025-09-07","by":"human:mira","as":"kitchen-policy","op":"policy","scope":"house.kitchen","text":"Whoever holds the kitchen decides the kitchen.","rule":{"rule":"subsidiarity"}}
+// The allotment is decided the same way, and nobody has ever been given it.
+// It is outside `house`, so no house grant reaches it — which is the point:
+// an undefined boundary is not an open one, and the refusal names what is
+// missing rather than defaulting to whoever asked.
+{"at":"2025-09-07","by":"human:mira","as":"allotment-policy","op":"policy","scope":"allotment","text":"The allotment is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-09-08","by":"human:mira","as":"laundry-policy","op":"policy","scope":"house.laundry","text":"The first time we ask. The second time the house asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-09-20","by":"human:mira","op":"silence","about":"who cooks on a wednesday","rationale":"it has sorted itself out every week for two years, and a rota would turn a kindness into a duty"}

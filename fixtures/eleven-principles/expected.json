@@ -1,0 +1,80 @@
+{
+  "who-owns-the-parser": {
+    "policy": "subsidiarity",
+    "deciders": ["human:omar", "human:eli", "human:noor", "human:priya", "human:sena", "human:tess"]
+  },
+  "the-owner-decides-the-parser": {
+    "outcome": "supported",
+    "authority": "act",
+    "because": "`engine.parser` is held by human:omar — including you",
+    "cites": ["@parser-alloc"]
+  },
+  "a-committer-elsewhere-does-not": {
+    "outcome": "supported",
+    "authority": "ask-one",
+    "because": "held by human:omar — not you"
+  },
+
+  "forked-from-the-engineering-canon": {
+    "lineage": "rust-service-canon",
+    "generation": "g7",
+    "inherited": 3,
+    "local": 4
+  },
+
+  "the-parser-under-its-new-rule": {
+    "outcome": "supported",
+    "authority": "act",
+    "rule": "threshold",
+    "because": "1 against, 2 needed",
+    "voices": ["human:tess"]
+  },
+
+  "the-bots-adjudication-is-surfaced": { "unattended": ["@bot-dismiss"] },
+  "the-bots-commit-rights-lapsed": { "count": 1, "targets": ["@bot-grant"] },
+  "the-bots-record-is-queryable": { "positions": 1, "decided": 0 },
+
+  "wire-break-first": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "because": "0 prior decision(s)",
+    "cites": ["@wire-break"]
+  },
+  "wire-break-second": { "outcome": "conflicts", "authority": "ask-panel", "because": "1 prior decision(s)" },
+  "wire-break-third": { "outcome": "conflicts", "authority": "refuse", "because": "2 prior decision(s)" },
+
+  "before-the-conflict": { "acts": 32, "tolerated": 0 },
+  "unwrap-against-the-parser": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "because": "one is enough",
+    "cites": ["@no-unwrap", "@parser-alloc"]
+  },
+  "after-the-conflict": { "acts": 33, "tolerated": 1, "live": 7 },
+
+  "the-fork-keeps-what-it-wrote": { "generation": "g7", "local": 4, "inherited": 3 },
+
+  "the-crate-above-the-module": {
+    "policy": "cautious/entrenched/consent",
+    "deciders": ["human:eli", "human:noor", "human:omar", "human:priya", "human:sena", "human:tess"]
+  },
+  "the-module-inside-the-crate": {
+    "policy": "graduated/default",
+    "deciders": ["human:noor", "human:eli", "human:omar", "human:priya", "human:sena", "human:tess"]
+  },
+
+  "amending-a-convention": { "outcome": "supported", "authority": "act", "because": "consent: no objection" },
+  "amending-a-principle": {
+    "outcome": "supported",
+    "authority": "ask-panel",
+    "because": "entrenched: amends a `principle`"
+  },
+
+  "an-irreversible-change-nothing-supports": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "cautious: irreversible"
+  },
+  "the-same-change-behind-a-flag": { "outcome": "unaddressed", "authority": "act-and-notify" },
+  "a-judgement-call-is-not-a-gap": { "outcome": "unaddressed", "silence": true }
+}
