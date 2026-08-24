@@ -42,7 +42,7 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 15] = [
+pub const KNOWN_ANNOTATIONS: [&str; 16] = [
     "accept",
     "dismiss",
     "question",
@@ -58,6 +58,7 @@ pub const KNOWN_ANNOTATIONS: [&str; 15] = [
     "draw_commit",
     "draw_secret",
     "draw_reveal",
+    "silence",
 ];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
@@ -274,6 +275,20 @@ pub enum ActKind {
     /// community's vocabulary, not ours (§2.4/§4). Policy reads it; nothing
     /// here interprets it.
     Rank { commitment: ActId, rank: String },
+    /// This is unwritten on purpose.
+    ///
+    /// **The métis floor.** Making a group legible has a cost that falls on
+    /// the practical, local, unwritten knowledge a place runs on — the things
+    /// everybody does and nobody codified, which usually work and usually
+    /// cannot survive being written down. A tool whose only two states are
+    /// "written" and "missing" reads every such norm as a gap, and every gap
+    /// as an invitation to legislate.
+    ///
+    /// This is the third state. It converts silence-by-neglect into
+    /// silence-by-choice, and it costs one act. The rationale is REQUIRED,
+    /// for the same reason `accept`'s is: a silence you keep on purpose must
+    /// say what it protects, or it is indistinguishable from having forgotten.
+    Silence { about: String, rationale: String },
     /// A draw is announced: this pool, this many seats, after this moment.
     ///
     /// **The boundary must be in the future when this is written**, and the

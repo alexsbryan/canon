@@ -37,6 +37,7 @@ const VALUED: &[&str] = &[
     "--objections",
     "--of",
     "--secret",
+    "--why",
     "--onto",
     "--outcome",
     "--policy",
@@ -510,6 +511,7 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Decided {
                 about, authority, ..
             } => format!("decided    {about} -> {authority}"),
+            ActKind::Silence { about, .. } => format!("silence    \"{about}\""),
             ActKind::DrawCommit {
                 scope,
                 count,

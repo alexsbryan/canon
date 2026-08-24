@@ -1100,6 +1100,10 @@ fn every_kind() -> Vec<ActKind> {
             at: 200,
             rationale: "trial period".into(),
         },
+        ActKind::Silence {
+            about: "who cooks on a wednesday".into(),
+            rationale: "it works and writing it down would break it".into(),
+        },
         ActKind::DrawCommit {
             scope: crate::scope::Scope::new("house").unwrap(),
             count: 3,
@@ -1144,6 +1148,7 @@ fn op_of(kind: &ActKind) -> &'static str {
         ActKind::Policy { .. } => "policy",
         ActKind::Decided { .. } => "decided",
         ActKind::Horizon { .. } => "horizon",
+        ActKind::Silence { .. } => "silence",
         ActKind::DrawCommit { .. } => "draw_commit",
         ActKind::DrawSecret { .. } => "draw_secret",
         ActKind::DrawReveal { .. } => "draw_reveal",
@@ -1448,4 +1453,146 @@ fn the_staleness_query_takes_a_clock_and_never_reads_one() {
     assert!(canon.overdue(999).is_empty());
     assert_eq!(canon.overdue(1_001).len(), 1);
     assert_eq!(canon.overdue(1_001), canon.overdue(1_001), "and it is pure");
+}
+
+// ── silence, and the voice record ───────────────────────────
+
+#[test]
+fn a_deliberate_silence_is_a_third_state_and_not_a_gap() {
+    // The métis floor. A tool whose only two states are "written" and
+    // "missing" reads every unwritten norm as a gap and every gap as an
+    // invitation to legislate — which is precisely how making a place legible
+    // destroys what it was running on.
+    let canon = Log::from_acts(vec![Act::new(
+        ActKind::Silence {
+            about: "who cooks on a wednesday".into(),
+            rationale: "it works, and writing it down would turn it into a rota".into(),
+        },
+        100,
+        "human:alex",
+    )])
+    .derive();
+    let s = canon
+        .silence_about("who cooks on a wednesday")
+        .expect("recorded");
+    assert!(s.rationale.contains("rota"));
+    // And it never spreads by resemblance.
+    assert!(canon.silence_about("who cooks").is_none());
+    assert!(canon
+        .silence_about("who cooks on a wednesday evening")
+        .is_none());
+}
+
+#[test]
+fn the_last_word_on_a_subject_is_the_silence_that_stands() {
+    let canon = Log::from_acts(vec![
+        Act::new(
+            ActKind::Silence {
+                about: "guests".into(),
+                rationale: "first".into(),
+            },
+            100,
+            "human:alex",
+        ),
+        Act::new(
+            ActKind::Silence {
+                about: "guests".into(),
+                rationale: "we have talked about it since".into(),
+            },
+            200,
+            "human:sam",
+        ),
+    ])
+    .derive();
+    assert_eq!(canon.silences.len(), 1);
+    assert_eq!(canon.silence_about("guests").unwrap().actor, "human:sam");
+}
+
+#[test]
+fn a_voice_record_says_whether_raising_things_has_ever_gone_anywhere() {
+    // Hirschman: voice is only rational if it works, and whether it has
+    // worked FOR YOU is exactly what a person cannot verify from memory and
+    // will not ask about aloud.
+    let asked = Act::new(
+        ActKind::Question {
+            text: "is it ok to run the machine after midnight?".into(),
+            proposal: None,
+        },
+        100,
+        "human:dana",
+    );
+    let ignored = Act::new(
+        ActKind::Question {
+            text: "what about the bins?".into(),
+            proposal: None,
+        },
+        101,
+        "human:dana",
+    );
+    let canon = Log::from_acts(vec![
+        asked.clone(),
+        ignored,
+        Act::new(
+            ActKind::Supersede {
+                text: "The machine is off after 11.".into(),
+                old: vec![asked.id.clone()],
+                rationale: "answered at the meeting".into(),
+            },
+            200,
+            "human:alex",
+        ),
+        Act::new(
+            ActKind::Position {
+                about: "bike storage".into(),
+                citing: None,
+                pull: crate::standing::Pull::Against,
+                because: "no room in the hall".into(),
+            },
+            300,
+            "human:dana",
+        ),
+    ])
+    .derive();
+
+    let dana = canon.voice_of("human:dana");
+    assert_eq!(dana.asked.len(), 2);
+    assert_eq!(dana.answered(), 1, "one of her questions became a rule");
+    assert_eq!(dana.open(), 1, "and one has gone nowhere");
+    assert_eq!(dana.positions.len(), 1);
+    assert!(dana.decided.is_empty(), "she has never adjudicated");
+
+    // It is a view of the record, not a file on a person: somebody who has
+    // put nothing in has nothing in it.
+    assert!(canon.voice_of("human:nobody").is_empty());
+}
+
+#[test]
+fn a_voice_record_credits_the_citer_and_not_only_the_cited() {
+    let a = Act::new(
+        ActKind::Assert {
+            text: "Mornings are protected.".into(),
+            from: None,
+            source: None,
+        },
+        100,
+        "human:alex",
+    );
+    let canon = Log::from_acts(vec![
+        a.clone(),
+        Act::new(
+            ActKind::Position {
+                about: "8am standup".into(),
+                citing: Some(a.id.clone()),
+                pull: crate::standing::Pull::Against,
+                because: "8am is inside mornings".into(),
+            },
+            200,
+            "agent:claude",
+        ),
+    ])
+    .derive();
+    // The position's SOURCE is the commitment; the person who did the citing
+    // is a different fact, and it is the one a voice record needs.
+    assert_eq!(canon.voice_of("agent:claude").positions.len(), 1);
+    assert_eq!(canon.voice_of("human:alex").positions.len(), 0);
 }
