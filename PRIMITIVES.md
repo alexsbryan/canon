@@ -201,7 +201,22 @@ permission system with both grants and denials is one where nobody can answer
 
 ## Primitive 7 — Policy: a pure function from evidence to outcome and authority
 
-`NOT BUILT` (`Outcome` is computed one way, inline)
+`BUILT` (`policy.rs`: `Rule`, `Authority`, `Attributes`, `Decision`, the
+`Policy` trait; `act.rs`: the `policy`, `decided` and `rank` ops;
+`fold.rs`: `Canon::{policy_for, prior_decisions, rank_of}`)
+
+Ships as one enum rather than one struct per policy. The set this library
+ships is closed and has to serialize — a policy lives in the ledger, not in a
+config file — so it is an enum (§2.1); `Policy` stays a trait so a caller can
+add one without forking. `Rule::{Graduated, Entrenched, Cautious}` wrap another
+rule rather than replacing it, and the wrapping can only make an answer
+stricter: `Authority` is ordered and a modifier takes the max. A wrapper that
+could soften what it wraps would make entrenchment a way to weaken a rule.
+
+`Standing::outcome()` delegates to `policy::default_outcome` and does not
+re-implement it. That is the §10.6 risk this primitive carried, and it is
+pinned by a table test that asserts both callers give the same answer for
+every shape of evidence the old inline rule could see.
 
 ```
 (bearings, proposal attributes, actor standing) -> outcome, authority

@@ -13,6 +13,7 @@ mod cmds;
 mod config;
 mod draft;
 mod explain;
+mod govern;
 mod lineage;
 mod locate;
 mod mcp;
@@ -46,6 +47,16 @@ RECORD                                        (no model needed)
   open                                   the open questions
   log                                    the raw acts
   mcp                                    serve the agent surface on stdio
+
+GOVERN                                        (no model needed)
+  who <scope>                            who may decide this, and under what
+  grant <actor> <scope> [--horizon <d>]  give someone standing
+  withdraw <actor> <scope>               step back from a scope, or stand down
+  scope <id> <scope>                     put a commitment in a scope
+  policy show | set <rule> [-m \"...\"]    what this canon decides under
+  position \"<about>\" --against|--toward  a vote, an objection, a second
+  decide \"<about>\" --outcome --authority record what the group decided
+  rank <id> <rank>                       a principle, not a convention
 
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
@@ -103,6 +114,14 @@ fn main() {
         "undo" => cmds::undo(rest),
         "log" => cmds::log(rest),
         "question" => cmds::question(rest),
+        "who" => govern::who(rest),
+        "grant" => govern::grant(rest),
+        "withdraw" => govern::withdraw(rest),
+        "scope" => govern::scoped(rest),
+        "policy" => govern::policy(rest),
+        "position" => govern::position(rest),
+        "decide" => govern::decide(rest),
+        "rank" => govern::rank(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),

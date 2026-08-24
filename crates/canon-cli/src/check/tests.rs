@@ -3,7 +3,7 @@
 //! personal profile never renders a verdict and never exits 1, on either
 //! surface.
 
-use canon_core::{Act, ActKind, Log};
+use canon_core::{Act, ActKind, Log, Rule};
 use serde_json::json;
 
 use super::*;
@@ -54,6 +54,12 @@ fn stand(items: &[(usize, &str, &str)]) -> (Canon, Standing) {
     (canon, standing)
 }
 
+/// The decision the shipped default reaches, so tests written before policy
+/// existed keep asserting exactly what they always did.
+fn shipped(canon: &Canon, standing: &Standing) -> Decision {
+    Rule::Default.decide(standing, &Attributes::default(), canon)
+}
+
 #[test]
 fn the_personal_profile_never_returns_exit_one() {
     // The invariant, pinned. Whatever the outcome, a personal canon reports
@@ -75,7 +81,12 @@ fn the_personal_profile_never_renders_a_verdict_on_either_surface() {
     ]);
     assert_eq!(standing.outcome(), Outcome::Conflicts);
 
-    let text = render(Profile::Personal, &canon, &standing);
+    let text = render(
+        Profile::Personal,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
     for banned in ["CONFLICT", "SUPPORTED", "UNADDRESSED", "verdict"] {
         assert!(
             !text.contains(banned),
@@ -87,17 +98,25 @@ fn the_personal_profile_never_renders_a_verdict_on_either_surface() {
 
     // And the machine-readable surface carries no outcome either: an outcome
     // is a verdict however it is serialized.
-    let p = payload(Profile::Personal, &standing);
+    let p = payload(Profile::Personal, &standing, &shipped(&canon, &standing));
     assert!(p.get("outcome").is_none(), "{p}");
     assert!(p.get("positions").is_some());
     // The other profiles do carry it.
-    assert_eq!(payload(Profile::Code, &standing)["outcome"], "conflicts");
+    assert_eq!(
+        payload(Profile::Code, &standing, &shipped(&canon, &standing))["outcome"],
+        "conflicts"
+    );
 }
 
 #[test]
 fn the_code_profile_names_the_rule_it_conflicts_with() {
     let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
-    let text = render(Profile::Code, &canon, &standing);
+    let text = render(
+        Profile::Code,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
     assert!(text.starts_with("CONFLICT"));
     assert!(text.contains("Mornings are protected"));
     assert!(text.contains("because: the rotation starts at 8"));
@@ -107,12 +126,22 @@ fn the_code_profile_names_the_rule_it_conflicts_with() {
 #[test]
 fn the_house_profile_says_which_act_the_proposal_needs() {
     let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
-    let text = render(Profile::House, &canon, &standing);
+    let text = render(
+        Profile::House,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
     assert!(text.contains("NEEDS AN AMENDMENT"));
     assert!(text.contains("canon supersede"));
 
     let (canon, standing) = stand(&[]);
-    let text = render(Profile::House, &canon, &standing);
+    let text = render(
+        Profile::House,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
     assert!(text.contains("NEEDS A NEW RULE"));
     assert!(text.contains("canon add"));
 }
@@ -121,7 +150,12 @@ fn the_house_profile_says_which_act_the_proposal_needs() {
 fn nothing_bearing_on_a_proposal_is_unaddressed_not_approval() {
     let (canon, standing) = stand(&[]);
     assert_eq!(standing.outcome(), Outcome::Unaddressed);
-    let text = render(Profile::Code, &canon, &standing);
+    let text = render(
+        Profile::Code,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
     assert!(text.starts_with("UNADDRESSED"));
     assert!(!text.contains("SUPPORTED"));
     // And it offers the act that closes the gap.
@@ -201,10 +235,109 @@ fn a_carried_contradiction_is_shown_rather_than_relitigated() {
         ]),
     )]);
     let (standing, _) = assess(&mock.client(), &canon, "take the rotation").unwrap();
-    let text = render(Profile::Personal, &canon, &standing);
+    let text = render(
+        Profile::Personal,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
     assert!(
         text.contains("reliability is how I earn the autonomy"),
         "{text}"
     );
     assert!(text.contains("revisit by 2026-10-01"), "{text}");
+}
+
+// ── policy at the check surface ─────────────────────────────
+
+#[test]
+fn the_canon_own_policy_decides_the_check_and_not_what_shipped() {
+    // The same evidence, two communities, two answers. That is the whole
+    // claim of the policy layer, asserted at the surface a person uses.
+    let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
+    assert_eq!(shipped(&canon, &standing).authority, Authority::AskOne);
+
+    let consent = Rule::Consent.decide(&standing, &Attributes::default(), &canon);
+    assert_eq!(consent.authority, Authority::Refuse);
+    let text = render(Profile::Code, &canon, &standing, &consent);
+    assert!(text.starts_with("CONFLICT"), "{text}");
+    assert!(text.contains("not under this policy"), "{text}");
+    assert!(
+        text.contains("consent:"),
+        "the rule that fired is named: {text}"
+    );
+
+    let lenient = Rule::Threshold { against: 2 }.decide(&standing, &Attributes::default(), &canon);
+    let text = render(Profile::Code, &canon, &standing, &lenient);
+    assert!(text.starts_with("SUPPORTED"), "{text}");
+    assert!(text.contains("1 against, 2 needed"), "{text}");
+}
+
+#[test]
+fn the_authority_is_rendered_even_when_it_agrees_with_you() {
+    // A policy that is invisible when it agrees is one nobody notices they
+    // are governed by.
+    let (canon, standing) = stand(&[(1, "toward", "it serves it")]);
+    let text = render(
+        Profile::Code,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
+    assert!(text.starts_with("SUPPORTED"));
+    assert!(text.contains("\nact\n"), "{text}");
+    assert!(text.contains("default:"), "{text}");
+}
+
+#[test]
+fn the_personal_profile_still_renders_no_verdict_under_any_policy() {
+    // The invariant has to survive the policy layer, including a policy that
+    // refuses outright.
+    let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
+    let refused = Rule::Consent.decide(&standing, &Attributes::default(), &canon);
+    let text = render(Profile::Personal, &canon, &standing, &refused);
+    for banned in [
+        "CONFLICT",
+        "SUPPORTED",
+        "UNADDRESSED",
+        "not under this policy",
+    ] {
+        assert!(
+            !text.contains(banned),
+            "personal rendered `{banned}`:\n{text}"
+        );
+    }
+    let p = payload(Profile::Personal, &standing, &refused);
+    assert!(p.get("outcome").is_none(), "{p}");
+    assert!(
+        p.get("authority").is_none(),
+        "an authority is a verdict too: {p}"
+    );
+}
+
+#[test]
+fn a_position_a_person_took_is_rendered_and_not_silently_dropped() {
+    // `cite` quotes a commitment. An actor-sourced position has no commitment
+    // to quote, and returning an empty string for it made a vote vanish from
+    // the very surface a person reads to see the votes.
+    let canon = canon_of(&TEXTS);
+    let positions = vec![
+        canon_core::Position::by("human:dana", Pull::Against, "school run until 8:30"),
+        canon_core::Position::by("human:sam", Pull::Toward, "works for me"),
+    ];
+    let (standing, refused) = Standing::cited(&canon, "move standup to 8am", positions);
+    assert!(refused.is_empty());
+    let text = render(
+        Profile::Code,
+        &canon,
+        &standing,
+        &shipped(&canon, &standing),
+    );
+    assert!(text.contains("human:dana"), "{text}");
+    assert!(text.contains("objects"), "{text}");
+    assert!(text.contains("school run until 8:30"), "{text}");
+    assert!(
+        text.contains("human:sam"),
+        "the supporting vote too: {text}"
+    );
 }

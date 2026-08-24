@@ -5,13 +5,45 @@
 
 use std::path::{Path, PathBuf};
 
-use canon_core::{Act, ActKind, Canon, Log};
+use canon_core::{Act, ActKind, Canon, Log, Policy as _};
 
 use crate::config::{Config, Key};
 use crate::profile::Profile;
 use crate::store;
 
 // ── plumbing ────────────────────────────────────────────────
+
+/// Flags that take a value, so [`positionals`] does not read the value as one.
+///
+/// One list rather than a `matches!` per call site: a flag added in one place
+/// and forgotten in the other makes its VALUE look like a positional
+/// argument, which is how `--scope house.kitchen` becomes a proposal called
+/// "house.kitchen".
+const VALUED: &[&str] = &[
+    "-m",
+    "--about",
+    "--after",
+    "--amends",
+    "--authority",
+    "--citing",
+    "--commit",
+    "--count",
+    "--endpoint",
+    "--entrench",
+    "--from",
+    "--from-proposal",
+    "--graduated",
+    "--horizon",
+    "--objections",
+    "--of",
+    "--onto",
+    "--outcome",
+    "--policy",
+    "--profile",
+    "--revisit",
+    "--scope",
+    "--since",
+];
 
 pub fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter()
@@ -32,10 +64,7 @@ pub fn positionals(args: &[String]) -> Vec<&str> {
             skip = false;
             continue;
         }
-        if matches!(
-            a.as_str(),
-            "-m" | "--from" | "--profile" | "--revisit" | "--since" | "--onto" | "--endpoint"
-        ) {
+        if VALUED.contains(&a.as_str()) {
             skip = true;
             continue;
         }
@@ -437,16 +466,16 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Revert { targets, .. } => format!("revert     {}", targets.len()),
             ActKind::Question { text, .. } => format!("question   {text}"),
             ActKind::Grant {
-                actor,
+                holder,
                 scope,
                 horizon,
                 ..
             } => match horizon {
-                Some(h) => format!("grant      {actor} over {scope} until {}", store::ymd(*h)),
-                None => format!("grant      {actor} over {scope}"),
+                Some(h) => format!("grant      {holder} over {scope} until {}", store::ymd(*h)),
+                None => format!("grant      {holder} over {scope}"),
             },
-            ActKind::Withdraw { actor, scope, .. } => {
-                format!("withdraw   {actor} from {scope}")
+            ActKind::Withdraw { holder, scope, .. } => {
+                format!("withdraw   {holder} from {scope}")
             }
             ActKind::Scoped { commitment, scope } => {
                 format!("scoped     {commitment} -> {scope}")
@@ -472,6 +501,16 @@ pub fn log(args: &[String]) -> i32 {
                 ..
             } => {
                 format!("adopt      {lineage}@{generation}")
+            }
+            ActKind::Policy { rule, scope, .. } => match scope {
+                Some(sc) => format!("policy     {} over {sc}", rule.name()),
+                None => format!("policy     {}", rule.name()),
+            },
+            ActKind::Decided {
+                about, authority, ..
+            } => format!("decided    {about} -> {authority}"),
+            ActKind::Rank { commitment, rank } => {
+                format!("rank       {commitment} is a {rank}")
             }
             // Shown, and shown as unread. The whole point of carrying an
             // annotation this build does not understand is that nothing is

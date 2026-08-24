@@ -42,8 +42,9 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 8] = [
-    "accept", "dismiss", "question", "adopt", "position", "grant", "withdraw", "scoped",
+pub const KNOWN_ANNOTATIONS: [&str; 11] = [
+    "accept", "dismiss", "question", "adopt", "position", "grant", "withdraw", "scoped", "policy",
+    "decided", "rank",
 ];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
@@ -158,7 +159,13 @@ pub enum ActKind {
     /// live — it changes who may decide about them — and because that keeps it
     /// citable, contestable and revertible like anything else.
     Grant {
-        actor: String,
+        /// **`holder`, not `actor`.** The envelope already has an `actor` —
+        /// the person doing the granting — and the body is flattened into the
+        /// same JSON object, so a body field of that name produces a line with
+        /// two `actor` keys that no reader can parse back. The two are
+        /// genuinely different people, which is why this act needs a field at
+        /// all where `position` does not.
+        holder: String,
         scope: crate::scope::Scope,
         /// When it lapses. Absent is standing with no end, which a community
         /// may choose and should have to.
@@ -175,7 +182,7 @@ pub enum ActKind {
     /// from SCOPES. Recording them makes the signal legible without demanding
     /// a confrontation from someone already disengaging.
     Withdraw {
-        actor: String,
+        holder: String,
         scope: crate::scope::Scope,
         #[serde(default, skip_serializing_if = "String::is_empty")]
         rationale: String,
@@ -189,6 +196,52 @@ pub enum ActKind {
         commitment: ActId,
         scope: crate::scope::Scope,
     },
+    /// The policy this canon decides under.
+    ///
+    /// **Policy lives in the ledger, and that is the whole design.** Defaults
+    /// are extraordinarily sticky and most adopters never change them, so
+    /// whatever ships as default *is* the governance for nearly everyone —
+    /// calling it loosely held describes our intentions rather than the
+    /// outcome. The mitigation is recursive and costs nothing, because the
+    /// machinery already exists: put the policy in the canon. Then how a
+    /// community governs is subject to `check`, to tension detection, to
+    /// `supersede` with a rationale, and to a visible diff against the lineage
+    /// it was forked from. A default you can run `canon why` against is
+    /// genuinely loosely held. One living in a TOML file is not.
+    ///
+    /// `text` and `rule` say the same thing twice on purpose (§7.6): the prose
+    /// renders and is citable, the typed rule is what code reads. Asking a
+    /// resolver to read governance rules would be a prompt imperative relied
+    /// on for correctness.
+    Policy {
+        text: String,
+        rule: crate::policy::Rule,
+        /// Which scope it governs. Absent is the whole canon.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        scope: Option<crate::scope::Scope>,
+    },
+    /// Somebody decided something. The rung a graduated ladder counts.
+    ///
+    /// **A decision, never an observation.** Ostrom's fifth principle needs to
+    /// know this is the third occurrence, and counting occurrences by person
+    /// is precisely the surveillance file this project forbids. The resolution
+    /// is a real distinction and not a compromise: an adjudication is a thing
+    /// the group did, attributed to whoever did it, and it belongs in the
+    /// record. What a person was seen doing does not. There is no act here
+    /// that records the second kind, and adding one would be the defect.
+    Decided {
+        about: String,
+        outcome: crate::standing::Outcome,
+        authority: crate::policy::Authority,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        rationale: String,
+    },
+    /// A commitment is of some rank — a principle rather than a convention.
+    ///
+    /// Open text, deliberately: which ranks exist and what they mean is a
+    /// community's vocabulary, not ours (§2.4/§4). Policy reads it; nothing
+    /// here interprets it.
+    Rank { commitment: ActId, rank: String },
     /// An annotation this build does not interpret.
     ///
     /// Carried verbatim so a log written by a community with governance moves

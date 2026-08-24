@@ -304,7 +304,11 @@ fn render_check(dir: &Path, proposal: &str) -> Result<String, String> {
     let client = crate::model::client_for(dir, false).map_err(|e| e.to_string())?;
     let (standing, refused) =
         crate::check::assess(&client, &canon, proposal).map_err(|e| e.to_string())?;
-    let mut out = crate::check::render(profile, &canon, &standing);
+    // The canon's own rule, so an agent is told what the community decided
+    // rather than what shipped.
+    let attrs = canon_core::Attributes::about(proposal).at(store::now());
+    let decision = canon_core::Policy::decide(canon.policy_for(None), &standing, &attrs, &canon);
+    let mut out = crate::check::render(profile, &canon, &standing, &decision);
     // Refusals travel to the agent too. A shorter answer with no explanation
     // is indistinguishable from a canon that had less to say.
     if !refused.is_empty() {

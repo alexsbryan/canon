@@ -14,7 +14,10 @@
 //! on someone's inner life would do harm the codebase profile cannot, and
 //! that is enforced here by [`exit_code`] and pinned by a test.
 
-use canon_core::{Canon, Commitment, Disposition, Outcome, Position, Pull, Standing, Status};
+use canon_core::{
+    Attributes, Authority, Canon, Commitment, Decision, Disposition, Outcome, Policy, Position,
+    Pull, Scope, Standing, Status,
+};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
@@ -128,6 +131,12 @@ pub fn assess(
 
 /// The exit-code contract, decided in ONE place.
 ///
+/// **It reports the OUTCOME, not the authority.** CI and agents already read
+/// these three codes, and a policy that refuses is louder on stdout than a
+/// changed exit code would be useful — moving the contract onto the authority
+/// ladder would silently redefine what `canon check` means for every existing
+/// caller.
+///
 /// `Personal` returns 0 whatever the outcome. That is the invariant, not a
 /// default: a personal canon reports stakes, and an exit 1 is a machine
 /// saying a life choice failed a check.
@@ -141,11 +150,23 @@ pub fn exit_code(profile: Profile, outcome: Outcome) -> i32 {
 }
 
 fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
-    // A position an ACTOR took cites no commitment, so there is nothing for
-    // this renderer to quote. It is rendered where actors are rendered, not
-    // silently as a rule that does not exist.
+    // A position an ACTOR took cites no commitment, so there is no rule to
+    // quote — but there is a person and a reason, and dropping them would be
+    // the renderer quietly showing less than the canon holds. It gets the
+    // same two lines in the same shape: who, which way, and why.
     let Some(c) = b.commitment().and_then(|id| canon.get(id)) else {
-        return String::new();
+        let Some(actor) = b.actor() else {
+            return String::new();
+        };
+        let way = match b.pull {
+            Pull::Against => "objects",
+            Pull::Toward => "supports",
+        };
+        return format!(
+            "{indent}{actor}  {way}\n{indent}{}because: {}\n",
+            " ".repeat(actor.len() + 2),
+            b.because,
+        );
     };
     let status = match &c.status {
         Status::Active => "in force, never superseded".to_string(),
@@ -189,91 +210,148 @@ fn carried(canon: &Canon, standing: &Standing) -> Vec<String> {
     out
 }
 
-pub fn render(profile: Profile, canon: &Canon, standing: &Standing) -> String {
+/// The words a profile uses. **Voice, not policy.**
+///
+/// This table is the whole of what used to be three renderers. `code` renders
+/// a verdict because a codebase wants one and CI reads exit codes; `house`
+/// renders which ACT the proposal needs, because a household's output is an
+/// agenda. Those are two vocabularies for one decision, and once the decision
+/// moved into [`canon_core::policy`] there was nothing left in the second
+/// renderer except the words — so it became a table and the branch it lived
+/// in went away.
+///
+/// The `personal` profile is deliberately NOT in this table. It renders no
+/// verdict at all, which is not a third vocabulary but a different shape, and
+/// forcing it through a verdict renderer to save a function is how the
+/// invariant that protects it would eventually be lost.
+struct Voice {
+    conflict: &'static str,
+    conflict_lead: &'static str,
+    supported: &'static str,
+    supported_lead: &'static str,
+    unaddressed: &'static str,
+    unaddressed_lead: &'static str,
+    also: &'static str,
+    /// After each opposing citation, name the acts that would settle it.
+    offer_acts: bool,
+    /// What to do about a gap. `{p}` is the proposal.
+    gap: &'static str,
+}
+
+const CODE: Voice = Voice {
+    conflict: "CONFLICT",
+    conflict_lead: "",
+    supported: "SUPPORTED",
+    supported_lead: "",
+    unaddressed: "UNADDRESSED",
+    unaddressed_lead: "  nothing in this canon bears on this proposal.",
+    also: "\nalso bears on it, in favour:\n",
+    offer_acts: false,
+    gap: "  record the gap:  canon question \"{p}\"\n",
+};
+
+const HOUSE: Voice = Voice {
+    conflict: "THIS NEEDS AN AMENDMENT",
+    conflict_lead: "  it runs against a rule the house already has:\n",
+    supported: "ALREADY COVERED",
+    supported_lead: "  no act needed; the house has already decided this:\n",
+    unaddressed: "THIS NEEDS A NEW RULE",
+    unaddressed_lead: "  nothing the house has decided bears on it.\n",
+    also: "\nalso bears on it, in favour:\n",
+    offer_acts: true,
+    gap: "  write one:  canon add \"<the rule>\"\n  \
+          or record the gap for the next meeting:  canon question \"{p}\"\n",
+};
+
+pub fn render(profile: Profile, canon: &Canon, standing: &Standing, decision: &Decision) -> String {
     match profile {
-        Profile::Code => render_code(canon, standing),
-        Profile::House => render_house(canon, standing),
-        Profile::Personal => render_personal(canon, standing),
+        // Never a verdict, and never routed through one.
+        Profile::Personal => render_stakes(canon, standing),
+        Profile::Code => render_verdict(&CODE, canon, standing, decision),
+        Profile::House => render_verdict(&HOUSE, canon, standing, decision),
     }
 }
 
-fn render_code(canon: &Canon, standing: &Standing) -> String {
+/// The one place an outcome becomes words.
+fn render_verdict(v: &Voice, canon: &Canon, standing: &Standing, decision: &Decision) -> String {
     let mut out = String::new();
-    match standing.outcome() {
+    match decision.outcome {
         Outcome::Conflicts => {
-            out.push_str("CONFLICT\n");
+            out.push_str(v.conflict);
+            out.push('\n');
+            out.push_str(v.conflict_lead);
+            if !v.conflict_lead.is_empty() {
+                out.push('\n');
+            }
             for b in standing.against() {
                 out.push_str(&cite(canon, b, "  "));
+                if v.offer_acts {
+                    out.push_str(&settle(canon, b));
+                }
             }
             let toward: Vec<&Position> = standing.toward().collect();
             if !toward.is_empty() {
-                out.push_str("\nalso bears on it, in favour:\n");
+                out.push_str(v.also);
                 for b in toward {
                     out.push_str(&cite(canon, b, "  "));
                 }
             }
         }
         Outcome::Supported => {
-            out.push_str("SUPPORTED\n");
+            out.push_str(v.supported);
+            out.push('\n');
+            out.push_str(v.supported_lead);
+            if !v.supported_lead.is_empty() {
+                out.push('\n');
+            }
             for b in standing.toward() {
                 out.push_str(&cite(canon, b, "  "));
             }
         }
         Outcome::Unaddressed => {
             // Not approval. The canon is silent, and silence is reported as
-            // silence.
-            out.push_str("UNADDRESSED\n");
-            out.push_str("  nothing in this canon bears on this proposal.\n");
-            out.push_str(&format!(
-                "  record the gap:  canon question \"{}\"\n",
-                standing.proposal
-            ));
+            // silence — whatever the policy then permits.
+            out.push_str(v.unaddressed);
+            out.push('\n');
+            out.push_str(v.unaddressed_lead);
+            if !v.unaddressed_lead.is_empty() {
+                out.push('\n');
+            }
+            out.push_str(&v.gap.replace("{p}", &standing.proposal));
         }
     }
+    out.push_str(&authority_line(decision));
     out
 }
 
-fn render_house(canon: &Canon, standing: &Standing) -> String {
-    // A household's output is an agenda: which act does this need?
-    let mut out = String::new();
-    match standing.outcome() {
-        Outcome::Conflicts => {
-            out.push_str("THIS NEEDS AN AMENDMENT\n");
-            out.push_str("  it runs against a rule the house already has:\n\n");
-            for b in standing.against() {
-                out.push_str(&cite(canon, b, "  "));
-                if let Some(c) = b.commitment().and_then(|id| canon.get(id)) {
-                    out.push_str(&format!(
-                        "  amend it:  canon supersede {} \"<the new rule>\" -m \"<why>\"\n",
-                        c.id
-                    ));
-                    out.push_str(&format!(
-                        "  or carry both knowingly:  canon accept {} <other> -m \"<what this protects>\"\n\n",
-                        c.id
-                    ));
-                }
-            }
-        }
-        Outcome::Supported => {
-            out.push_str("ALREADY COVERED\n");
-            out.push_str("  no act needed; the house has already decided this:\n\n");
-            for b in standing.toward() {
-                out.push_str(&cite(canon, b, "  "));
-            }
-        }
-        Outcome::Unaddressed => {
-            out.push_str("THIS NEEDS A NEW RULE\n");
-            out.push_str("  nothing the house has decided bears on it.\n\n");
-            out.push_str(&format!(
-                "  write one:  canon add \"<the rule>\"\n  or record the gap for the next meeting:  canon question \"{}\"\n",
-                standing.proposal
-            ));
-        }
-    }
-    out
+/// What the community's own rule says you may now do, and which rule said so.
+///
+/// Always rendered, including under the default: a policy that is invisible
+/// when it agrees with you is one nobody notices they are governed by.
+fn authority_line(decision: &Decision) -> String {
+    let what = match decision.authority {
+        Authority::Act => "act",
+        Authority::ActAndNotify => "act, and say that you did",
+        Authority::AskOne => "ask one person with standing",
+        Authority::AskPanel => "ask the group",
+        Authority::Refuse => "not under this policy",
+    };
+    format!("\n{what}\n  {}\n", decision.because)
 }
 
-fn render_personal(canon: &Canon, standing: &Standing) -> String {
+/// The acts that would settle an opposing citation. A household's agenda.
+fn settle(canon: &Canon, b: &Position) -> String {
+    let Some(c) = b.commitment().and_then(|id| canon.get(id)) else {
+        return String::new();
+    };
+    format!(
+        "  amend it:  canon supersede {} \"<the new rule>\" -m \"<why>\"\n  \
+         or carry both knowingly:  canon accept {} <other> -m \"<what this protects>\"\n\n",
+        c.id, c.id
+    )
+}
+
+fn render_stakes(canon: &Canon, standing: &Standing) -> String {
     // Never a verdict. No CONFLICT, no SUPPORTED, no ruling — what has a
     // stake in this, and which way each pulls.
     let mut out = String::new();
@@ -325,16 +403,42 @@ fn render_personal(canon: &Canon, standing: &Standing) -> String {
 /// The personal profile's payload carries NO `outcome` field. An outcome is a
 /// verdict whichever way it is serialized, and "never renders a verdict" has
 /// to hold for the machine-readable surface too or it does not hold.
-pub fn payload(profile: Profile, standing: &Standing) -> Value {
+pub fn payload(profile: Profile, standing: &Standing, decision: &Decision) -> Value {
     let mut v = json!({
         "proposal": standing.proposal,
         "profile": profile.as_str(),
         "positions": standing.positions,
     });
     if profile != Profile::Personal {
-        v["outcome"] = serde_json::to_value(standing.outcome()).unwrap_or(Value::Null);
+        v["outcome"] = serde_json::to_value(decision.outcome).unwrap_or(Value::Null);
+        v["authority"] = serde_json::to_value(decision.authority).unwrap_or(Value::Null);
+        v["because"] = json!(decision.because);
     }
     v
+}
+
+/// What the proposal is, beyond its words.
+///
+/// Effect classification is the caller's job — here, the person typing the
+/// command. `canon` never infers that a thing is irreversible, because a
+/// library that guessed would be wrong in exactly the cases the guess
+/// matters.
+fn attributes(args: &[String], proposal: &str) -> Result<Attributes, String> {
+    let mut attrs = Attributes::about(crate::cmds::flag(args, "--about").unwrap_or(proposal))
+        .by(crate::store::actor())
+        .at(crate::store::now());
+    if let Some(raw) = crate::cmds::flag(args, "--scope") {
+        let scope = Scope::new(raw)
+            .ok_or_else(|| format!("`{raw}` is not a scope: dotted path, no empty segments"))?;
+        attrs = attrs.in_scope(scope);
+    }
+    if crate::cmds::has(args, "--irreversible") {
+        attrs = attrs.reversible(false);
+    }
+    if let Some(id) = crate::cmds::flag(args, "--amends") {
+        attrs = attrs.amending(canon_core::ActId::from_raw(id));
+    }
+    Ok(attrs)
 }
 
 pub fn run(args: &[String]) -> i32 {
@@ -354,6 +458,11 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("this canon has no live commitments — nothing to check against.");
         return 2;
     }
+    // Before the endpoint, not after: a mistyped scope should cost nothing.
+    let attrs = match attributes(args, proposal) {
+        Ok(a) => a,
+        Err(e) => return crate::cmds::fail(e),
+    };
     let client = match model::client_for(&dir, crate::cmds::has(args, "--allow-remote")) {
         Ok(c) => c,
         Err(e) => return model::report(e),
@@ -390,15 +499,23 @@ pub fn run(args: &[String]) -> i32 {
         };
         eprintln!("warning: refused an uncitable position on {what} — {why}");
     }
+    // The canon's own rule, from the canon, for this scope. A canon that
+    // adopted nothing decides by what shipped — and says so.
+    let rule = canon.policy_for(attrs.scope.as_ref()).clone();
+    let decision = rule.decide(&standing, &attrs, &canon);
     if crate::cmds::has(args, "--json") {
         println!(
             "{}",
-            serde_json::to_string_pretty(&payload(profile, &standing)).unwrap_or_default()
+            serde_json::to_string_pretty(&payload(profile, &standing, &decision))
+                .unwrap_or_default()
         );
     } else {
-        print!("{}", render(profile, &canon, &standing));
+        print!("{}", render(profile, &canon, &standing, &decision));
+        if let Some(note) = crate::cmds::carried_note(&canon) {
+            eprintln!("\n{note}");
+        }
     }
-    exit_code(profile, standing.outcome())
+    exit_code(profile, decision.outcome)
 }
 
 #[cfg(test)]

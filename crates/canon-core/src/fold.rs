@@ -124,6 +124,35 @@ pub struct Stated {
     pub act: ActId,
 }
 
+/// A policy this canon adopted, and the prose it was adopted as.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Adopted {
+    /// Which scope it governs. `None` is the whole canon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scope: Option<crate::scope::Scope>,
+    pub rule: crate::policy::Rule,
+    /// How it reads to a person. Citable by `why` like any other prose.
+    pub text: String,
+    pub at: i64,
+    pub actor: String,
+    pub act: ActId,
+}
+
+/// Something the group decided. What a graduated ladder counts.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Ruling {
+    pub about: String,
+    pub outcome: crate::standing::Outcome,
+    pub authority: crate::policy::Authority,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub rationale: String,
+    pub at: i64,
+    /// Who decided. An adjudication with no person behind it is reported by
+    /// `Canon::unattended`, never hidden.
+    pub actor: String,
+    pub act: ActId,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Ancestry {
     pub lineage: String,
@@ -167,6 +196,17 @@ pub struct Canon {
     /// into a verdict is policy's job, and the fold has no policy.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub positions: Vec<Stated>,
+    /// The policies this canon decides under, by scope.
+    ///
+    /// In the ledger rather than beside it — see [`crate::ActKind::Policy`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub policies: Vec<Adopted>,
+    /// What the group has decided, in order. Decisions, never observations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rulings: Vec<Ruling>,
+    /// Which commitments are ranked, and as what. Last write wins.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ranks: Vec<(ActId, String)>,
     /// Annotations this build carried without interpreting, by op.
     ///
     /// The §4.3 mitigation, and it is required rather than a courtesy.
@@ -228,6 +268,58 @@ impl Canon {
             .iter()
             .find(|(id, _)| id == commitment)
             .map(|(_, s)| s)
+    }
+
+    /// The policy that governs this scope: the deepest one that covers it,
+    /// else the canon-wide one, else what shipped.
+    ///
+    /// **Deepest wins, and that is subsidiarity at the policy layer itself.**
+    /// A house may decide by consent and its kitchen by whoever is cooking,
+    /// and neither has to know about the other.
+    pub fn policy_for(&self, scope: Option<&crate::scope::Scope>) -> &crate::policy::Rule {
+        static SHIPPED: crate::policy::Rule = crate::policy::Rule::Default;
+        let mut best: Option<&Adopted> = None;
+        for p in &self.policies {
+            let applies = match (&p.scope, scope) {
+                (None, _) => true,
+                (Some(s), Some(target)) => s.covers(target),
+                (Some(_), None) => false,
+            };
+            if !applies {
+                continue;
+            }
+            let depth = p.scope.as_ref().map_or(0, crate::scope::Scope::depth);
+            let beats =
+                best.is_none_or(|b| depth > b.scope.as_ref().map_or(0, crate::scope::Scope::depth));
+            if beats {
+                best = Some(p);
+            }
+        }
+        best.map_or(&SHIPPED, |p| &p.rule)
+    }
+
+    /// The policy act governing this scope, for rendering and for `why`.
+    pub fn policy_act(&self, scope: Option<&crate::scope::Scope>) -> Option<&Adopted> {
+        let rule = self.policy_for(scope);
+        self.policies.iter().find(|p| &p.rule == rule)
+    }
+
+    /// What has already been decided about this subject.
+    ///
+    /// **This reads decisions. There is no observation-counting sibling and
+    /// there must never be one** — that is the line between a graduated
+    /// sanction and a file on a person, and it is held by there being nothing
+    /// in the format that records the second kind.
+    pub fn prior_decisions(&self, about: &str) -> Vec<&Ruling> {
+        self.rulings.iter().filter(|r| r.about == about).collect()
+    }
+
+    /// What rank someone gave this commitment, if anyone did.
+    pub fn rank_of(&self, commitment: &ActId) -> Option<&str> {
+        self.ranks
+            .iter()
+            .find(|(id, _)| id == commitment)
+            .map(|(_, r)| r.as_str())
     }
 
     /// Questions nobody has answered or withdrawn. This is `canon open`.
@@ -480,7 +572,7 @@ pub fn derive(acts: &[Act]) -> Canon {
                 })
             }
             ActKind::Grant {
-                actor,
+                holder,
                 scope,
                 horizon,
                 ..
@@ -490,16 +582,20 @@ pub fn derive(acts: &[Act]) -> Canon {
                 // "when does this lapse" have two answers.
                 canon
                     .grants
-                    .retain(|g| !(g.actor == *actor && g.scope == *scope));
+                    .retain(|g| !(g.actor == *holder && g.scope == *scope));
                 canon.grants.push(crate::scope::Grant {
-                    actor: actor.clone(),
+                    actor: holder.clone(),
                     scope: scope.clone(),
                     horizon: *horizon,
                     granted_at: act.ts_unix,
                     act: act.id.clone(),
                 });
             }
-            ActKind::Withdraw { actor, scope, .. } => {
+            ActKind::Withdraw {
+                holder: actor,
+                scope,
+                ..
+            } => {
                 // Removes grants AT or BELOW the named scope. Carving a hole
                 // out of a broader grant is deliberately not expressible:
                 // stepping back from `house.kitchen` while holding `house`
@@ -532,6 +628,38 @@ pub fn derive(acts: &[Act]) -> Canon {
                     at: act.ts_unix,
                     act: act.id.clone(),
                 });
+            }
+            ActKind::Policy { text, rule, scope } => {
+                // One policy per scope. Two live policies over one scope
+                // would make "what do we decide by" have two answers, which
+                // is the duplicated decider §10.6 names.
+                canon.policies.retain(|p| p.scope != *scope);
+                canon.policies.push(Adopted {
+                    scope: scope.clone(),
+                    rule: rule.clone(),
+                    text: text.clone(),
+                    at: act.ts_unix,
+                    actor: act.actor.clone(),
+                    act: act.id.clone(),
+                });
+            }
+            ActKind::Decided {
+                about,
+                outcome,
+                authority,
+                rationale,
+            } => canon.rulings.push(Ruling {
+                about: about.clone(),
+                outcome: *outcome,
+                authority: *authority,
+                rationale: rationale.clone(),
+                at: act.ts_unix,
+                actor: act.actor.clone(),
+                act: act.id.clone(),
+            }),
+            ActKind::Rank { commitment, rank } => {
+                canon.ranks.retain(|(id, _)| id != commitment);
+                canon.ranks.push((commitment.clone(), rank.clone()));
             }
             // Recorded, never acted on. This arm IS "not interpreted".
             ActKind::Annotation { kind, .. } => {
