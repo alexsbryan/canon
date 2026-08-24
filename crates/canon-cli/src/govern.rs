@@ -523,3 +523,124 @@ pub fn position(args: &[String]) -> i32 {
         Err(e) => fail(e),
     }
 }
+
+// ── canon horizon / canon overdue ───────────────────────────
+
+/// Say when something should be looked at again.
+pub fn horizon(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    if pos.len() < 2 {
+        return fail("usage: canon horizon <act-id> <YYYY-MM-DD> [-m \"<why>\"]");
+    }
+    let Some(at) = canon_core::date::parse_ymd(pos[1]) else {
+        return fail(format!("`{}` is not a date — YYYY-MM-DD", pos[1]));
+    };
+    let (d, log, _) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    // Any act may carry a horizon, not just a commitment: a grant, an
+    // accepted contradiction and a question are all things somebody defers.
+    let hits: Vec<&canon_core::Act> = log
+        .acts()
+        .iter()
+        .filter(|a| a.id.as_str().starts_with(pos[0]))
+        .collect();
+    let target = match hits.len() {
+        1 => hits[0].id.clone(),
+        0 => return fail(format!("no act matching `{}`", pos[0])),
+        n => {
+            return fail(format!(
+                "`{}` matches {n} acts — use more characters",
+                pos[0]
+            ))
+        }
+    };
+    match write(
+        &d,
+        ActKind::Horizon {
+            target: target.clone(),
+            at,
+            rationale: flag(args, "-m").unwrap_or_default().to_string(),
+        },
+    ) {
+        Ok(_) => {
+            println!("{target} comes back around {}", store::ymd(at));
+            println!("  `canon overdue` will surface it after that");
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+/// What has gone past its date.
+///
+/// **The closure loop.** Everything else here is additive — you assert, you
+/// grant, you accept a contradiction — and a body of commitments nobody ever
+/// subtracts from keeps reading as authoritative long after it stopped being
+/// true. This is the cheapest defense available, and the difference between
+/// deferring something and burying it.
+pub fn overdue(args: &[String]) -> i32 {
+    let (_, _, canon) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let now = store::now();
+    let due = canon.overdue(now);
+    if has(args, "--json") {
+        println!("{}", serde_json::to_string_pretty(&due).unwrap_or_default());
+        return 0;
+    }
+    if due.is_empty() {
+        println!("nothing overdue.");
+    }
+    for o in &due {
+        let when = store::ymd(o.due);
+        match &o.what {
+            canon_core::Due::Horizon { rationale } => {
+                let what = canon
+                    .get(&o.target)
+                    .map(|c| c.text.clone())
+                    .or_else(|| canon.question(&o.target).map(|q| format!("? {}", q.text)))
+                    .unwrap_or_else(|| o.target.to_string());
+                println!("{when}  {}  {what}", o.target);
+                if !rationale.is_empty() {
+                    println!("          {rationale}");
+                }
+            }
+            canon_core::Due::Revisit { other, rationale } => {
+                println!("{when}  {}  carried against {other}", o.target);
+                println!("          \"{rationale}\"");
+            }
+            canon_core::Due::Standing { holder, scope } => {
+                println!("{when}  {holder} no longer holds {scope}");
+                // The Ostrom-4 residue: standing that lapsed and nobody
+                // renewed is exactly what a monitor's accountability looks
+                // like when it works.
+                if canon.who_decides(scope, now).is_empty() {
+                    println!("          nobody holds it now — `canon who {scope}`");
+                }
+            }
+        }
+    }
+    if !due.is_empty() {
+        println!("\n{} overdue", due.len());
+    }
+    // Absence reported, never defaulted: a date nobody can read is a real
+    // intention with an unreadable deadline, and it is neither overdue nor
+    // absent.
+    let unreadable = canon.unreadable_dates();
+    if !unreadable.is_empty() {
+        eprintln!(
+            "\nwarning: {} revisit date(s) are not dates and were not judged:",
+            unreadable.len()
+        );
+        for (id, raw) in &unreadable {
+            eprintln!("  {id}  \"{raw}\"");
+        }
+    }
+    if let Some(note) = crate::cmds::carried_note(&canon) {
+        eprintln!("\n{note}");
+    }
+    0
+}

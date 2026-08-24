@@ -13,6 +13,7 @@
 pub mod act;
 pub mod date;
 pub mod fold;
+pub mod horizon;
 pub mod id;
 pub mod lineage;
 pub mod log;
@@ -24,6 +25,7 @@ pub use act::{Act, ActKind, FORMAT_VERSION};
 pub use fold::{
     derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Ruling, Status,
 };
+pub use horizon::{Due, Horizon, Overdue};
 pub use id::{short_digest, ActId, ID_PREFIX};
 pub use lineage::{Divergence, Fate, Inherited, Snapshot, SnapshotCommitment};
 pub use log::{Log, ParseError};

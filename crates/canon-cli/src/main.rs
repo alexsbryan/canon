@@ -57,6 +57,8 @@ GOVERN                                        (no model needed)
   position \"<about>\" --against|--toward  a vote, an objection, a second
   decide \"<about>\" --outcome --authority record what the group decided
   rank <id> <rank>                       a principle, not a convention
+  horizon <act-id> <YYYY-MM-DD>          look at this again by then
+  overdue                                what has gone past its date
 
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
@@ -122,6 +124,8 @@ fn main() {
         "position" => govern::position(rest),
         "decide" => govern::decide(rest),
         "rank" => govern::rank(rest),
+        "horizon" => govern::horizon(rest),
+        "overdue" => govern::overdue(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),

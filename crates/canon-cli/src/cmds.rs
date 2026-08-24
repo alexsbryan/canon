@@ -509,6 +509,9 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Decided {
                 about, authority, ..
             } => format!("decided    {about} -> {authority}"),
+            ActKind::Horizon { target, at, .. } => {
+                format!("horizon    {target} by {}", store::ymd(*at))
+            }
             ActKind::Rank { commitment, rank } => {
                 format!("rank       {commitment} is a {rank}")
             }
