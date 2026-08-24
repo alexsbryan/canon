@@ -63,6 +63,9 @@ GOVERN                                        (no model needed)
   draw commit <scope> <seats> --after    announce a lot nobody can steer
   draw seal | open <draw-id>             your secret, before and after
   draw show <draw-id>                    the panel, recomputed from the log
+  silence \"<subject>\" -m \"<why>\"         unwritten on purpose, not by neglect
+  voice [<actor>]                        what someone raised, and what came of it
+  leave <scope> [-m \"<question>\"]        step out, and leave the question behind
 
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
@@ -131,6 +134,9 @@ fn main() {
         "horizon" => govern::horizon(rest),
         "overdue" => govern::overdue(rest),
         "draw" => draw_cmd::run(rest),
+        "silence" => govern::silence(rest),
+        "voice" => govern::voice(rest),
+        "leave" => govern::leave(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),

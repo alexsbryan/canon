@@ -5,7 +5,7 @@
 //! of them touches an endpoint, which is what makes a governance replay
 //! possible and is the single most important fact about this layer.
 
-use canon_core::{ActKind, Authority, Outcome, Policy as _, Rule, Scope};
+use canon_core::{Act, ActKind, Authority, Outcome, Policy as _, Rule, Scope};
 
 use crate::cmds::{fail, flag, has, load, positionals, write};
 use crate::store;
@@ -643,4 +643,189 @@ pub fn overdue(args: &[String]) -> i32 {
         eprintln!("\n{note}");
     }
     0
+}
+
+// ── canon silence ───────────────────────────────────────────
+
+/// Leave something unwritten, on purpose.
+///
+/// The third state between "written" and "missing". Without it every
+/// unwritten norm reads as a gap and every gap as an invitation to
+/// legislate — which is how making a place legible destroys the practical
+/// local knowledge it was running on.
+pub fn silence(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(about) = pos.first() else {
+        return fail(
+            "usage: canon silence \"<subject>\" -m \"<what leaving it unwritten protects>\"",
+        );
+    };
+    // Required, like `accept`'s: a silence you keep on purpose must say what
+    // it protects, or it cannot be told apart from having forgotten.
+    let Some(rationale) = flag(args, "-m").filter(|r| !r.trim().is_empty()) else {
+        return fail(
+            "silence requires -m \"<reason>\" — an unwritten norm with no reason is \
+             indistinguishable from a gap",
+        );
+    };
+    let (d, _, _) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    match write(
+        &d,
+        ActKind::Silence {
+            about: (*about).to_string(),
+            rationale: rationale.to_string(),
+        },
+    ) {
+        Ok(act) => {
+            println!("{}  unwritten on purpose: \"{about}\"", act.id);
+            println!("  {rationale}");
+            println!("  `canon check --about \"{about}\"` will say so rather than call it a gap");
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+// ── canon voice ─────────────────────────────────────────────
+
+/// What somebody raised, and what came of it.
+///
+/// **Hirschman's loyalty mechanism, made answerable.** Voice is only rational
+/// if it works, and whether it has worked for YOU is exactly what a person
+/// cannot check from memory and will not ask about out loud. Everything shown
+/// is something that person put into the log themselves; nothing here was
+/// observed about anybody.
+pub fn voice(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let who = match pos.first() {
+        Some(a) => (*a).to_string(),
+        None => store::actor(),
+    };
+    let (_, _, canon) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let v = canon.voice_of(&who);
+    if v.is_empty() {
+        println!("{who} has not put anything in this canon.");
+        return 0;
+    }
+    println!("{who}");
+    if !v.asked.is_empty() {
+        println!(
+            "\nasked {} question(s), {} answered:",
+            v.asked.len(),
+            v.answered()
+        );
+        for q in &v.asked {
+            let fate = match &q.status {
+                canon_core::Status::Active => "still open".to_string(),
+                canon_core::Status::Superseded { by } => format!("answered by {by}"),
+                canon_core::Status::Retracted { .. } => "withdrawn".to_string(),
+            };
+            println!("  {}  ? {}  ({fate})", q.id, q.text);
+        }
+    }
+    if !v.positions.is_empty() {
+        println!("\ntook {} position(s):", v.positions.len());
+        for p in &v.positions {
+            let way = match p.position.pull {
+                canon_core::Pull::Against => "against",
+                canon_core::Pull::Toward => "toward",
+            };
+            println!("  {way} \"{}\" — {}", p.about, p.position.because);
+        }
+    }
+    if !v.decided.is_empty() {
+        println!("\ndecided {} time(s):", v.decided.len());
+        for r in &v.decided {
+            println!("  \"{}\" -> {}", r.about, r.authority);
+        }
+    }
+    if !v.silences.is_empty() {
+        println!("\nleft {} thing(s) unwritten on purpose:", v.silences.len());
+        for s in &v.silences {
+            println!("  \"{}\" — {}", s.about, s.rationale);
+        }
+    }
+    // The number that answers the question people actually have.
+    println!(
+        "\n{} of {} question(s) went somewhere",
+        v.answered(),
+        v.asked.len()
+    );
+    0
+}
+
+// ── canon leave ─────────────────────────────────────────────
+
+/// Step out of a scope, and leave the question behind.
+///
+/// **The thing a leaver knows is the thing nobody else will ever learn.** By
+/// the time somebody is going, raising it costs them a confrontation they have
+/// no reason to accept — so it goes unsaid, and the group loses its single
+/// best-informed critique at the exact moment it is offered for free.
+///
+/// This writes two acts: the withdrawal, which is the pre-exit signal read as
+/// a first-class move rather than as an absence, and an unattributed question.
+///
+/// **The unattribution is thin and this says so.** The question carries no
+/// name, but it lands in the log beside a withdrawal that does, in the same
+/// second. That is worth having anyway — a norm of asking on the way out is
+/// worth more than the anonymity — but a tool that implied it was untraceable
+/// would be lying about something that could cost somebody.
+pub fn leave(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(raw) = pos.first() else {
+        return fail("usage: canon leave <scope> [-m \"<the question you never raised>\"]");
+    };
+    let Some(scope) = Scope::new(raw) else {
+        return fail(format!("`{raw}` is not a scope"));
+    };
+    let (d, _, _) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let me = store::actor();
+    if let Err(e) = write(
+        &d,
+        ActKind::Withdraw {
+            holder: me.clone(),
+            scope: scope.clone(),
+            rationale: flag(args, "--why").unwrap_or_default().to_string(),
+        },
+    ) {
+        return fail(e);
+    }
+    println!("{me} no longer holds {scope}");
+    let Some(question) = flag(args, "-m").filter(|q| !q.trim().is_empty()) else {
+        println!("\n  the thing you know and nobody else will learn:");
+        println!("    canon leave {scope} -m \"<it>\"   (recorded without your name)");
+        return 0;
+    };
+    // Written by `anonymous`, so the record carries no name. `Question` is
+    // exempt from the attribution check by design — asking is not
+    // adjudicating — so this does not show up as an unattended decision.
+    let act = Act::new(
+        ActKind::Question {
+            text: question.to_string(),
+            proposal: None,
+        },
+        store::now(),
+        "anonymous",
+    );
+    match store::append(&d, &act) {
+        Ok(()) => {
+            println!("{}  ? {question}", act.id);
+            println!("  recorded without your name.");
+            println!(
+                "  it sits next to your withdrawal in the log, so treat the anonymity as thin."
+            );
+            0
+        }
+        Err(e) => fail(e),
+    }
 }

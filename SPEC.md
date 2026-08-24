@@ -101,6 +101,7 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `draw_commit` | `scope`, `count`, `after_ts`, `rationale?` | A lot is announced |
 | `draw_secret` | `commit`, `digest` | A sealed secret, before the boundary |
 | `draw_reveal` | `commit`, `secret` | The secret, after it |
+| `silence` | `about`, `rationale` | Unwritten on purpose, not by neglect |
 
 `accept.rationale` is **required**: a tolerated contradiction must say
 what it protects. Every other rationale is optional, and `dismiss` is
@@ -151,6 +152,12 @@ and this format does not rewrite what is already written. A reader MUST
 read both through one calendar, and MUST NOT read an unparseable revisit
 as a date — reporting it as unreadable and reading it as epoch zero are
 not the same thing, and the second makes it permanently overdue.
+
+`silence.rationale` is **required**, like `accept`'s: something left
+unwritten on purpose must say what that protects, or it cannot be told
+apart from having been forgotten. A reader MUST match `about` exactly and
+MUST NOT match by resemblance — a silence that spread would cover
+subjects nobody chose to leave unwritten.
 
 **The draw is a query, not an act.** There is no `draw` op and there must
 not be one: given `draw_commit` and the verified secrets, the panel is a

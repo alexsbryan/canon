@@ -86,6 +86,7 @@ fn the_personal_profile_never_renders_a_verdict_on_either_surface() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     for banned in ["CONFLICT", "SUPPORTED", "UNADDRESSED", "verdict"] {
         assert!(
@@ -98,12 +99,17 @@ fn the_personal_profile_never_renders_a_verdict_on_either_surface() {
 
     // And the machine-readable surface carries no outcome either: an outcome
     // is a verdict however it is serialized.
-    let p = payload(Profile::Personal, &standing, &shipped(&canon, &standing));
+    let p = payload(
+        Profile::Personal,
+        &standing,
+        &shipped(&canon, &standing),
+        None,
+    );
     assert!(p.get("outcome").is_none(), "{p}");
     assert!(p.get("positions").is_some());
     // The other profiles do carry it.
     assert_eq!(
-        payload(Profile::Code, &standing, &shipped(&canon, &standing))["outcome"],
+        payload(Profile::Code, &standing, &shipped(&canon, &standing), None)["outcome"],
         "conflicts"
     );
 }
@@ -116,6 +122,7 @@ fn the_code_profile_names_the_rule_it_conflicts_with() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     assert!(text.starts_with("CONFLICT"));
     assert!(text.contains("Mornings are protected"));
@@ -131,6 +138,7 @@ fn the_house_profile_says_which_act_the_proposal_needs() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     assert!(text.contains("NEEDS AN AMENDMENT"));
     assert!(text.contains("canon supersede"));
@@ -141,6 +149,7 @@ fn the_house_profile_says_which_act_the_proposal_needs() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     assert!(text.contains("NEEDS A NEW RULE"));
     assert!(text.contains("canon add"));
@@ -155,6 +164,7 @@ fn nothing_bearing_on_a_proposal_is_unaddressed_not_approval() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     assert!(text.starts_with("UNADDRESSED"));
     assert!(!text.contains("SUPPORTED"));
@@ -240,6 +250,7 @@ fn a_carried_contradiction_is_shown_rather_than_relitigated() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     assert!(
         text.contains("reliability is how I earn the autonomy"),
@@ -259,7 +270,7 @@ fn the_canon_own_policy_decides_the_check_and_not_what_shipped() {
 
     let consent = Rule::Consent.decide(&standing, &Attributes::default(), &canon);
     assert_eq!(consent.authority, Authority::Refuse);
-    let text = render(Profile::Code, &canon, &standing, &consent);
+    let text = render(Profile::Code, &canon, &standing, &consent, None);
     assert!(text.starts_with("CONFLICT"), "{text}");
     assert!(text.contains("not under this policy"), "{text}");
     assert!(
@@ -268,7 +279,7 @@ fn the_canon_own_policy_decides_the_check_and_not_what_shipped() {
     );
 
     let lenient = Rule::Threshold { against: 2 }.decide(&standing, &Attributes::default(), &canon);
-    let text = render(Profile::Code, &canon, &standing, &lenient);
+    let text = render(Profile::Code, &canon, &standing, &lenient, None);
     assert!(text.starts_with("SUPPORTED"), "{text}");
     assert!(text.contains("1 against, 2 needed"), "{text}");
 }
@@ -283,6 +294,7 @@ fn the_authority_is_rendered_even_when_it_agrees_with_you() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     assert!(text.starts_with("SUPPORTED"));
     assert!(text.contains("\nact\n"), "{text}");
@@ -295,7 +307,7 @@ fn the_personal_profile_still_renders_no_verdict_under_any_policy() {
     // refuses outright.
     let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
     let refused = Rule::Consent.decide(&standing, &Attributes::default(), &canon);
-    let text = render(Profile::Personal, &canon, &standing, &refused);
+    let text = render(Profile::Personal, &canon, &standing, &refused, None);
     for banned in [
         "CONFLICT",
         "SUPPORTED",
@@ -307,7 +319,7 @@ fn the_personal_profile_still_renders_no_verdict_under_any_policy() {
             "personal rendered `{banned}`:\n{text}"
         );
     }
-    let p = payload(Profile::Personal, &standing, &refused);
+    let p = payload(Profile::Personal, &standing, &refused, None);
     assert!(p.get("outcome").is_none(), "{p}");
     assert!(
         p.get("authority").is_none(),
@@ -332,6 +344,7 @@ fn a_position_a_person_took_is_rendered_and_not_silently_dropped() {
         &canon,
         &standing,
         &shipped(&canon, &standing),
+        None,
     );
     assert!(text.contains("human:dana"), "{text}");
     assert!(text.contains("objects"), "{text}");
@@ -340,4 +353,41 @@ fn a_position_a_person_took_is_rendered_and_not_silently_dropped() {
         text.contains("human:sam"),
         "the supporting vote too: {text}"
     );
+}
+
+#[test]
+fn a_subject_left_unwritten_on_purpose_is_not_reported_as_a_gap() {
+    // The métis floor at the surface that matters. `UNADDRESSED` plus "write
+    // a rule" is exactly the prompt that turns a working unwritten practice
+    // into a rota nobody wanted.
+    let canon = canon_of(&TEXTS);
+    let (standing, _) = Standing::cited(&canon, "who cooks on a wednesday", vec![]);
+    let decision = shipped(&canon, &standing);
+    assert_eq!(decision.outcome, Outcome::Unaddressed);
+
+    let plain = render(Profile::House, &canon, &standing, &decision, None);
+    assert!(plain.contains("NEEDS A NEW RULE"), "{plain}");
+
+    let s = canon_core::Silence {
+        about: "who cooks on a wednesday".into(),
+        rationale: "it works, and writing it down would turn it into a rota".into(),
+        at: 1_767_225_600,
+        actor: "human:alex".into(),
+        act: canon_core::ActId::from_raw("can-000000000001"),
+    };
+    let quiet = render(Profile::House, &canon, &standing, &decision, Some(&s));
+    assert!(quiet.contains("UNWRITTEN ON PURPOSE"), "{quiet}");
+    assert!(!quiet.contains("NEEDS A NEW RULE"), "{quiet}");
+    assert!(
+        quiet.contains("turn it into a rota"),
+        "it says what it protects"
+    );
+    // Still revisitable — a silence is an act like any other, not a lock.
+    assert!(quiet.contains("canon undo"), "{quiet}");
+
+    // The machine surface carries it too, or an agent would read the same
+    // silence as a gap and propose a rule.
+    let p = payload(Profile::House, &standing, &decision, Some(&s));
+    assert!(p.get("silence").is_some(), "{p}");
+    assert_eq!(p["outcome"], "unaddressed", "the outcome is still honest");
 }

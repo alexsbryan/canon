@@ -25,7 +25,8 @@ pub mod standing;
 pub use act::{Act, ActKind, FORMAT_VERSION};
 pub use draw::{DrawError, Drawn};
 pub use fold::{
-    derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Ruling, Status,
+    derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Ruling, Silence,
+    Stated, Status, Voice,
 };
 pub use horizon::{Due, Horizon, Overdue};
 pub use id::{short_digest, ActId, ID_PREFIX};

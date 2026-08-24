@@ -16,7 +16,7 @@
 
 use canon_core::{
     Attributes, Authority, Canon, Commitment, Decision, Disposition, Outcome, Policy, Position,
-    Pull, Scope, Standing, Status,
+    Pull, Scope, Silence, Standing, Status,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -263,17 +263,29 @@ const HOUSE: Voice = Voice {
           or record the gap for the next meeting:  canon question \"{p}\"\n",
 };
 
-pub fn render(profile: Profile, canon: &Canon, standing: &Standing, decision: &Decision) -> String {
+pub fn render(
+    profile: Profile,
+    canon: &Canon,
+    standing: &Standing,
+    decision: &Decision,
+    silence: Option<&Silence>,
+) -> String {
     match profile {
         // Never a verdict, and never routed through one.
         Profile::Personal => render_stakes(canon, standing),
-        Profile::Code => render_verdict(&CODE, canon, standing, decision),
-        Profile::House => render_verdict(&HOUSE, canon, standing, decision),
+        Profile::Code => render_verdict(&CODE, canon, standing, decision, silence),
+        Profile::House => render_verdict(&HOUSE, canon, standing, decision, silence),
     }
 }
 
 /// The one place an outcome becomes words.
-fn render_verdict(v: &Voice, canon: &Canon, standing: &Standing, decision: &Decision) -> String {
+fn render_verdict(
+    v: &Voice,
+    canon: &Canon,
+    standing: &Standing,
+    decision: &Decision,
+    silence: Option<&Silence>,
+) -> String {
     let mut out = String::new();
     match decision.outcome {
         Outcome::Conflicts => {
@@ -311,13 +323,31 @@ fn render_verdict(v: &Voice, canon: &Canon, standing: &Standing, decision: &Deci
         Outcome::Unaddressed => {
             // Not approval. The canon is silent, and silence is reported as
             // silence — whatever the policy then permits.
-            out.push_str(v.unaddressed);
-            out.push('\n');
-            out.push_str(v.unaddressed_lead);
-            if !v.unaddressed_lead.is_empty() {
+            // A subject somebody left unwritten ON PURPOSE is not a gap, and
+            // prompting for a new rule here is how a tool turns a working
+            // unwritten practice into a rota nobody wanted.
+            if let Some(s) = silence {
+                out.push_str("UNWRITTEN ON PURPOSE\n");
+                out.push_str(&format!(
+                    "  \"{}\" is left unwritten deliberately.\n",
+                    s.about
+                ));
+                out.push_str(&format!("  {}\n", s.rationale));
+                out.push_str(&format!(
+                    "  decided {} by {} — and revisitable like anything else:\n    canon undo {}\n",
+                    store::ymd(s.at),
+                    s.actor,
+                    s.act
+                ));
+            } else {
+                out.push_str(v.unaddressed);
                 out.push('\n');
+                out.push_str(v.unaddressed_lead);
+                if !v.unaddressed_lead.is_empty() {
+                    out.push('\n');
+                }
+                out.push_str(&v.gap.replace("{p}", &standing.proposal));
             }
-            out.push_str(&v.gap.replace("{p}", &standing.proposal));
         }
     }
     out.push_str(&authority_line(decision));
@@ -403,12 +433,20 @@ fn render_stakes(canon: &Canon, standing: &Standing) -> String {
 /// The personal profile's payload carries NO `outcome` field. An outcome is a
 /// verdict whichever way it is serialized, and "never renders a verdict" has
 /// to hold for the machine-readable surface too or it does not hold.
-pub fn payload(profile: Profile, standing: &Standing, decision: &Decision) -> Value {
+pub fn payload(
+    profile: Profile,
+    standing: &Standing,
+    decision: &Decision,
+    silence: Option<&Silence>,
+) -> Value {
     let mut v = json!({
         "proposal": standing.proposal,
         "profile": profile.as_str(),
         "positions": standing.positions,
     });
+    if let Some(s) = silence {
+        v["silence"] = serde_json::to_value(s).unwrap_or(Value::Null);
+    }
     if profile != Profile::Personal {
         v["outcome"] = serde_json::to_value(decision.outcome).unwrap_or(Value::Null);
         v["authority"] = serde_json::to_value(decision.authority).unwrap_or(Value::Null);
@@ -503,14 +541,15 @@ pub fn run(args: &[String]) -> i32 {
     // adopted nothing decides by what shipped — and says so.
     let rule = canon.policy_for(attrs.scope.as_ref()).clone();
     let decision = rule.decide(&standing, &attrs, &canon);
+    let silence = canon.silence_about(&attrs.about);
     if crate::cmds::has(args, "--json") {
         println!(
             "{}",
-            serde_json::to_string_pretty(&payload(profile, &standing, &decision))
+            serde_json::to_string_pretty(&payload(profile, &standing, &decision, silence))
                 .unwrap_or_default()
         );
     } else {
-        print!("{}", render(profile, &canon, &standing, &decision));
+        print!("{}", render(profile, &canon, &standing, &decision, silence));
         if let Some(note) = crate::cmds::carried_note(&canon) {
             eprintln!("\n{note}");
         }

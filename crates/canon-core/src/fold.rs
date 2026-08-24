@@ -119,8 +119,22 @@ pub struct Stated {
     /// What it is a position on.
     pub about: String,
     pub position: crate::standing::Position,
+    /// Who wrote the act. For an actor-sourced position this is the same
+    /// person the source names; for a cited one it is who did the citing,
+    /// which is a different fact and the one a voice record wants.
+    pub by: String,
     pub at: i64,
     /// The act that recorded it, so it can be reverted like anything else.
+    pub act: ActId,
+}
+
+/// Something left unwritten on purpose.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Silence {
+    pub about: String,
+    pub rationale: String,
+    pub at: i64,
+    pub actor: String,
     pub act: ActId,
 }
 
@@ -204,6 +218,9 @@ pub struct Canon {
     /// What the group has decided, in order. Decisions, never observations.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rulings: Vec<Ruling>,
+    /// What this canon leaves unwritten on purpose. Last word per subject.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub silences: Vec<Silence>,
     /// Draws announced.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub draws: Vec<crate::draw::Committed>,
@@ -327,6 +344,35 @@ impl Canon {
         self.rulings.iter().filter(|r| r.about == about).collect()
     }
 
+    /// Is this subject unwritten on purpose?
+    ///
+    /// **Exact subject match, and no fuzzy matching ever.** A silence that
+    /// spread by resemblance would quietly cover things nobody chose to leave
+    /// unwritten, which is the opposite of what it is for. `canon check
+    /// --about "<subject>"` is how a proposal is checked against one.
+    pub fn silence_about(&self, about: &str) -> Option<&Silence> {
+        self.silences.iter().find(|s| s.about == about)
+    }
+
+    /// What somebody raised, and what became of it.
+    ///
+    /// **Hirschman's loyalty mechanism, made answerable.** Voice is only
+    /// rational if it works, and whether it has worked for YOU is exactly the
+    /// thing a person cannot verify by memory and will not ask about aloud.
+    /// One query: the questions you asked and whether any were answered, the
+    /// positions you took, and the decisions you made.
+    ///
+    /// It reads the canon, not a file on a person. Everything here is
+    /// something the actor themselves put in the log.
+    pub fn voice_of(&self, actor: &str) -> Voice<'_> {
+        Voice {
+            asked: self.questions.iter().filter(|q| q.actor == actor).collect(),
+            positions: self.positions.iter().filter(|p| p.by == actor).collect(),
+            decided: self.rulings.iter().filter(|r| r.actor == actor).collect(),
+            silences: self.silences.iter().filter(|s| s.actor == actor).collect(),
+        }
+    }
+
     /// What rank someone gave this commitment, if anyone did.
     pub fn rank_of(&self, commitment: &ActId) -> Option<&str> {
         self.ranks
@@ -359,6 +405,45 @@ impl Canon {
         self.conflicts
             .iter()
             .filter(|c| matches!(c.disposition, Disposition::Tolerated { .. }))
+    }
+}
+
+/// What one person put into the canon, and what came of it.
+///
+/// Borrowed rather than owned so this costs a filter and not a clone of the
+/// log. It is a view of the record, not a record of its own — there is no
+/// second store here that could drift from the first, and nothing in it was
+/// observed about anybody.
+#[derive(Debug)]
+pub struct Voice<'a> {
+    pub asked: Vec<&'a Question>,
+    pub positions: Vec<&'a Stated>,
+    pub decided: Vec<&'a Ruling>,
+    pub silences: Vec<&'a Silence>,
+}
+
+impl Voice<'_> {
+    /// Questions of theirs that a commitment answered.
+    pub fn answered(&self) -> usize {
+        self.asked
+            .iter()
+            .filter(|q| matches!(q.status, Status::Superseded { .. }))
+            .count()
+    }
+
+    /// Questions still open. The number that says whether voice is working.
+    pub fn open(&self) -> usize {
+        self.asked
+            .iter()
+            .filter(|q| matches!(q.status, Status::Active))
+            .count()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.asked.is_empty()
+            && self.positions.is_empty()
+            && self.decided.is_empty()
+            && self.silences.is_empty()
     }
 }
 
@@ -653,6 +738,7 @@ pub fn derive(acts: &[Act]) -> Canon {
                 canon.positions.push(Stated {
                     about: about.clone(),
                     position,
+                    by: act.actor.clone(),
                     at: act.ts_unix,
                     act: act.id.clone(),
                 });
@@ -685,6 +771,16 @@ pub fn derive(acts: &[Act]) -> Canon {
                 actor: act.actor.clone(),
                 act: act.id.clone(),
             }),
+            ActKind::Silence { about, rationale } => {
+                canon.silences.retain(|s| s.about != *about);
+                canon.silences.push(Silence {
+                    about: about.clone(),
+                    rationale: rationale.clone(),
+                    at: act.ts_unix,
+                    actor: act.actor.clone(),
+                    act: act.id.clone(),
+                });
+            }
             ActKind::DrawCommit {
                 scope,
                 count,
