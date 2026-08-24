@@ -75,10 +75,16 @@ failure, not a compatibility inconvenience.
 
 Closed set, therefore an enum.
 
-## Primitive 3 — Open annotations, registry and forward-compatible
+## Primitive 3 — Open annotations, forward-compatible
 
-`PARTIAL` (`Accept`, `Dismiss`, `Question`, `Adopt` exist, but as closed
-built-ins rather than a registry)
+`BUILT` in format v2 (`act.rs`: `STRUCTURAL`, `KNOWN_ANNOTATIONS`,
+`ActKind::Annotation`; `fold.rs`: `Canon::carried`)
+
+**Corrected from "registry".** What this needed was not a registration API but
+a namespace split with a carried fallback: known ops are read strictly, and an
+op from a build ahead of this one is preserved verbatim and left uninterpreted.
+Interpretation is added where a kind is understood, which is the policy layer,
+not a table of constructors.
 
 Everything that is not structural is a typed statement *about* a commitment or
 a pair of them. Accepting a contradiction. Dismissing a detector's false
@@ -89,13 +95,17 @@ deliberately left unwritten.
 Unknown annotation kinds must be **carried but not interpreted** — the opposite
 rule from Primitive 2.
 
-**Why this changes:** the note on `Question` in `act.rs` explains it was added
+**Why this changed:** the note on `Question` in `act.rs` explained it was added
 inside v1 "because an unknown `op` is refused rather than skipped, which makes
 every new act kind a breaking change." That rule is right for structural ops and
-much too strict for annotations. Under it, a community cannot add a governance
-move without forking the format — which means the library ships one opinion
-about what moves exist, and that is exactly what this document is trying to
-avoid. Closed set as enum, open set as registry.
+much too strict for annotations. Under it, a community could not add a
+governance move without forking the format — which meant the library shipped one
+opinion about what moves exist.
+
+**Carried is not ignored**, and that is the §4.3 deviation this repays.
+`Canon::carried` records every uninterpreted annotation by op, and `canon log`
+and `canon list` report them. Extensibility that answers as though it had read
+everything is worse than refusing to read.
 
 ## Primitive 4 — Resolvers: text in, typed evidence out, never a verdict
 

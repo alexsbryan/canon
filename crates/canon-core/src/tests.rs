@@ -640,3 +640,95 @@ fn superseding_a_question_that_is_not_in_the_log_is_still_reported() {
     .derive();
     assert_eq!(st.dangling.len(), 1);
 }
+
+// ── v2: the op namespace splits, and the halves have opposite rules ──────
+
+/// One raw JSONL line, so these tests exercise the reader rather than a
+/// constructor that could not produce the shape in the first place.
+fn line(op: &str, extra: &str) -> String {
+    format!(
+        r#"{{"id":"can-000000000000","v":2,"ts_unix":100,"actor":"human:sam","op":"{op}"{extra}}}"#
+    )
+}
+
+#[test]
+fn an_unknown_structural_op_is_refused_not_carried() {
+    // There is no such thing as a structural op we do not know: the list is
+    // closed. But a MALFORMED known one must not slip through as an
+    // annotation, which is the way this guard would fail quietly.
+    let bad = line("retract", "");
+    let err = Log::parse(&bad).expect_err("a retract with no target is not readable");
+    assert!(
+        matches!(err, ParseError::Malformed { .. }),
+        "a malformed structural op refuses the line, it does not become an annotation: {err:?}"
+    );
+}
+
+#[test]
+fn an_unknown_annotation_is_carried_and_round_trips() {
+    // The governance move this build has never heard of. Before v2 this was a
+    // parse error, which made every new move a breaking change.
+    let raw = line(
+        "second",
+        r#","question":"can-abc","actor_ref":"human:dana""#,
+    );
+    let log = Log::parse(&raw).expect("an unknown annotation is readable");
+    assert_eq!(log.len(), 1);
+    let ActKind::Annotation { kind, body } = &log.acts()[0].kind else {
+        panic!("expected an Annotation, got {:?}", log.acts()[0].kind);
+    };
+    assert_eq!(kind, "second");
+    assert_eq!(
+        body.get("question").and_then(|v| v.as_str()),
+        Some("can-abc")
+    );
+    assert!(
+        !body.contains_key("op"),
+        "`op` is the kind, not part of the body"
+    );
+
+    // Round-trips: nothing is lost by reading a log we do not fully understand.
+    let again = Log::parse(&log.render()).expect("re-readable");
+    assert_eq!(again.acts()[0].kind, log.acts()[0].kind);
+    assert_eq!(again.acts()[0].id, log.acts()[0].id, "the id survives");
+}
+
+#[test]
+fn a_carried_annotation_changes_nothing_and_is_reported() {
+    // "Not interpreted" has to mean it cannot reach the fold at all — that is
+    // what makes carrying an unknown move safe rather than a hole.
+    let known = Log::from_acts(vec![assert_c("quiet hours at 11", 100)]);
+    let raw = format!(
+        "{}\n{}",
+        known.render().trim(),
+        line("sanction", r#","who":"human:dana","step":2"#)
+    );
+    let mixed = Log::parse(&raw).expect("readable");
+
+    let a = known.derive();
+    let b = mixed.derive();
+    assert_eq!(
+        a.commitments, b.commitments,
+        "an unread act changes nothing"
+    );
+    assert_eq!(a.conflicts, b.conflicts);
+    assert!(a.carried.is_empty());
+
+    // And it is reported rather than silently dropped (§18.3, §4.3).
+    assert_eq!(b.carried.len(), 1, "carried is not the same as ignored");
+    assert_eq!(b.carried[0].1, "sanction");
+    assert!(
+        b.unattended.is_empty(),
+        "an annotation we did not interpret is not an adjudication"
+    );
+}
+
+#[test]
+fn a_version_beyond_this_build_is_still_refused() {
+    // v2 widened what ops mean, not what versions mean.
+    let ahead = line("assert", r#","text":"x""#).replace(r#""v":2"#, r#""v":3"#);
+    assert!(matches!(
+        Log::parse(&ahead),
+        Err(ParseError::UnknownVersion { found: 3, .. })
+    ));
+}
