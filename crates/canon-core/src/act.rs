@@ -42,7 +42,7 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 4] = ["accept", "dismiss", "question", "adopt"];
+pub const KNOWN_ANNOTATIONS: [&str; 5] = ["accept", "dismiss", "question", "adopt", "position"];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
 /// is the id of the act that introduced it.
@@ -129,6 +129,25 @@ pub enum ActKind {
         generation: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source: Option<String>,
+    },
+    /// Someone takes a position on a proposal.
+    ///
+    /// A vote, an objection, a second, a delegation's effect — all one shape.
+    /// **The actor is the act's own `actor`, never a field here**: two places
+    /// naming who did something is exactly the duplicated decider that
+    /// diverges quietly (§10.6).
+    ///
+    /// `citing` present means the position rests on a commitment the canon
+    /// holds; absent means it is the actor's own. Both are positions, and the
+    /// difference is what lets one policy count votes while another weighs
+    /// what the canon already says.
+    Position {
+        /// What this is a position on: a proposal key, or a question's id.
+        about: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        citing: Option<ActId>,
+        pull: crate::standing::Pull,
+        because: String,
     },
     /// An annotation this build does not interpret.
     ///

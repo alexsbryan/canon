@@ -309,7 +309,7 @@ fn render_check(dir: &Path, proposal: &str) -> Result<String, String> {
     // is indistinguishable from a canon that had less to say.
     if !refused.is_empty() {
         out.push_str(&format!(
-            "\n({} uncitable bearing(s) were refused and are not shown.)\n",
+            "\n({} uncitable position(s) were refused and are not shown.)\n",
             refused.len()
         ));
     }

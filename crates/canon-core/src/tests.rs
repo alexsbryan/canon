@@ -732,3 +732,134 @@ fn a_version_beyond_this_build_is_still_refused() {
         Err(ParseError::UnknownVersion { found: 3, .. })
     ));
 }
+
+// ── positions: a vote is an act, and the actor is the act's own ──────────
+
+#[test]
+fn a_position_citing_nothing_is_the_actors_own() {
+    // The whole point of the second source kind. Dana objecting is not a
+    // commitment bearing on the proposal; it is a person with a reason.
+    let act = Act::new(
+        ActKind::Position {
+            about: "move standup to 8am".into(),
+            citing: None,
+            pull: Pull::Against,
+            because: "school run until 8:30".into(),
+        },
+        100,
+        "human:dana",
+    );
+    let canon = Log::from_acts(vec![act.clone()]).derive();
+    assert_eq!(canon.positions.len(), 1);
+    let stated = &canon.positions[0];
+    assert_eq!(stated.about, "move standup to 8am");
+    assert_eq!(
+        stated.position.actor(),
+        Some("human:dana"),
+        "the act's actor IS the source — nothing else says who"
+    );
+    assert!(stated.position.commitment().is_none());
+    assert_eq!(stated.act, act.id, "revertible like any other act");
+}
+
+#[test]
+fn a_position_citing_a_commitment_carries_the_citation() {
+    let rule = assert_c("mornings are protected", 100);
+    let cited = Act::new(
+        ActKind::Position {
+            about: "move standup to 8am".into(),
+            citing: Some(rule.id.clone()),
+            pull: Pull::Against,
+            because: "8am is inside mornings".into(),
+        },
+        200,
+        "agent:canon",
+    );
+    let canon = Log::from_acts(vec![rule.clone(), cited]).derive();
+    assert_eq!(canon.positions[0].position.commitment(), Some(&rule.id));
+    assert!(
+        canon.positions[0].position.actor().is_none(),
+        "a cited position rests on the rule, not on whoever noticed it"
+    );
+}
+
+#[test]
+fn an_agent_may_cite_a_rule_but_may_not_hold_an_opinion() {
+    // The line PRIMITIVES.md draws, falling out of the type rather than
+    // being remembered. Citing a commitment is a READING and is what an
+    // agent is for. Taking your own position is a STANCE — and under a
+    // consent policy one reasoned objection blocks, so an agent that may
+    // object may veto.
+    let rule = assert_c("mornings are protected", 100);
+    let reading = Act::new(
+        ActKind::Position {
+            about: "p".into(),
+            citing: Some(rule.id.clone()),
+            pull: Pull::Against,
+            because: "reads against it".into(),
+        },
+        200,
+        "agent:canon",
+    );
+    let stance = Act::new(
+        ActKind::Position {
+            about: "p".into(),
+            citing: None,
+            pull: Pull::Against,
+            because: "I do not like it".into(),
+        },
+        300,
+        "agent:canon",
+    );
+
+    let cited_only = Log::from_acts(vec![rule.clone(), reading.clone()]).derive();
+    assert!(
+        cited_only.unattended.is_empty(),
+        "an agent citing a rule is reading, not ruling"
+    );
+
+    let with_stance = Log::from_acts(vec![rule, reading, stance.clone()]).derive();
+    assert_eq!(
+        with_stance.unattended,
+        vec![stance.id],
+        "an agent's own position is an adjudication and is surfaced"
+    );
+
+    // And the same stance from a person is not flagged at all.
+    let human = Act::new(
+        ActKind::Position {
+            about: "p".into(),
+            citing: None,
+            pull: Pull::Against,
+            because: "school run".into(),
+        },
+        400,
+        "human:dana",
+    );
+    let by_person = Log::from_acts(vec![human]).derive();
+    assert!(by_person.unattended.is_empty());
+}
+
+#[test]
+fn a_reverted_position_leaves_no_trace_in_the_fold() {
+    let p = Act::new(
+        ActKind::Position {
+            about: "p".into(),
+            citing: None,
+            pull: Pull::Toward,
+            because: "fine by me".into(),
+        },
+        100,
+        "human:dana",
+    );
+    let undo = Act::new(
+        ActKind::Revert {
+            targets: vec![p.id.clone()],
+            rationale: "wrong proposal".into(),
+        },
+        200,
+        "human:dana",
+    );
+    let canon = Log::from_acts(vec![p, undo]).derive();
+    assert!(canon.positions.is_empty(), "revert tombstones its effects");
+}

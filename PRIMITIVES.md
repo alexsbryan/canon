@@ -128,13 +128,13 @@ checked; a verdict it produces cannot.
 Configurable: which resolvers run, which model, whether any run at all.
 Not configurable: that code holds the decision.
 
-## Primitive 5 — Bearings: cited evidence with a direction and a reason
+## Primitive 5 — Positions: cited evidence with a source, a direction and a reason
 
-`BUILT` (`standing.rs`: `Bearing { commitment, pull, because }`,
-`Standing::cited`)
+`BUILT` (`standing.rs`: `Position { source, pull, because }`,
+`Source::{Commitment, Actor}`, `Standing::cited`; `act.rs`: the `position` op)
 
-A bearing names a commitment the canon actually holds, says which way it pulls,
-and says why. `Standing::cited` drops any bearing citing a commitment that does
+A position names something real — a commitment the canon holds, or an actor —
+says which way it pulls, and says why. `Standing::cited` drops any bearing citing a commitment that does
 not exist, and **returns what it refused** rather than silently rendering a
 shorter answer.
 
@@ -148,12 +148,23 @@ constrains people to arguments framed as group-interested, and that constraint
 shapes outcomes even when the reason is insincere — what Elster called the
 civilizing force of hypocrisy.
 
-**This must generalize to actor-sourced positions.** A bearing runs from a
-commitment to a proposal; a vote, an objection, a second and a delegation run
-from an *actor* to a proposal. Modelling only the first is what makes every
-voting technology look like it needs new mechanism. One relation, two source
-kinds, `because` still required on anything pulling against. See the adequacy
-test.
+**Two source kinds, and the split earns more than voting.** A bearing runs from
+a commitment; a vote, objection, second or delegation runs from an *actor*.
+Modelling only the first was what made every voting technology look like new
+mechanism.
+
+It also decides, structurally, what an agent may do. Citing a commitment is a
+READING — an agent's whole job — and is not an adjudication. Taking your own
+position is a STANCE, and under a consent policy one reasoned objection blocks,
+so an agent that may object may veto. `fold.rs` therefore flags a
+machine-authored `Position { citing: None }` as unattended and a
+`Position { citing: Some(_) }` as ordinary work. "Agents draft, ask and cite;
+they do not adjudicate" stopped being a sentence to remember and became a
+consequence of the type (§7).
+
+The act carries no actor field: for an actor-sourced position the source IS the
+act's own `actor`. Two places naming who did something is the duplicated decider
+that diverges quietly (§10.6).
 
 ## Primitive 6 — Boundaries: who holds standing, over what
 

@@ -113,6 +113,17 @@ impl Conflict {
 }
 
 /// Where this canon came from, if it was adopted.
+/// A position somebody took, with when and by whom.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Stated {
+    /// What it is a position on.
+    pub about: String,
+    pub position: crate::standing::Position,
+    pub at: i64,
+    /// The act that recorded it, so it can be reverted like anything else.
+    pub act: ActId,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Ancestry {
     pub lineage: String,
@@ -144,6 +155,12 @@ pub struct Canon {
     /// supersession whose target is absent is a hole in the record, not a
     /// no-op.
     pub dangling: Vec<(ActId, ActId)>,
+    /// Positions people and commitments have taken, by what they are about.
+    ///
+    /// Recorded here rather than resolved into an outcome: turning positions
+    /// into a verdict is policy's job, and the fold has no policy.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub positions: Vec<Stated>,
     /// Annotations this build carried without interpreting, by op.
     ///
     /// The §4.3 mitigation, and it is required rather than a courtesy.
@@ -329,12 +346,27 @@ pub fn derive(acts: &[Act]) -> Canon {
         // not know what it is, and calling it one would be an interpretation
         // we just declined to make. It cannot bypass a gate either, because
         // it has no effect on the fold at all.
+        //
+        // A POSITION SPLITS ON ITS SOURCE, and the split is the reason the
+        // two source kinds are worth having. Citing a commitment is a
+        // READING — "this rule bears on that proposal" — which is exactly
+        // what an agent is for, and flagging every agent citation as an
+        // unattended adjudication would bury the real ones. Taking your OWN
+        // position is a STANCE, and an agent with a stance is adjudicating:
+        // under a consent policy one reasoned objection blocks, so an agent
+        // that may object may veto. "Agents draft, ask and cite; they do not
+        // adjudicate" now falls out of the type instead of being remembered
+        // (§7 — structural, not instructed).
         let adjudication = !matches!(
             act.kind,
             ActKind::Assert { .. }
                 | ActKind::Adopt { .. }
                 | ActKind::Question { .. }
                 | ActKind::Annotation { .. }
+                | ActKind::Position {
+                    citing: Some(_),
+                    ..
+                }
         );
         if adjudication && !act.is_human() {
             canon.unattended.push(act.id.clone());
@@ -400,6 +432,25 @@ pub fn derive(acts: &[Act]) -> Canon {
                     source: source.clone(),
                     at: act.ts_unix,
                 })
+            }
+            ActKind::Position {
+                about,
+                citing,
+                pull,
+                because,
+            } => {
+                // The act's own actor is the source when nothing is cited.
+                // One place says who.
+                let position = match citing {
+                    Some(id) => crate::standing::Position::of(id.clone(), *pull, because),
+                    None => crate::standing::Position::by(act.actor.clone(), *pull, because),
+                };
+                canon.positions.push(Stated {
+                    about: about.clone(),
+                    position,
+                    at: act.ts_unix,
+                    act: act.id.clone(),
+                });
             }
             // Recorded, never acted on. This arm IS "not interpreted".
             ActKind::Annotation { kind, .. } => {

@@ -22,7 +22,7 @@ pub use fold::{derive, Ancestry, Canon, Commitment, Conflict, Disposition, Quest
 pub use id::{short_digest, ActId, ID_PREFIX};
 pub use lineage::{Divergence, Fate, Inherited, Snapshot, SnapshotCommitment};
 pub use log::{Log, ParseError};
-pub use standing::{Bearing, Outcome, Pull, Standing};
+pub use standing::{Outcome, Position, Pull, Source, Standing};
 
 #[cfg(test)]
 mod tests;
