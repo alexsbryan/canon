@@ -123,7 +123,10 @@ impl Canon {
         }
 
         for g in &self.grants {
-            if !g.lapsed(now) {
+            // Lapsed, and not already closed some other way. Standing that
+            // somebody gave up before its horizon was dealt with; surfacing
+            // it as overdue would be the query re-raising settled work.
+            if !g.lapsed(now) || g.withdrawn_at.is_some() || g.granted_at > now {
                 continue;
             }
             out.push(Overdue {

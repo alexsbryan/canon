@@ -107,6 +107,16 @@ pub struct Grant {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub horizon: Option<i64>,
     pub granted_at: i64,
+    /// When it was given up, stood down, or replaced by a re-grant.
+    ///
+    /// **Kept rather than deleted, and that is what makes standing an AS-OF
+    /// question.** A live-list-only model cannot answer "who held the kitchen
+    /// in March", and worse, it lets a withdrawal today silently change a
+    /// pool that was supposed to be frozen in March — which is the pool-churn
+    /// attack the draw's threat model names, arriving from the other
+    /// direction.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub withdrawn_at: Option<i64>,
     /// The act that granted it, so it can be reverted like anything else.
     pub act: ActId,
 }
@@ -118,6 +128,15 @@ impl Grant {
     /// staleness query wants to say "this lapsed and nobody renewed it".
     pub fn lapsed(&self, now: i64) -> bool {
         self.horizon.is_some_and(|h| now > h)
+    }
+
+    /// Was this standing actually held at that moment?
+    ///
+    /// Three ways it is not: it had not been given yet, it had lapsed, or it
+    /// had been given up. All three are dates, so all three are answerable
+    /// about any moment rather than only about now.
+    pub fn held_at(&self, now: i64) -> bool {
+        self.granted_at <= now && !self.lapsed(now) && self.withdrawn_at.is_none_or(|w| w > now)
     }
 }
 
@@ -180,6 +199,7 @@ mod tests {
             scope: Scope::new("house.kitchen").unwrap(),
             horizon: Some(200),
             granted_at: 100,
+            withdrawn_at: None,
             act: ActId::from_raw("can-000000000000"),
         };
         assert!(!g.lapsed(199));
@@ -188,5 +208,22 @@ mod tests {
 
         let forever = Grant { horizon: None, ..g };
         assert!(!forever.lapsed(i64::MAX));
+    }
+
+    #[test]
+    fn standing_is_an_as_of_question_and_not_only_a_now_question() {
+        let g = Grant {
+            actor: "human:dana".into(),
+            scope: Scope::new("house").unwrap(),
+            horizon: None,
+            granted_at: 100,
+            withdrawn_at: Some(500),
+            act: ActId::from_raw("can-000000000000"),
+        };
+        assert!(!g.held_at(99), "before it was given");
+        assert!(g.held_at(100), "on the day it was given");
+        assert!(g.held_at(499));
+        assert!(!g.held_at(500), "the moment it was given up");
+        assert!(!g.held_at(10_000));
     }
 }

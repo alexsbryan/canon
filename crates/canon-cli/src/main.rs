@@ -12,6 +12,7 @@ mod check;
 mod cmds;
 mod config;
 mod draft;
+mod draw_cmd;
 mod explain;
 mod govern;
 mod lineage;
@@ -59,6 +60,9 @@ GOVERN                                        (no model needed)
   rank <id> <rank>                       a principle, not a convention
   horizon <act-id> <YYYY-MM-DD>          look at this again by then
   overdue                                what has gone past its date
+  draw commit <scope> <seats> --after    announce a lot nobody can steer
+  draw seal | open <draw-id>             your secret, before and after
+  draw show <draw-id>                    the panel, recomputed from the log
 
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
@@ -126,6 +130,7 @@ fn main() {
         "rank" => govern::rank(rest),
         "horizon" => govern::horizon(rest),
         "overdue" => govern::overdue(rest),
+        "draw" => draw_cmd::run(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),

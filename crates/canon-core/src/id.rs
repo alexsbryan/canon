@@ -48,20 +48,22 @@ impl ActId {
     }
 }
 
-/// A short content digest of arbitrary text.
+/// The full hex digest of arbitrary bytes.
 ///
 /// Exposed because this crate already owns content addressing, and the
-/// alternative — a second hasher in the CLI — is two implementations of one
-/// idea (§10.6).
-pub fn short_digest(input: &str) -> String {
-    let digest = Sha256::digest(input.as_bytes());
-    digest
+/// alternative — a second hasher elsewhere — is two implementations of one
+/// idea (§10.6). The draw's commit-reveal check and its seed both go through
+/// here, so "what does this hash to" has exactly one answer in the tree.
+pub fn digest_hex(input: &[u8]) -> String {
+    Sha256::digest(input)
         .iter()
         .map(|b| format!("{b:02x}"))
-        .collect::<String>()
-        .chars()
-        .take(8)
         .collect()
+}
+
+/// A short content digest of arbitrary text.
+pub fn short_digest(input: &str) -> String {
+    digest_hex(input.as_bytes()).chars().take(8).collect()
 }
 
 impl std::fmt::Display for ActId {
