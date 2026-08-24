@@ -122,9 +122,11 @@ canon draft --from ./notes        # or --from-git --since 1y
 
 `draft` extracts candidate commitments from text you already have and
 offers them one at a time. **Every candidate carries the passage it came
-from, or it is not shown**: the extractor must return the words verbatim,
-and a quote that is not in the source drops the candidate. A drafted
-commitment with no citation is a model inventing a value you never held.
+from, or it is not shown**: the extractor answers with the POSITION of the
+sentence it read, and `canon` cuts the quote out of the source itself — so
+a citation that is not in your document is not something that can happen.
+A drafted commitment with no citation is a model inventing a value you
+never held.
 
 There is no `--accept-all`. A canon adopted wholesale is disengagement at
 t=0, so accepting one at a time is what makes onboarding the first

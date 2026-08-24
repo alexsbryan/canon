@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! `draft` tests. The two that matter most are the invariants the phase
-//! exists to make structural: a paraphrase never becomes a citation, and the
-//! reduce step never mints text.
+//! exists to make structural: a citation is cut from the passage rather than
+//! retyped by the model, and the reduce step never mints text.
 
 use serde_json::json;
 
@@ -56,70 +56,101 @@ fn unstructured_prose_still_chunks_and_still_cites() {
     assert!(chunks[0].source.starts_with("journal.md:"));
 }
 
-fn extracted(items: &[(&str, &str)]) -> String {
+/// One scripted extraction: `(first marker, last marker, rule text)`. The
+/// model answers with a POSITION, so a test cannot hand it a quote — which is
+/// the property under test.
+fn extracted(items: &[(usize, usize, &str)]) -> String {
     completion(
         &json!({
             "commitments": items
                 .iter()
-                .map(|(t, q)| json!({ "text": t, "quote": q }))
+                .map(|(f, l, t)| json!({ "first": f, "last": l, "text": t }))
                 .collect::<Vec<_>>()
         })
         .to_string(),
     )
 }
 
+/// A chunk whose first sentence is too small to evidence anything.
+const SHORT: &str = "# House\n\nBe quiet. Quiet hours run from 11:00 PM until 7:00 AM.\n";
+
 #[test]
-fn a_paraphrased_quote_drops_the_candidate() {
+fn the_citation_is_cut_from_the_passage_not_taken_from_the_reply() {
     // Cite-or-abstain, enforced in code rather than asked of the model
-    // (§7.6). A commitment whose quote is not in the passage is the model
-    // inventing a rule the user never wrote.
+    // (§7.6) — and now by construction rather than by check. The model says
+    // WHERE; the quote is a slice of the chunk, so it carries the passage's
+    // own wording ("until 7:00 AM") and not the rule's ("to 7 AM").
     let chunks = chunk_text("house.md", DOC);
     let mock = Mock::spawn(vec![(
         200,
-        extracted(&[
-            (
-                "Quiet hours run from 11 PM to 7 AM.",
-                "Quiet hours run from 11:00 PM until 7:00 AM",
-            ),
-            (
-                "Noise is discouraged in the evening.",
-                "the house prefers a peaceful evening atmosphere",
-            ),
-        ]),
+        extracted(&[(1, 1, "Quiet hours run from 11 PM to 7 AM.")]),
     )]);
     let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
-    assert_eq!(kept.len(), 1, "{kept:#?}");
+    assert_eq!(kept.len(), 1, "{dropped:#?}");
     assert_eq!(kept[0].source, "house.md:3-4");
-    assert_eq!(dropped.len(), 1);
-    assert!(
-        dropped[0].reason.contains("not in the passage"),
-        "{dropped:#?}"
+    assert_eq!(
+        kept[0].quote,
+        "Quiet hours run from 11:00 PM until 7:00 AM."
     );
+    assert!(chunks[0].text.contains(&kept[0].quote));
 }
 
 #[test]
-fn a_quote_reflowed_across_lines_still_cites() {
-    // The passage wraps mid-sentence; a model quoting it returns one line.
-    // Same words, so the same citation — whitespace is not evidence.
+fn a_citation_keeps_the_line_breaks_the_passage_had() {
+    // The passage wraps mid-sentence. A model asked to retype it reflows;
+    // copying cannot, so the citation is byte-for-byte the source.
     let chunks = chunk_text("house.md", DOC);
     let mock = Mock::spawn(vec![(
         200,
         extracted(&[(
+            2,
+            2,
             "Music is played through headphones during quiet hours.",
-            "During quiet hours, music must be played through headphones.",
         )]),
     )]);
     let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
     assert_eq!(kept.len(), 1, "dropped: {dropped:#?}");
+    assert_eq!(
+        kept[0].quote,
+        "During quiet hours, music must\nbe played through headphones."
+    );
 }
 
 #[test]
-fn a_quote_too_short_to_be_evidence_is_refused() {
+fn a_rule_spanning_two_sentences_cites_both() {
     let chunks = chunk_text("house.md", DOC);
-    let mock = Mock::spawn(vec![(200, extracted(&[("Be quiet.", "quiet")]))]);
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted(&[(1, 2, "Quiet hours run 11 PM to 7 AM, headphones only.")]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert_eq!(kept.len(), 1, "dropped: {dropped:#?}");
+    assert_eq!(kept[0].quote, chunks[0].text);
+}
+
+#[test]
+fn a_position_the_passage_does_not_have_drops_the_candidate() {
+    // The one citation failure still reachable, and the reason names both
+    // what was asked for and what was on offer.
+    let chunks = chunk_text("house.md", DOC);
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted(&[(9, 9, "Quiet hours run from 11 PM to 7 AM.")]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert!(kept.is_empty(), "{kept:#?}");
+    assert_eq!(dropped[0].reason, "cited sentence 9, but the passage has 2");
+    // Nothing to quote, and nothing invented to stand in for one.
+    assert!(dropped[0].quote.is_empty());
+}
+
+#[test]
+fn a_cited_sentence_too_short_to_be_evidence_is_refused() {
+    let chunks = chunk_text("house.md", SHORT);
+    let mock = Mock::spawn(vec![(200, extracted(&[(1, 1, "Be quiet.")]))]);
     let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
     assert!(kept.is_empty());
-    assert!(dropped[0].reason.contains("too short"));
+    assert!(dropped[0].reason.contains("too short"), "{dropped:#?}");
 }
 
 /// What the reading pass answers for a batch of rules, 1-based.
@@ -140,6 +171,25 @@ fn read_as(rules: &[Reading]) -> String {
     )
 }
 
+/// Rule readings as `support` hands them on: one list per candidate, in the
+/// same order. The fold guard indexes straight into this, so a test supplies
+/// one entry per candidate whether or not that rule states anything.
+fn quantified(rules: &[&[(&str, &str, &str, &str)]]) -> Vec<Vec<quantify::Quantity>> {
+    rules
+        .iter()
+        .map(|qs| {
+            qs.iter()
+                .map(|(v, u, o, c)| quantify::Quantity {
+                    value: (*v).into(),
+                    unit: (*u).into(),
+                    of: (*o).into(),
+                    canonical: (*c).into(),
+                })
+                .collect()
+        })
+        .collect()
+}
+
 fn candidate(text: &str) -> Candidate {
     Candidate {
         text: text.into(),
@@ -147,6 +197,22 @@ fn candidate(text: &str) -> Candidate {
         chunk: 0,
         source: "house.md:1-2".into(),
     }
+}
+
+/// One scripted partition of a proposed group: for each member, the member
+/// it governs the same thing as. `dedupe` asks this before it folds anything,
+/// so every test that reaches the fold scripts a second response per group.
+fn named(same_as: &[usize]) -> String {
+    completion(
+        &json!({
+            "rules": same_as
+                .iter()
+                .enumerate()
+                .map(|(i, s)| json!({ "n": i + 1, "same_as": s }))
+                .collect::<Vec<_>>()
+        })
+        .to_string(),
+    )
 }
 
 #[test]
@@ -160,16 +226,15 @@ fn the_reduce_step_keeps_the_first_of_each_group_with_its_citation() {
     ];
     let mock = Mock::spawn(vec![
         (200, completion(&json!({ "groups": [[1, 3]] }).to_string())),
-        // Both state the same hour, so nothing keeps them apart.
-        (
-            200,
-            read_as(&[
-                (1, &[("11", "PM", "quiet hours start", "23:00")]),
-                (2, &[("eleven", "at night", "quiet hours start", "23:00")]),
-            ]),
-        ),
+        (200, named(&[1, 1])),
     ]);
-    let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
+    // Both state the same hour, so nothing keeps them apart.
+    let read = quantified(&[
+        &[("11", "PM", "quiet hours start", "23:00")],
+        &[],
+        &[("eleven", "at night", "quiet hours start", "23:00")],
+    ]);
+    let (groups, kept) = dedupe(&mock.client(), &cands, &read).unwrap();
     assert_eq!(groups, vec![vec![0, 2]]);
     assert_eq!(kept, vec![0, 1]);
     // The survivor is the ORIGINAL candidate, citation intact.
@@ -186,7 +251,7 @@ fn a_group_naming_a_position_that_does_not_exist_is_dropped_not_wrapped() {
         200,
         completion(&json!({ "groups": [[1, 99]] }).to_string()),
     )]);
-    let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
+    let (groups, kept) = dedupe(&mock.client(), &cands, &quantified(&[&[], &[]])).unwrap();
     // Only one valid member survives the filter, so it is not a group at all.
     assert!(groups.is_empty(), "{groups:?}");
     assert_eq!(kept, vec![0, 1]);
@@ -256,27 +321,143 @@ fn the_extraction_asks_for_the_voice_the_canon_is_written_in() {
     }
 }
 
+// ── support: the citation has to carry the rule's numbers ───
+
 #[test]
-fn the_measure_check_is_wired_into_extraction() {
-    let chunks = chunk_text("house.md", DOC);
+fn a_rule_stating_a_number_its_citation_does_not_is_dropped() {
+    // The citation is verbatim by construction now, so this is the failure
+    // that remains: the words are the passage's and the RULE is not. Observed
+    // against a live endpoint — a candidate reading "at least three hours in
+    // advance" over a sentence that said "three days ahead". Worse than a
+    // missing rule, because the citation makes it look checked.
+    let cands = vec![candidate(
+        "Guests are announced at least three hours in advance.",
+    )];
+    // ONE call: the rule at 1 and its citation at 2, read together so their
+    // canonical forms are agreed against each other rather than by luck.
     let mock = Mock::spawn(vec![(
         200,
-        extracted(&[(
-            "Quiet hours run from 10:00 PM to 7:00 AM.",
-            "Quiet hours run from 11:00 PM until 7:00 AM",
-        )]),
+        read_as(&[
+            (1, &[("three", "hours", "notice", "3 hour")]),
+            (2, &[("three", "days", "notice", "3 day")]),
+        ]),
     )]);
-    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    let Supported {
+        candidates: kept,
+        quantities,
+        dropped,
+    } = support(&mock.client(), cands).unwrap();
     assert!(kept.is_empty(), "{kept:#?}");
+    assert!(quantities.is_empty());
+    assert_eq!(dropped.len(), 1);
     assert!(
-        dropped[0].reason.contains("10pm"),
+        dropped[0].reason.contains("which its citation does not"),
         "{:?}",
         dropped[0].reason
     );
 }
 
 #[test]
-fn the_section_title_reaches_the_model_as_context_it_may_not_quote() {
+fn a_number_worded_differently_from_its_citation_survives() {
+    // "11 PM" against a citation reading "11:00 p.m." is one instant in two
+    // spellings. The canonical form makes them one without anyone keeping a
+    // table of clock formats — which is the whole reason this stopped being
+    // `measure.rs`.
+    let cands = vec![candidate("Quiet hours start at 11 PM.")];
+    let mock = Mock::spawn(vec![(
+        200,
+        read_as(&[
+            (1, &[("11", "PM", "quiet hours start", "23:00")]),
+            (2, &[("11:00", "p.m.", "quiet hours start", "23:00")]),
+        ]),
+    )]);
+    let Supported {
+        candidates: kept,
+        quantities,
+        dropped,
+    } = support(&mock.client(), cands).unwrap();
+    assert_eq!(kept.len(), 1, "{dropped:#?}");
+    assert_eq!(quantities.len(), 1);
+    assert_eq!(quantities[0][0].canonical, "23:00");
+}
+
+#[test]
+fn a_unit_nobody_listed_is_still_checked_against_the_citation() {
+    // dB(A) and dB(C) permit different sound. `measure.rs` read both as
+    // stating no measure at all, so a rule could claim either and no guard
+    // could tell. Nothing here knows what a decibel is.
+    let cands = vec![candidate("Sound equipment may register up to 85 dBCs.")];
+    let mock = Mock::spawn(vec![(
+        200,
+        read_as(&[
+            (1, &[("85", "dBC", "sound level", "85 dBC")]),
+            (2, &[("85", "dBA", "sound level", "85 dBA")]),
+        ]),
+    )]);
+    let Supported {
+        candidates: kept,
+        dropped,
+        ..
+    } = support(&mock.client(), cands).unwrap();
+    assert!(kept.is_empty(), "{kept:#?}");
+    assert!(
+        dropped[0].reason.contains("85 dBC"),
+        "{:?}",
+        dropped[0].reason
+    );
+}
+
+#[test]
+fn the_surviving_rules_carry_their_own_reading_forward() {
+    // The fold guard indexes straight into what this returns. If a dropped
+    // candidate left its reading behind, every later rule would be judged
+    // against the quantities of the one before it — a misalignment with no
+    // symptom until a fold goes wrong, and nothing downstream could see it.
+    let cands = vec![
+        candidate("Quiet hours start at 11 PM."),
+        candidate("Guests are announced three hours ahead."),
+        candidate("The kitchen is cleaned after use."),
+    ];
+    // Three pairs interleaved into one call: rule, citation, rule, citation…
+    let mock = Mock::spawn(vec![(
+        200,
+        read_as(&[
+            (1, &[("11", "PM", "quiet hours start", "23:00")]),
+            (2, &[("11", "PM", "quiet hours start", "23:00")]),
+            (3, &[("three", "hours", "notice", "3 hour")]),
+            (4, &[("three", "days", "notice", "3 day")]),
+            (5, &[]),
+            (6, &[]),
+        ]),
+    )]);
+    let Supported {
+        candidates: kept,
+        quantities,
+        dropped,
+    } = support(&mock.client(), cands).unwrap();
+    assert_eq!(dropped.len(), 1, "{dropped:#?}");
+    assert_eq!(kept.len(), 2);
+    assert_eq!(quantities.len(), kept.len());
+    assert_eq!(kept[1].text, "The kitchen is cleaned after use.");
+    assert_eq!(quantities[0][0].canonical, "23:00");
+    assert!(quantities[1].is_empty(), "that rule states no quantity");
+}
+
+#[test]
+fn nothing_extracted_asks_the_model_nothing() {
+    // An empty document must not spend two completions discovering it is
+    // empty. Mock scripted for zero requests: a call would hang the test.
+    let mock = Mock::spawn(Vec::new());
+    let Supported {
+        candidates: kept,
+        quantities,
+        dropped,
+    } = support(&mock.client(), Vec::new()).unwrap();
+    assert!(kept.is_empty() && quantities.is_empty() && dropped.is_empty());
+}
+
+#[test]
+fn the_section_title_reaches_the_model_as_context_with_no_position_to_cite() {
     // The chunker recorded the heading from the first commit and never sent
     // it. A minute headed "Decision — 2026-02-10 — Weeknight Quiet Hours"
     // opens "the house met and resolved…" and never names its own subject;
@@ -290,7 +471,9 @@ fn the_section_title_reaches_the_model_as_context_it_may_not_quote() {
         .unwrap()
         .to_string();
     assert!(user.contains("Article II — Quiet Hours"), "{user}");
-    assert!(user.contains("do not quote from it"), "{user}");
+    assert!(user.contains("cannot be cited"), "{user}");
+    // Only the body is numbered, so there is no marker that names the title.
+    assert!(user.contains("[1] Quiet hours run"), "{user}");
 }
 
 #[test]
@@ -322,15 +505,14 @@ fn two_rules_with_different_times_are_never_duplicates() {
     cands.push(candidate("Members keep the back porch tidy."));
     let mock = Mock::spawn(vec![
         (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
-        (
-            200,
-            read_as(&[
-                (1, &[("11:00 PM", "", "quiet hours start", "23:00")]),
-                (2, &[("10:00 PM", "", "quiet hours start", "22:00")]),
-            ]),
-        ),
+        (200, named(&[1, 1])),
     ]);
-    let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
+    let read = quantified(&[
+        &[("11:00 PM", "", "quiet hours start", "23:00")],
+        &[("10:00 PM", "", "quiet hours start", "22:00")],
+        &[],
+    ]);
+    let (groups, kept) = dedupe(&mock.client(), &cands, &read).unwrap();
     assert!(
         groups.is_empty(),
         "a contradiction is not a duplicate: {groups:?}"
@@ -348,10 +530,10 @@ fn a_genuine_reword_still_folds() {
     ];
     let mock = Mock::spawn(vec![
         (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
-        // Neither states a quantity, so nothing can keep them apart.
-        (200, read_as(&[(1, &[]), (2, &[])])),
+        (200, named(&[1, 1])),
     ]);
-    let (groups, kept) = dedupe(&mock.client(), &cands).unwrap();
+    // Neither states a quantity, so nothing can keep them apart.
+    let (groups, kept) = dedupe(&mock.client(), &cands, &quantified(&[&[], &[]])).unwrap();
     assert_eq!(groups, vec![vec![0, 1]]);
     assert_eq!(kept, vec![0]);
 }
@@ -364,28 +546,142 @@ fn the_same_measure_stated_differently_still_folds() {
     ];
     let mock = Mock::spawn(vec![
         (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
-        // "two consecutive nights" and "2 nights" are one limit, and the
-        // reading pass says so without anyone listing number words.
-        (
-            200,
-            read_as(&[
-                (
-                    1,
-                    &[
-                        ("2", "nights", "length of stay", "2 night"),
-                        ("7", "days", "period", "7 day"),
-                    ],
-                ),
-                (
-                    2,
-                    &[
-                        ("2", "nights", "length of stay", "2 night"),
-                        ("7", "days", "period", "7 day"),
-                    ],
-                ),
-            ]),
-        ),
+        (200, named(&[1, 1])),
     ]);
-    let (groups, _) = dedupe(&mock.client(), &cands).unwrap();
+    // "two consecutive nights" and "2 nights" are one limit, and the reading
+    // pass says so without anyone listing number words.
+    let same: &[(&str, &str, &str, &str)] = &[
+        ("2", "nights", "length of stay", "2 night"),
+        ("7", "days", "period", "7 day"),
+    ];
+    let (groups, _) = dedupe(&mock.client(), &cands, &quantified(&[same, same])).unwrap();
     assert_eq!(groups, vec![vec![0, 1]], "same quantities, one rule");
+}
+
+#[test]
+fn the_same_limit_about_a_different_permit_is_never_a_duplicate() {
+    // The Des Moines failure, verbatim from the corpus. A permit schedule
+    // restates one sentence per type, so these differ only in a letter: same
+    // level, same distance, same wording. The quantity guard has no grounds
+    // to refuse — both state 65 dBAs at 50 feet — and folding them deleted
+    // the type "C" commitment and the planted supersession against it. Every
+    // run of the bar measured 10 of 11 reachable with extraction missing none.
+    let cands = vec![
+        candidate(
+            "Sound equipment under a type \"B\" permit may emit music or human speech \
+             registering not more than 65 dBAs when measured at the real property boundary \
+             or at a distance of 50 feet from the sound equipment, whichever is closer.",
+        ),
+        candidate(
+            "Sound equipment under a type \"C\" permit may emit music or human speech \
+             registering not more than 65 dBAs when measured at the real property boundary \
+             or at a distance of 50 feet from the sound equipment, whichever is closer.",
+        ),
+    ];
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
+        (200, named(&[1, 2])),
+    ]);
+    let same: &[(&str, &str, &str, &str)] = &[
+        ("65", "dBAs", "sound level", "65 dBA"),
+        ("50", "feet", "measuring distance", "50 foot"),
+    ];
+    let (groups, kept) = dedupe(&mock.client(), &cands, &quantified(&[same, same])).unwrap();
+    assert!(
+        groups.is_empty(),
+        "same limit, different permit: {groups:?}"
+    );
+    assert_eq!(kept, vec![0, 1], "both permits survive the fold");
+}
+
+#[test]
+fn a_subject_the_model_did_not_name_refuses_the_fold() {
+    // Uncertainty resolves toward keeping a rule out of a fold. A refused
+    // fold costs precision; a wrong fold destroys a commitment outright, and
+    // the bar gates on recall (§18.3).
+    let cands = vec![
+        candidate("Bins go out Tuesday."),
+        candidate("Put bins out Tuesdays."),
+    ];
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "groups": [[1, 2]] }).to_string())),
+        // Only the first rule comes back named.
+        (200, named(&[1])),
+    ]);
+    let (groups, kept) = dedupe(&mock.client(), &cands, &quantified(&[&[], &[]])).unwrap();
+    assert!(groups.is_empty(), "an unread subject is not agreement");
+    assert_eq!(kept, vec![0, 1]);
+}
+
+// ── a stage that fails keeps the work before it ─────────────
+
+fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
+    DraftRun {
+        schema: RUN_SCHEMA.into(),
+        at: 1,
+        endpoint: "http://localhost:9741/v1".into(),
+        model: "primary".into(),
+        profile: "house".into(),
+        sources: vec!["ordinance.md".into()],
+        chunks,
+        candidates,
+        dropped: Vec::new(),
+        unread: Vec::new(),
+        duplicates: Vec::new(),
+        kept: Vec::new(),
+        tensions: Vec::new(),
+        tension_passes: 0,
+        tension_passes_unread: Vec::new(),
+        failed: None,
+    }
+}
+
+#[test]
+fn a_stage_that_fails_writes_what_ran_before_it() {
+    // Observed: a Des Moines sweep died in the comparison stage twenty passes
+    // in, having already spent thirty-four extraction calls, and wrote
+    // nothing at all. The next attempt paid for those calls again and nobody
+    // could see what the run had actually extracted.
+    let dir = std::env::temp_dir().join("canon-abandon-keeps-work");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+
+    let chunks = chunk_text("house.md", DOC);
+    let cands = vec![candidate("Quiet hours start at 11 PM.")];
+    let mut artifact = in_flight(chunks, cands);
+    let code = abandon(
+        &dir,
+        &mut artifact,
+        "tensions",
+        ModelError::Refused {
+            status: 503,
+            detail: "inference deadline exceeded after 300s".into(),
+        },
+    );
+    assert_ne!(code, 0, "an abandoned run is still a failure to the caller");
+
+    let written: Vec<_> = std::fs::read_dir(dir.join(RUNS_DIR))
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .collect();
+    assert_eq!(written.len(), 1, "the partial run is on disk");
+    let got: DraftRun =
+        serde_json::from_str(&std::fs::read_to_string(written[0].path()).unwrap()).unwrap();
+
+    // The extraction survives...
+    assert_eq!(got.candidates.len(), 1);
+    assert_eq!(got.chunks.len(), 2);
+    // ...and the artifact says why it is not a measurement, naming the stage
+    // and the endpoint's own words.
+    let why = got.failed.expect("a partial run must say it is one");
+    assert!(why.starts_with("tensions:"), "{why}");
+    assert!(why.contains("deadline exceeded"), "{why}");
+}
+
+#[test]
+fn a_finished_run_carries_no_failure_marker() {
+    // `failed` is skipped when absent, so the bar's check is "is the field
+    // there", and a complete run can never trip it.
+    let json = serde_json::to_string(&in_flight(Vec::new(), Vec::new())).unwrap();
+    assert!(!json.contains("failed"), "{json}");
 }
