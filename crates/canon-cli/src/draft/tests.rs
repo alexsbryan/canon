@@ -64,7 +64,23 @@ fn extracted(items: &[(usize, usize, &str)]) -> String {
         &json!({
             "commitments": items
                 .iter()
-                .map(|(f, l, t)| json!({ "first": f, "last": l, "text": t }))
+                .map(|(f, l, t)| json!({ "kind": "rule", "first": f, "last": l, "text": t }))
+                .collect::<Vec<_>>()
+        })
+        .to_string(),
+    )
+}
+
+/// The same, with a kind and an optional reason — for the two act kinds
+/// beyond a commitment.
+fn extracted_kinds(items: &[(&str, usize, usize, &str, &str)]) -> String {
+    completion(
+        &json!({
+            "commitments": items
+                .iter()
+                .map(|(k, f, l, t, because)| json!({
+                    "kind": k, "first": f, "last": l, "text": t, "because": because
+                }))
                 .collect::<Vec<_>>()
         })
         .to_string(),
@@ -196,6 +212,8 @@ fn candidate(text: &str) -> Candidate {
         quote: format!("verbatim: {text}"),
         chunk: 0,
         source: "house.md:1-2".into(),
+        kind: Kind::Rule,
+        because: String::new(),
     }
 }
 
@@ -291,12 +309,14 @@ fn a_directory_is_read_in_a_stable_order() {
     ] {
         std::fs::write(root.join(p), body).unwrap();
     }
-    let found = walk(&root).unwrap();
-    let names: Vec<String> = found
-        .iter()
-        .map(|p| p.strip_prefix(&root).unwrap().to_string_lossy().to_string())
-        .collect();
+    let mut got = crate::sources::Gathered::default();
+    crate::sources::gather(&root, &mut got).unwrap();
+    let names: Vec<String> = got.sources.iter().map(|s| s.name.clone()).collect();
     assert_eq!(names, vec!["a.md", "b.md", "sub/c.txt"], "{names:?}");
+    // And the one it passed over is REPORTED. A folder with some readable
+    // files used to drop the rest in silence, which is how a Slack export
+    // sitting beside three documents was never opened by anyone.
+    assert_eq!(got.skipped.get(".bin"), Some(&1), "{:?}", got.skipped);
 }
 
 #[test]
@@ -623,6 +643,7 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         model: "primary".into(),
         profile: "house".into(),
         sources: vec!["ordinance.md".into()],
+        skipped: Default::default(),
         chunks,
         candidates,
         dropped: Vec::new(),
@@ -684,4 +705,212 @@ fn a_finished_run_carries_no_failure_marker() {
     // there", and a complete run can never trip it.
     let json = serde_json::to_string(&in_flight(Vec::new(), Vec::new())).unwrap();
     assert!(!json.contains("failed"), "{json}");
+}
+
+// ── three kinds, not one ────────────────────────────────────
+
+const MEETING: &str = "\
+House meeting, 3 April 2026
+
+Wednesday cooking. Discussed making a rota. Decided NOT to. It has sorted
+itself out every week for two years and a rota would turn a kindness into a
+duty. Explicitly leaving this unwritten.
+
+Allotment. Nobody has ever said who looks after the allotment. Left open.
+
+Rent is due on the 1st.
+";
+
+#[test]
+fn a_passage_yields_the_three_kinds_it_actually_records() {
+    // **The gap this closes.** A group's normative content is three shapes,
+    // and an extractor that could only mint commitments dropped two of them
+    // on the floor — so a meeting note that says "decided NOT to write this
+    // down" and "nobody has ever said who looks after the allotment"
+    // onboarded as one rule about rent.
+    let chunks = chunk_text("meeting.txt", MEETING);
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted_kinds(&[
+            (
+                "silence",
+                4,
+                6,
+                "who cooks on a wednesday",
+                "a rota would turn a kindness into a duty",
+            ),
+            ("question", 8, 9, "Who looks after the allotment?", ""),
+            ("rule", 10, 10, "Rent is due on the 1st.", ""),
+        ]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert_eq!(kept.len(), 3, "{dropped:#?}");
+    assert_eq!(kept[0].kind, Kind::Silence);
+    assert_eq!(kept[0].because, "a rota would turn a kindness into a duty");
+    assert_eq!(kept[1].kind, Kind::Question);
+    assert_eq!(kept[2].kind, Kind::Rule);
+    // Every one still carries the passage it came from.
+    assert!(kept.iter().all(|c| !c.quote.is_empty()));
+}
+
+#[test]
+fn a_silence_with_no_stated_reason_is_refused() {
+    // Cite-or-abstain, applied to silence. A deliberate silence with no
+    // reason cannot be told apart from having forgotten, which is the entire
+    // distinction it exists to make — so it is refused at the door rather
+    // than written and discovered later.
+    let chunks = chunk_text("meeting.txt", MEETING);
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted_kinds(&[("silence", 4, 6, "who cooks on a wednesday", "  ")]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert!(kept.is_empty());
+    assert_eq!(dropped.len(), 1);
+    assert!(
+        dropped[0].reason.contains("no stated reason"),
+        "{dropped:#?}"
+    );
+}
+
+#[test]
+fn an_unreadable_kind_is_a_rule_and_not_a_way_past_the_guards() {
+    // A rule is the kind that has to clear the citation and quantity guards.
+    // Reading an unknown word as anything else would make a typo a bypass.
+    let chunks = chunk_text("meeting.txt", MEETING);
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted_kinds(&[("stanadrd", 10, 10, "Rent is due on the 1st.", "")]),
+    )]);
+    let (kept, _) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert_eq!(kept.len(), 1);
+    assert_eq!(kept[0].kind, Kind::Rule);
+}
+
+#[test]
+fn questions_and_silences_do_not_go_through_the_quantity_guard() {
+    // The guard asks whether a rule states a number its citation does not.
+    // A question states no number to disagree about, so putting it through
+    // would spend a call to compare two empty lists — and would let a stray
+    // reading refuse an open question over a limit nobody claimed.
+    //
+    // Scripted with NO responses at all: if support() called the endpoint,
+    // this hangs or errors rather than passing quietly.
+    let mock = Mock::spawn(Vec::new());
+    let mut q = candidate("Who looks after the allotment?");
+    q.kind = Kind::Question;
+    let mut sil = candidate("who cooks on a wednesday");
+    sil.kind = Kind::Silence;
+    sil.because = "it would turn a kindness into a duty".into();
+
+    let got = support(&mock.client(), vec![q, sil]).unwrap();
+    assert_eq!(got.candidates.len(), 2);
+    assert!(got.dropped.is_empty());
+    // Same length and same order as the candidates — the reduce step indexes
+    // both, and a mismatch would judge every later rule against the one
+    // before it.
+    assert_eq!(got.quantities.len(), 2);
+    assert!(got.quantities.iter().all(Vec::is_empty));
+}
+
+// ── finishing a review later ────────────────────────────────
+
+#[test]
+fn resuming_offers_only_what_is_not_already_in_the_canon() {
+    // **Why this exists.** There is no `--accept-all` on purpose: accepting
+    // one at a time is what makes onboarding the first governance session
+    // rather than disengagement at t=0. But a folder of documents yields
+    // dozens of candidates, and "finish in one sitting or lose your place" is
+    // how somebody quits at candidate nine and never comes back.
+    //
+    // The run artifact already holds every candidate and every citation, so
+    // resuming costs no model call at all.
+    use canon_core::{Act, ActKind, Log};
+
+    let mut run = in_flight(Vec::new(), Vec::new());
+    let mut q = candidate("Who looks after the allotment?");
+    q.kind = Kind::Question;
+    let mut sil = candidate("who cooks on a wednesday");
+    sil.kind = Kind::Silence;
+    sil.because = "it would turn a kindness into a duty".into();
+    run.candidates = vec![
+        candidate("Quiet hours run 11pm to 7am."),
+        candidate("Bikes live in the hall."),
+        q,
+        sil,
+    ];
+    run.kept = vec![0, 1, 2, 3];
+
+    let empty = Log::default().derive();
+    assert_eq!(
+        remaining(&run, &empty),
+        vec![0, 1, 2, 3],
+        "nothing done yet"
+    );
+
+    // A session that accepted the first rule, the question and the silence.
+    let canon = Log::from_acts(vec![
+        Act::new(
+            ActKind::Assert {
+                text: "Quiet hours run 11pm to 7am.".into(),
+                from: None,
+                source: None,
+            },
+            100,
+            "human:mira",
+        ),
+        Act::new(
+            ActKind::Question {
+                text: "Who looks after the allotment?".into(),
+                proposal: None,
+            },
+            101,
+            "human:mira",
+        ),
+        Act::new(
+            ActKind::Silence {
+                about: "who cooks on a wednesday".into(),
+                rationale: "it would turn a kindness into a duty".into(),
+            },
+            102,
+            "human:mira",
+        ),
+    ])
+    .derive();
+    // All three kinds count as done, not just the commitments — otherwise
+    // resuming re-offers every question somebody already answered.
+    assert_eq!(
+        remaining(&run, &canon),
+        vec![1],
+        "only the bikes rule is left"
+    );
+
+    // And resuming twice cannot write anything twice.
+    let after = Log::from_acts(
+        canon
+            .active()
+            .map(|c| {
+                Act::new(
+                    ActKind::Assert {
+                        text: c.text.clone(),
+                        from: None,
+                        source: None,
+                    },
+                    c.asserted_at,
+                    c.actor.clone(),
+                )
+            })
+            .chain(std::iter::once(Act::new(
+                ActKind::Assert {
+                    text: "Bikes live in the hall.".into(),
+                    from: None,
+                    source: None,
+                },
+                200,
+                "human:mira",
+            )))
+            .collect::<Vec<_>>(),
+    )
+    .derive();
+    assert!(remaining(&run, &after).iter().all(|i| *i != 1));
 }

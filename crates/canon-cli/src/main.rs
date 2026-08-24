@@ -24,6 +24,7 @@ mod quantify;
 mod rebase;
 mod replay;
 mod resolver;
+mod sources;
 mod store;
 mod subject;
 mod tensions;
@@ -39,17 +40,19 @@ mod testing;
 const HELP: &str = "\
 canon — the rules you already have, and what was decided about them
 
-USAGE
-  canon <command> [args]
-
   init [--profile personal|code|house]   start one in this directory
-  add \"<text>\"                           write one down
+  draft --from <folder>                  read what you already have
+  add \"<text>\"                           write one down by hand
   check \"<proposal>\"                     does it clash with one?
   list                                   what is live now
   why <id>                               what replaced what, when, and why
   log                                    the raw acts, oldest first
 
-Only `check` needs a model. Everything above it is a fold over a text file.
+Nobody writes one of these a rule at a time. `draft` reads a folder of docs,
+meeting notes and Slack exports and proposes what it found, each with the
+passage it came from. `--resume` finishes a long review later.
+
+`draft` and `check` need a model; everything else folds a text file.
 A canon on the `personal` profile never returns a verdict and never exits 1.
 
   canon help all    who decides what, how you decide, what has gone stale,
