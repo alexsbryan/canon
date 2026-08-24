@@ -36,6 +36,7 @@ const VALUED: &[&str] = &[
     "--horizon",
     "--objections",
     "--of",
+    "--secret",
     "--onto",
     "--outcome",
     "--policy",
@@ -509,6 +510,17 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Decided {
                 about, authority, ..
             } => format!("decided    {about} -> {authority}"),
+            ActKind::DrawCommit {
+                scope,
+                count,
+                after_ts,
+                ..
+            } => format!(
+                "draw       {count} from {scope} after {}",
+                store::ymd(*after_ts)
+            ),
+            ActKind::DrawSecret { commit, .. } => format!("sealed     for {commit}"),
+            ActKind::DrawReveal { commit, .. } => format!("opened     for {commit}"),
             ActKind::Horizon { target, at, .. } => {
                 format!("horizon    {target} by {}", store::ymd(*at))
             }

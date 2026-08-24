@@ -204,6 +204,15 @@ pub struct Canon {
     /// What the group has decided, in order. Decisions, never observations.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rulings: Vec<Ruling>,
+    /// Draws announced.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub draws: Vec<crate::draw::Committed>,
+    /// Digests published before a draw's boundary. First per (draw, actor).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sealed: Vec<crate::draw::Sealed>,
+    /// Secrets published after it. First per (draw, actor).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub opened: Vec<crate::draw::Opened>,
     /// Dates attached to acts. Last write per target wins, so a horizon can
     /// be moved as well as set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -247,7 +256,7 @@ impl Canon {
         let mut found: Vec<&crate::scope::Grant> = self
             .grants
             .iter()
-            .filter(|g| !g.lapsed(now) && g.scope.covers(scope))
+            .filter(|g| g.held_at(now) && g.scope.covers(scope))
             .collect();
         // Deepest first, then by actor so two runs render identically.
         found.sort_by(|a, b| {
@@ -509,6 +518,11 @@ pub fn derive(acts: &[Act]) -> Canon {
                     citing: Some(_),
                     ..
                 }
+                // Sealing and opening a secret is PARTICIPATION, not
+                // adjudication: it decides nothing and cannot be steered.
+                // Announcing a draw is an adjudication and is not exempt.
+                | ActKind::DrawSecret { .. }
+                | ActKind::DrawReveal { .. }
         );
         if adjudication && !act.is_human() {
             canon.unattended.push(act.id.clone());
@@ -581,17 +595,25 @@ pub fn derive(acts: &[Act]) -> Canon {
                 horizon,
                 ..
             } => {
-                // Re-granting the same actor the same scope replaces rather
-                // than stacks: two live grants for one pair would make
-                // "when does this lapse" have two answers.
-                canon
+                // Re-granting the same actor the same scope CLOSES the old
+                // one rather than stacking on it: two grants live at one
+                // instant would make "when does this lapse" have two answers.
+                // Closing rather than deleting is what keeps "who held this
+                // in March" answerable — and what stops a re-grant today
+                // from changing a pool that was frozen in March.
+                for g in canon
                     .grants
-                    .retain(|g| !(g.actor == *holder && g.scope == *scope));
+                    .iter_mut()
+                    .filter(|g| g.actor == *holder && g.scope == *scope && g.withdrawn_at.is_none())
+                {
+                    g.withdrawn_at = Some(act.ts_unix);
+                }
                 canon.grants.push(crate::scope::Grant {
                     actor: holder.clone(),
                     scope: scope.clone(),
                     horizon: *horizon,
                     granted_at: act.ts_unix,
+                    withdrawn_at: None,
                     act: act.id.clone(),
                 });
             }
@@ -606,9 +628,11 @@ pub fn derive(acts: &[Act]) -> Canon {
                 // would need a negative grant, and a permission system with
                 // both grants and denials is one where nobody can answer "may
                 // they?" by looking. Re-grant narrower instead.
-                canon
-                    .grants
-                    .retain(|g| !(g.actor == *actor && scope.covers(&g.scope)));
+                for g in canon.grants.iter_mut().filter(|g| {
+                    g.actor == *actor && scope.covers(&g.scope) && g.withdrawn_at.is_none()
+                }) {
+                    g.withdrawn_at = Some(act.ts_unix);
+                }
             }
             ActKind::Scoped { commitment, scope } => {
                 canon.scopes.retain(|(id, _)| id != commitment);
@@ -661,6 +685,51 @@ pub fn derive(acts: &[Act]) -> Canon {
                 actor: act.actor.clone(),
                 act: act.id.clone(),
             }),
+            ActKind::DrawCommit {
+                scope,
+                count,
+                after_ts,
+                rationale,
+            } => canon.draws.push(crate::draw::Committed {
+                act: act.id.clone(),
+                scope: scope.clone(),
+                count: *count,
+                after_ts: *after_ts,
+                at: act.ts_unix,
+                drawer: act.actor.clone(),
+                rationale: rationale.clone(),
+            }),
+            // FIRST per (draw, actor) wins, for both. A second digest would
+            // let somebody publish several and open whichever flatters them;
+            // a second opening is meaningless once the first was checked.
+            ActKind::DrawSecret { commit, digest } => {
+                if !canon
+                    .sealed
+                    .iter()
+                    .any(|s| s.commit == *commit && s.actor == act.actor)
+                {
+                    canon.sealed.push(crate::draw::Sealed {
+                        commit: commit.clone(),
+                        actor: act.actor.clone(),
+                        digest: digest.clone(),
+                        at: act.ts_unix,
+                    });
+                }
+            }
+            ActKind::DrawReveal { commit, secret } => {
+                if !canon
+                    .opened
+                    .iter()
+                    .any(|o| o.commit == *commit && o.actor == act.actor)
+                {
+                    canon.opened.push(crate::draw::Opened {
+                        commit: commit.clone(),
+                        actor: act.actor.clone(),
+                        secret: secret.clone(),
+                        at: act.ts_unix,
+                    });
+                }
+            }
             ActKind::Horizon {
                 target,
                 at,

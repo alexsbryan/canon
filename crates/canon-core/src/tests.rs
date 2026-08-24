@@ -949,17 +949,23 @@ fn stepping_back_from_a_scope_removes_what_it_covers() {
 }
 
 #[test]
-fn re_granting_replaces_rather_than_stacks() {
-    // Two live grants for one actor-scope pair would make "when does this
-    // lapse" have two answers.
+fn re_granting_closes_the_old_grant_rather_than_stacking_on_it() {
+    // Two grants LIVE AT ONE INSTANT would make "when does this lapse" have
+    // two answers. The old one is closed, not deleted: standing is an as-of
+    // question, and a renewal today must not rewrite who held it in March.
     let canon = Log::from_acts(vec![
         grant("human:dana", "house.kitchen", Some(200), 100),
         grant("human:dana", "house.kitchen", Some(900), 300),
     ])
     .derive();
-    assert_eq!(canon.grants.len(), 1);
-    assert_eq!(canon.grants[0].horizon, Some(900), "the renewal wins");
+    assert_eq!(canon.grants.len(), 2, "both are facts that happened");
+    let live: Vec<_> = canon.grants.iter().filter(|g| g.held_at(500)).collect();
+    assert_eq!(live.len(), 1, "but only one is held at any instant");
+    assert_eq!(live[0].horizon, Some(900), "the renewal wins");
     assert!(canon.standing_of("human:dana", &scope("house.kitchen"), 500));
+    // And the old term is still answerable about its own window.
+    assert!(canon.grants[0].held_at(150));
+    assert!(!canon.grants[0].held_at(500));
 }
 
 #[test]
@@ -1094,6 +1100,20 @@ fn every_kind() -> Vec<ActKind> {
             at: 200,
             rationale: "trial period".into(),
         },
+        ActKind::DrawCommit {
+            scope: crate::scope::Scope::new("house").unwrap(),
+            count: 3,
+            after_ts: 1_000,
+            rationale: "kitchen panel".into(),
+        },
+        ActKind::DrawSecret {
+            commit: id.clone(),
+            digest: crate::id::digest_hex(b"s"),
+        },
+        ActKind::DrawReveal {
+            commit: id.clone(),
+            secret: "s".into(),
+        },
         ActKind::Rank {
             commitment: id,
             rank: "principle".into(),
@@ -1124,6 +1144,9 @@ fn op_of(kind: &ActKind) -> &'static str {
         ActKind::Policy { .. } => "policy",
         ActKind::Decided { .. } => "decided",
         ActKind::Horizon { .. } => "horizon",
+        ActKind::DrawCommit { .. } => "draw_commit",
+        ActKind::DrawSecret { .. } => "draw_secret",
+        ActKind::DrawReveal { .. } => "draw_reveal",
         ActKind::Rank { .. } => "rank",
         ActKind::Annotation { kind, .. } => {
             assert_eq!(kind, "from-the-future");

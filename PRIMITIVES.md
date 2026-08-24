@@ -272,7 +272,13 @@ defense, and it is the difference between deferring and burying.
 
 ## Primitive 9 — A fair draw
 
-`NOT BUILT`
+`BUILT` (`draw.rs`: `Canon::draw`, `Drawn`, `DrawError`; the `draw_commit`,
+`draw_secret` and `draw_reveal` ops)
+
+**The threat model came first, and it changed the design.** What is written
+below was enumerated before any code, and the sketch this document carried —
+"a draw act names the pool, the count, and a seed source that already existed
+and was authored by someone other than the drawer" — did not survive it.
 
 Selection of people by lot, in a way nobody could steer.
 
@@ -283,16 +289,66 @@ and randomness is exactly what a content-addressed, replayable ledger cannot
 casually have — a draw nobody can reproduce is a draw nobody can audit, and a
 draw seeded by whoever calls it is not a draw.
 
-What is required is a seed **nobody chose after seeing the pool**. Sketch, not
-yet a design: a draw act names the pool, the count, and a seed source that
-already existed and was authored by someone other than the drawer; anyone
-replaying the log recomputes the same selection and can check it. Commit-reveal
-across the eligible set, or an external public beacon, are the other candidates.
+What is required is a seed **nobody chose after seeing the pool**.
 
 Getting this wrong is not a small defect. Sortition is the answer this document
 leans on for two separate problems — Freeman's entrenchment, and the minimal
 governance ask — and a steerable lottery is worse than no lottery, because it
 launders a chosen panel as a fair one.
+
+### The threat model, written before the code
+
+The design under attack, restated so the attacks have something to bite:
+
+1. `draw_commit { scope, count, after_ts }` names the pool by scope, how many
+   seats, and a boundary that must be **strictly in the future** when it is
+   written.
+2. Anyone in the pool writes `draw_secret { commit, digest }` **before** the
+   boundary. The digest is `sha256` of a secret they keep.
+3. After the boundary, they write `draw_reveal { commit, secret }`.
+4. **The draw is a query, not an act.** Seed is `sha256` over the commit id and
+   every verified `(actor, secret)` in sorted order; selection is a
+   seed-keyed Fisher-Yates over the frozen pool. Anyone replaying the log
+   computes the same panel.
+
+Point 4 is what the threat model forced. The original sketch seeded the draw
+from **the first act after the boundary not authored by the drawer**, and that
+does not survive attack (e) below: an act's id is a hash of its own body, so
+whoever writes it can try bodies until the shuffle favours them. Hashing is
+cheap and a pool of twenty needs a few hundred attempts. The race to be first
+is not a defence — most people write acts rarely, and an attacker writes at
+`after_ts + 1`.
+
+| # | Attack | Closed by | Test |
+|---|---|---|---|
+| a | Grind `after_ts` onto a favourable seed | the boundary must postdate its own commit act, and no secret is revealed when it is chosen — there is nothing yet to grind toward | `a_boundary_in_the_past_is_refused` |
+| b | The drawer seeds their own draw | there is no seed act; the drawer's only move is the commit, and a drawer in the pool contributes one secret like anyone else | `the_drawer_has_no_move_after_committing` |
+| c | Pool churn between commit and draw | the pool is frozen at `after_ts` — grants live then, not now | `standing_granted_after_the_boundary_does_not_join_the_pool` |
+| d | Empty window — nobody revealed | **refuse.** A draw with no verified secret is not a draw with a default seed | `a_draw_with_nothing_revealed_refuses_rather_than_falling_back` |
+| e | Grind the secret | a digest is committed before the boundary and checked on reveal; a mismatch excludes that actor | `a_revealed_secret_that_does_not_match_its_digest_is_refused` |
+| f | Commit several digests, reveal the flattering one | **first digest per actor wins**; a later one is not read | `a_second_secret_from_the_same_actor_is_ignored` |
+| g | Two replayers disagree | the seed and the shuffle are pure functions of the log | `two_replayers_draw_the_same_panel` |
+| h | Draw more seats than there are people | **refuse.** A draw that selects everyone is not a draw, and shipping one would launder an unselected group as a chosen one | `drawing_more_seats_than_the_pool_holds_refuses` |
+
+### The residual, named
+
+**The last revealer has one bit.** Whoever reveals last can compute the panel
+that results from revealing and compare it with the panel that results from
+staying silent, then choose. They cannot grind — their secret is committed —
+so the influence is one bit, exercised once, and it costs them their own seat:
+an actor who committed and did not reveal is excluded from the pool.
+
+This is the standard result for commit-reveal without an external beacon and it
+does not close with a ledger alone. It is bounded, it is visible in the log —
+a commit with no reveal is a fact anyone can see — and it is the price of
+having no network dependency. A community that wants it closed needs a public
+randomness beacon, which is a different tool.
+
+**The draw is only as fair as the pool, and the pool is a scope.** Standing
+granted before the boundary counts, which is deliberate: excluding somebody who
+legitimately joined last week would be the worse failure. It does mean the
+question "who may be drawn" is answered by grants, under whatever policy
+governs them — which is where it belongs, and where it is visible.
 
 ## Does the set actually span? An adequacy test
 

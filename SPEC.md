@@ -98,6 +98,9 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `decided` | `about`, `outcome`, `authority`, `rationale?` | The group decided something |
 | `rank` | `commitment`, `rank` | A principle rather than a convention |
 | `horizon` | `target`, `at`, `rationale?` | Look at this again by then |
+| `draw_commit` | `scope`, `count`, `after_ts`, `rationale?` | A lot is announced |
+| `draw_secret` | `commit`, `digest` | A sealed secret, before the boundary |
+| `draw_reveal` | `commit`, `secret` | The secret, after it |
 
 `accept.rationale` is **required**: a tolerated contradiction must say
 what it protects. Every other rationale is optional, and `dismiss` is
@@ -148,6 +151,16 @@ and this format does not rewrite what is already written. A reader MUST
 read both through one calendar, and MUST NOT read an unparseable revisit
 as a date — reporting it as unreadable and reading it as epoch zero are
 not the same thing, and the second makes it permanently overdue.
+
+**The draw is a query, not an act.** There is no `draw` op and there must
+not be one: given `draw_commit` and the verified secrets, the panel is a
+pure function of the log, so every reader computes the same one and nobody
+performs it. A reader MUST refuse rather than fall back when the boundary
+does not postdate its own `draw_commit`, when no secret verifies, when the
+scope has no pool, or when the seats would take the whole pool. The seed
+is `sha256` over the commit id and every verified `(actor, secret)` in
+sorted order, with `0x1e` between pairs and `0x1f` within one. The
+threat model is in `PRIMITIVES.md` under Primitive 9.
 
 `decided` records an **adjudication**, never an observation. It says the
 group decided something about a subject; there is no act in this format

@@ -42,9 +42,22 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 12] = [
-    "accept", "dismiss", "question", "adopt", "position", "grant", "withdraw", "scoped", "policy",
-    "decided", "rank", "horizon",
+pub const KNOWN_ANNOTATIONS: [&str; 15] = [
+    "accept",
+    "dismiss",
+    "question",
+    "adopt",
+    "position",
+    "grant",
+    "withdraw",
+    "scoped",
+    "policy",
+    "decided",
+    "rank",
+    "horizon",
+    "draw_commit",
+    "draw_secret",
+    "draw_reveal",
 ];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
@@ -261,6 +274,28 @@ pub enum ActKind {
     /// community's vocabulary, not ours (§2.4/§4). Policy reads it; nothing
     /// here interprets it.
     Rank { commitment: ActId, rank: String },
+    /// A draw is announced: this pool, this many seats, after this moment.
+    ///
+    /// **The boundary must be in the future when this is written**, and the
+    /// draw refuses if it is not. That is what stops the drawer choosing a
+    /// moment whose consequences they can already see. See the threat model
+    /// under Primitive 9 in `PRIMITIVES.md`; it was written before this code
+    /// and it changed the design.
+    DrawCommit {
+        scope: crate::scope::Scope,
+        count: usize,
+        after_ts: i64,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        rationale: String,
+    },
+    /// A member of the pool commits to a secret without disclosing it.
+    ///
+    /// The first digest an actor writes for a draw is the one that counts.
+    /// Allowing a second would let somebody commit several and reveal
+    /// whichever flatters them, which is grinding with extra steps.
+    DrawSecret { commit: ActId, digest: String },
+    /// The secret, after the boundary. Checked against the digest.
+    DrawReveal { commit: ActId, secret: String },
     /// An annotation this build does not interpret.
     ///
     /// Carried verbatim so a log written by a community with governance moves
