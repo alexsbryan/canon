@@ -1,3 +1,14 @@
 /target
 **/*.rs.bk
 .DS_Store
+
+# A canon the tool made while being exercised, not one anybody keeps.
+/.canon/
+
+# Sweep provenance for a DIRTY tree: the patch and tarball exist so a run
+# made from uncommitted work can be reconstructed. Once the work is
+# committed the commit line in BUILD.txt says the same thing, and a
+# tarball of the working tree does not belong in the tree.
+fixtures/*/runs/*/tree.patch
+fixtures/*/runs/*/tree.status
+fixtures/*/runs/*/tree-untracked.tgz

@@ -1,0 +1,1086 @@
+{
+  "schema": "canon-draft-run/v1",
+  "at": 1787531746,
+  "endpoint": "http://localhost:9741/v1",
+  "model": "primary",
+  "profile": "house",
+  "sources": [
+    "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md"
+  ],
+  "chunks": [
+    {
+      "id": 0,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:3-25",
+      "heading": "Des Moines Municipal Code, Sec. 42-251 — Exceptions to article",
+      "text": "This article shall not apply to the following:\n(1) The emission of sound for the purpose of alerting persons to the existence of an emergency.\n(2) The emission of sound in the performance of emergency work.\n(3) Noncommercial public speaking and public assembly activities conducted on any private\nproperty, public space, or public right-of-way, except those activities controlled by section 42-257 of this article.\n(4) The un-amplified human voice, except those activities controlled by subsection 42-256(a) of this\narticle.\n(5) Agricultural activities, exclusive of those involving the ownership or possession of animals or\nbirds.\n(6) Snowmobiles regulated by I.C. ch. 321G.\n(7) Rail and air transportation and public mass transportation vehicles.\n(8) The emission of sound in connection with activities conducted on the state fairgrounds during\nthe annual state fair and exposition.\n(9) The emission of sound in the performance of military operations, exclusive of travel by\nindividuals to or from military duty.\n(10) The emission of sound in the legal discharge of weapons or in fireworks displays licensed by\nthe city.\n(11) The emission of sound in the operation of snow removal equipment.\n(12) Parades or processions for which a parade permit has been issued by the city.\n(13) Marching bands and athletic events\n(14) Government owned, operated, or contracted vehicles in the performance of their official duties.\n\n(O.14,746)"
+    },
+    {
+      "id": 1,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:29-72",
+      "heading": "Des Moines Municipal Code, Sec. 42-254 — Maximum permissible sound levels by receiving land use; immediate threat",
+      "text": "(a) Maximum permissible sound levels. With the exception of sound levels elsewhere specifically\nauthorized or allowed in this article, no person shall make, continue, or cause to be made or\ncontinued, any sound which exceeds the following sound level limits at or within the real property\nboundary of a receiving land use:\n\nTable 1. Sound Levels By Receiving Land Use\n\n| Zoning Category of Receiving Land Use | Time | Sound Level Limit, dBA |\n| --- | --- | --- |\n| Residential zones: R1-80 to R-6,R-HD and a residential PUD | 7:00 a.m. to 10:00 p.m. | 60 |\n| Residential zones: R1-80 to R-6,R-HD and a residential PUD | 10:00 p.m. to 7:00 a.m. | 50 |\n| Mixed use and commercial zones: PUD to C-4 | At all times | 65 |\n| Industrial zones: M-1 to M-3 | At all times | 75 |\n| Noise sensitive area | At all times | 55 |\n| U-1 floodplain or FW floodway | At all times | 65 |\n\n(1) For the purposes of this article, sound levels in excess of the dBA listed in table 1 shall be\ndeemed a violation.\n(2) This subsection shall not apply to:\na. Activities covered by the following sections of this article: 42-255 (emergency signaling\ndevices); 42-259 (motorized vehicles); 42-260 (construction); 42-261 (stationary non-\nemergency signaling devices); 42-266 (noise covered by sound variance).\nb. The operation of the following domestic power tools or equipment between the hours of\n7:00 a.m. and 10:00 p.m.:\n1. Electrical power tools.\n2. Motor-powered, muffler-equipped lawn, garden and tree trimming equipment.\n(b) Immediate threat.\n(1) The official of any department charged with enforcement of this article shall order an immediate\nhalt to any sound which exposes any person, except those excluded under subsection (2) of\nthis section, to continuous sound levels in excess of those shown in table 2 or to impulsive\nsound levels in excess of those shown in table 3. If the sound has not abated within a\nreasonable length of time following issuance of such an order, the official of any department\ncharged with enforcement of this article may apply to the appropriate court for an injunction to\nreplace the order or may treat the violation in the manner of other Code violations.\n(2) No order under subsection (b)(1) of this section shall be issued if the only persons exposed to\nsound levels in excess of those listed in tables 2 and 3 are exposed as a result of:\na. Trespass;\nb. Invitation upon private property by the person causing or permitting the sound; or\nc. Employment by the person or contractor of the person causing or permitting the sound.\n(3) Any person subject to an order issued pursuant to subsection (b)(1) of this section shall comply\nwith such order until:\na. The sound is brought into compliance with the order as determined by the noise control\ndivision; or\nb. A judicial order has superseded such order."
+    },
+    {
+      "id": 2,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:74-100",
+      "heading": "Des Moines Municipal Code, Sec. 42-254 — Maximum permissible sound levels by receiving land use; immediate threat",
+      "text": "Table 2. Continuous Sound Levels Which Pose an Immediate Threat to Health and Welfare (Measured at 50 Feet)\n\n| Sound Level Limit (dBA) | Duration |\n| --- | --- |\n| 90 | 24 hours |\n| 93 | 12 hours |\n| 96 | 6 hours |\n| 99 | 3 hours |\n| 102 | 1.5 hours |\n| 105 | 45 minutes |\n| 108 | 22 minutes |\n\n(4) Correction for character of sound. For any source of sound which emits a pure tone, the\nmaximum sound level limits set forth in table 2 shall be reduced by five dBA.\n(5) Varying sound level. Where the sound level (dBA) varies over the measuring period, the\nequivalent A-weighted (average) sound level (Leq) shall be determined by figuring the time and\nintensity levels for time periods set out in tables 2 and 3.\n\nTable 3. Impulsive Sound Levels Which Pose an Immediate Threat to Health and Welfare (Measured at 50 Feet)\n\n| Sound Level Limit (dB) | Number of Repetitions per 24-Hour Period |\n| --- | --- |\n| 140 | 1 |\n| 130 | 10 |\n| 120 | 100 |\n\n(O.14,746, 14,774)"
+    },
+    {
+      "id": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:104-118",
+      "heading": "Des Moines Municipal Code, Sec. 42-256 — Specific activities prohibited",
+      "text": "(a) Sales by hawking or barking. No person shall offer for sale or sell anything by shouting or raised\nvoice within any residential or commercial area in the city.\n(b) Loading and unloading. No person shall so load, unload, open, close or handle boxes, crates,\ncontainers, building materials, garbage cans, or similar objects between the hours of 7:00 p.m. and\n6:00 a.m. the following morning as to create a noise disturbance across a residential real property\nboundary or within a noise sensitive area. This subsection shall not apply to the engine noise\ngenerated by the activities regulated by section 42-259 of this article.\n(c) Vehicle or motorboat repairs and testing. No person shall repair, rebuild, modify, or test any motor\nvehicle, motorcycle, or motorboat in such a manner as to cause a noise disturbance across a\nresidential real property boundary or outdoors within a noise sensitive area.\n(d) Powered model vehicles. No person shall operate or permit the operation of powered model vehicles\nin a public or private space out-of-doors or within a noise sensitive area between the hours of 10:00\np.m. and 7:00 a.m. the following day.\n\n(O.14,746, 14,976)"
+    },
+    {
+      "id": 4,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:122-127",
+      "heading": "Des Moines Municipal Code, Sec. 42-257 — Musical instruments and similar devices",
+      "text": "No person shall operate, play or permit the operation or playing of any drum, musical instrument or\nsimilar device which produces sound in such a manner as to create a noise disturbance across a\nresidential real property boundary as defined in section 42-254 of this article or outdoors within a noise\nsensitive area.\n\n(O.14,746)"
+    },
+    {
+      "id": 5,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:131-176",
+      "heading": "Des Moines Municipal Code, Sec. 42-259 — Motorized vehicles",
+      "text": "(a) No person shall operate the engine, or auxiliary engine, of a motor vehicle with a manufacturer's\ngross vehicle weight rating of 10,000 pounds or more for a period longer than 20 minutes while such\nvehicle is standing and located within 150 feet of property zoned and used for residential purposes.\nThis subsection shall not apply to delivery or pickup vehicles that require the operation of the engine\nto unload or load their vending loads.\n(b) No person shall operate a motor vehicle or a combination of vehicles of a type subject to registration\nat any time or under any condition in such manner as to exceed the noise limit listed in this\nsubsection for the category of motor vehicle, such noise to be measured at a distance of 50 feet from\nthe vehicle.\n\nNoise Limit In Relation To Legal Speed Limit\n\n| Type of Vehicle | 35 mph or Less, dBA | Over 35 mph, dBA |\n| --- | --- | --- |\n| Any motor vehicle with a manufacturer's gross vehicle weight rating of 10,000 lbs. or more and any combination of vehicles towed by such motor vehicle | 88 | 92 |\n| Any motorcycle | 82 | 86 |\n| Any other motor vehicle and any combination of motor vehicles towed by such motor vehicle | 76 | 82 |\n\nThis subsection applies to the total noise from a vehicle or combination of vehicles and shall not be\nconstrued as limiting or precluding the enforcement of any other section of this Code relating to motor\nvehicle mufflers or noise control.\n\n(c) (1) No person shall operate a recreational vehicle or permit the operation of one or more\nrecreational vehicles, individually or in a group, or in an organized racing event on public or\nprivate property in such a manner that the sound level exceeds that set forth in Section 42-254(a) Table 1.\n(2) No person shall operate or permit the operation of any recreational vehicle(s), on public or\nprivate land between the hours of 10:30 p.m. and 9:00 a.m.\n(3) This section shall not apply to recreational vehicles when legally operated upon the public\nstreets.\n(d) No person operating or in control of a motor vehicle, recreational vehicle, watercraft, or vessel shall\noperate or permit the operation of a sound system in the vehicle so as to produce a vibration or\nsound that is clearly detectable at a distance of 50 feet from the vehicle between the hours of 7:00\na.m. and 7:00 p.m. or clearly detectable at a distance of 25 feet from the vehicle between the hours\nof 7:00 p.m. to 7:00 a.m.\n(e) No person operating or in control of a garbage truck or other motor vehicle engaged in the business\nof solid waste collection, shall use such vehicle to pick up or empty a dumpster or other container\nused for the collection or storage of solid at any location in, or within 150 feet of, an R district or\nportion of a PUD district restricted to residential use, between the hours of 7:00 p.m. and 6:00 a.m.\nthe following morning, subject to the following:\n(1) Trash pickup at elementary and secondary schools and hospitals is exempt from this\nrequirement.\n(2) The city manager or the city manager's designee may grant an exception to this limitation on\nthe timing of trash pickup where such exception is necessary to avoid an unreasonable risk of\nharm created by the unusual circumstances of the site. Any such exception may be subject to\nreasonable conditions imposed to minimize the detrimental impact of granting such exception,\nand shall be subject to reconsideration in the event of changed circumstances."
+    },
+    {
+      "id": 6,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:182-186",
+      "heading": "Des Moines Municipal Code, Sec. 42-262 — Animals and birds",
+      "text": "No person shall own, possess or harbor any animal or bird which frequently or for continued duration\nemits sounds native to the species which are a noise disturbance across a residential real property\nboundary or within a noise sensitive area.\n\n(O.14,746)"
+    },
+    {
+      "id": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:190-200",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(1) — Type \"A\" permit",
+      "text": "(1) Type \"A\" permit. A type \"A\" permit may be issued for sound equipment emitting music or human\nspeech registering not more than 85 dBAs when measured at the real property boundary of the\npermitted property or at a distance of 50 feet from the sound equipment if issued in conjunction\nwith a street closing. A type \"A\" permit may be issued only in areas of the city zoned for\ncommercial and/or mixed use and only between the hours of 9:00 a.m. and 10:00 p.m., except\nthe C-3, C-3A, C-3B, C-3R and DR zoned areas which shall be between the hours of 9:00 a.m.\nand 11:00 p.m. Sunday through Thursday, and between the hours of 9:00 a.m. and 12:30 a.m.\non Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday. A type \"A\" permit will be issued for a thirty day period\nto be used on eight days during the permitted time, with the days of use to be designated on the\npermit application."
+    },
+    {
+      "id": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:204-212",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(2) — Type \"B\" permit",
+      "text": "(2) Type \"B\" permit—Parks located in residential zones. A type \"B\" permit may be used for sound\nequipment emitting music or human speech registering not more than 65 dBAs when measured\nat the real property boundary or at a distance of 50 feet from the sound equipment, whichever\ndistance is closer to the sound equipment. Sound equipment permitted under a type \"B\" permit\nmay be used only in public parks owned and operated by the city or public grounds owned and\noperated by another governmental body, located in a residentially zoned district from 9:00 a.m.\nto the time the park closes for events authorized and approved by the park and recreation board\nor other body having jurisdiction over the park or public grounds. A type \"B\" permit will be\nissued for one day up to one week with the days to be designated on the permit application."
+    },
+    {
+      "id": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:216-224",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(3) — Type \"C\" permit",
+      "text": "(3) Type \"C\" permit—Church or school grounds. A type \"C\" permit may be issued for sound\nequipment emitting music or human speech registering not more than 65 dBAs when measured\nat the real property boundary or when measured at a distance of 50 feet from the sound\nequipment, whichever distance is closer to the sound equipment. Sound equipment permitted\nunder a type \"C\" permit may be used only on church grounds, school grounds, or in conjunction\nwith a school sponsored activity, from 9:00 a.m. to 10:00 p.m. for events authorized and\napproved by the church or school authorities having jurisdiction of the grounds. A type \"C\"\npermit will be issued for one day up to one week with the days to be designated on the permit\napplication."
+    },
+    {
+      "id": 10,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:228-234",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(4) — Type \"D\" permit",
+      "text": "(4) Type \"D\" permit—Residential events. A type \"D\" permit may be issued for sound equipment\nemitting music or human speech registering not more than 65 dBAs when measured at the real\nproperty boundary of the permitted property or 50 feet from the sound equipment, whichever\ndistance is closer. Sound equipment permitted under a type \"D\" permit may be used only\npursuant to a permitted street closing under chapter 102 of this Code, from 9:00 a.m. to 10:00\np.m. A type \"D\" permit will be issued for one day up to one week with the days to be designate\non the permit application."
+    },
+    {
+      "id": 11,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:238-245",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(5) — Type \"E\" permit",
+      "text": "(5) Type \"E\" permit—Background sound equipment. A type \"E\" permit may be issued for a\ncommercially zoned area or a commercially zoned PUD or PBP area for sound equipment to be\nused in an outdoor area in conjunction with an approved business use emitting music or human\nspeech, excluding live music, registering not more then 65 dBAs, or below the ambient level,\nwhen measured at the property boundary, edge of designated seating area or 50 feet from the\nsound equipment which ever is closer. Sound equipment permitted under a type \"E\" permit may\nbe used only during regular hours of business operation. A type \"E\" permit will be issued up to\none year."
+    },
+    {
+      "id": 12,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:249-257",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(6) — Type \"F\" permit",
+      "text": "(6) Type \"F\" permit—Simon Estes Riverfront Amphitheater and Brenton Skating Plaza. A type \"F\"\npermit may be issued for sound equipment to be used, either in the Simon Estes Riverfront\nAmphitheater or the Brenton Skating Plaza, in conjunction with a lease agreement entered into\nwith the Parks and Recreation Department, emitting music or human speech, registering not\nmore than 100 dBAs, when measured at the middle cement crosswalk area of the amphitheater\nor 50 feet from the sound equipment at the skating plaza. This permit is effective between the\nhours of 9:00 a.m. to 11:00 p.m. Sunday through Thursday and 9:00 a.m. to 12:30 a.m. on\nFriday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday."
+    },
+    {
+      "id": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(7) — Type \"G\" permit",
+      "text": "(7) Type \"G\" permit—Special event live performances. A type \"G\" permit may be issued for sound\namplification equipment to be used for live performances where the sound from music or human\nspeech does not exceed 100 dBAs when measured 50 feet from the amplification equipment\nand meets all of the following criteria:\na. The special event or live performance is located in a C-3, C-3A, C-3B, C-3R or RD zoned\ndistrict,\nb. This type permit will only be issued two times per year per address to include a street\nclosing abutting the sponsoring business and only if 30 days has elapsed from the effective\ndate of a previous type \"G\" permit for the same location, however, if the street closing is\nsponsored by the Court Avenue Business Association, Downtown Community Alliance,\nHistoric East Village, or any other community organization affiliated with businesses\nlocated in the C-3, C-3A, C-3B, C-3R or RD zoned districts this type permit is not limited in\nnumber or time span,\nc. If the applicant has no address in the C-3, C-3A, C-3B, C-3R or RD zoned district, then\neither a business in the properly zoned district, or a community organization affiliated with\nbusinesses located in the C-3, C-3A, C-3B, C-3R or RD zoned districts must sponsor the\nevent,\nd. This type permit may not be issued if another type \"G\" permit has already been issued\nwithin 1,000 feet of a given location and covering the same time on any day.\ne. When used in conjunction with a street closure this type permit will not be issued until the\nstreet use team approves the street closure,\nf. This type permit must be obtained at least seven days prior to the performance unless\npending street use team approval.\ng. This type permit is effective for one or two days in succession and for the hours of 9:00\na.m. to 11:00 p.m. Sunday through Thursday and 9:00 a.m. to 12:30 a.m. on Friday and\nSaturday, the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of\nJuly should it fall on a Sunday.\nh. A variance may be sought in accordance with this article if any of the requirements for\nissuance of this type permit wish to be modified on a case by case basis."
+    },
+    {
+      "id": 14,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:293-295",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(8) — Type \"H\" permit",
+      "text": "(8) Type \"H\" permit—Farmer's Market. A type \"H\" permit may be issued to Farmer's Markets which\nhave a street closure for sound amplification equipment allowing music up to 85 dBA's for the\nduration of the street closure."
+    },
+    {
+      "id": 15,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:299-306",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(9) — Type \"I\" permit",
+      "text": "(9) Type \"I\" permit—Waterworks Park. A type \"I\" permit may be issued for amplification equipment\nfor live performances held in Waterworks Park, emitting music or human speech, at a level not\ngreater than 85 decibels when measured at the nearest residence. A type \"I\" permit is effective\nfor one or two days and for the hours of 9:00 a.m. and 10:00 p.m. Sunday through Thursday,\nand between the hours of 9:00 a.m. and 12:00 midnight on Friday and Saturday, the Sunday of\nMemorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.\nAdditionally the stage and sound equipment shall be set up facing the northeast causing the\nsound to be directed through the park and away from residential areas."
+    },
+    {
+      "id": 16,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:310-317",
+      "heading": "Des Moines Municipal Code, Sec. 42-258(10) — Type \"J\" permit",
+      "text": "(10) Type \"J\" permit—Night construction. A type \"J\" permit may be issued for residential construction\nactivities beyond the hours permitted under section 42-260. A type \"J\" permit may be issued for\nconstruction performed on behalf of a nonprofit or philanthropic organization where such\nconstruction activity is to be completed in an expedited manner pursuant to a construction\nschedule which has been approved by the community development director and has been\ndetermined to advance the overall welfare of city residents, provided that the residential\nstructure is being built for occupation by low or moderate income persons. Application for a type\n\"J\" permit shall be processed pursuant to sections 42-264 through 42-267 of this article."
+    },
+    {
+      "id": 17,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:321-334",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(1), Type \"A\" permit",
+      "text": "(1) Type \"A\" permit. A type \"A\" permit may be issued for sound equipment emitting\nlive music, reproduced music or human speech registering not more than 85 dBCs\nwhen measured at the real property boundary of the permitted property or at a\ndistance of 50 feet from the sound equipment if issued in conjunction with a street\nclosing. A type \"A\" permit may be issued only in areas of the city zoned for\nindustrial, commercial and/or mixed use and only between the hours of 9:00 a.m.\nand 10:00 p.m., except in the downtown areas and East Village Street Closure area,\nwhich shall be between the hours of 9:00 a.m. and 11:00 p.m. Sunday through\nThursday, and between the hours of 9:00 a.m. and 12:30 a.m. on Friday and\nSaturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday. A type \"A\" permit will be issued for a\nthirty-day period, commencing on the first of each month, to be used on eight days\nduring the permitted time, with the days of use to be designated on the permit\napplication."
+    },
+    {
+      "id": 18,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:338-348",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(2), Type \"B\" permit",
+      "text": "(2) Type \"B\" permit—parks located in residential zones. A type \"B\" permit may be\nused for sound equipment emitting music or human speech registering not more\nthan 65 dBCs when measured at the real property boundary or at a distance of 50\nfeet from the sound equipment, whichever distance is closer to the sound\nequipment. Sound equipment permitted under a type \"B\" permit may be used only\nin public parks owned and operated by the city or public grounds owned and\noperated by another governmental body, located in a residentially zoned district\nfrom 9:00 a.m. to the time the park closes for events authorized and approved by\nthe park and recreation board or other body having jurisdiction over the park or\npublic grounds. A type \"B\" permit will be issued for one day up to one week with\nthe days to be designated on the permit application."
+    },
+    {
+      "id": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:352-361",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(3), Type \"C\" permit",
+      "text": "(3) Type \"C\" permit—church or school grounds. A type \"C\" permit may be issued for\nsound equipment emitting music or human speech registering not more than 65\ndBCs when measured at the real property boundary or when measured at a distance\nof 50 feet from the sound equipment, whichever distance is closer to the sound\nequipment. Sound equipment permitted under a type \"C\" permit may be used only\non church grounds, school grounds, or in conjunction with a school sponsored\nactivity, from 9:00 a.m. to 10:00 p.m. for events authorized and approved by the\nchurch or school authorities having jurisdiction of the grounds. A type \"C\" permit\nwill be issued for one day up to one week with the days to be designated on the\npermit application."
+    },
+    {
+      "id": 20,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:365-372",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(4), Type \"D\" permit",
+      "text": "(4) Type \"D\" permit--residential events. A type \"D\" permit may be issued for sound\nequipment emitting music or human speech registering not more than 65 dBCs\nwhen measured at the real property boundary of the permitted property or 50 feet\nfrom the sound equipment, whichever distance is closer. Sound equipment\npermitted under a type \"D\" permit may be used only pursuant to a permitted street\nclosing under chapter 102 of this Code, from 9:00 a.m. to 10:00 p.m. A type \"D\"\npermit will be issued for one day up to one week with the days to be designate on\nthe permit application."
+    },
+    {
+      "id": 21,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:376-384",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(5), Type \"E\" permit",
+      "text": "(5) Type \"E\" permit – background sound equipment. A type \"E\" permit may be issued\nfor a commercially zoned area, mixed use zoned area, East Village noise control\narea or a commercially zoned PUD or PBP area for sound equipment to be used in\nan outdoor area in conjunction with an approved business use emitting music or\nhuman speech, excluding live music, registering not more than 65 dBCs, or below\nthe ambient level, when measured at the property boundary, edge of designated\nseating area or 50 feet from the sound equipment whichever is closer. Sound\nequipment permitted under a type \"E\" permit may be used only during regular hours\nof business operation. A type \"E\" permit will be issued up to one year."
+    },
+    {
+      "id": 22,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:388-395",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(6), Type \"F\" permit",
+      "text": "(6) Type \"F\" permit – Brenton Skating Plaza. A type \"F\" permit may be issued for\nsound equipment in the Brenton Skating Plaza, in conjunction with a lease\nagreement entered into with the Parks and Recreation Department emitting music\nor human speech, registering not more than 112 dBCs, at the front of house which\nis established to be 75 feet from the sound. This permit is effective between the\nhours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday and 9:00 a.m. to 11:00\np.m. on Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day\nweekend and the Fourth of July should it fall on a Sunday."
+    },
+    {
+      "id": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(7), Type \"G\" permit",
+      "text": "(7) Type \"G\" permit-Special Event Live Performances. A type \"G\" permit may be\nissued for sound amplification equipment to be used for live performances where\nthe sound from music or human speech does not exceed 112 dBCs when measured\n50 feet from the amplification equipment and meets all of the following criteria:\na. The special event or live performance is located in the Downtown areas and\nthe East Village Steet Closure area,\nb. This type permit will only be issued two times per year per address to\ninclude a street closing abutting the sponsoring business and only if 30 days\nhas elapsed from the effective date of a previous type \"G\" permit for the\nsame location, however, if the street closing is sponsored by the Court\nAvenue Business Association, Downtown Community Alliance, Historic\nEast Village, or any other community organization affiliated with\nbusinesses located in the downtown areas this type permit is not limited in\nnumber or time span,\nc. If the applicant has no address in the downtown areas, then either a business\nin the area, or a community organization affiliated with businesses located\nin the downtown area must sponsor the event,\nd. This type permit may not be issued if another type \"G\" permit has already\nbeen issued within 1,000 feet of a given location and covering the same time\non any day. If the event has multiple stages in the designated event only\none permit will be required.\ne. When used in conjunction with a street closure this type permit will not be\nissued until the street use team approves the street closure,\nf. This type permit must be obtained at least 7 days prior to the performance\nunless pending street use team approval.\ng. This type permit is effective for up to three consecutive days and for the\nhours of 9:00 a.m. to 11:00 p.m. Sunday through Thursday and 9:00 a.m. to\n12:30 a.m. on Friday and Saturday, the Sunday of Memorial Day weekend,\nLabor Day weekend and the Fourth of July should it fall on a Sunday.\nh. A variance may be sought in accordance with this article if any of the\nrequirements for issuance of this type permit wish to be modified on a case\nby case basis."
+    },
+    {
+      "id": 24,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:434-436",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(8), Type \"H\" permit",
+      "text": "(8) Type \"H\" permit-Farmer's Market. A type \"H\" permit may be issued to Farmer's\nMarkets which have a street closure for sound amplification equipment allowing\nmusic up to 85 dBCs for the duration of the street closure."
+    },
+    {
+      "id": 25,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:440-448",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(9), Type \"I\" permit",
+      "text": "(9) Type \"I\" permit- Waterworks Park – Lauridsen Amphitheater. A type \"I\" permit\nmay be issued for amplification equipment for live performances held in\nWaterworks Park, at the Lauridsen Amphiltheater, emitting music or human\nspeech, at a level not greater than 114 dBCs measured at front of house which will\nbe set at 125 feet from the stage. A type \"I\" permit is effective for one or two days\nand for the hours of 9:00 a.m. and 10:00 p.m. Sunday through Thursday, and\nbetween the hours of 9:00 a.m. and 11:00 p.m. on Friday and Saturday, the Sunday\nof Memorial Day weekend, Labor Day weekend and the Fourth of July should it\nfall on a Sunday."
+    },
+    {
+      "id": 26,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:452-461",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(10), Type \"J\" permit",
+      "text": "(10) Type \"J\" permit – night construction. A type \"J\" permit may be issued for\nresidential construction activities beyond the hours permitted under section 42-260.\nA type \"J\" permit may be issued for construction performed on behalf of a nonprofit\nor philanthropic organization where such construction activity is to be completed\nin an expedited manner pursuant to a construction schedule which has been\napproved by the community development director and has been determined to\nadvance the overall welfare of city residents, provided that the residential structure\nis being built for occupation by low or moderate income persons. Application for\na type \"J\" permit shall be processed pursuant to sections 42-264 through 42-267 of\nthis article."
+    },
+    {
+      "id": 27,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:465-468",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(11), Type \"K\" permit",
+      "text": "(11) Type \"K\" permit may be issued for an event whose route is on city streets, trails\nand/or other public right-of-way with the permit to be valid one hour before the\nstart of the event and at specifically approved locations along the route that would\notherwise comply with all other provisions of this article."
+    },
+    {
+      "id": 28,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:472-482",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(12), Type \"L\" permit",
+      "text": "(12) Type \"L\" permit may be issued to a privately held recreational area more than 40\nacres in area for outside events, emitting music or human speech at a level not\ngreater than 112 dBCs when measured 50 feet from the amplification equipment.\nThis permit is effective between the hours of 9:00 a.m. to 11:00 p.m. Sunday\nthrough Thursday and 9:00 a.m. to 12:30 a.m. on Friday and Saturday, the Sunday\nof Memorial Day weekend, the Sunday of Labor Day weekend, and the Fourth of\nJuly whenever it occurs on a Sunday. The stage and sound equipment for any live\nperformances held shall be set up facing away from residential areas. A type \"L\"\npermit will be issued for a thirty-day period, commencing on the first of each\nmonth, to be used on eight days during the permitted time, with the days of use to\nbe designated on the permit application."
+    },
+    {
+      "id": 29,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:486-503",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(13), Type \"M\" permit",
+      "text": "(13) Type \"M\" permit Zoo and Water Works Park. A type \"M\" permit may be issued\nfor amplification equipment for live performances held on the Blank Park Zoo\nFoundation Parcel and Water Works Park field, emitting music or human speech,\n114 dBCs measured at front of house which will be 125 feet from the state and\nlimited to 85 dBCs when measured at the nearest residence. A type \"M\" permit is\neffective for one or two days and for the hours of 9:00 a.m. and 10:00 p.m. Sunday\nthrough Thursday, and between the hours of 9:00 a.m. and 11:00 p.m. on Friday\nand Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday. The stage and sound equipment for any\nlive performances held on the Blank Park Zoo Foundation Parcel shall be set up\nfacing the south causing the sound to be directed towards the Blank Park Zoo and\nthe Blank Golf Course. For the purpose of this subsection, Blank Park Zoo\nFoundation Parcel means the tract owned by Blank Park Zoo Foundation located\nsouth of Army Post Road and east of SW 9th Street, and designated for tax purposes\nas Polk County district/parcel number 120/00324-005-001. Additionally, the stage\nand sound equipment for any live performances held in the field in Waterworks\nPark shall be set up facing the northeast causing he sound to be directed through\nthe park and away from residential areas."
+    },
+    {
+      "id": 30,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:507-514",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(14), Type \"N\" permit",
+      "text": "(14) Type \"N\" permit – Simon Estes Riverfront Amphitheater. A type \"N\" permit may\nbe issued for sound equipment to be used in the Simon Estes Riverfront\nAmphitheater in conjunction with a lease agreement entered into with the Parks and\nRecreation Department, emitting music or human speech, registering not more than\n100 dBCs, when measured at the middle cement crosswalk. This permit is effective\nbetween the hours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday and 9:00\na.m. to 11:00 p.m. on Friday and Saturday, the Sunday of Memorial Day weekend,\nLabor Day weekend and the Fourth of July should it fall on a Sunday."
+    },
+    {
+      "id": 31,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:518-526",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(15), Type \"O\" permit",
+      "text": "(15) Type \"O\" permit – Riverview Amphitheater. The type permit may be issued for\nsound equipment in the Riverview Amphitheater, in conjunction with a lease\nagreement entered into with the Parks and Recreation Department, emitting music\nor human speech, registering not more than 105 dBC 50 feet from the speakers\nwhich shall be the established front of house for purposes of noise control\nmeasurements. This permit is effective between the hours of 9:00 a.m. to 10:00\np.m. Sunday through Thursday and 9:00 a.m. to 11:00 p.m. on Friday and Saturday,\nthe Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July\nshould it fall on a Sunday."
+    },
+    {
+      "id": 32,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:530-537",
+      "heading": "Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(16), Type \"P\" permit",
+      "text": "(16) Type \"P\" Permit - Botanical Center. A type \"P\" permit may be issued for sound\nequipment on the Botanical Center grounds, registering not more than 112 dBCs,\nat the front of house which is established to be 75 feet from the sound. This permit\nis effective between the hours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday\nand 9:00 a.m. to 11:00 p.m. on Friday and Saturday, the Sunday of Memorial Day\nweekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.\n\n...."
+    },
+    {
+      "id": 33,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:541-558",
+      "heading": "Ordinance 16,127, adopted 2022-05-23 — Sec. 42-258(17), Type \"Q\" permit",
+      "text": "(17) Type\" Q\" Permit – 900 Mulberry Street. A type \"Q\" permit may be issued for sound\nequipment at 900 Mulberry Street, registering not more than 90 dBCs for up to six\ntimes in a calendar year and registering not more than 85 dBCs for up to 18 times\nin a calendar year measured at the real property boundary. Within any calendar\nmonth, no more than six permits may be granted with no more than two of those\npermits allowing readings up to 90 dBCs. The permits will be effective between the\nhours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday and between the hours\nof 9:00 a.m. to 11:00 p.m. on Friday and Saturday. The amplified sound will not be\nthe primary purpose of the event and the description of the event will be provided\nwith the permit application. The event coordinator and/or the production company\nwill provide notice to the adjacent residents detailing the type of event, the time\nframe of the event and contact names of persons responsible for the event as set out\non the permit application. All speaker systems shall face SW 9 th Street. The\npromoter or event coordinator shall have a sound level meter and comply with\nsection 42- 258 (e) of this article. The event coordinator and/or the production\ncompany shall provide the adjacent residents or their designated representative the\nsound level meter readings within three (3) business days after the readings are\nrequested."
+    }
+  ],
+  "candidates": [
+    {
+      "text": "In industrial zones M-1 to M-3, sound levels must not exceed the limit specified in Table 1 for that zone at all times.",
+      "quote": "| Industrial zones: M-1 to M-3 | At all times | 75 |",
+      "chunk": 1,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:29-72"
+    },
+    {
+      "text": "No person shall offer for sale or sell anything by shouting or raised voice within any residential or commercial area in the city.",
+      "quote": "No person shall offer for sale or sell anything by shouting or raised\nvoice within any residential or commercial area in the city.",
+      "chunk": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:104-118"
+    },
+    {
+      "text": "No person shall so load, unload, open, close or handle boxes, crates, containers, building materials, garbage cans, or similar objects between the hours of 7:00 p.m. and 6:00 a.m. the following morning as to create a noise disturbance across a residential real property boundary or within a noise sensitive area, except for engine noise generated by activities regulated by section 42-259.",
+      "quote": "No person shall so load, unload, open, close or handle boxes, crates,\ncontainers, building materials, garbage cans, or similar objects between the hours of 7:00 p.m. and\n6:00 a.m. the following morning as to create a noise disturbance across a residential real property\nboundary or within a noise sensitive area. This subsection shall not apply to the engine noise\ngenerated by the activities regulated by section 42-259 of this article.",
+      "chunk": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:104-118"
+    },
+    {
+      "text": "No person shall repair, rebuild, modify, or test any motor vehicle, motorcycle, or motorboat in such a manner as to cause a noise disturbance across a residential realproperty boundary or outdoors within a noise sensitive area.",
+      "quote": "No person shall repair, rebuild, modify, or test any motor\nvehicle, motorcycle, or motorboat in such a manner as to cause a noise disturbance across a\nresidential real property boundary or outdoors within a noise sensitive area.",
+      "chunk": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:104-118"
+    },
+    {
+      "text": "No person shall operate or permit the operation of powered model vehicles in a public or private space out-of-doors or within a noise sensitive area between the hours of 10:00 p.m. and 7:00 a.m. the following day.",
+      "quote": "No person shall operate or permit the operation of powered model vehicles\nin a public or private space out-of-doors or within a noise sensitive area between the hours of 10:00\np.m. and 7:00 a.m. the following day.",
+      "chunk": 3,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:104-118"
+    },
+    {
+      "text": "No person shall operate, play or permit the operation or playing of any drum, musical instrument or similar device which produces sound in such a manner as to create a noise disturbance across a residential real property boundary as defined in section 42-254 of this article or outdoors within a noise sensitive area.",
+      "quote": "No person shall operate, play or permit the operation or playing of any drum, musical instrument or\nsimilar device which produces sound in such a manner as to create a noise disturbance across a\nresidential real property boundary as defined in section 42-254 of this article or outdoors within a noise\nsensitive area.",
+      "chunk": 4,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:122-127"
+    },
+    {
+      "text": "Vehicles with a gross vehicle weight rating of 10,000 pounds or more shall not operate their engine for longer than 20 minutes while standing within 150 feet of residential property, except delivery or pickup vehicles that require the engine to load or unload.",
+      "quote": "(a) No person shall operate the engine, or auxiliary engine, of a motor vehicle with a manufacturer's\ngross vehicle weight rating of 10,000 pounds or more for a period longer than 20 minutes while such\nvehicle is standing and located within 150 feet of property zoned and used for residential purposes.\nThis subsection shall not apply to delivery or pickup vehicles that require the operation of the engine\nto unload or load their vending loads.",
+      "chunk": 5,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:131-176"
+    },
+    {
+      "text": "Recreational vehicles shall not be operated on public or private property in a manner that exceeds the sound levels set forth in Section 42-254(a) Table 1, nor between the hours of 10:30 p.m. and 9:00 a.m., except when legally operated upon public streets.",
+      "quote": "(c) (1) No person shall operate a recreational vehicle or permit the operation of one or more\nrecreational vehicles, individually or in a group, or in an organized racing event on public or\nprivate property in such a manner that the sound level exceeds that set forth in Section 42-254(a) Table 1.\n(2) No person shall operate or permit the operation of any recreational vehicle(s), on public or\nprivate land between the hours of 10:30 p.m. and 9:00 a.m.\n(3) This section shall not apply to recreational vehicles when legally operated upon the public\nstreets.",
+      "chunk": 5,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:131-176"
+    },
+    {
+      "text": "Sound systems in motor vehicles, recreational vehicles, watercraft, or vessels shall not produce vibration or sound clearly detectable at 50 feet between 7:00 a.m. and 7:00 p.m., or at 25 feet between 7:00 p.m. and 7:00 a.m.",
+      "quote": "(d) No person operating or in control of a motor vehicle, recreational vehicle, watercraft, or vessel shall\noperate or permit the operation of a sound system in the vehicle so as to produce a vibration or\nsound that is clearly detectable at a distance of 50 feet from the vehicle between the hours of 7:00\na.m. and 7:00 p.m. or clearly detectable at a distance of 25 feet from the vehicle between the hours\nof 7:00 p.m. to 7:00 a.m.",
+      "chunk": 5,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:131-176"
+    },
+    {
+      "text": "No person shall own, possess or harbor any animal or bird which frequently or for continued duration emits sounds native to the species which are a noise disturbance across a residential real property boundary or within a noise sensitive area.",
+      "quote": "No person shall own, possess or harbor any animal or bird which frequently or for continued duration\nemits sounds native to the species which are a noise disturbance across a residential real property\nboundary or within a noise sensitive area.",
+      "chunk": 6,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:182-186"
+    },
+    {
+      "text": "Type \"A\" permits may be issued for sound equipment emitting music or human speech registering not more than 85 dBAs when measured at the real property boundary of the permitted property or at a distance of 50 feet from the sound equipment if issued in conjunction with a street closing.",
+      "quote": "A type \"A\" permit may be issued for sound equipment emitting music or human\nspeech registering not more than 85 dBAs when measured at the real property boundary of the\npermitted property or at a distance of 50 feet from the sound equipment if issued in conjunction\nwith a street closing.",
+      "chunk": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:190-200"
+    },
+    {
+      "text": "Type \"A\" permits are only valid in areas zoned for commercial and/or mixed use between the hours of 9:00 a.m. and 10:00 p.m., except in C-3, C-3A, C-3B, C-3R and DR zoned areas where they are valid between 9:00 a.m. and 11:00 p.m. Sunday through Thursday, and between 9:00 a.m. and 12:30 a.m. on Friday and Saturday, as well as the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "quote": "A type \"A\" permit may be issued only in areas of the city zoned for\ncommercial and/or mixed use and only between the hours of 9:00 a.m. and 10:00 p.m., except\nthe C-3, C-3A, C-3B, C-3R and DR zoned areas which shall be between the hours of 9:00 a.m.\nand 11:00 p.m. Sunday through Thursday, and between the hours of 9:00 a.m. and 12:30 a.m.\non Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday.",
+      "chunk": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:190-200"
+    },
+    {
+      "text": "Type \"A\" permits cover a thirty day period to be used on eight days during the permitted time, with the specific days designated on the permit application.",
+      "quote": "A type \"A\" permit will be issued for a thirty day period\nto be used on eight days during the permitted time, with the days of use to be designated on the\npermit application.",
+      "chunk": 7,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:190-200"
+    },
+    {
+      "text": "Sound equipment under a type \"B\" permit may emit music or human speech registering not more than 65 dBAs when measured at the real property boundary or at a distance of 50 feet from the sound equipment, whichever is closer.",
+      "quote": "A type \"B\" permit may be used for sound\nequipment emitting music or human speech registering not more than 65 dBAs when measured\nat the real property boundary or at a distance of 50 feet from the sound equipment, whichever\ndistance is closer to the sound equipment.",
+      "chunk": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:204-212"
+    },
+    {
+      "text": "Sound equipment permitted under a type \"B\" permit may be used only in public parks owned and operated by the city or public grounds owned and operated by another governmental body located in a residentially zoned district from 9:00 a.m. to closing time for events authorized and approved by the park and recreation board or other body having jurisdiction over the park or public grounds.",
+      "quote": "Sound equipment permitted under a type \"B\" permit\nmay be used only in public parks owned and operated by the city or public grounds owned and\noperated by another governmental body, located in a residentially zoned district from 9:00 a.m.\nto the time the park closes for events authorized and approved by the park and recreation board\nor other body having jurisdiction over the park or public grounds.",
+      "chunk": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:204-212"
+    },
+    {
+      "text": "A type \"B\" permit is issued for one day up to one week with the days designated on the permit application.",
+      "quote": "A type \"B\" permit will be\nissued for one day up to one week with the days to be designated on the permit application.",
+      "chunk": 8,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:204-212"
+    },
+    {
+      "text": "Sound equipment under a type \"C\" permit may emit music or human speech registering not more than 65 dBAs when measured at the real property boundary or at a distance of 50 feet from the sound equipment, whichever is closer.",
+      "quote": "A type \"C\" permit may be issued for sound\nequipment emitting music or human speech registering not more than 65 dBAs when measured\nat the real property boundary or when measured at a distance of 50 feet from the sound\nequipment, whichever distance is closer to the sound equipment.",
+      "chunk": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:216-224"
+    },
+    {
+      "text": "Sound equipment permitted under a type \"C\" permit may be used only on church grounds, school grounds, or in conjunction with a school sponsored activity, from 9:00 a.m. to 10:00 p.m., for events authorized and approved by the church or school authorities having jurisdiction of the grounds.",
+      "quote": "Sound equipment permitted\nunder a type \"C\" permit may be used only on church grounds, school grounds, or in conjunction\nwith a school sponsored activity, from 9:00 a.m. to 10:00 p.m. for events authorized and\napproved by the church or school authorities having jurisdiction of the grounds.",
+      "chunk": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:216-224"
+    },
+    {
+      "text": "A type \"C\" permit is issued for one day up to one week, with the specific days designated on the permit application.",
+      "quote": "A type \"C\"\npermit will be issued for one day up to one week with the days to be designated on the permit\napplication.",
+      "chunk": 9,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:216-224"
+    },
+    {
+      "text": "Sound equipment under a type \"D\" permit may emit music or human speech registering not more than 65 dBAs when measured at the real property boundary of the permitted property or 50 feet from the sound equipment, whichever distance is closer.",
+      "quote": "A type \"D\" permit may be issued for sound equipment\nemitting music or human speech registering not more than 65 dBAs when measured at the real\nproperty boundary of the permitted property or 50 feet from the sound equipment, whichever\ndistance is closer.",
+      "chunk": 10,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:228-234"
+    },
+    {
+      "text": "Sound equipment permitted under a type \"D\" permit may be used only pursuant to a permitted street closing under chapter 102 of this Code, from 9:00 a.m. to 10:00 p.m.",
+      "quote": "Sound equipment permitted under a type \"D\" permit may be used only\npursuant to a permitted street closing under chapter 102 of this Code, from 9:00 a.m. to 10:00\np.m. A type \"D\" permit will be issued for one day up to one week with the days to be designate\non the permit application.",
+      "chunk": 10,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:228-234"
+    },
+    {
+      "text": "A type \"D\" permit will be issued for one day up to one week with the days to be designated on the permit application.",
+      "quote": "Sound equipment permitted under a type \"D\" permit may be used only\npursuant to a permitted street closing under chapter 102 of this Code, from 9:00 a.m. to 10:00\np.m. A type \"D\" permit will be issued for one day up to one week with the days to be designate\non the permit application.",
+      "chunk": 10,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:228-234"
+    },
+    {
+      "text": "A type \"E\" permit may be issued for sound equipment in a commercially zoned area or PUD/PBP used with an approved business emitting music or human speech (excluding live music) that registers not more than 65 dBAs or below the ambient level when measured at the property boundary, edge of designated seating area, or 50 feet from the equipment, whichever is closer.",
+      "quote": "A type \"E\" permit may be issued for a\ncommercially zoned area or a commercially zoned PUD or PBP area for sound equipment to be\nused in an outdoor area in conjunction with an approved business use emitting music or human\nspeech, excluding live music, registering not more then 65 dBAs, or below the ambient level,\nwhen measured at the property boundary, edge of designated seating area or 50 feet from the\nsound equipment which ever is closer.",
+      "chunk": 11,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:238-245"
+    },
+    {
+      "text": "Sound equipment permitted under a type \"E\" permit may be used only during regular hours of business operation.",
+      "quote": "Sound equipment permitted under a type \"E\" permit may\nbe used only during regular hours of business operation.",
+      "chunk": 11,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:238-245"
+    },
+    {
+      "text": "A type \"F\" permit may be issued for sound equipment used in the Simon Estes Riverfront Amphitheater or Brenton Skating Plaza under a Parks and Recreation Department lease agreement to emit music or human speech registering not more than 100 dBAs at the middle cement crosswalk area of the amphitheater or 50 feet from the equipment at the skating plaza, effective between 9:00 a.m. and 11:00 p.m. Sunday through Thursday and 9:00 a.m. and 12:30 a.m. on Friday, Saturday, and the Sundays of Memorial Day weekend, Labor Day weekend, and the Fourth of July.",
+      "quote": "A type \"F\"\npermit may be issued for sound equipment to be used, either in the Simon Estes Riverfront\nAmphitheater or the Brenton Skating Plaza, in conjunction with a lease agreement entered into\nwith the Parks and Recreation Department, emitting music or human speech, registering not\nmore than 100 dBAs, when measured at the middle cement crosswalk area of the amphitheater\nor 50 feet from the sound equipment at the skating plaza. This permit is effective between the\nhours of 9:00 a.m. to 11:00 p.m. Sunday through Thursday and 9:00 a.m. to 12:30 a.m. on\nFriday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday.",
+      "chunk": 12,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:249-257"
+    },
+    {
+      "text": "Sound from music or human speech at live performances must not exceed 100 dBAs when measured 50 feet from the amplification equipment.",
+      "quote": "A type \"G\" permit may be issued for sound\namplification equipment to be used for live performances where the sound from music or human\nspeech does not exceed 100 dBAs when measured 50 feet from the amplification equipment\nand meets all of the following criteria:",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289"
+    },
+    {
+      "text": "Special events and live performances requiring a Type \"G\" permit are located in C-3, C-3A, C-3B, C-3R, or RD zoned districts.",
+      "quote": "a. The special event or live performance is located in a C-3, C-3A, C-3B, C-3R or RD zoned\ndistrict,",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289"
+    },
+    {
+      "text": "Type \"G\" permits including street closings abutting the sponsoring business are issued no more than two times per year per address with at least 30 days elapsed from the effective date of a previous permit for the same location, unless sponsored by the Court Avenue Business Association, Downtown Community Alliance, Historic East Village, or any other community organization affiliated with businesses in C-3, C-1A, C-3B, c-3r, or rd zoned districts.",
+      "quote": "b. This type permit will only be issued two times per year per address to include a street\nclosing abutting the sponsoring business and only if 30 days has elapsed from the effective\ndate of a previous type \"G\" permit for the same location, however, if the street closing is\nsponsored by the Court Avenue Business Association, Downtown Community Alliance,\nHistoric East Village, or any other community organization affiliated with businesses\nlocated in the C-3, C-3A, C-3B, C-3R or RD zoned districts this type permit is not limited in\nnumber or time span,",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289"
+    },
+    {
+      "text": "If an applicant has no address in a C-3, C-2A, C-3b, c-3R, or Rd zoned district, the event must be sponsored by a business in that properly zoned district or a community organization affiliated with such businesses.",
+      "quote": "c. If the applicant has no address in the C-3, C-3A, C-3B, C-3R or RD zoned district, then\neither a business in the properly zoned district, or a community organization affiliated with\nbusinesses located in the C-3, C-3A, C-3B, C-3R or RD zoned districts must sponsor the\nevent,",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289"
+    },
+    {
+      "text": "Type \"G\" permits are not issued if another Type \"G\" permit covers the same time on any day within 1,000 feet of the given location.",
+      "quote": "d. This type permit may not be issued if another type \"G\" permit has already been issued\nwithin 1,000 feet of a given location and covering the same time on any day.",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289"
+    },
+    {
+      "text": "When used in conjunction with a street closure, Type \"G\" permits are not issued until the street use team approves the street closure.",
+      "quote": "e. When used in conjunction with a street closure this type permit will not be issued until the\nstreet use team approves the street closure,",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289"
+    },
+    {
+      "text": "Type \"G\" permits must be obtained at least seven days prior to the performance unless pending street use team approval.",
+      "quote": "f. This type permit must be obtained at least seven days prior to the performance unless\npending street use team approval.",
+      "chunk": 13,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:261-289"
+    },
+    {
+      "text": "A type \"H\" permit may be issued to Farmer's Markets which have a street closure for sound amplification equipment allowing music up to 85 dBA's for the duration of the street closure.",
+      "quote": "A type \"H\" permit may be issued to Farmer's Markets which\nhave a street closure for sound amplification equipment allowing music up to 85 dBA's for the\nduration of the street closure.",
+      "chunk": 14,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:293-295"
+    },
+    {
+      "text": "A type \"I\" permit may be issued for amplification equipment at live performances in Waterworks Park emitting music or human speech at a level not greater than 85 decibels when measured at the nearest residence.",
+      "quote": "A type \"I\" permit may be issued for amplification equipment\nfor live performances held in Waterworks Park, emitting music or human speech, at a level not\ngreater than 85 decibels when measured at the nearest residence.",
+      "chunk": 15,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:299-306"
+    },
+    {
+      "text": "A type \"I\" permit is effective for one or two days and for the hours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday, and between the hours of 9:00 a.m. and 12:00 midnight on Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "quote": "A type \"I\" permit is effective\nfor one or two days and for the hours of 9:00 a.m. and 10:00 p.m. Sunday through Thursday,\nand between the hours of 9:00 a.m. and 12:00 midnight on Friday and Saturday, the Sunday of\nMemorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "chunk": 15,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:299-306"
+    },
+    {
+      "text": "The stage and sound equipment shall be set up facing the northeast causing the sound to be directed through the park and away from residential areas.",
+      "quote": "Additionally the stage and sound equipment shall be set up facing the northeast causing the\nsound to be directed through the park and away from residential areas.",
+      "chunk": 15,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:299-306"
+    },
+    {
+      "text": "A type \"J\" permit may be issued for residential construction activities beyond the hours permitted under section 42-260 or for expedited nonprofit construction advancing city welfare where the structure is built for low or moderate income persons.",
+      "quote": "A type \"J\" permit may be issued for residential construction\nactivities beyond the hours permitted under section 42-260. A type \"J\" permit may be issued for\nconstruction performed on behalf of a nonprofit or philanthropic organization where such\nconstruction activity is to be completed in an expedited manner pursuant to a construction\nschedule which has been approved by the community development director and has been\ndetermined to advance the overall welfare of city residents, provided that the residential\nstructure is being built for occupation by low or moderate income persons.",
+      "chunk": 16,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:310-317"
+    },
+    {
+      "text": "Applications for a type \"J\" permit shall be processed pursuant to sections 42-264 through 42-267 of this article.",
+      "quote": "Application for a type\n\"J\" permit shall be processed pursuant to sections 42-264 through 42-267 of this article.",
+      "chunk": 16,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:310-317"
+    },
+    {
+      "text": "A type \"A\" permit may be issued for sound equipment emitting live music, reproduced music or human speech registering not more than 85 dBCs when measured at the real property boundary of the permitted property or at a distance of 50 feet from the sound equipment if issued in conjunction with a street closing.",
+      "quote": "A type \"A\" permit may be issued for sound equipment emitting\nlive music, reproduced music or human speech registering not more than 85 dBCs\nwhen measured at the real property boundary of the permitted property or at a\ndistance of 50 feet from the sound equipment if issued in conjunction with a street\nclosing.",
+      "chunk": 17,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:321-334"
+    },
+    {
+      "text": "A type \"A\" permit may be issued only in areas of the city zoned for industrial, commercial and/or mixed use and only between the hours of 9:00 a.m. and 10:00 p.m., except in the downtown areas and East Village Street Closure area, which shall be between the hours of 9:00 a.m. and 11:00 p.m. Sunday through Thursday, and between the hours of 9:00 a.m. and 12:30 a.m. on Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "quote": "A type \"A\" permit may be issued only in areas of the city zoned for\nindustrial, commercial and/or mixed use and only between the hours of 9:00 a.m.\nand 10:00 p.m., except in the downtown areas and East Village Street Closure area,\nwhich shall be between the hours of 9:00 a.m. and 11:00 p.m. Sunday through\nThursday, and between the hours of 9:00 a.m. and 12:30 a.m. on Friday and\nSaturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday.",
+      "chunk": 17,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:321-334"
+    },
+    {
+      "text": "A type \"A\" permit will be issued for a thirty-day period, commencing on the first of each month, to be used on eight days during the permitted time, with the days of use to be designated on the permit application.",
+      "quote": "A type \"A\" permit will be issued for a\nthirty-day period, commencing on the first of each month, to be used on eight days\nduring the permitted time, with the days of use to be designated on the permit\napplication.",
+      "chunk": 17,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:321-334"
+    },
+    {
+      "text": "A type \"B\" permit may be used for sound equipment emitting music or human speech registering not more than 65 dBCs when measured at the real property boundary or at a distance of 50 feet from the sound equipment, whichever distance is closer to the sound equipment.",
+      "quote": "A type \"B\" permit may be\nused for sound equipment emitting music or human speech registering not more\nthan 65 dBCs when measured at the real property boundary or at a distance of 50\nfeet from the sound equipment, whichever distance is closer to the sound\nequipment.",
+      "chunk": 18,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:338-348"
+    },
+    {
+      "text": "Sound equipment permitted under a type \"B\" permit may be used only in public parks owned and operated by the city or public grounds owned and operated by another governmental body, located in a residentially zoned district from 9:00 a.m. to the time the park closes for events authorized and approved by the park and recreation board or other body having jurisdiction over the park or public grounds.",
+      "quote": "Sound equipment permitted under a type \"B\" permit may be used only\nin public parks owned and operated by the city or public grounds owned and\noperated by another governmental body, located in a residentially zoned district\nfrom 9:00 a.m. to the time the park closes for events authorized and approved by\nthe park and recreation board or other body having jurisdiction over the park or\npublic grounds.",
+      "chunk": 18,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:338-348"
+    },
+    {
+      "text": "A type \"B\" permit will be issued for one day up to one week with the days to be designated on the permit application.",
+      "quote": "A type \"B\" permit will be issued for one day up to one week with\nthe days to be designated on the permit application.",
+      "chunk": 18,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:338-348"
+    },
+    {
+      "text": "A type \"C\" permit may be issued for sound equipment emitting music or human speech registering not more than 65 dBCs when measured at the real property boundary or when measured at a distance of 50 feet from the sound equipment, whichever distance is closer to the sound equipment.",
+      "quote": "A type \"C\" permit may be issued for\nsound equipment emitting music or human speech registering not more than 65\ndBCs when measured at the real property boundary or when measured at a distance\nof 50 feet from the sound equipment, whichever distance is closer to the sound\nequipment.",
+      "chunk": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:352-361"
+    },
+    {
+      "text": "Sound equipment permitted under a type \"C\" permit may be used only on church grounds, school grounds, or in conjunction with a school sponsored activity, from 9:00 a.m. to 10:00 p.m. for events authorized and approved by the church or school authorities having jurisdiction of the grounds.",
+      "quote": "Sound equipment permitted under a type \"C\" permit may be used only\non church grounds, school grounds, or in conjunction with a school sponsored\nactivity, from 9:00 a.m. to 10:00 p.m. for events authorized and approved by the\nchurch or school authorities having jurisdiction of the grounds.",
+      "chunk": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:352-361"
+    },
+    {
+      "text": "A type \"C\" permit will be issued for one day up to one week with the days to be designated on the permit application.",
+      "quote": "A type \"C\" permit\nwill be issued for one day up to one week with the days to be designated on the\npermit application.",
+      "chunk": 19,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:352-361"
+    },
+    {
+      "text": "A type \"D\" permit may be issued for sound equipment emitting music or human speech registering not more than 65 dBCs when measured at the real property boundary of the permitted property or 50 feet from the sound equipment, whichever distance is closer.",
+      "quote": "A type \"D\" permit may be issued for sound\nequipment emitting music or human speech registering not more than 65 dBCs\nwhen measured at the real property boundary of the permitted property or 50 feet\nfrom the sound equipment, whichever distance is closer.",
+      "chunk": 20,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:365-372"
+    },
+    {
+      "text": "Sound equipment under a type \"D\" permit may only be used pursuant to a permitted street closing under chapter 102 of this Code, from 9:00 a.m. to 10:00 p.m., and permits are valid for one day up to one week with specific days designated on the application.",
+      "quote": "Sound equipment\npermitted under a type \"D\" permit may be used only pursuant to a permitted street\nclosing under chapter 102 of this Code, from 9:00 a.m. to 10:00 p.m. A type \"D\"\npermit will be issued for one day up to one week with the days to be designate on\nthe permit application.",
+      "chunk": 20,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:365-372"
+    },
+    {
+      "text": "A type \"E\" permit may be issued for sound equipment in a commercially zoned area, mixed use zoned area, East Village noise control area or a commercially zoned PUD or PBP area to emit music or human speech (excluding live music) at not more than 65 dBCs or below the ambient level when measured at the property boundary, edge of designated seating area or 50 feet from the sound equipment whichever is closer.",
+      "quote": "A type \"E\" permit may be issued\nfor a commercially zoned area, mixed use zoned area, East Village noise control\narea or a commercially zoned PUD or PBP area for sound equipment to be used in\nan outdoor area in conjunction with an approved business use emitting music or\nhuman speech, excluding live music, registering not more than 65 dBCs, or below\nthe ambient level, when measured at the property boundary, edge of designated\nseating area or 50 feet from the sound equipment whichever is closer.",
+      "chunk": 21,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:376-384"
+    },
+    {
+      "text": "Sound equipment permitted under a type \"E\" permit may be used only during regular hours of business operation.",
+      "quote": "Sound\nequipment permitted under a type \"E\" permit may be used only during regular hours\nof business operation.",
+      "chunk": 21,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:376-384"
+    },
+    {
+      "text": "A type \"E\" permit will be issued up to one year.",
+      "quote": "A type \"E\" permit will be issued up to one year.",
+      "chunk": 21,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:376-384"
+    },
+    {
+      "text": "A type \"F\" permit may be issued for sound equipment in the Brenton Skating Plaza emitting music or human speech registering not more than 112 dBCs at a point 75 feet from the source, effective between 9:00 a.m. and 10:00 p.m. Sunday through Thursday and 9:00 a.m. and 11:00 p.m. on Friday and Saturday, as well as the Sundays of Memorial Day weekend, Labor Day weekend, and the Fourth of July.",
+      "quote": "A type \"F\" permit may be issued for\nsound equipment in the Brenton Skating Plaza, in conjunction with a lease\nagreement entered into with the Parks and Recreation Department emitting music\nor human speech, registering not more than 112 dBCs, at the front of house which\nis established to be 75 feet from the sound. This permit is effective between the\nhours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday and 9:00 a.m. to 11:00\np.m. on Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day\nweekend and the Fourth of July should it fall on a Sunday.",
+      "chunk": 22,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:388-395"
+    },
+    {
+      "text": "Sound from music or human speech at live performances must not exceed 112 dBCs when measured 50 feet from the amplification equipment.",
+      "quote": "A type \"G\" permit may be\nissued for sound amplification equipment to be used for live performances where\nthe sound from music or human speech does not exceed 112 dBCs when measured\n50 feet from the amplification equipment and meets all of the following criteria:",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "Special events and live performances requiring a Type \"G\" permit are located in the Downtown areas and the East Village Street Closure area.",
+      "quote": "a. The special event or live performance is located in the Downtown areas and\nthe East Village Steet Closure area,",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "A Type \"G\" permit is issued no more than two times per year per address including a street closing abutting the sponsoring business, provided that at least 30 days have elapsed since the effective date of a previous Type \"G\" permit for the same location; however, if the street closing is sponsored by the Court Avenue Business Association, Downtown Community Alliance, Historic East Village, or any other community organization affiliated with businesses located in the downtown areas, this type of permit is not limited in number or time span.",
+      "quote": "b. This type permit will only be issued two times per year per address to\ninclude a street closing abutting the sponsoring business and only if 30 days\nhas elapsed from the effective date of a previous type \"G\" permit for the\nsame location, however, if the street closing is sponsored by the Court\nAvenue Business Association, Downtown Community Alliance, Historic\nEast Village, or any other community organization affiliated with\nbusinesses located in the downtown areas this type permit is not limited in\nnumber or time span,",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "If an applicant has no address in the downtown areas, either a business in the area or a community organization affiliated with businesses located in downtown must sponsor the event.",
+      "quote": "c. If the applicant has no address in the downtown areas, then either a business\nin the area, or a community organization affiliated with businesses located\nin the downtown area must sponsor the event,",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "A Type \"G\" permit may not be issued if another Type \"G\" permit has already been issued within 1,000 feet of a given location and covering the same time on any day.",
+      "quote": "d. This type permit may not be issued if another type \"G\" permit has already\nbeen issued within 1,000 feet of a given location and covering the same time\non any day.",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "If an event has multiple stages in the designated event, only one permit is required.",
+      "quote": "If the event has multiple stages in the designated event only\none permit will be required.",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "When used in conjunction with a street closure, this type of permit will not be issued until the street use team approves the street closure.",
+      "quote": "e. When used in conjunction with a street closure this type permit will not be\nissued until the street use team approves the street closure,",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "This type of permit must be obtained at least 7 days prior to the performance unless pending street use team approval.",
+      "quote": "f. This type permit must be obtained at least 7 days prior to the performance\nunless pending street use team approval.",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "This type of permit is effective for up to three consecutive days and for the hours of 9:00 a.m. to 11:00 p.m. Sunday through Thursday and 9:00 a.m. to 12:30 a.m. on Friday and Saturday, as well as the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "quote": "g. This type permit is effective for up to three consecutive days and for the\nhours of 9:00 a.m. to 11:00 p.m. Sunday through Thursday and 9:00 a.m. to\n12:30 a.m. on Friday and Saturday, the Sunday of Memorial Day weekend,\nLabor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "chunk": 23,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:399-430"
+    },
+    {
+      "text": "A type \"H\" permit may be issued to Farmer's Markets which have a street closure for sound amplification equipment allowing music up to 85 dBCs for the duration of the street closure.",
+      "quote": "A type \"H\" permit may be issued to Farmer's\nMarkets which have a street closure for sound amplification equipment allowing\nmusic up to 85 dBCs for the duration of the street closure.",
+      "chunk": 24,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:434-436"
+    },
+    {
+      "text": "A type \"I\" permit may be issued for amplification equipment at the Lauridsen Amphitheater in Waterworks Park emitting music or human speech at a level not greater than 114 dBCs measured at front of house set at 125 feet from the stage.",
+      "quote": "A type \"I\" permit\nmay be issued for amplification equipment for live performances held in\nWaterworks Park, at the Lauridsen Amphiltheater, emitting music or human\nspeech, at a level not greater than 114 dBCs measured at front of house which will\nbe set at 125 feet from the stage.",
+      "chunk": 25,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:440-448"
+    },
+    {
+      "text": "A type \"I\" permit is effective for one or two days and for the hours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday, and between the hours of 9:00 a.m. and 11:00 p.m. on Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "quote": "A type \"I\" permit is effective for one or two days\nand for the hours of 9:00 a.m. and 10:00 p.m. Sunday through Thursday, and\nbetween the hours of 9:00 a.m. and 11:00 p.m. on Friday and Saturday, the Sunday\nof Memorial Day weekend, Labor Day weekend and the Fourth of July should it\nfall on a Sunday.",
+      "chunk": 25,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:440-448"
+    },
+    {
+      "text": "A type \"J\" permit may be issued for residential construction activities beyond the hours permitted under section 42-260 or for expedited nonprofit construction advancing city welfare where the structure is built for low or moderate income persons.",
+      "quote": "A type \"J\" permit may be issued for\nresidential construction activities beyond the hours permitted under section 42-260.\nA type \"J\" permit may be issued for construction performed on behalf of a nonprofit\nor philanthropic organization where such construction activity is to be completed\nin an expedited manner pursuant to a construction schedule which has been\napproved by the community development director and has been determined to\nadvance the overall welfare of city residents, provided that the residential structure\nis being built for occupation by low or moderate income persons.",
+      "chunk": 26,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:452-461"
+    },
+    {
+      "text": "Applications for a type \"J\" permit shall be processed pursuant to sections 42-264 through 42-267 of this article.",
+      "quote": "Application for\na type \"J\" permit shall be processed pursuant to sections 42-264 through 42-267 of\nthis article.",
+      "chunk": 26,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:452-461"
+    },
+    {
+      "text": "A Type \"K\" permit may be issued for an event whose route is on city streets, trails and/or other public right-of-way with the permit to be valid one hour before the start of the event and at specifically approved locations along the route that would otherwise comply with all other provisions of this article.",
+      "quote": "(11) Type \"K\" permit may be issued for an event whose route is on city streets, trails\nand/or other public right-of-way with the permit to be valid one hour before the\nstart of the event and at specifically approved locations along the route that would\notherwise comply with all other provisions of this article.",
+      "chunk": 27,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:465-468"
+    },
+    {
+      "text": "A Type \"L\" permit may be issued to a privately held recreational area more than 40 acres in area for outside events emitting music or human speech at a level not greater than 112 dBCs when measured 50 feet from the amplification equipment.",
+      "quote": "(12) Type \"L\" permit may be issued to a privately held recreational area more than 40\nacres in area for outside events, emitting music or human speech at a level not\ngreater than 112 dBCs when measured 50 feet from the amplification equipment.",
+      "chunk": 28,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:472-482"
+    },
+    {
+      "text": "The Type \"L\" permit is effective between the hours of 9:00 a.m. and 11:00 p.m. Sunday through Thursday and 9:00 a.m. and 12:30 a.m. on Friday and Saturday, the Sunday of Memorial Day weekend, the Sunday of Labor Day weekend, and the Fourth of July whenever it occurs on a Sunday.",
+      "quote": "This permit is effective between the hours of 9:00 a.m. to 11:00 p.m. Sunday\nthrough Thursday and 9:00 a.m. to 12:30 a.m. on Friday and Saturday, the Sunday\nof Memorial Day weekend, the Sunday of Labor Day weekend, and the Fourth of\nJuly whenever it occurs on a Sunday.",
+      "chunk": 28,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:472-482"
+    },
+    {
+      "text": "Stage and sound equipment for live performances shall be set up facing away from residential areas.",
+      "quote": "The stage and sound equipment for any live\nperformances held shall be set up facing away from residential areas.",
+      "chunk": 28,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:472-482"
+    },
+    {
+      "text": "A Type \"L\" permit is issued for a thirty-day period commencing on the first of each month to be used on eight days during the permitted time, with the days of use designated on the permit application.",
+      "quote": "A type \"L\"\npermit will be issued for a thirty-day period, commencing on the first of each\nmonth, to be used on eight days during the permitted time, with the days of use to\nbe designated on the permit application.",
+      "chunk": 28,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:472-482"
+    },
+    {
+      "text": "A type \"M\" permit may be issued for amplification equipment emitting music or human speech at live performances on the Blank Park Zoo Foundation Parcel and Water Works Park field, limited to 114 dBCs measured at front of house which will be 125 feet from the state and 85 dBCs when measured at the nearest residence.",
+      "quote": "A type \"M\" permit may be issued\nfor amplification equipment for live performances held on the Blank Park Zoo\nFoundation Parcel and Water Works Park field, emitting music or human speech,\n114 dBCs measured at front of house which will be 125 feet from the state and\nlimited to 85 dBCs when measured at the nearest residence.",
+      "chunk": 29,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:486-503"
+    },
+    {
+      "text": "A type \"M\" permit is effective for one or two days between the hours of 9:00 a.m. and 10:00 p.m. Sunday through Thursday, and between the hours of 9:00 a.m. and 11:00 p.m. on Friday and Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "quote": "A type \"M\" permit is\neffective for one or two days and for the hours of 9:00 a.m. and 10:00 p.m. Sunday\nthrough Thursday, and between the hours of 9:00 a.m. and 11:00 p.m. on Friday\nand Saturday, the Sunday of Memorial Day weekend, Labor Day weekend and the\nFourth of July should it fall on a Sunday.",
+      "chunk": 29,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:486-503"
+    },
+    {
+      "text": "The stage and sound equipment for any live performances held on the Blank Park Zoo Foundation Parcel shall be set up facing south causing the sound to be directed towards the Blank Park Zoo and the Blank Golf Course.",
+      "quote": "The stage and sound equipment for any\nlive performances held on the Blank Park Zoo Foundation Parcel shall be set up\nfacing the south causing the sound to be directed towards the Blank Park Zoo and\nthe Blank Golf Course.",
+      "chunk": 29,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:486-503"
+    },
+    {
+      "text": "The stage and sound equipment for any.live performances held in the field in Waterworks Park shall be set up facing northeast causing the sound to be directed through the park and away from residential areas.",
+      "quote": "Additionally, the stage\nand sound equipment for any live performances held in the field in Waterworks\nPark shall be set up facing the northeast causing he sound to be directed through\nthe park and away from residential areas.",
+      "chunk": 29,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:486-503"
+    },
+    {
+      "text": "A type \"N\" permit may be issued for sound equipment used in the Simon Estes Riverfront Amphitheater under a Parks and Recreation Department lease agreement to emit music or human speech registering not more than 100 dBCs at the middle cement crosswalk between 9:00 a.m. and 10:00 p.m. Sunday through Thursday, and between 9:00 a.m. and 11:00 p.m. on Friday, Saturday, and the Sundays of Memorial Day weekend, Labor Day weekend, and the Fourth of July.",
+      "quote": "A type \"N\" permit may\nbe issued for sound equipment to be used in the Simon Estes Riverfront\nAmphitheater in conjunction with a lease agreement entered into with the Parks and\nRecreation Department, emitting music or human speech, registering not more than\n100 dBCs, when measured at the middle cement crosswalk. This permit is effective\nbetween the hours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday and 9:00\na.m. to 11:00 p.m. on Friday and Saturday, the Sunday of Memorial Day weekend,\nLabor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "chunk": 30,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:507-514"
+    },
+    {
+      "text": "Type \"O\" permits for sound equipment in the Riverview Amphitheater are issued under a lease with the Parks and Recreation Department, must not exceed 105 dBC at 50 feet from speakers, and are effective between 9:00 a.m. to 10:00 p.m. Sunday through Thursday and 9:00 a.m. to 11:00 p.m. on Friday and Saturday, as well as the Sundays of Memorial Day weekend, Labor Day weekend, and the Fourth of July.",
+      "quote": "The type permit may be issued for\nsound equipment in the Riverview Amphitheater, in conjunction with a lease\nagreement entered into with the Parks and Recreation Department, emitting music\nor human speech, registering not more than 105 dBC 50 feet from the speakers\nwhich shall be the established front of house for purposes of noise control\nmeasurements. This permit is effective between the hours of 9:00 a.m. to 10:00\np.m. Sunday through Thursday and 9:00 a.m. to 11:00 p.m. on Friday and Saturday,\nthe Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July\nshould it fall on a Sunday.",
+      "chunk": 31,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:518-526"
+    },
+    {
+      "text": "A type \"P\" permit may be issued for sound equipment on the Botanical Center grounds registering not more than 112 dBCs at a front of house established to be 75 feet from the sound, effective between the hours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday and 9:00 a.m. to 11:00 p.m. on Friday and Saturday, as well as the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "quote": "A type \"P\" permit may be issued for sound\nequipment on the Botanical Center grounds, registering not more than 112 dBCs,\nat the front of house which is established to be 75 feet from the sound. This permit\nis effective between the hours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday\nand 9:00 a.m. to 11:00 p.m. on Friday and Saturday, the Sunday of Memorial Day\nweekend, Labor Day weekend and the Fourth of July should it fall on a Sunday.",
+      "chunk": 32,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:530-537"
+    },
+    {
+      "text": "A type \"Q\" permit may be issued for sound equipment at 900 Mulberry Street registering not more than 90 dBCs for up to six times in a calendar year and not more than 85 dBCs for up to 18 times in a calendar year measured at the real property boundary.",
+      "quote": "A type \"Q\" permit may be issued for sound\nequipment at 900 Mulberry Street, registering not more than 90 dBCs for up to six\ntimes in a calendar year and registering not more than 85 dBCs for up to 18 times\nin a calendar year measured at the real property boundary.",
+      "chunk": 33,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:541-558"
+    },
+    {
+      "text": "Within any calendar month, no more than six permits may be granted with no more than two of those permits allowing readings up to 90 dBCs.",
+      "quote": "Within any calendar\nmonth, no more than six permits may be granted with no more than two of those\npermits allowing readings up to 90 dBCs.",
+      "chunk": 33,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:541-558"
+    },
+    {
+      "text": "Permits are effective between the hours of 9:00 a.m. and 10:00 p.m. Sunday through Thursday and between the hours of 9:00 a.m. and 11:00 p.m. on Friday and Saturday.",
+      "quote": "The permits will be effective between the\nhours of 9:00 a.m. to 10:00 p.m. Sunday through Thursday and between the hours\nof 9:00 a.m. to 11:00 p.m. on Friday and Saturday.",
+      "chunk": 33,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:541-558"
+    },
+    {
+      "text": "The amplified sound will not be the primary purpose of the event and the description of the event must be provided with the permit application.",
+      "quote": "The amplified sound will not be\nthe primary purpose of the event and the description of the event will be provided\nwith the permit application.",
+      "chunk": 33,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:541-558"
+    },
+    {
+      "text": "The event coordinator or production company must provide notice to adjacent residents detailing the type of event, the time frame of the event, and contact names of persons responsible for the event as set out on the permit application.",
+      "quote": "The event coordinator and/or the production company\nwill provide notice to the adjacent residents detailing the type of event, the time\nframe of the event and contact names of persons responsible for the event as set out\non the permit application.",
+      "chunk": 33,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:541-558"
+    },
+    {
+      "text": "All speaker systems shall face SW 9th Street.",
+      "quote": "All speaker systems shall face SW 9 th Street.",
+      "chunk": 33,
+      "source": "/Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md:541-558"
+    }
+  ],
+  "dropped": [
+    {
+      "text": "No person shall make or continue any sound exceeding the dBA limits in Table 1 at the boundary of a receiving land use.",
+      "quote": "",
+      "chunk": 1,
+      "reason": "cited 9 sentences; a citation that wide evidences the passage, not the rule"
+    },
+    {
+      "text": "Motor vehicles and combinations subject to registration shall not exceed noise limits measured at 50 feet: 88 dBA (under 35 mph) / 92 dBA (over 35 mph) for vehicles rated 10,00 lbs. or more; 82 dBA (under 35 mhp) / 86 dBA (over 35 mpH) for motorcycles; and 76 dBA (under 34 mph) / 82 dBA (over 45 mph) for all other motor vehicles.",
+      "quote": "",
+      "chunk": 5,
+      "reason": "cited 7 sentences; a citation that wide evidences the passage, not the rule"
+    },
+    {
+      "text": "Garbage trucks and solid waste collection vehicles shall not pick up or empty dumpsters within 150 feet of an R district or residential PUD portion between 7:00 p.m. and 6:00 a.m., except for schools and hospitals or when the city manager grants an exception to avoid unreasonable risk of harm.",
+      "quote": "",
+      "chunk": 5,
+      "reason": "cited 4 sentences; a citation that wide evidences the passage, not the rule"
+    },
+    {
+      "text": "In residential zones R1-80 to R-6, R-HD and residential PUDs, sound levels must not exceed 60 dBA from 7:00 a.m. to 10:00 p.m. and 50 dBA from 10:00 p.m. to 7:00 a.m.",
+      "quote": "| Residential zones: R1-80 to R-6,R-HD and a residential PUD | 7:00 a.m. to 10:00 p.m. | 60 |\n| Residential zones: R1-80 to R-6,R-HD and a residential PUD | 10:00 p.m. to 7:00 a.m. | 50 |",
+      "chunk": 1,
+      "reason": "states `60 dBA`, which its citation does not"
+    },
+    {
+      "text": "In mixed use and commercial zones PUD to C-4, sound levels must not exceed 75 dBA at all times.",
+      "quote": "| Mixed use and commercial zones: PUD to C-4 | At all times | 65 |",
+      "chunk": 1,
+      "reason": "states `75 dBA`, which its citation does not"
+    },
+    {
+      "text": "A type \"E\" permit will be issued for up to one year.",
+      "quote": "A type \"E\" permit will be issued up to\none year.",
+      "chunk": 11,
+      "reason": "states `one year year`, which its citation does not"
+    },
+    {
+      "text": "Type \"G\" permits are effective for one or two consecutive days from 9:00 a.m. to 11:00 p.m. Sunday through Thursday and from 9:00 a.m. to 12:30 a.m. on Friday, Saturday, and the Sundays of Memorial Day weekend, Labor Day weekend, and the Fourth of July if it falls on a Sunday.",
+      "quote": "g. This type permit is effective for one or two days in succession and for the hours of 9:00\na.m. to 11:00 p.m. Sunday through Thursday and 9:00 a.m. to 12:30 a.m. on Friday and\nSaturday, the Sunday of Memorial Day weekend, Labor Day weekend and the Fourth of\nJuly should it fall on a Sunday.",
+      "chunk": 13,
+      "reason": "states `one or two consecutive days`, which its citation does not"
+    },
+    {
+      "text": "The promoter or event coordinator shall have a sound level meter and comply with section 42-258(e) of this article.",
+      "quote": "The\npromoter or event coordinator shall have a sound level meter and comply with\nsection 42- 258 (e) of this article.",
+      "chunk": 33,
+      "reason": "states `42-258(e)`, which its citation does not"
+    },
+    {
+      "text": "The event coordinator or production company shall provide adjacent residents or their designated representative the sound level meter readings within three business days after the readings are requested.",
+      "quote": "The event coordinator and/or the production\ncompany shall provide the adjacent residents or their designated representative the\nsound level meter readings within three (3) business days after the readings are\nrequested.",
+      "chunk": 33,
+      "reason": "states `three business days`, which its citation does not"
+    }
+  ],
+  "unread": [],
+  "duplicates": [
+    [
+      13,
+      16
+    ],
+    [
+      35,
+      70
+    ]
+  ],
+  "kept": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84
+  ],
+  "tensions": [
+    {
+      "a": 0,
+      "b": 6,
+      "reason": "A heavy vehicle (over 10,000 lbs) is parked within 150 feet of residential property in an industrial zone M-1 to M-3. If the engine idling for up to 20 minutes causes sound levels to exceed the limit specified in Table 1 for that specific industrial zone at any moment during those 20 minutes, complying with the strict decibel cap violates the allowance for a 20-minute idle period."
+    },
+    {
+      "a": 7,
+      "b": 8,
+      "reason": "A recreational vehicle equipped with a sound system is operated on private property between 7:00 p.m. and 9:00 a.m. (specifically after 10:30 p.m.). The commitment prohibiting operation of RVs between 10:30 p.m. and 9:00 a.m. conflicts with the specific distance-based limits for sound systems in vehicles during that same time window; if the sound system produces vibration detectable at less than 25 feet but more than zero, it technically violates the detection threshold while simultaneously being prohibited from operating entirely by the hour restriction."
+    },
+    {
+      "a": 0,
+      "b": 23,
+      "reason": "A Type \"F\" permit allows sound levels up to 100 dBAs at the amphitheater crosswalk or skating plaza. If these locations are situated within industrial zones M-1 to M-3 (or if the noise propagates into them), this permitted level may exceed the stricter limits specified in Table 1 for those industrial zones, creating a conflict between the specific permit allowance and the general zone-wide limit."
+    },
+    {
+      "a": 0,
+      "b": 35,
+      "reason": "A Type \"J\" permit authorizes residential construction activities beyond the hours permitted under section 42-260 (which typically restricts noise to daytime), but Commitment 1 mandates that in industrial zones M-1 to M-3, sound levels must not exceed Table 1 limits at all times. If a low-income housing project is located within or adjacent to an M-zone where strict 24/7 decibel caps apply, the expedited nighttime work authorized by the J-permit would inevitably violate the absolute sound level limit required for that zone."
+    },
+    {
+      "a": 0,
+      "b": 38,
+      "reason": "A Type \"A\" permit is valid in industrial zones until 10:00 p.m. (or later on weekends), but the general rule for industrial zones M-1 to M-3 requires sound levels not to exceed Table 1 limits at all times; if a permitted event generates noise exceeding those specific zone limits after 9:00 p.m., honoring the permit's validity conflicts with the absolute decibel cap."
+    },
+    {
+      "a": 5,
+      "b": 47,
+      "reason": "Commitment 6 prohibits any musical instrument from creating a noise disturbance across a residential boundary or within a noise-sensitive area without exception, while Commitment 24 allows Type \"D\" permits (for street closings) to operate until 10:00 p.m.; if a street closing occurs adjacent to a residence and the music creates a disturbance at that time, the specific permission for the event directly contradicts the general prohibition on disturbances in sensitive areas."
+    },
+    {
+      "a": 0,
+      "b": 51,
+      "reason": "A Type \"F\" permit allows sound levels up to 112 dBCs at the Brenton Skating Plaza, which is located in a commercial/mixed-use zone (M-3 or similar) where Commitment 1 mandates that sound levels must not exceed the limit specified in Table 1 for industrial zones. If the Table 1 limit for M-3 is lower than 112 dBAs/dBAs equivalent, honoring the specific high-decibel allowance of the skating plaza permit would violate the general industrial noise cap."
+    },
+    {
+      "a": 8,
+      "b": 52,
+      "reason": "Commitment 9 prohibits vehicle sound systems from producing vibration detectable at 50 feet between 7:00 a.m. and 7:00 p.m., while Commitment 17 allows live performance amplification to reach up to 112 dCs measured at 50 feet during those same hours (as Type G permits are valid in downtown areas). A mobile stage or amplified event using vehicles with active sound systems near residential boundaries would face conflicting requirements regarding the maximum allowable decibel level at that specific distance."
+    },
+    {
+      "a": 0,
+      "b": 70,
+      "reason": "A live performance at the Blank Park Zoo Foundation Parcel under a Type \"M\" permit is allowed to emit sound up to 85 dBCs measured at the nearest residence. If this location falls within industrial zones M-1 to M-3 where Table 1 specifies a lower decibel limit (e.g., for nighttime or specific sensitive areas), complying with the permit's maximum level would violate the strict zone-specific limits that apply 'at all times'."
+    },
+    {
+      "a": 5,
+      "b": 61,
+      "reason": "Commitment 6 prohibits playing any musical instrument in a manner creating a noise disturbance across a residential boundary without exception. However, Commitment 14 allows Farmer's Markets to use sound amplification equipment up to 85 dBC during street closures; if such an event occurs near a residence and exceeds the threshold for a 'noise disturbance,' the general prohibition on instruments conflicts with the specific permission granted by the permit."
+    },
+    {
+      "a": 0,
+      "b": 79,
+      "reason": "A Type A permit is valid until 10:00 p.m. in commercial zones, but the general rule for industrial zones M-1 to M-3 requires sound levels not to exceed Table 1 limits at all times; if a permitted event occurs near an industrial zone boundary after hours or during restricted periods where Table 1 limits are stricter than the permit's allowed decibel level (85 dBA), both cannot be fully honored."
+    },
+    {
+      "a": 5,
+      "b": 74,
+      "reason": "The general prohibition against creating noise disturbances across residential boundaries applies to musical instruments and similar devices, while Type N permits allow up to 100 dBCs until late evening in the Simon Estes Riverfront Amphitheater; if residents live within range of this high-decibel output, the specific permit conflicts with the general ban on cross-boundary disturbance from sound-producing devices."
+    },
+    {
+      "a": 12,
+      "b": 39,
+      "reason": "Commitment 1 states that Type A permits cover a thirty-day period to be used on eight days with specific days designated on the application. Commitment 16 specifies that these permits are issued for a thirty-day period commencing on the first of each month, which conflicts if an applicant requests a start date other than the first of the month or attempts to designate days outside the fixed monthly cycle."
+    },
+    {
+      "a": 13,
+      "b": 40,
+      "reason": "Commitment 2 limits sound under a Type B permit to 65 dBAs (A-weighted), while Commitment 17 allows up to 65 dBCs (C-weighted). Since C-weighting is less sensitive to low frequencies and typically yields higher readings than A-weighting for music, a system emitting between 65 dBA and 65 dBC would violate one limit but satisfy the other, creating an ambiguity in compliance standards."
+    },
+    {
+      "a": 14,
+      "b": 41,
+      "reason": "Both commitments restrict Type B permits to public parks or grounds in residentially zoned districts. However, Commitment 3 limits usage until 'closing time' while Commitment 18 specifies usage from 9:00 a.m. to 'the time the park closes.' If a specific park's closing time is earlier than standard operating hours implied by general regulations, or if there is a discrepancy between the board-approved event end time and the physical park closure time, these definitions may conflict regarding when sound must cease."
+    },
+    {
+      "a": 15,
+      "b": 42,
+      "reason": "Commitment 4 states Type B permits are issued for one day up to one week with days designated on the application. Commitment 19 repeats this but adds that the permit will be issued for one day up to a week. While seemingly identical, any slight variation in interpretation of 'up to one week' (e.g., inclusive vs exclusive counting) or administrative processing differences between the two clauses could create tension if an applicant applies for exactly seven consecutive days starting mid-week versus a full calendar week."
+    },
+    {
+      "a": 16,
+      "b": 44,
+      "reason": "Commitment 5 restricts Type C permits to church/school grounds from 9:00 a.m. to 10:00 p.m. Commitment 21 repeats this restriction but adds that it is for events authorized by authorities having jurisdiction. If school authorities authorize an event extending past 10:00 p.m., Commitment 5's hard time limit conflicts with the authorization implied in Commitment 21."
+    },
+    {
+      "a": 17,
+      "b": 45,
+      "reason": "Similar to the Type B conflict, Commitments 6 and 22 both define the duration of Type C permits as one day up to one week. Any administrative or interpretive divergence between these two clauses regarding how 'one week' is calculated (e.g., calendar days vs business days) creates a tension for applicants seeking maximum duration."
+    },
+    {
+      "a": 18,
+      "b": 46,
+      "reason": "Commitment 7 limits sound under a Type D permit to 65 dBAs, while Commitment 23 allows up to 65 dCbs. As with Type B, the difference in weighting scales means that audio content rich in low frequencies could comply with the C-weighted limit but violate the A-weighted limit, creating an unresolvable conflict in enforcement standards."
+    },
+    {
+      "a": 19,
+      "b": 47,
+      "reason": "Commitment 8 restricts Type D permits to street closings from 9:00 a.m. to 10:00 p.m. Commitment 24 repeats this restriction and adds validity for one day up to one week. If a street closing is approved by Chapter 102 authorities for hours extending beyond 10:00 p.m., Commitment 8's hard stop conflicts with the broader permission implied by the 'pursuant to permitted street closing' language in both clauses."
+    },
+    {
+      "a": 20,
+      "b": 47,
+      "reason": "Commitment 9 states Type D permits are issued for one day to one week. Commitment 24 combines duration with usage restrictions (street closings). If an applicant secures a multi-day street closing but applies under separate daily permit structures or if the definition of 'one week' differs between issuance rules and usage validity, tension arises regarding whether a single permit covers the entire closure period."
+    },
+    {
+      "a": 23,
+      "b": 51,
+      "reason": "A Type \"F\" permit for the Brenton Skating Plaza allows sound levels up to 100 dBAs until 11:00 p.m. on Fridays and Saturdays (and specific holiday Sundays), while a separate commitment limits sound at that same location to 112 dBCs only until 10:00 p.m. on those days; an event scheduled from 10:30 p.m. to 11:00 p.m. on a Friday would violate the time restriction of the second commitment despite being permitted by the first."
+    },
+    {
+      "a": 23,
+      "b": 74,
+      "reason": "A live performance at the Simon Estes Riverfront Amphitheater on a Friday night cannot simultaneously comply with both permit types: Type F allows sound until 12:30 a.m., while Type N restricts it to 11:00 p.m. (or 10:00 p.m. depending on interpretation of 'Sunday through Thursday' vs specific weekend rules), creating an irreconcilable conflict for events extending past 11:00 p.m."
+    },
+    {
+      "a": 75,
+      "b": 79,
+      "reason": "A concert at the Riverview Amphitheater scheduled for Saturday evening faces a direct contradiction regarding closing time; Commitment 16 explicitly permits operation until 11:00 p.m., whereas Commitment 20 imposes a general limit ending sound equipment use by 10:00 p.m. (or implies a stricter standard if interpreted as overriding site-specific exceptions not clearly stated in its text)."
+    },
+    {
+      "a": 24,
+      "b": 31,
+      "reason": "A Farmer's Market with a street closure is permitted to emit music up to 85 dBA under the Type \"H\" permit rules, but this directly violates the requirement that sound from live performances must not exceed 100 dBAs when measured 50 feet from amplification equipment if the measurement point for the Type H event falls within that distance and the ambient conditions or specific decibel weighting (dBA vs dBC) create a conflict in enforcement standards; however, more precisely, there is no direct numerical tension here as 85 < 100. Let's re-evaluate.\n\nActually, looking closer at Commitment 14: A type 'A' permit allows up to **85 dBCs**. Commitment 1 states sound must not exceed **100 dBAs**.\ndB(A) and dB(C) are different weightings. At low frequencies, C-weighting can be significantly higher than A-weighting. However, usually, regulations align these or specify one. Is there a true logical contradiction?\nLet's look for clearer conflicts.\n\nCommitment 3 says Type G permits with street closings abutting the business are limited to two per year unless sponsored by specific community orgs.\nCommitment 2 says Type G events are in C-3 etc districts.\nThis is consistent.\n\nLet's look at Commitment 5: No Type G permit if another covers same time within 1000 feet.\nCommitment 7: Must obtain 7 days prior unless pending street use team approval.\nNo tension.\n\nLet's look at hours of operation vs location restrictions.\nCommitment 18: Type B (parks, residential zones) allowed until park closes.\nParks often close earlier than the standard commercial hours or have different noise ordinances. But \"until the park closes\" is a specific rule for that zone/type. Is it in tension with general city-wide quiet hours? The prompt doesn't list a general city-wide night curfew commitment other than those attached to specific permit types (like A, I).\n\nLet's re-read Commitment 1 carefully: \"Sound from music or human speech at live performances must not exceed 1 dBAs...\"\nWait, Commitment 9 says Type I permits allow up to **85 decibels** (unspecified weighting, likely dBA by default in this context) measured at nearest residence.\nCommitment 14 allows **85 dBCs**.\nIf we assume standard regulatory interpretation where unweighted 'decibels' implies the same metric as the strictest applicable rule or if there is a mismatch:\nThe tension might be between the *measurement distance* and *location* constraints that make compliance impossible for certain setups?\n\nLet's look at **Commitment 17/20/23**: \"whichever distance is closer\".\nThis phrasing creates a logical impossibility. You cannot measure at two different distances simultaneously to determine which is closer, then apply the limit based on that choice in a way that guarantees compliance with both potential measurement points if they yield different results due to background noise or geometry? No, it just means you pick the stricter/closer one. That's not a tension between commitments, it's an operational rule.\n\nIs there a conflict between **Type G** (Live performances) and **Street Closures**?\nCommitment 6: Type G + Street Closure requires street use team approval *before* issuance.\nCommitment 7: Must obtain permit 7 days prior *unless* pending street use team approval.\nThis seems designed to work together.\n\nLet's look at **Commitment 15** vs **Commitment 8/9/10**.\nType A hours in Downtown/East Village extend to midnight on weekends/holidays.\nType I (Waterworks Park) extends to midnight on Fri/Sat/Holidays.\nNo conflict between them as they are different locations/types.\n\nWhat about **Commitment 3** and **Commitment 4**?\nCommitment 3 limits frequency for Type G with street closings abutting business unless sponsored by community orgs in specific zones.\nCommitment 4 says if applicant has no address in those zones, event must be sponsored by a business or community org *in* that zone.\nIf an applicant is outside the zone, they need sponsorship. If they get sponsorship from a Community Org, does Commitment 3's exception apply? Yes, \"unless sponsored by... any other community organization affiliated with businesses in C-3...\". So this resolves the tension rather than creating one.\n\nLet's look closely at **Commitment 1** vs **Commitment 9/8/14** regarding decibel weightings and distances.\nCommitment 1: Max 100 dBA @ 50 ft.\nCommitment 9: Type I (Waterworks) max 85 dB @ nearest residence.\nIf the nearest residence is *less* than 50 feet away, the limit drops to 85. If it is *more*, does Commitment 1 apply? Or does the specific permit rule override?\nUsually, specific overrides general. But if a Type I event has a resident at 60 feet, they are limited by \"nearest residence\" (which might be further out?) No,"
+    },
+    {
+      "a": 32,
+      "b": 61,
+      "reason": "Commitment 9 limits Type I permits at Waterworks Park to 85 decibels measured at the nearest residence, whereas Commitment 14 allows Farmer's Markets (which may use street closures and potentially different permit types or contexts) up to 85 dBCs; however, more critically, Commitment 9 specifies a measurement location of \"nearest residence\" while other commitments like 1 specify \"50 feet from amplification equipment,\" creating tension in how compliance is verified if residential proximity varies."
+    },
+    {
+      "a": 60,
+      "b": 68,
+      "reason": "Commitment 13 states Type J permits are effective until 11:00 p.m. Sunday through Thursday, while Commitment 21 states Type L permits are also effective until 11:00 p.m. on those days; this is not a direct conflict but rather parallel rules. However, looking closer at the provided text, there is no direct contradiction between these two specific hours as they apply to different permit types (J vs L). Let's re-evaluate for actual conflicts."
+    },
+    {
+      "a": 28,
+      "b": 30,
+      "reason": "Commitment 5 prohibits issuing a Type G permit if another covers the same time within 1,000 feet, while Commitment 7 requires obtaining the permit seven days prior unless pending street use team approval; if an applicant applies on day -6 because their street closure application was delayed and approved late, but during that delay another event secured a conflicting slot in the vicinity, the first applicant cannot obtain the permit despite having initiated the process early enough relative to the *street* approval timeline, creating a tension between the timing of administrative approvals and spatial exclusivity."
+    },
+    {
+      "a": 31,
+      "b": 61,
+      "reason": "Commitment 8 limits Farmer's Market music to \"85 dBA's\" while Commitment 14 limits it to \"85 dBCs\"; since A-weighting (dBA) is generally lower than C-weighting (dBC) for low-frequency sounds common in amplified music, an event could comply with one limit but violate the other depending on the frequency content, making both commitments impossible to fully honor simultaneously if the sound profile shifts between mid/high frequencies and bass-heavy profiles."
+    },
+    {
+      "a": 24,
+      "b": 82,
+      "reason": "A live performance in a C-3 zoned district (required for Type G permits) located near SW 9th Street must direct sound toward that street to comply with the speaker orientation rule, but this directionality may cause noise levels at nearby residences or sensitive areas to exceed the strict 100 dBA limit measured 50 feet from amplification equipment."
+    },
+    {
+      "a": 73,
+      "b": 82,
+      "reason": "For any live performance held in Waterworks Park, the stage and sound equipment are mandated to face northeast to direct sound away from residential areas, which directly conflicts with a requirement that all speaker systems face SW 9th Street if such an event is subject to that specific directional constraint."
+    },
+    {
+      "a": 54,
+      "b": 55,
+      "reason": "An applicant without a downtown address who is not sponsored by an eligible business or community organization cannot obtain the Type \"G\" permit required for their event in that area."
+    },
+    {
+      "a": 72,
+      "b": 82,
+      "reason": "A live performance held on the Blank Park Zoo Foundation Parcel requires sound equipment to face south toward the zoo and golf course, but a separate commitment mandates that all speaker systems face SW 9th Street; if these two directions are not identical (which is geographically unlikely given different landmarks), it is impossible for the speakers at this specific location to satisfy both orientation requirements simultaneously."
+    },
+    {
+      "a": 54,
+      "b": 56,
+      "reason": "A community organization affiliated with downtown businesses sponsors two Type \"G\" events at different addresses within the same Downtown area that are less than 1,000 feet apart and scheduled for the exact same time; while Commitment 7 exempts such sponsored permits from numerical limits, Commitment 9 prohibits issuing a second permit if another is already issued within 1,000 covering the same time."
+    },
+    {
+      "a": 48,
+      "b": 79,
+      "reason": "A Type \"E\" permit allows sound equipment to operate during regular business hours in commercial zones, which may extend past the standard curfew of 10:00 p.m. on Sunday through Thursday mandated for general permits."
+    },
+    {
+      "a": 51,
+      "b": 79,
+      "reason": "The Brenton Skating Plaza permit explicitly extends operating hours until 11:00 p.m. on Fridays and Saturdays, directly conflicting with the general rule that limits effectiveness to 10:00 p.m. on those days unless a specific exception applies (which this is)."
+    },
+    {
+      "a": 60,
+      "b": 63,
+      "reason": "A Type \"I\" permit holder operating on a Friday or Saturday is required to cease operations at 10:00 p.m. per the specific hours for that permit type, but this conflicts with the general rule allowing events until 11:00 p.m. on those days if one were to assume the general rule applies broadly; however, looking closer, Commitment 1 (Type A?) allows until 12:30 a.m., while Commitment 4 (Type I) restricts it to 11:00 p.m. The tension arises because an event seeking to use both types of permissions simultaneously in overlapping contexts isn't possible, but more directly, there is no direct conflict between Type A and Type I as they are different permits.\n\nLet's re-evaluate for actual logical contradictions where *one* situation forces a choice.\n\nActually, let's look at **Commitment 9** vs **Commitment 16/17/etc.**\nCommitment 9 says Type L is effective until 12:30 a.m. on Fri/Sat/Holidays.\nCommitment 20 (General rule?) says Permits are effective until 11:00 p.m. on Fri/Sat.\nIf Commitment 20 is the general baseline for all permits unless specified otherwise, then Type L (which specifies 12:30) overrides it. This is not a tension; specific overrides general.\n\nLet's look at **Commitment 5** and **Commitment 20**.\nCommitment 5 allows residential construction *beyond* hours permitted under section 42-260 (presumably standard quiet hours).\nCommitment 20 sets the permit validity to end at 11:00 PM on weekends/10:00 PM weekdays.\nThis isn't necessarily a tension if \"beyond\" means earlier or later than standard noise ordinance, but within the permit window? No, Type J is for activities *outside* normal limits. If the permit itself expires at 11 PM, can you do construction until midnight with a Type J permit? Commitment 5 says it's issued for activities beyond hours permitted by 42-260. It doesn't explicitly state the time limit of the Type J permit in this list (unlike Types A-L). However, usually permits have validity windows. If we assume all permits are subject to some general validity unless stated, and Commitment 20 states \"Permits are effective...\", does that apply to ALL permits?\nIf Commitment 2 applies to"
+    },
+    {
+      "a": 72,
+      "b": 73,
+      "reason": "The commitments prescribe contradictory stage orientations for live performances in different parks: one requires the sound to be directed towards the Blank Park Zoo and Golf Course (facing south), while the other requires it to be directed away from residential areas through Waterworks Park (facing northeast). A single production company or event coordinator managing simultaneous or sequential events at both locations cannot fully honor both specific directional mandates if they are interpreted as universal standards for their respective venues without conflict in logistics or noise impact planning."
+    },
+    {
+      "a": 74,
+      "b": 79,
+      "reason": "Commitment 3 allows Type 'N' permits to remain effective until 11:00 p.m. on Fridays, Saturdays, and specific holiday Sundays, whereas Commitment 8 states that all permits are generally effective only until 10:00 p.m. on those days. A permit holder operating under a Type 'N' agreement at the Simon Estes Riverfront Amphitheater cannot fully honor both the extended hours granted by their specific lease/permit type and the general curfew imposed by the overarching rule."
+    },
+    {
+      "a": 76,
+      "b": 79,
+      "reason": "Commitment 5 allows Type 'P' permits for the Botanical Center to remain effective until 11:00 p.m. on Fridays, Saturdays, and the Sunday of Memorial Day weekend (if it falls on a Sunday), whereas Commitment 8 limits all permits to 10:00 p.m. on those days. A performer at the Botanical Center cannot fully honor both the specific holiday/weekend extension in their permit type and the universal time restriction."
+    }
+  ],
+  "tension_passes": 28,
+  "tension_passes_unread": [
+    "pass 16/28 over kept positions [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59]: the endpoint refused (HTTP 503): {\"error\":{\"message\":\"local inference failed: Inference error: inference deadline exceeded after 300s (3312 tokens generated; deadline=300s) — likely pathological JSON-Schema mask state. Set SOVEREIGN_INFERENCE_TIMEOUT_SECS to override.\",\"type\":\"backend_error\",\"code\":null}}"
+  ]
+}

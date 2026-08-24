@@ -1,0 +1,7 @@
+commit    198131f
+dirty     20 uncommitted file(s)
+document  /Users/alexsbryan/dev/canon/fixtures/des-moines-noise/des-moines-noise.md
+profile   house
+model     primary
+endpoint  http://localhost:9741/v1
+binary    /tmp/canon-sweep/canon-pinned
