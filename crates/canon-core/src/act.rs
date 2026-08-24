@@ -42,7 +42,9 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 5] = ["accept", "dismiss", "question", "adopt", "position"];
+pub const KNOWN_ANNOTATIONS: [&str; 8] = [
+    "accept", "dismiss", "question", "adopt", "position", "grant", "withdraw", "scoped",
+];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
 /// is the id of the act that introduced it.
@@ -148,6 +150,44 @@ pub enum ActKind {
         citing: Option<ActId>,
         pull: crate::standing::Pull,
         because: String,
+    },
+    /// Somebody is given standing over a scope.
+    ///
+    /// Ostrom's first principle in one act. Modelled as an annotation rather
+    /// than a structural op because it does not change which commitments are
+    /// live — it changes who may decide about them — and because that keeps it
+    /// citable, contestable and revertible like anything else.
+    Grant {
+        actor: String,
+        scope: crate::scope::Scope,
+        /// When it lapses. Absent is standing with no end, which a community
+        /// may choose and should have to.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        horizon: Option<i64>,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        rationale: String,
+    },
+    /// Somebody steps back from a scope, or is stood down from it.
+    ///
+    /// The same act serves both, and that is deliberate: withdrawal read as a
+    /// first-class move is the pre-exit signal. People leave a house in stages
+    /// — stop hosting, stop cooking, stop coming — and those stages are exits
+    /// from SCOPES. Recording them makes the signal legible without demanding
+    /// a confrontation from someone already disengaging.
+    Withdraw {
+        actor: String,
+        scope: crate::scope::Scope,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        rationale: String,
+    },
+    /// A commitment belongs to a scope.
+    ///
+    /// An annotation rather than a field on `assert`, so the structural ops
+    /// stay closed and unchanged and a commitment can be scoped — or rescoped
+    /// — after the fact, which is what actually happens.
+    Scoped {
+        commitment: ActId,
+        scope: crate::scope::Scope,
     },
     /// An annotation this build does not interpret.
     ///

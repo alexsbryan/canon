@@ -863,3 +863,148 @@ fn a_reverted_position_leaves_no_trace_in_the_fold() {
     let canon = Log::from_acts(vec![p, undo]).derive();
     assert!(canon.positions.is_empty(), "revert tombstones its effects");
 }
+
+// ── scope: who holds standing, over what (Ostrom #1) ────────────────────
+
+fn scope(s: &str) -> Scope {
+    Scope::new(s).expect("valid scope")
+}
+
+fn grant(actor: &str, s: &str, horizon: Option<i64>, ts: i64) -> Act {
+    Act::new(
+        ActKind::Grant {
+            actor: actor.into(),
+            scope: scope(s),
+            horizon,
+            rationale: String::new(),
+        },
+        ts,
+        "human:sam",
+    )
+}
+
+#[test]
+fn who_decides_answers_without_anyone_having_to_be_asked() {
+    // The Freeman floor. If finding out who decides needs knowing whom to
+    // ask, that person is the gatekeeper.
+    let canon = Log::from_acts(vec![
+        grant("human:dana", "house.kitchen", None, 100),
+        grant("human:sam", "house", None, 100),
+    ])
+    .derive();
+
+    let who = canon.who_decides(&scope("house.kitchen"), 150);
+    assert_eq!(who.len(), 2, "both the specific and the general cover it");
+    assert_eq!(
+        who[0].actor, "human:dana",
+        "deepest first — that ordering IS subsidiarity"
+    );
+
+    // And the house-wide grant does not reach a scope it never covered.
+    let elsewhere = canon.who_decides(&scope("network"), 150);
+    assert!(elsewhere.is_empty());
+}
+
+#[test]
+fn standing_is_held_not_remembered() {
+    // Rotation is the default shape, so a lapsed grant stops deciding. The
+    // grant is not deleted — it happened — but it no longer answers.
+    let canon = Log::from_acts(vec![grant("human:dana", "house.kitchen", Some(200), 100)]).derive();
+    assert!(canon.standing_of("human:dana", &scope("house.kitchen"), 150));
+    assert!(!canon.standing_of("human:dana", &scope("house.kitchen"), 300));
+    assert_eq!(
+        canon.grants.len(),
+        1,
+        "the fact is kept, the authority is not"
+    );
+}
+
+#[test]
+fn stepping_back_from_a_scope_removes_what_it_covers() {
+    // Withdrawal read as a first-class move: the pre-exit signal, without
+    // demanding a confrontation from someone already disengaging.
+    let out = Act::new(
+        ActKind::Withdraw {
+            actor: "human:dana".into(),
+            scope: scope("house"),
+            rationale: "moving out in spring".into(),
+        },
+        300,
+        "human:dana",
+    );
+    let canon = Log::from_acts(vec![
+        grant("human:dana", "house.kitchen", None, 100),
+        grant("human:dana", "house.garden", None, 100),
+        grant("human:sam", "house.kitchen", None, 100),
+        out,
+    ])
+    .derive();
+
+    assert!(!canon.standing_of("human:dana", &scope("house.kitchen"), 400));
+    assert!(!canon.standing_of("human:dana", &scope("house.garden"), 400));
+    assert!(
+        canon.standing_of("human:sam", &scope("house.kitchen"), 400),
+        "and takes nobody else's standing with it"
+    );
+}
+
+#[test]
+fn re_granting_replaces_rather_than_stacks() {
+    // Two live grants for one actor-scope pair would make "when does this
+    // lapse" have two answers.
+    let canon = Log::from_acts(vec![
+        grant("human:dana", "house.kitchen", Some(200), 100),
+        grant("human:dana", "house.kitchen", Some(900), 300),
+    ])
+    .derive();
+    assert_eq!(canon.grants.len(), 1);
+    assert_eq!(canon.grants[0].horizon, Some(900), "the renewal wins");
+    assert!(canon.standing_of("human:dana", &scope("house.kitchen"), 500));
+}
+
+#[test]
+fn a_commitment_can_be_scoped_and_rescoped() {
+    let rule = assert_c("wipe the stovetop after cooking", 100);
+    let first = Act::new(
+        ActKind::Scoped {
+            commitment: rule.id.clone(),
+            scope: scope("house"),
+        },
+        200,
+        "human:sam",
+    );
+    let corrected = Act::new(
+        ActKind::Scoped {
+            commitment: rule.id.clone(),
+            scope: scope("house.kitchen"),
+        },
+        300,
+        "human:sam",
+    );
+    let canon = Log::from_acts(vec![rule.clone(), first, corrected]).derive();
+    assert_eq!(canon.scope_of(&rule.id), Some(&scope("house.kitchen")));
+    assert_eq!(
+        canon.scopes.len(),
+        1,
+        "last write wins, it does not accumulate"
+    );
+}
+
+#[test]
+fn granting_standing_is_an_adjudication_and_a_machine_one_is_surfaced() {
+    // An agent that can grant itself standing has escalated its own
+    // authority. It is not refused here — the fold has no policy — but it is
+    // never invisible.
+    let by_agent = Act::new(
+        ActKind::Grant {
+            actor: "agent:canon".into(),
+            scope: scope("house"),
+            horizon: None,
+            rationale: "convenient".into(),
+        },
+        100,
+        "agent:canon",
+    );
+    let canon = Log::from_acts(vec![by_agent.clone()]).derive();
+    assert_eq!(canon.unattended, vec![by_agent.id]);
+}

@@ -15,6 +15,7 @@ pub mod fold;
 pub mod id;
 pub mod lineage;
 pub mod log;
+pub mod scope;
 pub mod standing;
 
 pub use act::{Act, ActKind, FORMAT_VERSION};
@@ -22,6 +23,7 @@ pub use fold::{derive, Ancestry, Canon, Commitment, Conflict, Disposition, Quest
 pub use id::{short_digest, ActId, ID_PREFIX};
 pub use lineage::{Divergence, Fate, Inherited, Snapshot, SnapshotCommitment};
 pub use log::{Log, ParseError};
+pub use scope::{Grant, Scope};
 pub use standing::{Outcome, Position, Pull, Source, Standing};
 
 #[cfg(test)]

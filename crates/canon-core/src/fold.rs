@@ -155,6 +155,12 @@ pub struct Canon {
     /// supersession whose target is absent is a hole in the record, not a
     /// no-op.
     pub dangling: Vec<(ActId, ActId)>,
+    /// Who holds standing, over what. Ostrom's first principle.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub grants: Vec<crate::scope::Grant>,
+    /// Which scope a commitment belongs to. Last write wins.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scopes: Vec<(ActId, crate::scope::Scope)>,
     /// Positions people and commitments have taken, by what they are about.
     ///
     /// Recorded here rather than resolved into an outcome: turning positions
@@ -182,6 +188,46 @@ impl Canon {
 
     pub fn get(&self, id: &ActId) -> Option<&Commitment> {
         self.commitments.iter().find(|c| &c.id == id)
+    }
+
+    /// Who may decide about this scope, deepest grant first.
+    ///
+    /// **Answerable without asking a person, and that is the point.** Informal
+    /// power runs on private knowledge of the process; a group where finding
+    /// out who decides requires knowing whom to ask has made that person the
+    /// gatekeeper. Ordering by depth is subsidiarity: the most specific
+    /// standing that covers the question comes first.
+    ///
+    /// Lapsed grants are excluded — held standing, not remembered standing.
+    pub fn who_decides(&self, scope: &crate::scope::Scope, now: i64) -> Vec<&crate::scope::Grant> {
+        let mut found: Vec<&crate::scope::Grant> = self
+            .grants
+            .iter()
+            .filter(|g| !g.lapsed(now) && g.scope.covers(scope))
+            .collect();
+        // Deepest first, then by actor so two runs render identically.
+        found.sort_by(|a, b| {
+            b.scope
+                .depth()
+                .cmp(&a.scope.depth())
+                .then_with(|| a.actor.cmp(&b.actor))
+        });
+        found
+    }
+
+    /// Does this actor hold standing over this scope right now?
+    pub fn standing_of(&self, actor: &str, scope: &crate::scope::Scope, now: i64) -> bool {
+        self.who_decides(scope, now)
+            .iter()
+            .any(|g| g.actor == actor)
+    }
+
+    /// The scope a commitment belongs to, if anyone said.
+    pub fn scope_of(&self, commitment: &ActId) -> Option<&crate::scope::Scope> {
+        self.scopes
+            .iter()
+            .find(|(id, _)| id == commitment)
+            .map(|(_, s)| s)
     }
 
     /// Questions nobody has answered or withdrawn. This is `canon open`.
@@ -432,6 +478,41 @@ pub fn derive(acts: &[Act]) -> Canon {
                     source: source.clone(),
                     at: act.ts_unix,
                 })
+            }
+            ActKind::Grant {
+                actor,
+                scope,
+                horizon,
+                ..
+            } => {
+                // Re-granting the same actor the same scope replaces rather
+                // than stacks: two live grants for one pair would make
+                // "when does this lapse" have two answers.
+                canon
+                    .grants
+                    .retain(|g| !(g.actor == *actor && g.scope == *scope));
+                canon.grants.push(crate::scope::Grant {
+                    actor: actor.clone(),
+                    scope: scope.clone(),
+                    horizon: *horizon,
+                    granted_at: act.ts_unix,
+                    act: act.id.clone(),
+                });
+            }
+            ActKind::Withdraw { actor, scope, .. } => {
+                // Removes grants AT or BELOW the named scope. Carving a hole
+                // out of a broader grant is deliberately not expressible:
+                // stepping back from `house.kitchen` while holding `house`
+                // would need a negative grant, and a permission system with
+                // both grants and denials is one where nobody can answer "may
+                // they?" by looking. Re-grant narrower instead.
+                canon
+                    .grants
+                    .retain(|g| !(g.actor == *actor && scope.covers(&g.scope)));
+            }
+            ActKind::Scoped { commitment, scope } => {
+                canon.scopes.retain(|(id, _)| id != commitment);
+                canon.scopes.push((commitment.clone(), scope.clone()));
             }
             ActKind::Position {
                 about,

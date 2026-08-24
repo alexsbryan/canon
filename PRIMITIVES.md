@@ -168,8 +168,8 @@ that diverges quietly (§10.6).
 
 ## Primitive 6 — Boundaries: who holds standing, over what
 
-`NOT BUILT` (`is_human()` distinguishes person from machine; nothing models
-*which* person may decide *what*)
+`BUILT` (`scope.rs`: `Scope`, `Grant`; `act.rs`: the `grant`, `withdraw` and
+`scoped` ops; `fold.rs`: `Canon::{who_decides, standing_of, scope_of}`)
 
 Ostrom's first design principle, from the study of common-pool-resource
 institutions that endured for centuries, is clearly defined boundaries: who
@@ -179,9 +179,25 @@ We initially filed this as a gap to close later. That was wrong. Systems
 without it do not endure, and every richer policy — subsidiarity, sortition,
 scoped authority, cohort re-ratification — is unstateable without it.
 
-Model it as an annotation (Primitive 3) consumed by policy (Primitive 7), not as
-a new structural op. A scope grant is a typed statement in the ledger like any
+Modelled as annotations (Primitive 3) consumed by policy (Primitive 7), not as
+new structural ops. A scope grant is a typed statement in the ledger like any
 other, which means it is itself citable, contestable and revertible.
+
+A scope is a dotted path, so `house` covers `house.kitchen` — **nesting is
+Ostrom's eighth principle for free**, and a policy preferring the deepest grant
+is subsidiarity with no extra machinery. `covers` requires the boundary to be a
+dot: `house` does not cover `household`, and a bare prefix test would hand
+someone authority over a scope that merely spells similarly.
+
+Standing is **held, not remembered**: a lapsed grant stays in the record as a
+fact and stops answering `who_decides`. Rotation is therefore the default shape
+rather than a reform somebody has to propose against an incumbent.
+
+**Withdrawal removes grants at or below the named scope, and carving a hole out
+of a broader grant is deliberately not expressible.** Stepping back from
+`house.kitchen` while holding `house` would need a negative grant, and a
+permission system with both grants and denials is one where nobody can answer
+"may they?" by looking. Re-grant narrower instead.
 
 ## Primitive 7 — Policy: a pure function from evidence to outcome and authority
 
