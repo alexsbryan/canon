@@ -22,6 +22,7 @@ mod model;
 mod profile;
 mod quantify;
 mod rebase;
+mod resolver;
 mod store;
 mod subject;
 mod tensions;

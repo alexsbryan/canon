@@ -24,6 +24,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::model::{Client, ModelError};
+use crate::resolver::{self, Offered, Resolver};
 
 /// One quantity a rule states.
 ///
@@ -216,27 +217,47 @@ pub fn quantify_pairs(
 ///
 /// A text the model does not answer for comes back empty rather than missing,
 /// so a caller can never silently line up the wrong answers.
-fn read_block(client: &Client, block: &[&str]) -> Result<Vec<Vec<Quantity>>, ModelError> {
-    let mut out: Vec<Vec<Quantity>> = vec![Vec::new(); block.len()];
-    let mut user = String::from("Rules:\n");
-    for (i, r) in block.iter().enumerate() {
-        user.push_str(&format!("{}. {}\n", i + 1, r));
+/// The reading contract, named. See [`crate::resolver`].
+pub struct Quantities;
+
+impl Resolver for Quantities {
+    /// No quantities. Cannot claim a disagreement, which is the refusing
+    /// default this reader needs.
+    type Reading = Vec<Quantity>;
+
+    fn name(&self) -> &'static str {
+        "quantities"
     }
-    user.push_str("\nList the quantities each rule states.");
-    let got: Quantified = client.complete_json(SYSTEM, &user, "quantities", &schema())?;
+
+    fn system(&self) -> &'static str {
+        SYSTEM
+    }
+
+    fn schema(&self) -> Value {
+        schema()
+    }
+
+    fn unread(&self, _index: usize) -> Vec<Quantity> {
+        Vec::new()
+    }
+}
+
+fn read_block(client: &Client, block: &[&str]) -> Result<Vec<Vec<Quantity>>, ModelError> {
+    let offered = Offered::new(block.iter().map(|r| (*r).to_string()).collect(), "rule");
+    let mut out = Quantities.blank(&offered);
+    let got: Quantified = resolver::ask(
+        client,
+        &Quantities,
+        &offered,
+        "Rules:",
+        "List the quantities each rule states.",
+    )?;
     for mut r in got.rules {
-        if r.n >= 1 && r.n <= block.len() {
-            // Filtered here, at the one place a model's answer becomes data,
-            // rather than defended against by each consumer.
-            r.quantities.retain(Quantity::states_a_number);
-            out[r.n - 1] = r.quantities;
-        } else {
-            eprintln!(
-                "\nwarning: dropped quantities for rule {} — only 1..{} were offered",
-                r.n,
-                block.len()
-            );
-        }
+        let Some(at) = offered.at(r.n) else { continue };
+        // Filtered here, at the one place a model's answer becomes data,
+        // rather than defended against by each consumer.
+        r.quantities.retain(Quantity::states_a_number);
+        out[at] = r.quantities;
     }
     Ok(out)
 }

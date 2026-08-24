@@ -109,8 +109,17 @@ everything is worse than refusing to read.
 
 ## Primitive 4 — Resolvers: text in, typed evidence out, never a verdict
 
-`PARTIAL` (`locate`, `quantify`, `subject` all implement this contract
-independently; it is a convention, not a trait)
+`BUILT` (`canon-cli/src/resolver.rs`: the `Resolver` trait and `Offered`;
+implemented by `quantify::Quantities` and `subject::SameThing`, with `locate`
+and `check` on the same numbering)
+
+Extracting it found what a convention always hides: **four places wrote the
+out-of-range check by hand and one of them wrote it differently.** `locate`
+returned a typed `Miscited` and counted it; `quantify` and `subject` printed a
+warning and dropped; `check` printed a warning with different wording. Now
+`Offered::at` owns it, never clamps, and counts what it refused — because "the
+reader cited past the end nine times" is a measurement about the pass, not
+noise to swallow.
 
 A resolver reads open text and returns typed structure. Code compares the
 structure and decides. `locate` returns a *position* and code cuts the quote.

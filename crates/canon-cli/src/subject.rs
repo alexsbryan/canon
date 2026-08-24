@@ -37,6 +37,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::model::{Client, ModelError};
+use crate::resolver::{self, Offered, Resolver};
 
 const SYSTEM: &str = "\
 You decide which rules govern the same thing.
@@ -104,28 +105,47 @@ pub fn same_thing(client: &Client, groups: &[Vec<&str>]) -> Result<Vec<Vec<usize
     Ok(out)
 }
 
+/// The reading contract, named. See [`crate::resolver`].
+pub struct SameThing;
+
+impl Resolver for SameThing {
+    /// The index of the member that represents this one.
+    type Reading = usize;
+
+    fn name(&self) -> &'static str {
+        "same"
+    }
+
+    fn system(&self) -> &'static str {
+        SYSTEM
+    }
+
+    fn schema(&self) -> Value {
+        schema()
+    }
+
+    /// Represents itself, which refuses the fold. The refusing default this
+    /// reader needs: anything the model leaves unsaid must not merge.
+    fn unread(&self, index: usize) -> usize {
+        index
+    }
+}
+
 fn partition(client: &Client, group: &[&str]) -> Result<Vec<usize>, ModelError> {
-    // Every member starts representing itself, so anything the model leaves
-    // unsaid stays a refusal (§18.3: absence is reported, never defaulted).
-    let mut rep: Vec<usize> = (0..group.len()).collect();
+    let offered = Offered::new(group.iter().map(|r| (*r).to_string()).collect(), "rule");
+    let mut rep = SameThing.blank(&offered);
     if group.len() < 2 {
         return Ok(rep);
     }
-    let mut user = String::from("Rules:\n");
-    for (i, r) in group.iter().enumerate() {
-        user.push_str(&format!("{}. {}\n", i + 1, r));
-    }
-    user.push_str("\nFor each rule, which is the smallest-numbered rule governing the same thing?");
-    let got: Partitioned = client.complete_json(SYSTEM, &user, "same", &schema())?;
+    let got: Partitioned = resolver::ask(
+        client,
+        &SameThing,
+        &offered,
+        "Rules:",
+        "For each rule, which is the smallest-numbered rule governing the same thing?",
+    )?;
     for r in got.rules {
-        let Some(at) = r.n.checked_sub(1).filter(|i| *i < group.len()) else {
-            eprintln!(
-                "\nwarning: dropped a reading for rule {} — only 1..{} were offered",
-                r.n,
-                group.len()
-            );
-            continue;
-        };
+        let Some(at) = offered.at(r.n) else { continue };
         // A representative past the end, or past this member, names nothing
         // the model was shown. Left as itself, which refuses the fold.
         if let Some(to) = r.same_as.checked_sub(1).filter(|i| *i <= at) {
