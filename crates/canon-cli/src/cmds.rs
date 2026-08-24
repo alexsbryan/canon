@@ -436,6 +436,21 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Dismiss { a, b, .. } => format!("dismiss    {a} / {b}"),
             ActKind::Revert { targets, .. } => format!("revert     {}", targets.len()),
             ActKind::Question { text, .. } => format!("question   {text}"),
+            ActKind::Grant {
+                actor,
+                scope,
+                horizon,
+                ..
+            } => match horizon {
+                Some(h) => format!("grant      {actor} over {scope} until {}", store::ymd(*h)),
+                None => format!("grant      {actor} over {scope}"),
+            },
+            ActKind::Withdraw { actor, scope, .. } => {
+                format!("withdraw   {actor} from {scope}")
+            }
+            ActKind::Scoped { commitment, scope } => {
+                format!("scoped     {commitment} -> {scope}")
+            }
             ActKind::Position {
                 about,
                 pull,
