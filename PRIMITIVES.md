@@ -137,6 +137,13 @@ constrains people to arguments framed as group-interested, and that constraint
 shapes outcomes even when the reason is insincere — what Elster called the
 civilizing force of hypocrisy.
 
+**This must generalize to actor-sourced positions.** A bearing runs from a
+commitment to a proposal; a vote, an objection, a second and a delegation run
+from an *actor* to a proposal. Modelling only the first is what makes every
+voting technology look like it needs new mechanism. One relation, two source
+kinds, `because` still required on anything pulling against. See the adequacy
+test.
+
 ## Primitive 6 — Boundaries: who holds standing, over what
 
 `NOT BUILT` (`is_human()` distinguishes person from machine; nothing models
@@ -201,6 +208,122 @@ accumulate and nothing closes; a closure query is the cheapest available
 defense, and it is the difference between deferring and burying.
 
 ---
+
+## Primitive 9 — A fair draw
+
+`NOT BUILT`
+
+Selection of people by lot, in a way nobody could steer.
+
+This is the only entry on this list that was not designed in advance. It fell
+out of the adequacy test below: every other technology of political economy we
+tried decomposed into Primitives 1-8, and sortition did not. It needs randomness,
+and randomness is exactly what a content-addressed, replayable ledger cannot
+casually have — a draw nobody can reproduce is a draw nobody can audit, and a
+draw seeded by whoever calls it is not a draw.
+
+What is required is a seed **nobody chose after seeing the pool**. Sketch, not
+yet a design: a draw act names the pool, the count, and a seed source that
+already existed and was authored by someone other than the drawer; anyone
+replaying the log recomputes the same selection and can check it. Commit-reveal
+across the eligible set, or an external public beacon, are the other candidates.
+
+Getting this wrong is not a small defect. Sortition is the answer this document
+leans on for two separate problems — Freeman's entrenchment, and the minimal
+governance ask — and a steerable lottery is worse than no lottery, because it
+launders a chosen panel as a fair one.
+
+## Does the set actually span? An adequacy test
+
+The claim this document makes is that governance is policy over a small
+mechanical core. That claim is falsifiable, and this is the test: **take the
+known technologies of political economy and try to express each as a composition
+of the primitives.** Anything that requires new mechanism is evidence the set is
+incomplete.
+
+The point is not novelty. These techniques are old, studied, and mostly
+well-understood; what has been missing is a substrate where adopting one is
+configuration rather than a rebuild. A community should be able to layer
+sortition onto what it already does the way one adds a dependency.
+
+| Technology | Composition | Verdict |
+|---|---|---|
+| Consent, not consensus | policy over positions where `Against` requires a reason | spans |
+| Majority / supermajority / unanimity | policy counting actor-sourced positions | spans\* |
+| Quorum, thresholds | policy over position count and standing | spans |
+| Veto and minority protection | policy | spans |
+| Subsidiarity | nested scopes + policy routing to the lowest competent one | spans |
+| Delegation / liquid democracy | annotation (A delegates scope S to B, with a horizon); policy resolves the chain | spans |
+| Term limits, rotation | scope grant carrying a horizon + the staleness query | spans |
+| Sunset clauses, trial periods | annotation carrying a horizon + the staleness query | spans |
+| Recall, impeachment | retract a scope grant | spans |
+| Appeal, escalation | policy returning a higher scope in the authority ladder | spans |
+| Entrenchment (constitution harder to amend than statute) | rank as an annotation; policy reads it | spans |
+| Per-actor budgets, quadratic voting | fold over actor-sourced annotations | spans |
+| Precedent, distinguishing, overruling | the core: assert, supersede, tensions, the fold guards | spans |
+| Cohort ratification | `Adopt` + generation + scope | spans |
+| Deliberative minipublics | fair draw + scope grant with horizon + a question batch | needs Primitive 9 |
+| Sortition | a draw nobody can steer | **does not span** |
+| Graduated sanctions | authority ladder + a count of prior decisions | spans, with a caveat below |
+| Futarchy, staked prediction | positions carrying transferable stakes | out of scope — no value transfer here, and we are not adding it |
+
+\* Spans only once positions can be actor-sourced — see the first finding.
+
+Three findings, and they changed the primitives rather than decorating them.
+
+**Positions have two source kinds, and only one exists.** A `Bearing` runs from
+a *commitment* to a proposal. A vote, an objection, a second, a delegation all
+run from an *actor* to a proposal. Those are different relations, and today only
+the first is modelled — which is why the entire voting family looked like it
+needed new mechanism. Generalize `Bearing` into a position whose source is
+either a commitment or an actor, keep `because` required on anything that pulls
+against, and eight rows of that table become policy rather than features. This
+is the highest-leverage change on the list and it is small.
+
+**Graduated sanctions collide with the line we do not cross.** Ostrom's fifth
+principle needs to know that this is the third occurrence, and counting
+occurrences by person is precisely the surveillance file this document forbids.
+The resolution is a real distinction rather than a compromise: **the ladder
+counts prior decisions, not prior observations.** "The house asked Dana to stop
+doing X" is an adjudication, attributed to whoever decided it, and belongs in
+the record. "Dana ran the washing machine at 1am" is an observation about a
+person and does not. A community that has never decided anything has no ladder
+to climb, which is the correct behaviour.
+
+**One generalization pays for five technologies.** Term limits, sunset clauses,
+trial periods, revisit dates and rotation are all the same shape: an annotation
+carrying a horizon, plus one query for what is overdue. That is the strongest
+evidence in this document that Primitive 8 is a primitive and not a feature.
+
+## The motions people already make
+
+The other reason to prefer a small core: **the primitives should name what
+people already do, not ask them to do something new.** Communities already ask
+questions, already decide, already object with reasons, already defer things,
+already delegate, already withdraw, and already record some of it — in minutes,
+a spreadsheet, a chat thread, a lease.
+
+Every primitive here corresponds to a motion that exists organically:
+
+- Asking → `Question`
+- Deciding → `Assert`, `Supersede`, `Retract`
+- Objecting, with a reason → a position pulling against
+- Agreeing to disagree → `Accept`
+- Handing something to someone → a scope grant
+- Stepping back → a scoped withdrawal
+- Changing your mind → `Supersede` with a rationale
+- Undoing → `Revert`
+
+Nothing on that list is a new behaviour. The library's contribution is that
+these motions become *records with a shape*, so a policy can be written over
+them — and so a community that wants sortition, or consent, or subsidiarity, can
+adopt it without changing how anyone behaves day to day.
+
+That is the whole design intent: the technologies of political economy are old
+and mostly sound, and the barrier to adopting them has never been that nobody
+understood them. It is that each one has meant building an institution around
+it. If the records people already keep carry enough structure, adopting one
+becomes a configuration change.
 
 ## What is policy, and therefore not ours
 
@@ -370,10 +493,12 @@ keeping agents as *routers* — they may draft, ask and cite; they may not
 adjudicate — and for treating any drift toward agent adjudication as the
 failure it is.
 
-**Graduated sanctions are absent.** Ostrom found durable commons use mild-first
-escalating responses. We have no enforcement layer at all. That may be correct —
-this library advises and humans act — but it should be a decision on the record
-rather than an omission nobody noticed.
+**Graduated sanctions are still absent, though no longer unmodellable.** The
+adequacy test resolved how a ladder can exist without a surveillance file — it
+counts prior decisions, not prior observations. What remains undecided is
+whether this library should carry an enforcement ladder at all, or only ever
+advise while humans act. That is a decision someone should make on the record
+rather than leave as an omission nobody noticed.
 
 ## What we are borrowing, and from whom
 
@@ -415,6 +540,15 @@ Not a bibliography. Each of these changed something above.
 
 ## Where to start
 
-Extracting the outcome computation out of `standing.rs` into a named policy,
-with today's behaviour as `Default`, is small and mechanical, and it unlocks
-Primitives 6 and 7. Do that before anything else here.
+Two changes, in order, both small.
+
+Generalize `Bearing` so a position may be sourced from an actor as well as from
+a commitment. Eight rows of the adequacy table turn from mechanism into policy
+the moment this lands.
+
+Then extract the outcome computation out of `standing.rs` into a named policy
+with today's behaviour as `Default`. That unlocks Primitives 6 and 7, and with
+them everything in the table except the fair draw.
+
+The fair draw wants its own design pass. Do not ship a lottery before it is
+auditable.
