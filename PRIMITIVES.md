@@ -274,6 +274,58 @@ Dearer:
   proposals fold, which is what keeps the review burden survivable under volume
   — and the fold guards are what stop that from being weaponized.
 
+## Voice must be cheaper than exit
+
+Hirschman's claim is that members respond to decline through exit or voice, and
+that available exit reduces investment in voice. A community with high turnover
+has cheap exit, and it is tempting to read that as a reason to doubt whether
+voice is the operative response at all.
+
+That is the wrong conclusion, and it is not testable the way it sounds: you
+cannot learn whether voice would work with better tools by measuring voice under
+worse ones. **Voice has to be the response. Making it cheaper than exit is the
+design target, and it is the only lever we hold.**
+
+The two are not costly on the same axis, which is what makes the target
+tractable. Exit is expensive in logistics — a new place, a deposit, a move — and
+**cheap in exposure**: nobody confronts you, you simply go. Voice is nearly free
+in logistics and **expensive in exposure**. So convenience is not the binding
+constraint and optimizing it moves nothing. Every affordance that works here
+reduces *exposure*:
+
+- A `Question` records a gap rather than accusing a person.
+- `check` runs privately, so you can discover you are offside before proposing
+  and adjust without anyone knowing you considered it.
+- Unattributed asking, with attributed adjudication.
+- Unattributed seconds, so you learn you are not alone without going first.
+- `Accept` as a real outcome, so raising something is not a bet you can only
+  lose.
+
+Three consequences follow that are not obvious from the primitives alone.
+
+**Loyalty is manufacturable, and the ledger is the mechanism.** Hirschman's
+third term is less sentiment than the expectation that voice will work. That
+expectation is built from evidence, and the log already holds it: a member
+should be able to see voice's track record — questions asked, which became
+commitments, what changed. Not a vanity metric. It is what makes the next
+person's decision to speak rational.
+
+**Exit is silent by default, and the silence is the damage.** The person leaves
+and the reason leaves with them. An offboarding that mints an unattributed
+`Question` converts a departure into a governance signal, which is the cheapest
+available salvage of an exit nobody prevented.
+
+**Exit is gradual before it is total.** People withdraw from the common table,
+stop hosting, stop coming to meetings. Those are exits from *scopes*, and once
+boundaries (Primitive 6) exist, scoped withdrawal becomes a recordable move
+rather than an invisible one — which surfaces the pre-exit signal without
+demanding a confrontation from someone already disengaging.
+
+The limit is real and worth stating: we work only on voice's side. Lowering
+exit's cost is not ours to do, and raising it — making a community harder to
+leave — is not governance. It is a trap, and it produces the compliance that
+looks like consent, which is the failure this whole document is written against.
+
 ## The line we do not cross
 
 **No person-attributed observations in the canon, ever.** Acts record who
@@ -297,14 +349,6 @@ economics and potentially bad politics. These pull in opposite directions and we
 do not have a principled resolution. Sortition — rotating panels of three to
 five handling the question queue, as in deliberative minipublics — is the best
 answer we know, because rotation is a direct answer to entrenchment.
-
-**Cheap exit suppresses voice.** Hirschman's claim is that members respond to
-decline through exit or voice, and that available exit reduces investment in
-voice. A coliving house with high annual turnover has very cheap exit. This
-library assumes dissatisfaction converts into voice. Where exit is cheaper than
-engagement, it may not, no matter how good the primitives are — which suggests
-the value is highest where exit is costly and should be *tested* before building
-much further for high-churn communities.
 
 **Legibility can destroy what it measures.** Scott's case is that formalizing
 local practice destroys the tacit knowledge that made it work. A canon
@@ -339,9 +383,10 @@ Not a bibliography. Each of these changed something above.
   for enduring common-pool-resource institutions. Promoted boundaries to
   Primitive 6, made authority graduated in Primitive 7, and supplied two of the
   open tensions.
-- **Albert Hirschman**, *Exit, Voice, and Loyalty* (1970). The reason to test
-  whether voice is even the operative response before building for a
-  high-turnover community.
+- **Albert Hirschman**, *Exit, Voice, and Loyalty* (1970). The design target:
+  voice cheaper than exit, on the exposure axis rather than the convenience one.
+  Loyalty as the expectation that voice will work, and therefore as something a
+  visible track record can build.
 - **Jo Freeman**, "The Tyranny of Structurelessness" (1972). Why "minimal" is
   not automatically good, and why rotation matters.
 - **Timur Kuran**, *Private Truths, Public Lies* (1995). Preference
