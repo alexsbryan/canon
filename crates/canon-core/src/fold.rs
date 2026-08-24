@@ -204,6 +204,10 @@ pub struct Canon {
     /// What the group has decided, in order. Decisions, never observations.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rulings: Vec<Ruling>,
+    /// Dates attached to acts. Last write per target wins, so a horizon can
+    /// be moved as well as set.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub horizons: Vec<crate::horizon::Horizon>,
     /// Which commitments are ranked, and as what. Last write wins.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ranks: Vec<(ActId, String)>,
@@ -657,6 +661,20 @@ pub fn derive(acts: &[Act]) -> Canon {
                 actor: act.actor.clone(),
                 act: act.id.clone(),
             }),
+            ActKind::Horizon {
+                target,
+                at,
+                rationale,
+            } => {
+                canon.horizons.retain(|h| h.target != *target);
+                canon.horizons.push(crate::horizon::Horizon {
+                    target: target.clone(),
+                    at: *at,
+                    rationale: rationale.clone(),
+                    set_at: act.ts_unix,
+                    act: act.id.clone(),
+                });
+            }
             ActKind::Rank { commitment, rank } => {
                 canon.ranks.retain(|(id, _)| id != commitment);
                 canon.ranks.push((commitment.clone(), rank.clone()));

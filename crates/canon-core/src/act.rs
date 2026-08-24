@@ -42,9 +42,9 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 11] = [
+pub const KNOWN_ANNOTATIONS: [&str; 12] = [
     "accept", "dismiss", "question", "adopt", "position", "grant", "withdraw", "scoped", "policy",
-    "decided", "rank",
+    "decided", "rank", "horizon",
 ];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
@@ -233,6 +233,25 @@ pub enum ActKind {
         about: String,
         outcome: crate::standing::Outcome,
         authority: crate::policy::Authority,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        rationale: String,
+    },
+    /// Look at this again by then.
+    ///
+    /// **One act for five technologies.** A term limit, a sunset clause, a
+    /// trial period, a revisit date and a rotation are the same shape: a date
+    /// attached to a decision, and a query for what is past it. Modelled as
+    /// an annotation on a TARGET rather than as a field on each act, for the
+    /// same reason `scoped` is: the structural ops stay closed, and a date can
+    /// be attached — or moved — after the fact, which is what actually
+    /// happens.
+    ///
+    /// `at` is Unix seconds, not a date string. `Accept.revisit` is a string
+    /// because it shipped that way and the format does not rewrite history;
+    /// the staleness query reads both through one calendar.
+    Horizon {
+        target: ActId,
+        at: i64,
         #[serde(default, skip_serializing_if = "String::is_empty")]
         rationale: String,
     },

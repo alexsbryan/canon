@@ -97,6 +97,7 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `policy` | `text`, `rule`, `scope?` | What this canon decides under |
 | `decided` | `about`, `outcome`, `authority`, `rationale?` | The group decided something |
 | `rank` | `commitment`, `rank` | A principle rather than a convention |
+| `horizon` | `target`, `at`, `rationale?` | Look at this again by then |
 
 `accept.rationale` is **required**: a tolerated contradiction must say
 what it protects. Every other rationale is optional, and `dismiss` is
@@ -135,6 +136,18 @@ substitutes for the other**: the prose is what a person reads and
 contests, the typed rule is what code reads. An implementation MUST NOT
 derive its behaviour from the prose, and MUST NOT show only the typed
 form. Nesting is by a `base` field, so a rule may wrap another.
+
+`horizon.at` is Unix **seconds**, and it may target any act — a
+commitment, a question, a grant, an accepted contradiction. It is one act
+for what people call term limits, sunset clauses, trial periods, revisit
+dates and rotation, which are the same shape. The last horizon written
+for a target governs, so a date can be moved as well as set.
+
+`accept.revisit` remains a **date string**, because it shipped that way
+and this format does not rewrite what is already written. A reader MUST
+read both through one calendar, and MUST NOT read an unparseable revisit
+as a date — reporting it as unreadable and reading it as epoch zero are
+not the same thing, and the second makes it permanently overdue.
 
 `decided` records an **adjudication**, never an observation. It says the
 group decided something about a subject; there is no act in this format

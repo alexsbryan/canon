@@ -247,7 +247,15 @@ classification is the caller's job; the attribute is the interface.
 
 ## Primitive 8 — Two standing queries
 
-`PARTIAL` (tensions built; staleness exists only as `revisit` on `Accept`)
+`BUILT` (`tensions`; `horizon.rs`: `Canon::{overdue, unreadable_dates}`, the
+`horizon` op, `Due::{Horizon, Revisit, Standing}`)
+
+The generalization held: one query returns a lapsed term limit, a trial period
+and a revisit date, and a test asserts all three come back from a single call.
+Three queries would have meant three mechanisms.
+
+The clock is passed in, never read. `overdue(now)` is pure, which is what
+`canon replay` depends on completely.
 
 **What contradicts what.** Governance by accretion means commitments accumulate
 one decision at a time and begin to conflict. Without this the canon silently
