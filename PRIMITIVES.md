@@ -83,7 +83,8 @@ built-ins rather than a registry)
 Everything that is not structural is a typed statement *about* a commitment or
 a pair of them. Accepting a contradiction. Dismissing a detector's false
 positive. Recording a gap. Recording ancestry. Seconding a question without
-attribution. Granting scope. Marking a trial period.
+attribution. Granting scope. Marking a trial period. Declaring that something is
+deliberately left unwritten.
 
 Unknown annotation kinds must be **carried but not interpreted** — the opposite
 rule from Primitive 2.
@@ -460,45 +461,146 @@ gotcha, people stop asking questions and every property above inverts.
 Incidents inform which commitments get minted. They are not stored as evidence
 against anyone.
 
-## Open tensions we are not resolving here
+## The tensions, and the floor under each
 
-Named because a design that hides its unresolved problems is not loosely held.
+A tool cannot determine how it is used. It can make one direction cheaper than
+the other, and it can refuse to supply the thing an abuse would need. That is
+the whole of what follows: for each unresolved tension, what the tool cannot do,
+and the floor it holds anyway.
 
-**Minimal governance versus hidden power.** Freeman's argument in "The Tyranny
-of Structurelessness" is that groups refusing explicit structure do not become
+None of these are closed. A design that claims to have solved the problems
+political theory has argued over for a century is not loosely held.
+
+### Legibility versus métis
+
+Scott's case is that formalizing local practice destroys the tacit, adaptive
+knowledge that made it work. High modernism's failure needed three ingredients:
+a totalizing map, authority to impose it, and contempt for local knowledge as
+unscientific. Michael Polanyi's tacit knowing and Hayek's dispersed local
+knowledge describe the same substrate from other directions — and Hayek's point
+is the useful one here, that a mechanism can *coordinate* on local knowledge
+without *extracting* it.
+
+**What the tool cannot do.** It cannot stop a community from trying to write
+everything down, and it cannot supply the judgment that unwritten practice
+carries.
+
+**The floor.**
+
+*It does not aim at total coverage.* `Unaddressed` is a healthy state with a
+floor rather than a defect with a target, and nothing here should optimize canon
+size, coverage, or the number of resolved tensions. A canon that answers
+everything has replaced judgment with lookup.
+
+*Standards are first-class, not failed rules.* Kaplow's distinction is the
+useful frame: rules are specified in advance and cheap to apply but fit badly;
+standards are specified at the point of application and fit well but cost when
+applied. Métis lives in standards — "guests are your responsibility", "leave it
+better than you found it" — and their underspecification is the point. The
+resolvers must never pressure a commitment toward being sharpened into a
+measurable rule. A system that quantifies will drift toward the quantifiable
+unless told not to.
+
+*Deliberate silence is recordable.* A community can assert that it has decided
+**not** to write a rule about something. That converts silence-by-neglect into
+silence-by-choice, and it protects the unwritten from being read as a gap
+awaiting closure. Costs nothing under Primitive 3, and it is the most direct
+thing this document can do for métis.
+
+*The canon is never the sole input.* The authority ladder can return "ask a
+person" as an outcome, which keeps human judgment inside the loop by design
+rather than by omission.
+
+**What remains human.** Whether the community has the restraint to leave things
+unwritten. No mechanism supplies that.
+
+### Minimal structure versus hidden power
+
+Freeman's argument is that groups refusing explicit structure do not become
 unstructured — they develop informal, unaccountable elites, and the absence of
-written rules protects incumbents. Minimizing the governance ask is good
-economics and potentially bad politics. These pull in opposite directions and we
-do not have a principled resolution. Sortition — rotating panels of three to
-five handling the question queue, as in deliberative minipublics — is the best
-answer we know, because rotation is a direct answer to entrenchment.
+written rules protects incumbents. Michels' iron law is the pessimistic baseline:
+organizations tend toward oligarchy regardless of intent.
 
-**Legibility can destroy what it measures.** Scott's case is that formalizing
-local practice destroys the tacit knowledge that made it work. A canon
-comprehensive enough to cover everything has replaced judgment with lookup, and
-written norms invite rules-lawyering.
+The mechanism of informal power is worth stating precisely, because it is what
+determines whether a tool can touch it at all: **informal power runs on private
+knowledge of the rules and the process.** Who decides. What was decided before.
+What is pending. Why things are done this way. An informal gatekeeper is someone
+who knows the process and can dispense that knowledge selectively. Freeman's own
+prescriptions — rotation, delegation by explicit procedure, distribution of
+authority, and *diffusion of information* — attack exactly that.
 
-The direct consequence: **the unaddressed rate needs a floor, not a target.** An
-earlier framing of this work proposed driving it toward zero as the measure of
-success. That is wrong. Mouffe's agonistic pluralism holds conflict to be
-constitutive of politics rather than a defect; a system resolving every tension
-is suppressing politics, not conducting it. A healthy canon has a persistent
-unaddressed rate and a non-zero count of accepted contradictions. The thing to
-minimize is not gaps — it is **re-litigation of settled things**.
+**What the tool cannot do.** Power will operate outside any record. Friendships,
+side conversations, and who was in the kitchen at the time are not addressable
+by software and never will be.
 
-**Monitors accountable to whom.** Ostrom's fourth principle requires monitors
-drawn from or accountable to the people governed. An agent fleet paid by hosting
-fees and judged on task completion is neither. This is a structural argument for
-keeping agents as *routers* — they may draft, ask and cite; they may not
-adjudicate — and for treating any drift toward agent adjudication as the
-failure it is.
+**The floor.**
 
-**Graduated sanctions are still absent, though no longer unmodellable.** The
-adequacy test resolved how a ladder can exist without a surveillance file — it
-counts prior decisions, not prior observations. What remains undecided is
-whether this library should carry an enforcement ladder at all, or only ever
-advise while humans act. That is a decision someone should make on the record
-rather than leave as an omission nobody noticed.
+*Everything that governs is in the ledger and readable by the governed* —
+including the policy itself. You cannot be the gatekeeper of "how things work
+here" when how things work is queryable.
+
+*"Who decides this?" must be answerable without asking a person.* If finding out
+who has authority requires knowing whom to ask, that person is the informal
+elite. This is derivable from Primitives 6 and 7 but is called out because it
+must exist as a surface, not merely be implied.
+
+*Decisions made by nobody are surfaced.* `unattended` is the drift detector, and
+drift is informal power's favourite instrument — the decision that simply
+happened, which no one can be asked to justify because no one made it.
+
+*Authority expires.* Scope grants carry horizons, so rotation is the default
+shape rather than a reform someone has to propose against an incumbent.
+
+**What remains human.** Whether anyone looks. A readable record that nobody
+reads protects no one, and the literature offers no mechanism for curiosity.
+
+### Monitors accountable to whom
+
+Ostrom's fourth principle requires monitors drawn from, or accountable to, the
+people governed. An agent fleet paid by hosting fees and judged on task
+completion is neither. This is the ordinary principal-agent problem with the
+usual asymmetry: the agent has better information and different incentives.
+
+**What the tool cannot do.** It cannot align an agent's incentives with a
+community's interests, and it cannot make a community capable of evaluating work
+it does not understand.
+
+**The floor.**
+
+*Discretion is bounded structurally, not by instruction.* An agent cannot act on
+`Unaddressed`, so its authority is a function of the canon's coverage rather
+than of its own confidence. This is the single most important line, because it
+is the one an eager agent cannot argue its way past.
+
+*Agents may draft, ask and cite; they may not adjudicate.* Today this is
+reported after the fact. It should be gateable: policy must be able to require a
+human act for a class of decision, and the shipped default should require one
+for adjudication.
+
+*The monitor's record is auditable by the governed.* Every agent action is
+attributable and replayable, and an agent cannot quietly rewrite what it did.
+That is Ostrom's answer — appropriators monitoring the monitor — and the ledger
+already provides it.
+
+*The agent's job is itself a scope grant with a horizon.* This closes the loop
+neatly: an agent fleet's authority is granted, scoped, expiring, and renewed by
+humans, and its case for renewal is the auditable record of what it decided,
+cited and refused. "Keeping the job" stops being a motivation the agent holds
+privately and becomes a decision the community makes on evidence.
+
+**What remains human.** Someone has to actually review the record before
+renewing. The tool can make the evidence cheap to obtain; it cannot make anyone
+weigh it.
+
+### Enforcement
+
+Not a tension so much as an undecided question, kept here so it is not mistaken
+for an oversight. The adequacy test showed a graduated ladder is modellable
+without a surveillance file, since it counts prior *decisions* rather than prior
+*observations*. What nobody has decided is whether this library should carry an
+enforcement ladder at all, or only ever advise while humans act. Ostrom found
+that both zero enforcement and harsh first-strike enforcement fail; that is an
+argument for the middle, not for us picking it on a community's behalf.
 
 ## What we are borrowing, and from whom
 
@@ -519,7 +621,16 @@ Not a bibliography. Each of these changed something above.
   revealing the distribution must gate attention rather than outcome — a
   cascade is not deliberation.
 - **James C. Scott**, *Seeing Like a State* (1998). Legibility versus métis; the
-  floor under the unaddressed rate.
+  floor under the unaddressed rate, and the reason coverage is never a goal.
+- **Michael Polanyi** on tacit knowing, and **Hayek**, "The Use of Knowledge in
+  Society" (1945). The same substrate from two directions, and Hayek's useful
+  half: a mechanism can coordinate on local knowledge without extracting it.
+- **Louis Kaplow**, "Rules versus Standards" (1992). Why an underspecified
+  commitment is a standard rather than a failed rule, and why the resolvers must
+  not sharpen one into the other.
+- **Robert Michels**, the iron law of oligarchy (1911). The pessimistic baseline
+  under Freeman: drift toward oligarchy is the default, so rotation has to be
+  the default shape rather than a reform proposed against an incumbent.
 - **Buchanan and Tullock**, *The Calculus of Consent* (1962). Why one policy per
   canon is the wrong shape, and hence proposal attributes.
 - **Chantal Mouffe**, agonistic pluralism. Why `Accept` is a first-class outcome
