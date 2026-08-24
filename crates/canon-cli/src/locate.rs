@@ -29,6 +29,8 @@
 use std::fmt;
 use std::ops::Range;
 
+use crate::resolver::{Mark, Offered};
+
 /// A citation shorter than this cannot be evidence of anything.
 pub const QUOTE_MIN: usize = 20;
 
@@ -159,15 +161,20 @@ pub fn sentences(text: &str) -> Vec<Range<usize>> {
 /// prompt; the copy still comes from the source, so a sentence that wrapped
 /// in the document keeps its line breaks in the citation.
 pub fn numbered(text: &str, spans: &[Range<usize>]) -> String {
-    let mut out = String::new();
-    for (i, s) in spans.iter().enumerate() {
-        let flat = text[s.clone()]
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ");
-        out.push_str(&format!("[{}] {flat}\n", i + 1));
-    }
-    out
+    offered(text, spans).numbered()
+}
+
+/// The sentences of a passage, as a numbered offer.
+///
+/// One place builds the coordinate system the model answers in, so what it is
+/// shown and what [`cite`] checks against cannot drift (`resolver::Offered`).
+pub fn offered(text: &str, spans: &[Range<usize>]) -> Offered {
+    Offered::new(
+        spans.iter().map(|s| text[s.clone()].to_string()).collect(),
+        "sentence",
+    )
+    .marked(Mark::Bracket)
+    .flattened()
 }
 
 /// Copy the cited sentences out of the passage, `first` and `last` 1-based

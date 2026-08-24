@@ -23,6 +23,7 @@ use serde_json::{json, Value};
 
 use crate::model::{self, Client, ModelError};
 use crate::profile::Profile;
+use crate::resolver::Offered;
 use crate::store;
 
 const SYSTEM: &str = "\
@@ -94,26 +95,22 @@ pub fn assess(
     proposal: &str,
 ) -> Result<(Standing, Vec<Position>), ModelError> {
     let live: Vec<&Commitment> = canon.active().collect();
-    let mut user = String::from("Commitments:\n");
-    for (i, c) in live.iter().enumerate() {
-        user.push_str(&format!("{}. {}\n", i + 1, c.text));
+    // The same numbering discipline as every other reader here, from the one
+    // place that owns it — see `crate::resolver`. `Offered::at` never clamps:
+    // clamping attributes a conflict to whichever rule happens to be last.
+    let offered = Offered::new(live.iter().map(|c| c.text.clone()).collect(), "commitment");
+    if offered.is_empty() {
+        return Ok(Standing::cited(canon, proposal, Vec::new()));
     }
-    user.push_str(&format!("\nProposal:\n{proposal}\n"));
+    let user = format!(
+        "Commitments:\n{}\nProposal:\n{proposal}\n",
+        offered.numbered()
+    );
     let judged: Judged = client.complete_json(SYSTEM, &user, "bearings", &schema())?;
 
     let mut positions = Vec::new();
     for b in judged.bearings {
-        // An out-of-range number is dropped rather than clamped: clamping
-        // attributes a conflict to whichever rule happens to be last.
-        let Some(c) = (b.commitment >= 1)
-            .then(|| live.get(b.commitment - 1))
-            .flatten()
-        else {
-            eprintln!(
-                "warning: dropped a position naming commitment {} — only 1..{} exist",
-                b.commitment,
-                live.len()
-            );
+        let Some(c) = offered.at(b.commitment).and_then(|i| live.get(i)) else {
             continue;
         };
         let pull = match b.pull.trim().to_ascii_lowercase().as_str() {
@@ -125,6 +122,14 @@ pub fn assess(
             }
         };
         positions.push(Position::of(c.id.clone(), pull, b.because.trim()));
+    }
+    // Counted, not merely warned about: "the reader cited past the end nine
+    // times" is a measurement about this pass, not noise to swallow.
+    if offered.refused() > 0 {
+        eprintln!(
+            "warning: {} reading(s) named a commitment that was not offered",
+            offered.refused()
+        );
     }
     Ok(Standing::cited(canon, proposal, positions))
 }
