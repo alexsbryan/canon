@@ -151,14 +151,20 @@ impl Standing {
         )
     }
 
+    /// How this stands under the shipped default rule.
+    ///
+    /// **Delegates; it does not re-implement.** The rule lives in
+    /// [`crate::policy::default_outcome`] and this is one of its two callers,
+    /// the other being `Rule::Default`. Two copies of a three-line rule agree
+    /// today, diverge in a month, and produce a plausible answer with nothing
+    /// red anywhere — which is the failure §10.6 exists to prevent, and the
+    /// main risk this whole policy layer carried.
+    ///
+    /// A canon that has adopted a policy asks the policy, not this. Callers
+    /// that want the configured answer go through
+    /// [`crate::Canon::policy_for`].
     pub fn outcome(&self) -> Outcome {
-        if self.positions.is_empty() {
-            Outcome::Unaddressed
-        } else if self.against().next().is_some() {
-            Outcome::Conflicts
-        } else {
-            Outcome::Supported
-        }
+        crate::policy::default_outcome(self)
     }
 
     pub fn against(&self) -> impl Iterator<Item = &Position> {

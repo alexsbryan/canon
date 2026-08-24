@@ -90,6 +90,13 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `dismiss` | `a`, `b`, `rationale?` | Not actually a conflict |
 | `question` | `text`, `proposal?` | Something the canon does not cover |
 | `adopt` | `lineage`, `generation`, `source?` | Forked from a lineage |
+| `position` | `about`, `citing?`, `pull`, `because` | Somebody takes a position |
+| `grant` | `holder`, `scope`, `horizon?`, `rationale?` | Standing over a scope |
+| `withdraw` | `holder`, `scope`, `rationale?` | Standing given up, or stood down |
+| `scoped` | `commitment`, `scope` | A commitment belongs to a scope |
+| `policy` | `text`, `rule`, `scope?` | What this canon decides under |
+| `decided` | `about`, `outcome`, `authority`, `rationale?` | The group decided something |
+| `rank` | `commitment`, `rank` | A principle rather than a convention |
 
 `accept.rationale` is **required**: a tolerated contradiction must say
 what it protects. Every other rationale is optional, and `dismiss` is
@@ -97,6 +104,42 @@ deliberately light ceremony — rejecting detector noise is routine.
 
 `adopt` is an **act**, not repository metadata, so ancestry survives a
 file that arrives by paste with no version control attached.
+
+`position.pull` is `toward` or `against`, and `because` is required on
+both — a position whose reason a reader cannot check is an assertion.
+**The actor is the act's own `actor` field and never a field in the
+body.** Two places naming who did something is two answers to one
+question the first time they disagree. `citing` present means the
+position rests on a commitment this canon holds; absent means it is the
+actor's own.
+
+`grant.holder` and `withdraw.holder` are **not** named `actor`. The body
+is flattened into the same JSON object as the envelope, which already
+carries `actor` — the person doing the granting — and the two are
+different people. A body field of that name emits a line with two
+`actor` keys that no strict reader can parse back.
+
+`scope` is a **dotted path** — `house.kitchen` — with no empty segments.
+A scope covers itself and anything under it, and the boundary is the dot:
+`house` covers `house.kitchen` and does NOT cover `household`. A reader
+MUST refuse a malformed scope rather than repairing it.
+
+`withdraw` removes grants at or below the named scope. Carving a hole out
+of a broader grant is deliberately not expressible: a permission system
+with both grants and denials is one where nobody can answer "may they?"
+by looking. Re-grant narrower instead.
+
+`policy.rule` is a typed object discriminated on its own `rule` field, and
+`policy.text` is the same rule in prose. **Both are required and neither
+substitutes for the other**: the prose is what a person reads and
+contests, the typed rule is what code reads. An implementation MUST NOT
+derive its behaviour from the prose, and MUST NOT show only the typed
+form. Nesting is by a `base` field, so a rule may wrap another.
+
+`decided` records an **adjudication**, never an observation. It says the
+group decided something about a subject; there is no act in this format
+that records what a person was seen doing, and adding one would be a
+different format.
 
 An annotation the reader *does* recognise is read strictly, for the same
 reason as a structural op: a malformed `accept` is a defect in the writer,

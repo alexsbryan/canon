@@ -873,7 +873,7 @@ fn scope(s: &str) -> Scope {
 fn grant(actor: &str, s: &str, horizon: Option<i64>, ts: i64) -> Act {
     Act::new(
         ActKind::Grant {
-            actor: actor.into(),
+            holder: actor.into(),
             scope: scope(s),
             horizon,
             rationale: String::new(),
@@ -925,7 +925,7 @@ fn stepping_back_from_a_scope_removes_what_it_covers() {
     // demanding a confrontation from someone already disengaging.
     let out = Act::new(
         ActKind::Withdraw {
-            actor: "human:dana".into(),
+            holder: "human:dana".into(),
             scope: scope("house"),
             rationale: "moving out in spring".into(),
         },
@@ -997,7 +997,7 @@ fn granting_standing_is_an_adjudication_and_a_machine_one_is_surfaced() {
     // never invisible.
     let by_agent = Act::new(
         ActKind::Grant {
-            actor: "agent:canon".into(),
+            holder: "agent:canon".into(),
             scope: scope("house"),
             horizon: None,
             rationale: "convenient".into(),
@@ -1007,4 +1007,174 @@ fn granting_standing_is_an_adjudication_and_a_machine_one_is_surfaced() {
     );
     let canon = Log::from_acts(vec![by_agent.clone()]).derive();
     assert_eq!(canon.unattended, vec![by_agent.id]);
+}
+
+// ── the wire, exhaustively ──────────────────────────────────
+
+/// One instance of every act kind this build understands.
+///
+/// Kept beside the exhaustiveness assertion below, which is what makes it a
+/// gate rather than a list somebody remembers to update.
+fn every_kind() -> Vec<ActKind> {
+    let id = ActId::from_raw("can-000000000001");
+    let scope = crate::scope::Scope::new("house.kitchen").unwrap();
+    vec![
+        ActKind::Assert {
+            text: "a".into(),
+            from: Some(id.clone()),
+            source: Some("notes.md".into()),
+        },
+        ActKind::Supersede {
+            text: "b".into(),
+            old: vec![id.clone()],
+            rationale: "because".into(),
+        },
+        ActKind::Retract {
+            target: id.clone(),
+            rationale: "because".into(),
+        },
+        ActKind::Revert {
+            targets: vec![id.clone()],
+            rationale: "because".into(),
+        },
+        ActKind::Accept {
+            a: id.clone(),
+            b: id.clone(),
+            rationale: "protects".into(),
+            revisit: Some("2026-12-31".into()),
+        },
+        ActKind::Dismiss {
+            a: id.clone(),
+            b: id.clone(),
+            rationale: String::new(),
+        },
+        ActKind::Question {
+            text: "?".into(),
+            proposal: Some("p".into()),
+        },
+        ActKind::Adopt {
+            lineage: "l".into(),
+            generation: "g1".into(),
+            source: Some("https://example.org".into()),
+        },
+        ActKind::Position {
+            about: "p".into(),
+            citing: Some(id.clone()),
+            pull: crate::standing::Pull::Against,
+            because: "why".into(),
+        },
+        ActKind::Grant {
+            holder: "human:dana".into(),
+            scope: scope.clone(),
+            horizon: Some(200),
+            rationale: "rota".into(),
+        },
+        ActKind::Withdraw {
+            holder: "human:dana".into(),
+            scope: scope.clone(),
+            rationale: "moving out".into(),
+        },
+        ActKind::Scoped {
+            commitment: id.clone(),
+            scope: scope.clone(),
+        },
+        ActKind::Policy {
+            text: "consent".into(),
+            rule: crate::policy::Rule::Consent,
+            scope: Some(scope),
+        },
+        ActKind::Decided {
+            about: "quiet hours".into(),
+            outcome: crate::standing::Outcome::Conflicts,
+            authority: crate::policy::Authority::AskOne,
+            rationale: "asked once".into(),
+        },
+        ActKind::Rank {
+            commitment: id,
+            rank: "principle".into(),
+        },
+        ActKind::Annotation {
+            kind: "from-the-future".into(),
+            body: serde_json::Map::new(),
+        },
+    ]
+}
+
+/// The op each kind writes. No wildcard, so a new variant does not compile
+/// until it is named here.
+fn op_of(kind: &ActKind) -> &'static str {
+    match kind {
+        ActKind::Assert { .. } => "assert",
+        ActKind::Supersede { .. } => "supersede",
+        ActKind::Retract { .. } => "retract",
+        ActKind::Revert { .. } => "revert",
+        ActKind::Accept { .. } => "accept",
+        ActKind::Dismiss { .. } => "dismiss",
+        ActKind::Question { .. } => "question",
+        ActKind::Adopt { .. } => "adopt",
+        ActKind::Position { .. } => "position",
+        ActKind::Grant { .. } => "grant",
+        ActKind::Withdraw { .. } => "withdraw",
+        ActKind::Scoped { .. } => "scoped",
+        ActKind::Policy { .. } => "policy",
+        ActKind::Decided { .. } => "decided",
+        ActKind::Rank { .. } => "rank",
+        ActKind::Annotation { kind, .. } => {
+            assert_eq!(kind, "from-the-future");
+            "(carried)"
+        }
+    }
+}
+
+#[test]
+fn every_act_kind_survives_the_wire_with_its_id_intact() {
+    // **The failure this catches, which nothing else did.** `grant` carried a
+    // body field named `actor`, and the body is FLATTENED into the same JSON
+    // object as the envelope — which already has an `actor`, the person doing
+    // the granting. Every grant written to disk produced a line with two
+    // `actor` keys, and the next read of that canon died with "duplicate
+    // field `actor`". A canon that could be written once and never reopened.
+    //
+    // Every test that built acts in memory passed straight through it,
+    // because the collision only exists on the wire. This is the gate that
+    // was missing, and it was found by running the CLI rather than the suite.
+    for kind in every_kind() {
+        let op = op_of(&kind);
+        let act = Act::new(kind, 100, "human:alex");
+        let line = serde_json::to_string(&act).expect("serializes");
+        let back: Act = serde_json::from_str(&line)
+            .unwrap_or_else(|e| panic!("`{op}` does not survive the wire: {e}\n  {line}"));
+        assert_eq!(back, act, "`{op}` came back different");
+        assert_eq!(back.id, act.id, "`{op}` changed its id on the way back");
+
+        // And through the log, which is the path an actual file takes.
+        let log = Log::parse(&format!("{line}\n"))
+            .unwrap_or_else(|e| panic!("`{op}` does not parse as a log line: {e}"));
+        assert_eq!(log.len(), 1, "`{op}`");
+        assert_eq!(
+            log.render(),
+            format!("{line}\n"),
+            "`{op}` re-renders differently"
+        );
+    }
+}
+
+#[test]
+fn the_round_trip_covers_every_op_this_build_knows() {
+    // What makes the test above a gate. `KNOWN_ANNOTATIONS` and `STRUCTURAL`
+    // are the two lists a new act kind must join to be read strictly, so
+    // deriving the expected count from them means adding an op fails here
+    // until it also has a round-trip instance.
+    use crate::act::{KNOWN_ANNOTATIONS, STRUCTURAL};
+    let mut ops: Vec<&str> = every_kind().iter().map(op_of).collect();
+    ops.sort_unstable();
+    ops.dedup();
+    assert_eq!(
+        ops.len(),
+        STRUCTURAL.len() + KNOWN_ANNOTATIONS.len() + 1,
+        "an op was added without a round-trip instance: {ops:?}"
+    );
+    for op in STRUCTURAL.iter().chain(KNOWN_ANNOTATIONS.iter()) {
+        assert!(ops.contains(op), "`{op}` has no round-trip instance");
+    }
 }
