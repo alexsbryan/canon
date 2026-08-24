@@ -8,7 +8,11 @@ format is not.
 The point of that split: adopting this format must not be a lock-in
 decision. A record you cannot leave is not a record you own.
 
-Version: **1**. Status: draft, pre-1.0. Breaking changes bump `v`.
+Version: **2**. Status: draft, pre-1.0. Breaking changes bump `v`.
+
+v2 split the `op` namespace so that a community can add a governance move
+without every other implementation having to change. See "The acts" below —
+the two halves have deliberately opposite rules.
 
 ## The file
 
@@ -58,15 +62,33 @@ practice; it is a documented bound, not an accident.
 A **commitment** is introduced by `assert` or `supersede`. Its identity is
 the id of the act that introduced it.
 
+### Structural ops — closed, and strict
+
+These four change what is **live**. The set is closed. A reader that meets
+an unknown or malformed structural op MUST refuse that line.
+
 | `op` | Fields | Meaning |
 |---|---|---|
 | `assert` | `text`, `from?`, `source?` | A commitment enters the canon |
 | `supersede` | `text`, `old[]`, `rationale?` | Replaces one or more commitments |
 | `retract` | `target`, `rationale?` | Withdraws one, no replacement |
+| `revert` | `targets[]`, `rationale?` | Tomb-stones prior acts |
+
+Strictness here is not pedantry. A peer that silently skipped a `retract`
+it could not parse would fold a commitment back into a canon its holder
+had withdrawn, and nothing downstream could detect that.
+
+### Annotations — open, and carried
+
+Everything else is an annotation: a typed statement **about** a commitment
+or a pair of them. A reader that meets an annotation `op` it does not
+recognise MUST carry the line unchanged and MUST NOT interpret it.
+
+| `op` | Fields | Meaning |
+|---|---|---|
 | `accept` | `a`, `b`, `rationale`, `revisit?` | A contradiction carried knowingly |
 | `dismiss` | `a`, `b`, `rationale?` | Not actually a conflict |
 | `question` | `text`, `proposal?` | Something the canon does not cover |
-| `revert` | `targets[]`, `rationale?` | Tomb-stones prior acts |
 | `adopt` | `lineage`, `generation`, `source?` | Forked from a lineage |
 
 `accept.rationale` is **required**: a tolerated contradiction must say
@@ -75,6 +97,22 @@ deliberately light ceremony — rejecting detector noise is routine.
 
 `adopt` is an **act**, not repository metadata, so ancestry survives a
 file that arrives by paste with no version control attached.
+
+An annotation the reader *does* recognise is read strictly, for the same
+reason as a structural op: a malformed `accept` is a defect in the writer,
+not a version this reader is behind.
+
+**Carried is not ignored.** An implementation that carries an
+uninterpreted annotation MUST be able to say so — how many, and of what
+op — anywhere its answer could have been different had it understood
+them. Silently carrying lets a canon answer as though it had read
+everything when it had not.
+
+This is what makes the format extensible without a version bump per
+governance move. A community that invents `position`, `grant`, `silence`
+or `draw` writes them as annotations; every other implementation keeps
+reading the log, keeps merging it, and keeps rendering it byte-identically,
+while declining to act on what it does not understand.
 
 ## Deriving current state
 

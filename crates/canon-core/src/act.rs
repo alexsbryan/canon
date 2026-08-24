@@ -4,19 +4,50 @@
 //! Internally tagged on `"op"` so every line is self-describing and each
 //! variant carries exactly its own fields — illegal field combinations are
 //! unrepresentable.
+//!
+//! **The op namespace is split, and the two halves have opposite rules.**
+//!
+//! [`STRUCTURAL`] ops change what is LIVE — something enters, replaces,
+//! leaves, or is undone. An unknown or malformed structural op REFUSES the
+//! line. A peer silently dropping your retraction is a correctness failure,
+//! not a compatibility inconvenience.
+//!
+//! Everything else is an **annotation**: a typed statement about a commitment
+//! or a pair of them. An annotation this build does not recognise is CARRIED
+//! and not interpreted, as [`ActKind::Annotation`]. Refusing it instead would
+//! make every governance move a community invents — a vote, a scope grant, a
+//! trial period — a breaking change to the format, which is the thing
+//! `PRIMITIVES.md` exists to prevent.
+//!
+//! Carried is not the same as ignored. An unread annotation has no effect on
+//! the fold, and every surface that could have been affected by one says how
+//! many it is carrying rather than quietly rendering a shorter answer.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::id::ActId;
 
 /// Line format version. A reader that does not understand a declared version
 /// REFUSES the line rather than misinterpreting it (see [`crate::Log::parse`]).
-pub const FORMAT_VERSION: u32 = 1;
+///
+/// **v2** split the op namespace (above). v1 readers refuse a v2 line, which
+/// is correct: a v1 reader would reject a `position` or a `grant` outright,
+/// and folding a governance log while dropping its governance is worse than
+/// declining to read it.
+pub const FORMAT_VERSION: u32 = 2;
+
+/// The ops that change what is live. Unknown or malformed here refuses the
+/// line; see the module note.
+pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
+
+/// The annotations this build understands. Anything outside these two lists
+/// is carried as [`ActKind::Annotation`].
+pub const KNOWN_ANNOTATIONS: [&str; 4] = ["accept", "dismiss", "question", "adopt"];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
 /// is the id of the act that introduced it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "snake_case")]
+#[serde(tag = "op", rename_all = "snake_case", remote = "Self")]
 pub enum ActKind {
     /// A commitment enters the canon.
     Assert {
@@ -99,6 +130,66 @@ pub enum ActKind {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source: Option<String>,
     },
+    /// An annotation this build does not interpret.
+    ///
+    /// Carried verbatim so a log written by a community with governance moves
+    /// we have never heard of still round-trips byte-for-byte, and so nothing
+    /// is lost by reading it. It has no effect on the fold — that is what
+    /// "not interpreted" means, and it is why carrying is safe: an unknown
+    /// annotation cannot bypass a gate it cannot reach.
+    ///
+    /// `body` is a `serde_json::Map`, which is a `BTreeMap` in this build
+    /// (`preserve_order` is off), so key order is sorted and two machines
+    /// re-render an adopted log to identical bytes.
+    #[serde(skip)]
+    Annotation {
+        kind: String,
+        body: serde_json::Map<String, serde_json::Value>,
+    },
+}
+
+/// Serialize by hand so [`ActKind::Annotation`] can write itself back out as
+/// the op it arrived as, rather than as a variant name nobody sent.
+impl Serialize for ActKind {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Self::Annotation { kind, body } => {
+                let mut out = serde_json::Map::with_capacity(body.len() + 1);
+                out.insert("op".into(), serde_json::Value::String(kind.clone()));
+                for (k, v) in body {
+                    out.insert(k.clone(), v.clone());
+                }
+                out.serialize(serializer)
+            }
+            known => Self::serialize(known, serializer),
+        }
+    }
+}
+
+/// The namespace split, enforced at the one place a line becomes an act.
+impl<'de> Deserialize<'de> for ActKind {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        use serde::de::Error;
+        let value = serde_json::Value::deserialize(deserializer)?;
+        let op = value
+            .get("op")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| D::Error::missing_field("op"))?
+            .to_string();
+
+        // A known op is read strictly. We understand it, so a malformed body
+        // is a defect in the writer and not a version we are behind.
+        if STRUCTURAL.contains(&op.as_str()) || KNOWN_ANNOTATIONS.contains(&op.as_str()) {
+            return Self::deserialize(value).map_err(D::Error::custom);
+        }
+        // An unknown STRUCTURAL op cannot exist — the list is closed — so
+        // anything left is an annotation from a build ahead of this one.
+        let serde_json::Value::Object(mut body) = value else {
+            return Err(D::Error::custom("an act must be a JSON object"));
+        };
+        body.remove("op");
+        Ok(Self::Annotation { kind: op, body })
+    }
 }
 
 /// One line of the log: an act plus its provenance.

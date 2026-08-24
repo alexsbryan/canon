@@ -183,6 +183,9 @@ pub fn list(args: &[String]) -> i32 {
                 .join(", ")
         );
     }
+    if let Some(note) = carried_note(&st) {
+        eprintln!("\n{note}");
+    }
     0
 }
 
@@ -393,6 +396,28 @@ pub fn undo(args: &[String]) -> i32 {
     }
 }
 
+/// What this build carried without interpreting, for any surface whose answer
+/// could have been different had it understood them.
+///
+/// Required, not decorative (§18.3, and the §4.3 deviation `PRIMITIVES.md`
+/// records): carrying an unknown governance move is what keeps the format
+/// extensible, and carrying it *silently* would let a canon answer as though
+/// it had read everything when it had not.
+pub fn carried_note(canon: &Canon) -> Option<String> {
+    if canon.carried.is_empty() {
+        return None;
+    }
+    let mut kinds: Vec<&str> = canon.carried.iter().map(|(_, k)| k.as_str()).collect();
+    kinds.sort_unstable();
+    kinds.dedup();
+    Some(format!(
+        "  {} act(s) carried but not interpreted by this build ({}) — `canon log` shows them.\n  \
+         They had no effect on the answer above. A newer canon may read them.",
+        canon.carried.len(),
+        kinds.join(", ")
+    ))
+}
+
 pub fn log(args: &[String]) -> i32 {
     let (_, log, _) = match load() {
         Ok(v) => v,
@@ -418,6 +443,17 @@ pub fn log(args: &[String]) -> i32 {
             } => {
                 format!("adopt      {lineage}@{generation}")
             }
+            // Shown, and shown as unread. The whole point of carrying an
+            // annotation this build does not understand is that nothing is
+            // lost; rendering it as though it were nothing would lose it
+            // exactly where a person would look for it.
+            ActKind::Annotation { kind, body } => {
+                let fields: Vec<String> = body.keys().map(String::clone).collect();
+                format!(
+                    "{kind:<10} (carried, not interpreted: {})",
+                    fields.join(", ")
+                )
+            }
         };
         println!(
             "{}  {}  {}  {}",
@@ -428,6 +464,9 @@ pub fn log(args: &[String]) -> i32 {
         );
     }
     println!("\n{} acts", log.len());
+    if let Some(note) = carried_note(&log.derive()) {
+        println!("{note}");
+    }
     0
 }
 

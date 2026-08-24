@@ -144,6 +144,16 @@ pub struct Canon {
     /// supersession whose target is absent is a hole in the record, not a
     /// no-op.
     pub dangling: Vec<(ActId, ActId)>,
+    /// Annotations this build carried without interpreting, by op.
+    ///
+    /// The §4.3 mitigation, and it is required rather than a courtesy.
+    /// Carrying an unknown governance move is what keeps the format
+    /// extensible; carrying it SILENTLY would mean a canon answers as though
+    /// it had read everything when it had not. Every surface whose answer
+    /// could have been affected reports this rather than rendering a shorter
+    /// answer with no note (§18.3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub carried: Vec<(ActId, String)>,
 }
 
 impl Canon {
@@ -315,9 +325,16 @@ pub fn derive(acts: &[Act]) -> Canon {
     for act in live_acts() {
         // Attribution: everything except asserting and adopting is an
         // adjudication, and adjudications are expected to be human.
+        // An annotation we did not interpret is not an adjudication — we do
+        // not know what it is, and calling it one would be an interpretation
+        // we just declined to make. It cannot bypass a gate either, because
+        // it has no effect on the fold at all.
         let adjudication = !matches!(
             act.kind,
-            ActKind::Assert { .. } | ActKind::Adopt { .. } | ActKind::Question { .. }
+            ActKind::Assert { .. }
+                | ActKind::Adopt { .. }
+                | ActKind::Question { .. }
+                | ActKind::Annotation { .. }
         );
         if adjudication && !act.is_human() {
             canon.unattended.push(act.id.clone());
@@ -383,6 +400,10 @@ pub fn derive(acts: &[Act]) -> Canon {
                     source: source.clone(),
                     at: act.ts_unix,
                 })
+            }
+            // Recorded, never acted on. This arm IS "not interpreted".
+            ActKind::Annotation { kind, .. } => {
+                canon.carried.push((act.id.clone(), kind.clone()));
             }
             ActKind::Assert { .. } | ActKind::Revert { .. } | ActKind::Question { .. } => {}
         }
