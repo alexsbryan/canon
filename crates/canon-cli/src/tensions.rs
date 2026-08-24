@@ -98,57 +98,238 @@ pub struct Proposed {
 /// hundred commitments; it does not, and that claim has been corrected.
 const BATCH: usize = 12;
 
+/// Cut an order into blocks and pair every block with itself and each other.
+///
+/// Separated from [`detect_over`] because the property that matters is about
+/// this function alone and nothing else: **every unordered pair of positions
+/// appears in at least one returned set, for any order given.** That is what
+/// lets `similarity_order` rearrange the list freely — it moves pairs between
+/// passes and can never drop one — and it is asserted rather than argued.
+///
+/// Not a partition, and the difference is the point. A cross pass over blocks
+/// `x` and `y` shows the model all of `x`, all of `y`, and everything
+/// between, so a WITHIN-block pair is examined again in every cross pass its
+/// block takes part in — `k` times over, against `k`-1 for a pair that
+/// straddles two blocks. Its extra looks are the good ones, too: a self pass
+/// weighs it against `C(BATCH,2)` others where a cross pass weighs it against
+/// `C(2*BATCH,2)`. `detect_over` folds the repeats, so the cost is calls
+/// rather than duplicate tensions — and the asymmetry is precisely why
+/// `similarity_order` is worth its one embedding call, since it decides which
+/// pairs get the many good looks and which get the one crowded one.
+fn passes_over(order: &[usize]) -> Vec<Vec<usize>> {
+    let blocks: Vec<&[usize]> = order.chunks(BATCH).collect();
+    // A pass over fewer than two texts compares nothing. It cannot fail and
+    // cannot find anything, so counting it would pad the coverage this run
+    // reports — the last block is a single commitment whenever the count is
+    // one past a multiple of BATCH.
+    (0..blocks.len())
+        .flat_map(|x| (x..blocks.len()).map(move |y| (x, y)))
+        .map(|(x, y)| {
+            if x == y {
+                blocks[x].to_vec()
+            } else {
+                blocks[x].iter().chain(blocks[y]).copied().collect()
+            }
+        })
+        .filter(|idx| idx.len() >= 2)
+        .collect()
+}
+
+/// Order commitments so that near-twins share a block.
+///
+/// **Coverage is unaffected, by construction.** Block-pairwise compares every
+/// block with itself and with every other one, so each unordered pair lands in
+/// exactly one pass whatever order the list is in. Reordering MOVES a pair
+/// between passes; it can never drop one. What it changes is how much company
+/// a pair keeps: a pair inside one block is weighed against `C(12,2)` = 66
+/// others, and a pair split across two blocks against `C(24,2)` = 276.
+///
+/// Measured on the Des Moines corpus: this moves 6 of 11 planted pairs out of
+/// a cross pass and into a self pass, with no coverage change and no extra
+/// model call. It also speaks to the only pass that ever failed there — pass
+/// 16 of 28, the cross pass holding one block of Type "G" permit rules
+/// against the block restating the same rules in an amending ordinance. It
+/// ran 3,094 tokens into a 300s deadline and died, in all three runs, while
+/// the mean pass that finished emitted 234. The same 24 texts through a
+/// smaller model finished in 29s and proposed 2 pairs, so the input is not
+/// inherently pathological — facing one block of near-twins against another
+/// is, and that is the arrangement this removes.
+///
+/// A greedy nearest-neighbour chain rather than a clustering: deterministic,
+/// single-pass, and it needs neither a `k` nor a threshold. Ties go to the
+/// lower position, so two runs over one document order identically.
+fn similarity_order(client: &Client, texts: &[&str]) -> Vec<usize> {
+    let n = texts.len();
+    let document_order = || (0..n).collect::<Vec<usize>>();
+    let vectors = match client.embed(texts) {
+        Ok(v) if v.len() == n => v,
+        // Every one of these keeps the run going in document order, which is
+        // what it always did — but says so, because a quieter comparison is
+        // not the same comparison (§18.3).
+        Ok(v) => {
+            eprintln!(
+                "\nnote: comparing in document order — the endpoint returned {} vector(s) for {n} commitments",
+                v.len()
+            );
+            return document_order();
+        }
+        Err(ModelError::NoEmbedModel) => {
+            eprintln!(
+                "\nnote: comparing in document order — `canon config set embed_model <name>` \
+                 groups near-duplicates into one comparison instead of splitting them across two"
+            );
+            return document_order();
+        }
+        Err(e) => {
+            eprintln!("\nnote: comparing in document order — embedding failed: {e}");
+            return document_order();
+        }
+    };
+
+    let norms: Vec<f32> = vectors
+        .iter()
+        .map(|v| v.iter().map(|x| x * x).sum::<f32>().sqrt())
+        .collect();
+    // A zero vector has no direction, so it is similar to nothing rather than
+    // to everything — which is what dividing by its norm would produce.
+    let cosine = |i: usize, j: usize| -> f32 {
+        if norms[i] == 0.0 || norms[j] == 0.0 {
+            return 0.0;
+        }
+        let dot: f32 = vectors[i].iter().zip(&vectors[j]).map(|(a, b)| a * b).sum();
+        dot / (norms[i] * norms[j])
+    };
+
+    let mut order = Vec::with_capacity(n);
+    let mut placed = vec![false; n];
+    order.push(0);
+    placed[0] = true;
+    for _ in 1..n {
+        let last = *order.last().expect("just pushed");
+        let next = (0..n)
+            .filter(|k| !placed[*k])
+            .max_by(|a, b| {
+                cosine(last, *a)
+                    .total_cmp(&cosine(last, *b))
+                    // Equal similarity goes to the lower position, so the
+                    // order is a function of the document and nothing else.
+                    .then(b.cmp(a))
+            })
+            .expect("one unplaced remains");
+        placed[next] = true;
+        order.push(next);
+    }
+    eprintln!("\nordered {n} commitments by similarity so near-duplicates share a comparison");
+    order
+}
+
 /// The engine: find tensions among these texts, answering in list positions.
 ///
 /// Above [`BATCH`] the comparison is **block-pairwise**: the list is cut into
 /// blocks and every block is compared with itself and with every other block,
-/// so no pair goes unexamined. That costs `k(k+1)/2` calls for `k` blocks —
+/// so no pair goes unexamined — see [`passes_over`] for why that is a cover
+/// and not a partition. That costs `k(k+1)/2` calls for `k` blocks —
 /// quadratic, and the reason the spec names a ceiling on how large a canon
 /// this tool serves.
-pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Vec<Proposed>, ModelError> {
+pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelError> {
     if texts.len() < 2 {
-        return Ok(Vec::new());
+        return Ok(Compared::default());
     }
     if texts.len() <= BATCH {
-        return one_pass(client, texts, &(0..texts.len()).collect::<Vec<_>>());
+        let pairs = one_pass(client, texts, &(0..texts.len()).collect::<Vec<_>>())?;
+        return Ok(Compared {
+            pairs,
+            passes: 1,
+            unread: Vec::new(),
+        });
     }
 
-    let blocks: Vec<Vec<usize>> = (0..texts.len())
-        .collect::<Vec<_>>()
-        .chunks(BATCH)
-        .map(<[usize]>::to_vec)
-        .collect();
-    let passes = blocks.len() * (blocks.len() + 1) / 2;
+    let sets = passes_over(&similarity_order(client, texts));
+    let passes = sets.len();
     eprintln!(
         "{} commitments is past what one comparison holds — {passes} passes over blocks of {BATCH}",
         texts.len()
     );
 
     let mut out: Vec<Proposed> = Vec::new();
-    let mut done = 0;
-    for x in 0..blocks.len() {
-        for y in x..blocks.len() {
-            let idx: Vec<usize> = if x == y {
-                blocks[x].clone()
-            } else {
-                blocks[x].iter().chain(&blocks[y]).copied().collect()
-            };
-            done += 1;
-            eprint!("\rcomparing {done}/{passes}…");
-            let _ = std::io::Write::flush(&mut std::io::stderr());
-            for p in one_pass(client, texts, &idx)? {
-                // The same pair can surface in more than one pass. First
-                // reason wins; a pair is one tension however often it is
-                // noticed.
-                if !out.iter().any(|q| is_same(q, &p)) {
-                    out.push(p);
-                }
+    let mut unread: Vec<String> = Vec::new();
+    let mut last_err: Option<ModelError> = None;
+    for (i, idx) in sets.iter().enumerate() {
+        let done = i + 1;
+        eprint!("\rcomparing {done}/{passes}…");
+        let _ = std::io::Write::flush(&mut std::io::stderr());
+        // One pass failing is not the canon's. The map step has always
+        // recorded a chunk it could not read and kept going; this step threw
+        // away every other comparison for one refusal, and on a 34-section
+        // ordinance that cost a whole run twenty passes in, thirty-three
+        // minutes deep, with the two runs behind it never starting. What a
+        // refusal costs instead is COVERAGE, which is recorded and reported
+        // rather than absorbed (§18.3).
+        let got = match one_pass(client, texts, idx) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("\nwarning: comparison {done}/{passes} produced no answer: {e}");
+                // The positions, not just the pass number. A comparison that
+                // fails once and cannot be reproduced is a mystery for as
+                // long as its INPUT is unrecoverable — and one of these
+                // failed on a Des Moines sweep in a way no synthetic pass of
+                // the same size and shape would repeat. With the positions
+                // recorded, the artifact's own `kept` and `candidates` give
+                // the exact texts back, and the next occurrence is a bug
+                // someone can drive rather than a story about one.
+                unread.push(format!(
+                    "pass {done}/{passes} over kept positions {idx:?}: {e}"
+                ));
+                last_err = Some(e);
+                continue;
+            }
+        };
+        for p in got {
+            // The same pair can surface in more than one pass. First reason
+            // wins; a pair is one tension however often it is noticed.
+            if !out.iter().any(|q| is_same(q, &p)) {
+                out.push(p);
             }
         }
     }
-    eprintln!("\r{passes} passes done, {} pair(s) proposed", out.len());
+    // Nothing was compared at all. A run reporting zero tensions because zero
+    // comparisons happened is the failure §18.3 names, so the real error from
+    // the last attempt is returned rather than an empty result.
+    if let (true, Some(e)) = (unread.len() == passes, last_err) {
+        return Err(e);
+    }
+    eprintln!(
+        "\r{}/{passes} passes done, {} pair(s) proposed",
+        passes - unread.len(),
+        out.len()
+    );
+    if !unread.is_empty() {
+        // Loud, because every tension number from this run is a number about
+        // a fraction of the pairs.
+        eprintln!(
+            "WARNING: {} of {passes} comparison(s) went unread — this run weighed {:.0}% of the pairs",
+            unread.len(),
+            100.0 * (passes - unread.len()) as f64 / passes as f64
+        );
+    }
 
-    Ok(out)
+    Ok(Compared {
+        pairs: out,
+        passes,
+        unread,
+    })
+}
+
+/// What a comparison run weighed, and what it could not.
+///
+/// `passes` is what was attempted and `unread` what came back unusable, so a
+/// caller can say what fraction of the pair space a number covers instead of
+/// implying all of it.
+#[derive(Debug, Default)]
+pub struct Compared {
+    pub pairs: Vec<Proposed>,
+    pub passes: usize,
+    pub unread: Vec<String>,
 }
 
 fn is_same(a: &Proposed, b: &Proposed) -> bool {
@@ -203,6 +384,7 @@ fn one_pass(client: &Client, texts: &[&str], idx: &[usize]) -> Result<Vec<Propos
 pub fn detect(client: &Client, commitments: &[&Commitment]) -> Result<Vec<Conflict>, ModelError> {
     let texts: Vec<&str> = commitments.iter().map(|c| c.text.as_str()).collect();
     Ok(detect_over(client, &texts)?
+        .pairs
         .into_iter()
         .map(|p| Conflict {
             a: commitments[p.a].id.clone(),

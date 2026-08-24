@@ -38,6 +38,9 @@ const DETAIL_CAP: usize = 600;
 pub enum ModelError {
     /// No endpoint configured. Reported, never guessed at.
     NoEndpoint,
+    /// No embedding model configured. Only ordering wants one, and ordering
+    /// degrades to document order rather than failing a run.
+    NoEmbedModel,
     /// The config file itself could not be read.
     Config(String),
     /// A non-local endpoint where the caller requires a local one.
@@ -68,6 +71,10 @@ impl std::fmt::Display for ModelError {
                 f,
                 "no endpoint configured — `canon config set endpoint http://localhost:8080/v1`\n  \
                  any OpenAI-compatible server will do (llama.cpp, vllm, a sovereign daemon at :9741/v1)"
+            ),
+            Self::NoEmbedModel => write!(
+                f,
+                "no embedding model configured — `canon config set embed_model <name>`"
             ),
             Self::Config(e) => write!(f, "{e}"),
             Self::Remote { host, endpoint } => write!(
@@ -140,6 +147,7 @@ pub struct Client {
     agent: ureq::Agent,
     endpoint: String,
     model: String,
+    embed_model: Option<String>,
 }
 
 impl Client {
@@ -162,6 +170,10 @@ impl Client {
             // Most local servers serve one model and ignore this field, but
             // the OpenAI schema requires it, so something must be sent.
             model: cfg.model.clone().unwrap_or_else(|| "local".to_string()),
+            // No default. An embedding model is a second model the user may
+            // not have, and guessing a name produces a 404 thirty seconds
+            // into a run instead of a clear "ordering unavailable".
+            embed_model: cfg.embed_model.clone().filter(|m| !m.trim().is_empty()),
         })
     }
 
@@ -307,9 +319,65 @@ impl Client {
         })
     }
 
-    /// POST once; return the assistant's content string.
-    fn post(&self, body: &Value) -> Result<String, ModelError> {
-        let url = format!("{}/chat/completions", self.endpoint);
+    /// Embed each text, in the order given.
+    ///
+    /// Used only to ORDER commitments before they are cut into comparison
+    /// blocks, never to decide anything. That distinction is load-bearing:
+    /// cosine similarity cannot tell "same rule, reworded" from "different
+    /// permit, same words" — measured on this corpus, the Type "B" / Type
+    /// "C" pair that MUST stay apart scores 0.9227 and the smoking reword
+    /// that MUST fold scores 0.8599, so no threshold separates them and the
+    /// ordering that inherits one is inverted. Ordering needs no threshold
+    /// and cannot destroy a commitment when it is wrong; identity is decided
+    /// by `subject` and `quantify`, which read the token cosine throws away.
+    pub fn embed(&self, texts: &[&str]) -> Result<Vec<Vec<f32>>, ModelError> {
+        let model = self
+            .embed_model
+            .as_deref()
+            .ok_or(ModelError::NoEmbedModel)?;
+        let (parsed, raw) =
+            self.post_json("embeddings", &json!({ "model": model, "input": texts }))?;
+        let data = parsed
+            .get("data")
+            .and_then(Value::as_array)
+            .ok_or_else(|| ModelError::Malformed {
+                detail: "no `data` array in the embeddings response".into(),
+                raw: cap(&raw),
+            })?;
+        // Ordered by the server's own `index` where it states one, because
+        // the caller lines these up with its texts positionally and a
+        // reordered reply would silently mis-pair every one of them.
+        let mut rows: Vec<(usize, Vec<f32>)> = Vec::with_capacity(data.len());
+        for (i, d) in data.iter().enumerate() {
+            let at = d
+                .get("index")
+                .and_then(Value::as_u64)
+                .map_or(i, |n| n as usize);
+            let v = d
+                .get("embedding")
+                .and_then(Value::as_array)
+                .ok_or_else(|| ModelError::Malformed {
+                    detail: format!("no `embedding` array in data[{i}]"),
+                    raw: cap(&raw),
+                })?;
+            rows.push((
+                at,
+                v.iter()
+                    .filter_map(Value::as_f64)
+                    .map(|x| x as f32)
+                    .collect(),
+            ));
+        }
+        rows.sort_by_key(|(i, _)| *i);
+        Ok(rows.into_iter().map(|(_, v)| v).collect())
+    }
+
+    /// POST once to a path under the endpoint; return `(parsed, raw)`.
+    ///
+    /// The transport half, shared by completions and embeddings so there is
+    /// one place that knows how this server reports a refusal (§10.6).
+    fn post_json(&self, path: &str, body: &Value) -> Result<(Value, String), ModelError> {
+        let url = format!("{}/{path}", self.endpoint);
         let response = match self
             .agent
             .post(&url)
@@ -341,6 +409,12 @@ impl Client {
             detail: format!("response body is not JSON: {e}"),
             raw: cap(&raw),
         })?;
+        Ok((parsed, raw))
+    }
+
+    /// POST once; return the assistant's content string.
+    fn post(&self, body: &Value) -> Result<String, ModelError> {
+        let (parsed, raw) = self.post_json("chat/completions", body)?;
         let message = parsed
             .get("choices")
             .and_then(|c| c.get(0))

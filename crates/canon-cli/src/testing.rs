@@ -91,6 +91,20 @@ impl Mock {
         Client::new(&Config {
             endpoint: Some(self.base.clone()),
             model: None,
+            embed_model: None,
+        })
+        .expect("client")
+    }
+
+    /// A client that will also ask for embeddings.
+    ///
+    /// Ordering is OFF for the plain [`Mock::client`], so every test written
+    /// before it existed still scripts exactly the requests it always did.
+    pub fn embedding_client(&self) -> Client {
+        Client::new(&Config {
+            endpoint: Some(self.base.clone()),
+            model: None,
+            embed_model: Some("test-embed".into()),
         })
         .expect("client")
     }
