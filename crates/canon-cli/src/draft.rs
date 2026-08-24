@@ -56,6 +56,7 @@ use crate::locate;
 use crate::model::{self, Client, ModelError};
 use crate::profile::Profile;
 use crate::quantify;
+use crate::sources::{self, Gathered, Source};
 use crate::store;
 use crate::subject;
 use crate::tensions;
@@ -85,12 +86,52 @@ pub struct Chunk {
     pub text: String,
 }
 
+/// What kind of act a candidate would become.
+///
+/// **Three, because a group's normative content is three shapes and a tool
+/// that only knows one imports a list of rules rather than onboarding
+/// anybody.** A meeting note that says "nobody has ever said who looks after
+/// the allotment" is recording a QUESTION, and one that says "decided not to
+/// make a rota — it would turn a kindness into a duty" is recording a
+/// SILENCE. Both were being dropped on the floor by an extractor that could
+/// only mint commitments, and both are first-class acts in the format.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Kind {
+    /// A rule, a standard, a stated value.
+    #[default]
+    Rule,
+    /// Something the passage says nobody has decided.
+    Question,
+    /// Something the passage says is deliberately unwritten.
+    Silence,
+}
+
+impl Kind {
+    pub fn label(self) -> &'static str {
+        match self {
+            Kind::Rule => "RULE",
+            Kind::Question => "QUESTION",
+            Kind::Silence => "SILENCE",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Candidate {
     pub text: String,
     pub quote: String,
     pub chunk: usize,
     pub source: String,
+    /// Defaulted so a run artifact written before this existed still reads —
+    /// everything in one was a rule.
+    #[serde(default)]
+    pub kind: Kind,
+    /// What a deliberate silence protects. Required for `Kind::Silence` and
+    /// empty otherwise; a silence with no reason cannot be told apart from
+    /// having forgotten, which is the whole distinction it exists to make.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub because: String,
 }
 
 /// A chunk the endpoint could not answer for.
@@ -130,6 +171,10 @@ pub struct DraftRun {
     #[serde(default)]
     pub profile: String,
     pub sources: Vec<String>,
+    /// Files under those paths that were not read, by reason. Part of the
+    /// artifact because a coverage number computed without it is wrong.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub skipped: std::collections::BTreeMap<String, usize>,
     pub chunks: Vec<Chunk>,
     pub candidates: Vec<Candidate>,
     /// Candidates the citation check refused. Kept, because "the extractor
@@ -280,7 +325,18 @@ changed is a commitment.
 The passage is given as numbered sentences, one per line. Each is marked \
 [n]. The markers are not part of the text.
 
-For each commitment, return:
+Most of what you return is a RULE. Two other kinds count, and only when the \
+passage says them outright:
+- question: the passage says nobody has decided something, or leaves it open. \
+Write text as the open question.
+- silence: the passage says something is deliberately NOT being written down. \
+Write text as the subject, and because as what leaving it unwritten protects.
+
+A subject the passage simply does not mention is not a question. A rule that \
+is merely absent is not a silence. Both must be stated.
+
+For each one, return:
+- kind: rule, question, or silence
 - first: the marker of the sentence that states the rule
 - last: the marker of the last sentence the rule runs to — the same as first \
 when one sentence states it
@@ -324,6 +380,13 @@ struct ExtractedOne {
     last: usize,
     #[serde(default)]
     text: String,
+    /// Unreadable or absent reads as `rule`, which is the kind that has to
+    /// clear the citation and quantity guards. A silence or a question let
+    /// through by a typo would bypass both.
+    #[serde(default)]
+    kind: String,
+    #[serde(default)]
+    because: String,
 }
 
 fn extract_schema() -> Value {
@@ -335,11 +398,13 @@ fn extract_schema() -> Value {
                 "items": {
                     "type": "object",
                     "properties": {
+                        "kind": { "type": "string", "enum": ["rule", "question", "silence"] },
                         "first": { "type": "integer" },
                         "last": { "type": "integer" },
                         "text": { "type": "string" },
+                        "because": { "type": "string" },
                     },
-                    "required": ["first", "last", "text"],
+                    "required": ["kind", "first", "last", "text"],
                     "additionalProperties": false,
                 },
             },
@@ -435,11 +500,34 @@ pub fn extract(
         // The citation proves the words are the passage's. Whether the RULE
         // matches them is a different reading over different text, and it is
         // its own stage — see `support`.
+        // Anything but the two named words is a rule, which is the kind that
+        // has to clear the citation and quantity guards. A silence let
+        // through by a typo would bypass both.
+        let kind = match c.kind.trim() {
+            "question" => Kind::Question,
+            "silence" => Kind::Silence,
+            _ => Kind::Rule,
+        };
+        let because = c.because.trim().to_string();
+        // Cite-or-abstain, applied to silence. A deliberate silence with no
+        // stated reason cannot be told apart from having forgotten, which is
+        // the entire distinction it exists to make — so it is refused here
+        // rather than written as one and discovered later.
+        if kind == Kind::Silence && because.is_empty() {
+            dropped.push(refuse(
+                text,
+                quote,
+                "a silence with no stated reason is indistinguishable from a gap".into(),
+            ));
+            continue;
+        }
         kept.push(Candidate {
             text,
             quote,
             chunk: chunk.id,
             source: chunk.source.clone(),
+            kind,
+            because,
         });
     }
     Ok((kept, dropped))
@@ -478,9 +566,24 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
     if candidates.is_empty() {
         return Ok(Supported::default());
     }
+    // **Only rules are read for quantities.** The guard asks whether a rule
+    // states a number its citation does not, and a question or a silence
+    // states no number to disagree about — putting them through it would
+    // spend a call per candidate to compare two empty lists, and would let a
+    // stray reading refuse an open question for a limit nobody claimed.
+    let (rules, other): (Vec<Candidate>, Vec<Candidate>) =
+        candidates.into_iter().partition(|c| c.kind == Kind::Rule);
+    if rules.is_empty() {
+        let quantities = vec![Vec::new(); other.len()];
+        return Ok(Supported {
+            candidates: other,
+            quantities,
+            dropped: Vec::new(),
+        });
+    }
     // Each rule is read alongside its own citation, in one call, because the
     // canonical form the comparison depends on is only agreed within a call.
-    let pairs: Vec<(&str, &str)> = candidates
+    let pairs: Vec<(&str, &str)> = rules
         .iter()
         .map(|c| (c.text.as_str(), c.quote.as_str()))
         .collect();
@@ -489,7 +592,7 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
     let mut kept = Vec::new();
     let mut quantities = Vec::new();
     let mut dropped = Vec::new();
-    for (c, (rule, cited)) in candidates.into_iter().zip(read) {
+    for (c, (rule, cited)) in rules.into_iter().zip(read) {
         match quantify::unsupported(&rule, &cited) {
             Some(m) => dropped.push(Dropped {
                 text: c.text,
@@ -502,6 +605,14 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
                 quantities.push(rule);
             }
         }
+    }
+    // Questions and silences ride along, each with an empty reading, so
+    // `candidates` and `quantities` stay the same length and the same order —
+    // the reduce step indexes both, and splitting them would judge every
+    // later rule against the one before it.
+    for c in other {
+        kept.push(c);
+        quantities.push(Vec::new());
     }
     Ok(Supported {
         candidates: kept,
@@ -660,76 +771,30 @@ pub fn dedupe(
 
 // ── sources ─────────────────────────────────────────────────
 
-fn read_sources(args: &[String]) -> Result<Vec<(String, String)>, String> {
-    let mut out: Vec<(String, String)> = Vec::new();
+fn read_sources(args: &[String]) -> Result<Gathered, String> {
+    let mut got = Gathered::default();
     if crate::cmds::has(args, "--from-git") {
         let since = crate::cmds::flag(args, "--since").unwrap_or("1y");
-        out.extend(read_git(since)?);
+        for (name, text) in read_git(since)? {
+            got.sources.push(Source { name, text });
+        }
     }
     for p in from_paths(args) {
-        let path = PathBuf::from(&p);
-        if path.is_dir() {
-            let found = walk(&path)?;
-            if found.is_empty() {
-                return Err(format!("{p} has no {} files in it", READABLE.join(" or ")));
-            }
-            for f in found {
-                let text = std::fs::read_to_string(&f)
-                    .map_err(|e| format!("reading {}: {e}", f.display()))?;
-                out.push((f.to_string_lossy().to_string(), text));
-            }
-            continue;
-        }
-        let text = std::fs::read_to_string(&path).map_err(|e| format!("reading {p}: {e}"))?;
-        out.push((p, text));
+        sources::gather(Path::new(&p), &mut got)?;
     }
-    if out.is_empty() {
-        return Err(
-            "nothing to draft from — `canon draft --from <paths>` or `--from-git --since 1y`"
-                .into(),
+    if got.sources.is_empty() {
+        // A run with nothing to read says what it looked at, or "nothing to
+        // draft from" is indistinguishable from "your folder is the wrong
+        // kind of folder".
+        let mut msg = String::from(
+            "nothing to draft from — `canon draft --from <paths>` or `--from-git --since 1y`",
         );
-    }
-    Ok(out)
-}
-
-/// What a directory walk will pick up. Deliberately narrow: pointing `draft`
-/// at a folder should read the notes in it, not every binary underneath.
-const READABLE: &[&str] = &["md", "txt", "markdown", "text"];
-
-/// Every readable file under a directory, sorted.
-///
-/// Sorted because chunk ids are positions, and a run that reads the same
-/// folder twice in a different order produces a draft-run artifact that
-/// cannot be compared with the first (§18.4).
-fn walk(dir: &Path) -> Result<Vec<PathBuf>, String> {
-    let mut out = Vec::new();
-    let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)
-        .map_err(|e| format!("reading {}: {e}", dir.display()))?
-        .filter_map(|e| e.ok().map(|e| e.path()))
-        .collect();
-    entries.sort();
-    for path in entries {
-        let name = path
-            .file_name()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string();
-        // Hidden directories are infrastructure, not notes: `.git` alone
-        // would bury a run in objects.
-        if name.starts_with('.') {
-            continue;
+        if let Some(note) = got.skipped_note() {
+            msg.push_str(&format!("\n{note}"));
         }
-        if path.is_dir() {
-            out.extend(walk(&path)?);
-        } else if path
-            .extension()
-            .map(|e| READABLE.contains(&e.to_string_lossy().as_ref()))
-            .unwrap_or(false)
-        {
-            out.push(path);
-        }
+        return Err(msg);
     }
-    Ok(out)
+    Ok(got)
 }
 
 /// `--from` takes every following argument until the next flag, because a
@@ -776,6 +841,93 @@ fn read_git(since: &str) -> Result<Vec<(String, String)>, String> {
 
 // ── the verb ────────────────────────────────────────────────
 
+/// Finish a review that was started and quit.
+///
+/// **The reason there is no `--accept-all` needs a way to be survivable.**
+/// Accepting one at a time is what makes onboarding the first governance
+/// session rather than disengagement at t=0 — but a folder of documents
+/// yields dozens of candidates, and "you must finish in one sitting or lose
+/// your place" is how a person quits at candidate nine and never comes back.
+///
+/// The run artifact already holds every candidate and every citation, so this
+/// costs NO model call. Anything already in the canon is skipped, so resuming
+/// twice cannot write a thing twice.
+fn resume(dir: &Path, profile: Profile) -> i32 {
+    let runs = dir.join(RUNS_DIR);
+    let mut found: Vec<PathBuf> = match std::fs::read_dir(&runs) {
+        Ok(rd) => rd
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.extension().is_some_and(|e| e == "json"))
+            .collect(),
+        Err(e) => return crate::cmds::fail(format!("no draft runs to resume ({e})")),
+    };
+    found.sort();
+    let Some(latest) = found.last() else {
+        return crate::cmds::fail("no draft runs to resume — `canon draft --from <paths>`");
+    };
+    let raw = match std::fs::read_to_string(latest) {
+        Ok(r) => r,
+        Err(e) => return crate::cmds::fail(format!("reading {}: {e}", latest.display())),
+    };
+    let run: DraftRun = match serde_json::from_str(&raw) {
+        Ok(r) => r,
+        Err(e) => return crate::cmds::fail(format!("{}: {e}", latest.display())),
+    };
+    let Ok(canon) = store::read(dir).map(|l| l.derive()) else {
+        return crate::cmds::fail("cannot read this canon");
+    };
+    // Already in the canon, by its own words. Text is what a person edited
+    // and what they will recognise; an id would not survive the `[e]dit`
+    // path that rewrites the text before it is written.
+    let remaining = remaining(&run, &canon);
+    println!(
+        "resuming {} — {} of {} left, no model call",
+        latest.file_name().unwrap_or_default().to_string_lossy(),
+        remaining.len(),
+        run.kept.len()
+    );
+    if remaining.is_empty() {
+        println!("nothing left to review.");
+        return 0;
+    }
+    match review(dir, &run.candidates, &remaining) {
+        Ok(a) if a.is_empty() => {
+            println!("nothing accepted.");
+            0
+        }
+        Ok(a) => {
+            println!("\n{} accepted.", profile.count(a.len()));
+            0
+        }
+        Err(e) => crate::cmds::fail(e),
+    }
+}
+
+/// Candidates from a run that are not already in the canon.
+///
+/// Matched **by text**, because text is what a person recognises and what
+/// they may have rewritten on the `[e]dit` path before it was written. An id
+/// would not survive that edit, so resuming would offer the same candidate
+/// again in the words the model chose, which is the one wording the person
+/// has already rejected.
+fn remaining(run: &DraftRun, canon: &canon_core::Canon) -> Vec<usize> {
+    let already: std::collections::BTreeSet<&str> = canon
+        .active()
+        .map(|c| c.text.as_str())
+        .chain(canon.open().map(|q| q.text.as_str()))
+        .chain(canon.silences.iter().map(|s| s.about.as_str()))
+        .collect();
+    run.kept
+        .iter()
+        .copied()
+        .filter(|i| {
+            run.candidates
+                .get(*i)
+                .is_some_and(|c| !already.contains(c.text.as_str()))
+        })
+        .collect()
+}
+
 pub fn run(args: &[String]) -> i32 {
     if crate::cmds::has(args, "--accept-all") {
         eprintln!("error: there is no --accept-all, on purpose.");
@@ -792,14 +944,24 @@ pub fn run(args: &[String]) -> i32 {
         Ok(p) => p,
         Err(e) => return crate::cmds::fail(e),
     };
-    let sources = match read_sources(args) {
+    if crate::cmds::has(args, "--resume") {
+        return resume(&dir, profile);
+    }
+    let gathered = match read_sources(args) {
         Ok(s) => s,
         Err(e) => return crate::cmds::fail(e),
     };
+    // **Before the model run, not after.** What was skipped changes whether
+    // this run is worth paying for, and a person who finds out afterwards
+    // has already spent the time.
+    if let Some(note) = gathered.skipped_note() {
+        eprintln!("{note}");
+    }
+    let sources = &gathered.sources;
 
     let mut chunks: Vec<Chunk> = Vec::new();
-    for (path, text) in &sources {
-        chunks.extend(chunk_text(path, text));
+    for src in sources {
+        chunks.extend(chunk_text(&src.name, &src.text));
     }
     for (i, c) in chunks.iter_mut().enumerate() {
         c.id = i;
@@ -861,7 +1023,10 @@ pub fn run(args: &[String]) -> i32 {
         endpoint: client.endpoint().to_string(),
         model: client.model().to_string(),
         profile: profile.as_str().to_string(),
-        sources: sources.iter().map(|(p, _)| p.clone()).collect(),
+        sources: sources.iter().map(|s| s.name.clone()).collect(),
+        // Recorded so a re-score can tell "the extractor found nothing there"
+        // from "nothing there was ever opened" (§18.3).
+        skipped: gathered.skipped.clone(),
         chunks: chunks.clone(),
         candidates: candidates.clone(),
         dropped: dropped.clone(),
@@ -911,7 +1076,14 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("{} duplicate group(s) folded", groups.len());
     }
 
-    let kept_texts: Vec<&str> = kept.iter().map(|i| candidates[*i].text.as_str()).collect();
+    // Tensions compare RULES. Two open questions do not contradict each
+    // other, and a silence contradicts nothing by construction — it is the
+    // absence of a rule, held on purpose.
+    let kept_texts: Vec<&str> = kept
+        .iter()
+        .filter(|i| candidates[**i].kind == Kind::Rule)
+        .map(|i| candidates[*i].text.as_str())
+        .collect();
     // In a dry run nothing is accepted, so tensions runs over every surviving
     // candidate — that is what the bar scores. In a real run it runs over what
     // the person accepted, below.
@@ -949,11 +1121,22 @@ pub fn run(args: &[String]) -> i32 {
             );
         } else {
             for i in &kept {
-                println!("  {}\n    {}", candidates[*i].text, candidates[*i].source);
+                let c = &candidates[*i];
+                println!("  {:<9} {}", c.kind.label(), c.text);
+                if !c.because.is_empty() {
+                    println!("            because: {}", c.because);
+                }
+                println!("            {}", c.source);
             }
+            // Counted by kind, because "12 candidates" hides whether this run
+            // found a body of rules or twelve open questions.
+            let n = |k: Kind| kept.iter().filter(|i| candidates[**i].kind == k).count();
             println!(
-                "\n{} candidate(s), {} tension(s) proposed. Nothing written.",
-                kept.len(),
+                "\n{} rule(s), {} question(s), {} silence(s), {} tension(s) proposed. \
+                 Nothing written.",
+                n(Kind::Rule),
+                n(Kind::Question),
+                n(Kind::Silence),
                 artifact.tensions.len()
             );
             println!("run recorded at {}", path.display());
@@ -1016,7 +1199,13 @@ fn review(
     for (n, i) in kept.iter().enumerate() {
         let c = &candidates[*i];
         println!("\nCandidate {} of {}", n + 1, kept.len());
-        println!("  \"{}\"\n", c.text);
+        // The kind is shown because accepting writes a different act for each
+        // one, and "accept" has to mean what the person thought it meant.
+        println!("  {:<9} \"{}\"", c.kind.label(), c.text);
+        if !c.because.is_empty() {
+            println!("        because: {}", c.because);
+        }
+        println!();
         println!("  from {}:", c.source);
         for l in c.quote.lines() {
             println!("    {l}");
@@ -1046,16 +1235,22 @@ fn review(
             "q" | "quit" => break,
             _ => continue,
         };
-        let act = crate::cmds::write(
-            dir,
-            ActKind::Assert {
+        let kind = match c.kind {
+            Kind::Rule => ActKind::Assert {
                 text,
                 from: None,
-                // The citation travels into the log, so `why` can show where a
-                // drafted commitment came from months later.
                 source: Some(c.source.clone()),
             },
-        )?;
+            Kind::Question => ActKind::Question {
+                text,
+                proposal: None,
+            },
+            Kind::Silence => ActKind::Silence {
+                about: text,
+                rationale: c.because.clone(),
+            },
+        };
+        let act = crate::cmds::write(dir, kind)?;
         println!("  {}", act.id);
         accepted.push(act.id);
     }

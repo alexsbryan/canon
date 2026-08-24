@@ -88,12 +88,20 @@ cannot.
 
 ## Two verbs is the whole tool
 
-`canon add "<a rule>"` and `canon check "<an idea>"`. That is what you
-hand the next person. `canon --help` is six verbs, not forty-seven, and
-`canon init` prints the three you need before you have read anything.
+```sh
+canon draft --from ~/house-docs     # read what you already have
+canon check "<something you want to do>"   # does it clash with one?
+```
 
-Everything below this line is optional, and stays out of the way until a
-group asks for it. `canon help all` is the one door.
+Nobody writes one of these a rule at a time. The normative content already
+exists — a handbook, two years of meeting notes, the channel where things
+actually get decided — so onboarding is pointing at that folder, and
+`canon add` is for the one you think of afterwards.
+
+`canon --help` is seven verbs, not forty-seven, and `canon init` prints the
+ones you need before you have read anything. Everything below this line is
+optional and stays out of the way until a group asks for it. `canon help
+all` is the one door.
 
 ## How you decide is in the canon, not in the tool
 
@@ -189,20 +197,49 @@ Set `CANON_DIR` to point it somewhere specific.
 ## Starting from what you already wrote
 
 ```sh
-canon draft --from ./notes        # or --from-git --since 1y
+canon draft --from ~/house-docs   # a folder, recursively
+canon draft --from-git --since 1y # or the commit messages
+canon draft --resume              # finish a long review later
 ```
 
-`draft` extracts candidate commitments from text you already have and
-offers them one at a time. **Every candidate carries the passage it came
-from, or it is not shown**: the extractor answers with the POSITION of the
-sentence it read, and `canon` cuts the quote out of the source itself — so
-a citation that is not in your document is not something that can happen.
-A drafted commitment with no citation is a model inventing a value you
-never held.
+Point it at a folder. It reads `.md`, `.txt`, and Slack or Discord `.json`
+exports, and **it tells you what it did not read** — how many files and of
+what kind. A directory with some readable files used to drop the rest in
+silence, so a Slack export sitting beside three documents was never opened
+by anyone and two rules that existed only in chat were never seen.
+
+Chat is not prose and is not chunked as though it were. Messages are
+rendered with who said them and cut into bursts on a time gap, so a
+citation quotes the exchange a rule was actually decided in:
+
+```text
+RULE      Recycling goes out Sunday night.
+          slack-export/general/2026-08-01.json:1-12
+
+  > sam: reminder the recycling goes out sunday night not monday
+  > mira: ^ this has bitten us three times now, can we make it a rule
+  > sam: yes. recycling out sunday night.
+```
+
+**Three kinds, because a group's normative content is three shapes.** A
+meeting note saying "nobody has ever said who looks after the allotment"
+is recording a QUESTION; one saying "decided not to make a rota — it would
+turn a kindness into a duty" is recording a SILENCE. An extractor that
+could only mint commitments dropped both on the floor, and what it handed
+back was a list of rules rather than a canon.
+
+**Every candidate carries the passage it came from, or it is not shown**:
+the extractor answers with the POSITION of the sentence it read, and
+`canon` cuts the quote out of the source itself — so a citation that is not
+in your document is not something that can happen. A drafted commitment
+with no citation is a model inventing a value you never held. A silence
+with no stated reason is refused for the same reason: it cannot be told
+apart from having forgotten.
 
 There is no `--accept-all`. A canon adopted wholesale is disengagement at
 t=0, so accepting one at a time is what makes onboarding the first
-governance session.
+governance session — and `--resume` is what makes that survivable, picking
+a review back up from the stored run with no second model pass.
 
 ### What it actually finds
 

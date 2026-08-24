@@ -240,7 +240,30 @@ fn score_run(path: &Path, truth: &Value, region: &Region) -> Score {
 
     let chunks = run["chunks"].as_array().expect("chunks");
     let candidates = run["candidates"].as_array().expect("candidates");
-    let kept = run["kept"].as_array().expect("kept");
+
+    // **RULES only, and this is what keeps the numbers comparable.**
+    // Extraction also mints `question` and `silence` now. Both are real
+    // findings about a corpus, neither is a commitment, and counting them
+    // here would move precision and recall for a reason that has nothing to
+    // do with whether extraction got better — which is exactly how a bar
+    // stops measuring the thing it was pre-registered to measure.
+    //
+    // A run written before kinds existed has no `kind` field and every
+    // candidate in it was a rule, so absent reads as `rule`.
+    let is_rule = |ci: usize| -> bool {
+        candidates
+            .get(ci)
+            .map(|c| c["kind"].as_str().unwrap_or("rule") == "rule")
+            .unwrap_or(false)
+    };
+    let kept: Vec<Value> = run["kept"]
+        .as_array()
+        .expect("kept")
+        .iter()
+        .filter(|k| k.as_u64().is_some_and(|i| is_rule(i as usize)))
+        .cloned()
+        .collect();
+    let kept = &kept;
 
     // candidate position (within `kept`) -> section key
     let section_of = |kept_pos: usize| -> Option<String> {
