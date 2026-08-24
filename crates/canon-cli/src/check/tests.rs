@@ -89,7 +89,7 @@ fn the_personal_profile_never_renders_a_verdict_on_either_surface() {
     // is a verdict however it is serialized.
     let p = payload(Profile::Personal, &standing);
     assert!(p.get("outcome").is_none(), "{p}");
-    assert!(p.get("bearings").is_some());
+    assert!(p.get("positions").is_some());
     // The other profiles do carry it.
     assert_eq!(payload(Profile::Code, &standing)["outcome"], "conflicts");
 }
@@ -135,7 +135,7 @@ fn a_bearing_naming_a_commitment_that_does_not_exist_is_refused() {
     let canon = canon_of(&TEXTS);
     let mock = Mock::spawn(vec![(200, judged(&[(99, "against", "invented")]))]);
     let (standing, _) = assess(&mock.client(), &canon, "p").unwrap();
-    assert!(standing.bearings.is_empty());
+    assert!(standing.positions.is_empty());
     assert_eq!(standing.outcome(), Outcome::Unaddressed);
 }
 
@@ -144,7 +144,7 @@ fn a_bearing_with_no_reason_is_refused_and_reported() {
     let canon = canon_of(&TEXTS);
     let mock = Mock::spawn(vec![(200, judged(&[(1, "against", "   ")]))]);
     let (standing, refused) = assess(&mock.client(), &canon, "p").unwrap();
-    assert!(standing.bearings.is_empty());
+    assert!(standing.positions.is_empty());
     assert_eq!(
         refused.len(),
         1,
@@ -157,7 +157,7 @@ fn an_unreadable_pull_is_dropped_rather_than_guessed() {
     let canon = canon_of(&TEXTS);
     let mock = Mock::spawn(vec![(200, judged(&[(1, "maybe", "unsure")]))]);
     let (standing, _) = assess(&mock.client(), &canon, "p").unwrap();
-    assert!(standing.bearings.is_empty());
+    assert!(standing.positions.is_empty());
 }
 
 #[test]

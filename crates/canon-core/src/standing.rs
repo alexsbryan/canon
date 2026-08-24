@@ -5,8 +5,8 @@
 //! renderers and the MCP tool all render the same object rather than three
 //! near-copies that drift.
 //!
-//! **A standing must carry citations.** `Bearing` has no constructor that
-//! omits the commitment it names, so "this conflicts with your principles"
+//! **A standing must carry citations.** `Position` has no constructor that
+//! omits the source it comes from, so "this conflicts with your principles"
 //! with nothing to point at is unrepresentable rather than discouraged. That
 //! is the whole difference between agent reasoning that is *citable* and
 //! agent reasoning that is *plausible* — which is what distinguishes "the
@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 use crate::fold::Canon;
 use crate::id::ActId;
 
-/// Which way a commitment pulls on a proposal.
+/// Which way something pulls on a proposal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Pull {
@@ -32,16 +32,71 @@ pub enum Pull {
     Against,
 }
 
-/// One commitment's bearing on a proposal, and why.
+/// Where a position comes from.
 ///
-/// The `because` is not decoration: a bearing whose reason a person cannot
-/// check is an assertion, and this whole tool exists to replace assertions
-/// with citations.
+/// **Two source kinds, and modelling only the first is what made every voting
+/// technology look like it needed new mechanism.** A commitment bears on a
+/// proposal because of what the canon already holds. An actor bears on it
+/// because they are a person with standing who said so. Majority, quorum,
+/// consent, delegation, seconds and per-actor budgets are all the second kind,
+/// and they become policy the moment the type admits them.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Bearing {
-    pub commitment: ActId,
+#[serde(rename_all = "snake_case")]
+pub enum Source {
+    /// A commitment this canon holds. Checked against it by [`Standing::cited`].
+    Commitment(ActId),
+    /// A person or agent, by the same `actor` string an act carries.
+    Actor(String),
+}
+
+/// One position on a proposal, and why.
+///
+/// The `because` is not decoration: a position whose reason a person cannot
+/// check is an assertion, and this whole tool exists to replace assertions
+/// with citations. Required from BOTH source kinds — sociocratic practice only
+/// obliges an objection to argue itself, but being stricter costs nothing here
+/// and keeps one rule instead of two.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Position {
+    pub source: Source,
     pub pull: Pull,
     pub because: String,
+}
+
+impl Position {
+    /// A commitment the canon holds, bearing on a proposal.
+    pub fn of(commitment: ActId, pull: Pull, because: impl Into<String>) -> Self {
+        Self {
+            source: Source::Commitment(commitment),
+            pull,
+            because: because.into(),
+        }
+    }
+
+    /// A person or agent taking a position.
+    pub fn by(actor: impl Into<String>, pull: Pull, because: impl Into<String>) -> Self {
+        Self {
+            source: Source::Actor(actor.into()),
+            pull,
+            because: because.into(),
+        }
+    }
+
+    /// The commitment this cites, when it cites one.
+    pub fn commitment(&self) -> Option<&ActId> {
+        match &self.source {
+            Source::Commitment(id) => Some(id),
+            Source::Actor(_) => None,
+        }
+    }
+
+    /// The actor who took it, when a person took it.
+    pub fn actor(&self) -> Option<&str> {
+        match &self.source {
+            Source::Actor(a) => Some(a),
+            Source::Commitment(_) => None,
+        }
+    }
 }
 
 /// The shape of the answer, before any profile decides how to say it.
@@ -60,12 +115,12 @@ pub enum Outcome {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Standing {
     pub proposal: String,
-    pub bearings: Vec<Bearing>,
+    pub positions: Vec<Position>,
 }
 
 impl Standing {
-    /// Build a standing, keeping only bearings that cite a commitment this
-    /// canon actually has and that say why.
+    /// Build a standing, keeping only positions that name something real and
+    /// say why: a commitment this canon actually holds, or an actor.
     ///
     /// Returns `(standing, refused)`. Absence is reported, never defaulted:
     /// the caller prints what was refused rather than quietly rendering a
@@ -73,22 +128,31 @@ impl Standing {
     pub fn cited(
         canon: &Canon,
         proposal: impl Into<String>,
-        bearings: Vec<Bearing>,
-    ) -> (Self, Vec<Bearing>) {
-        let (kept, refused): (Vec<_>, Vec<_>) = bearings
-            .into_iter()
-            .partition(|b| canon.get(&b.commitment).is_some() && !b.because.trim().is_empty());
+        positions: Vec<Position>,
+    ) -> (Self, Vec<Position>) {
+        let (kept, refused): (Vec<_>, Vec<_>) = positions.into_iter().partition(|p| {
+            let names_something_real = match &p.source {
+                // The citation filter, unchanged: a commitment nobody holds
+                // cannot license anything.
+                Source::Commitment(id) => canon.get(id).is_some(),
+                // An actor is real if they said so. WHETHER THEY MAY is a
+                // question about standing, which is scope's job and not this
+                // filter's — see `Canon::standing_of`.
+                Source::Actor(a) => !a.trim().is_empty(),
+            };
+            names_something_real && !p.because.trim().is_empty()
+        });
         (
             Self {
                 proposal: proposal.into(),
-                bearings: kept,
+                positions: kept,
             },
             refused,
         )
     }
 
     pub fn outcome(&self) -> Outcome {
-        if self.bearings.is_empty() {
+        if self.positions.is_empty() {
             Outcome::Unaddressed
         } else if self.against().next().is_some() {
             Outcome::Conflicts
@@ -97,12 +161,17 @@ impl Standing {
         }
     }
 
-    pub fn against(&self) -> impl Iterator<Item = &Bearing> {
-        self.bearings.iter().filter(|b| b.pull == Pull::Against)
+    pub fn against(&self) -> impl Iterator<Item = &Position> {
+        self.positions.iter().filter(|p| p.pull == Pull::Against)
     }
 
-    pub fn toward(&self) -> impl Iterator<Item = &Bearing> {
-        self.bearings.iter().filter(|b| b.pull == Pull::Toward)
+    pub fn toward(&self) -> impl Iterator<Item = &Position> {
+        self.positions.iter().filter(|p| p.pull == Pull::Toward)
+    }
+
+    /// Positions a commitment takes. What `check` renders as citations.
+    pub fn cited_commitments(&self) -> impl Iterator<Item = &Position> {
+        self.positions.iter().filter(|p| p.commitment().is_some())
     }
 }
 
@@ -132,12 +201,8 @@ mod tests {
         (Log::from_acts(acts).derive(), ids)
     }
 
-    fn bearing(id: &ActId, pull: Pull, because: &str) -> Bearing {
-        Bearing {
-            commitment: id.clone(),
-            pull,
-            because: because.into(),
-        }
+    fn bearing(id: &ActId, pull: Pull, because: &str) -> Position {
+        Position::of(id.clone(), pull, because)
     }
 
     #[test]
@@ -157,7 +222,7 @@ mod tests {
                 ),
             ],
         );
-        assert_eq!(standing.bearings.len(), 1);
+        assert_eq!(standing.positions.len(), 1);
         assert_eq!(refused.len(), 1);
     }
 
@@ -166,7 +231,7 @@ mod tests {
         let (canon, ids) = canon_with(&["Mornings are protected."]);
         let (standing, refused) =
             Standing::cited(&canon, "p", vec![bearing(&ids[0], Pull::Against, "  ")]);
-        assert!(standing.bearings.is_empty());
+        assert!(standing.positions.is_empty());
         assert_eq!(refused.len(), 1);
         // And with nothing cited, the outcome is UNADDRESSED, not supported.
         // Silence is not approval.
@@ -194,5 +259,61 @@ mod tests {
         let (canon, _) = canon_with(&["a"]);
         let (standing, _) = Standing::cited(&canon, "something else entirely", vec![]);
         assert_eq!(standing.outcome(), Outcome::Unaddressed);
+    }
+    #[test]
+    fn an_actor_may_take_a_position_without_citing_a_commitment() {
+        // The change that turns majority, quorum, consent, delegation and
+        // per-actor budgets from mechanism into policy. A vote is not a
+        // commitment bearing on a proposal; it is a person saying so.
+        let (canon, ids) = canon_with(&["Mornings are protected."]);
+        let (standing, refused) = Standing::cited(
+            &canon,
+            "move the standup to 8am",
+            vec![
+                Position::of(ids[0].clone(), Pull::Against, "8am is inside mornings"),
+                Position::by("human:dana", Pull::Against, "I have school run until 8:30"),
+                Position::by("human:sam", Pull::Toward, "works for me"),
+            ],
+        );
+        assert!(refused.is_empty(), "an actor names something real");
+        assert_eq!(standing.positions.len(), 3);
+        assert_eq!(standing.against().count(), 2);
+        assert_eq!(
+            standing.cited_commitments().count(),
+            1,
+            "only one cites a rule"
+        );
+        assert_eq!(
+            standing.positions[1].actor(),
+            Some("human:dana"),
+            "the source survives the filter"
+        );
+    }
+
+    #[test]
+    fn a_position_from_nobody_is_refused_like_a_commitment_nobody_holds() {
+        // Both source kinds must name something real, or the filter has a
+        // hole shaped exactly like the one it exists to close.
+        let (canon, _) = canon_with(&["Mornings are protected."]);
+        let (standing, refused) = Standing::cited(
+            &canon,
+            "p",
+            vec![Position::by("   ", Pull::Against, "anonymous veto")],
+        );
+        assert!(standing.positions.is_empty());
+        assert_eq!(refused.len(), 1);
+        assert_eq!(standing.outcome(), Outcome::Unaddressed);
+    }
+
+    #[test]
+    fn an_actor_position_still_has_to_say_why() {
+        let (canon, _) = canon_with(&["Mornings are protected."]);
+        let (standing, refused) = Standing::cited(
+            &canon,
+            "p",
+            vec![Position::by("human:dana", Pull::Against, " ")],
+        );
+        assert!(standing.positions.is_empty(), "a bare no is an assertion");
+        assert_eq!(refused.len(), 1);
     }
 }

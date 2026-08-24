@@ -436,6 +436,21 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Dismiss { a, b, .. } => format!("dismiss    {a} / {b}"),
             ActKind::Revert { targets, .. } => format!("revert     {}", targets.len()),
             ActKind::Question { text, .. } => format!("question   {text}"),
+            ActKind::Position {
+                about,
+                pull,
+                citing,
+                ..
+            } => {
+                let way = match pull {
+                    canon_core::Pull::Toward => "toward",
+                    canon_core::Pull::Against => "against",
+                };
+                match citing {
+                    Some(id) => format!("position   {way} {about} (citing {id})"),
+                    None => format!("position   {way} {about}"),
+                }
+            }
             ActKind::Adopt {
                 lineage,
                 generation,
