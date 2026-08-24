@@ -468,7 +468,11 @@ pub fn run(args: &[String]) -> i32 {
         if json {
             println!("[]");
         } else {
-            println!("fewer than two live commitments — nothing to compare.");
+            let profile = crate::profile::Profile::load(&dir).unwrap_or_default();
+            println!(
+                "fewer than two live {} — nothing to compare.",
+                profile.nouns()
+            );
         }
         return 0;
     }

@@ -60,6 +60,39 @@ fn shipped(canon: &Canon, standing: &Standing) -> Decision {
     Rule::Default.decide(standing, &Attributes::default(), canon)
 }
 
+/// The same commitments, in a canon that has adopted a rule of its own.
+///
+/// The renderer stays quiet about the authority ladder until a group has
+/// opted into governance, so any test asserting on that line needs a canon
+/// where somebody actually did.
+fn governed(rule: Rule) -> Canon {
+    let mut acts: Vec<Act> = TEXTS
+        .iter()
+        .enumerate()
+        .map(|(i, t)| {
+            Act::new(
+                ActKind::Assert {
+                    text: (*t).into(),
+                    from: None,
+                    source: None,
+                },
+                100 + i as i64,
+                "human:alex",
+            )
+        })
+        .collect();
+    acts.push(Act::new(
+        ActKind::Policy {
+            text: "how this community decides".into(),
+            rule,
+            scope: None,
+        },
+        200,
+        "human:alex",
+    ));
+    Log::from_acts(acts).derive()
+}
+
 #[test]
 fn the_personal_profile_never_returns_exit_one() {
     // The invariant, pinned. Whatever the outcome, a personal canon reports
@@ -265,9 +298,19 @@ fn a_carried_contradiction_is_shown_rather_than_relitigated() {
 fn the_canon_own_policy_decides_the_check_and_not_what_shipped() {
     // The same evidence, two communities, two answers. That is the whole
     // claim of the policy layer, asserted at the surface a person uses.
-    let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
-    assert_eq!(shipped(&canon, &standing).authority, Authority::AskOne);
+    let (bare, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
+    assert_eq!(shipped(&bare, &standing).authority, Authority::AskOne);
 
+    let canon = governed(Rule::Consent);
+    let (standing, _) = Standing::cited(
+        &canon,
+        "take the 8am rotation",
+        vec![canon_core::Position::of(
+            canon.active().next().unwrap().id.clone(),
+            Pull::Against,
+            "the rotation starts at 8",
+        )],
+    );
     let consent = Rule::Consent.decide(&standing, &Attributes::default(), &canon);
     assert_eq!(consent.authority, Authority::Refuse);
     let text = render(Profile::Code, &canon, &standing, &consent, None);
@@ -285,20 +328,68 @@ fn the_canon_own_policy_decides_the_check_and_not_what_shipped() {
 }
 
 #[test]
-fn the_authority_is_rendered_even_when_it_agrees_with_you() {
-    // A policy that is invisible when it agrees is one nobody notices they
-    // are governed by.
-    let (canon, standing) = stand(&[(1, "toward", "it serves it")]);
+fn a_canon_that_adopted_no_rule_is_not_told_about_the_ladder() {
+    // The fluency regression this closes. A fresh house canon printed "ask
+    // one person with standing" to housemates who had never granted standing
+    // and had never met the word, followed by "default: at least one
+    // commitment pulls against" — the internal rule's name restating the
+    // verdict two lines above it.
+    //
+    // Under the shipped default the authority IS the outcome: supported means
+    // act, anything else means ask a person. Printing it says nothing and
+    // costs a reader a vocabulary lesson.
+    let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
+    assert!(canon.policies.is_empty(), "nobody adopted anything");
     let text = render(
-        Profile::Code,
+        Profile::House,
         &canon,
         &standing,
         &shipped(&canon, &standing),
         None,
     );
+    assert!(text.contains("NEEDS AN AMENDMENT"), "{text}");
+    assert!(
+        text.contains("canon supersede"),
+        "the concrete act still shows"
+    );
+    for jargon in ["standing", "default:", "ask one person"] {
+        assert!(!text.contains(jargon), "still saying `{jargon}`:\n{text}");
+    }
+}
+
+#[test]
+fn adopting_a_rule_makes_the_ladder_appear_and_keeps_it_visible() {
+    // The other half, and it is the load-bearing one: once a group HAS
+    // decided how it decides, the authority is what they decided, so it
+    // prints even when it agrees with you. A rule that is invisible whenever
+    // it agrees is one nobody notices they are governed by.
+    let canon = governed(Rule::Consent);
+    let (standing, _) = Standing::cited(
+        &canon,
+        "p",
+        vec![canon_core::Position::of(
+            canon.active().next().unwrap().id.clone(),
+            Pull::Toward,
+            "it serves it",
+        )],
+    );
+    let d = Rule::Consent.decide(&standing, &Attributes::default(), &canon);
+    let text = render(Profile::Code, &canon, &standing, &d, None);
     assert!(text.starts_with("SUPPORTED"));
     assert!(text.contains("\nact\n"), "{text}");
-    assert!(text.contains("default:"), "{text}");
+    assert!(text.contains("consent: no objection"), "{text}");
+
+    // And the machine surface carries the ladder either way — an agent wants
+    // it whether or not a person would have found it noise.
+    let bare = canon_of(&TEXTS);
+    let (bare_standing, _) = Standing::cited(&bare, "p", vec![]);
+    let p = payload(
+        Profile::Code,
+        &bare_standing,
+        &shipped(&bare, &bare_standing),
+        None,
+    );
+    assert_eq!(p["authority"], "ask-one", "{p}");
 }
 
 #[test]

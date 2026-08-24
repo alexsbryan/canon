@@ -131,12 +131,41 @@ pub fn init(args: &[String]) -> i32 {
     if let Err(e) = std::fs::write(base.join(store::FILE), "") {
         return fail(e);
     }
+    // **The whole tool, in three lines, at the moment somebody needs it.**
+    // This is the n+1 explanation: if the next person cannot be handed the
+    // thing in two sentences it does not spread, and `canon --help` is
+    // forty-seven verbs. Everything past these three is opt-in and says so.
     println!(
-        "canon initialised at {} (profile: {})",
+        "canon initialised at {} ({})",
         base.display(),
         profile.as_str()
     );
-    println!("  canon add \"<your first commitment>\"");
+    // Padded to a common column, computed rather than typed: the noun
+    // changes width by profile, and three lines that almost line up read as
+    // sloppier than three that do not try.
+    let rows = [
+        (
+            format!("canon add \"<a {} you already have>\"", profile.noun()),
+            "write one down",
+        ),
+        (
+            "canon check \"<something you want to do>\"".to_string(),
+            "does it clash with one?",
+        ),
+        ("canon why <id>".to_string(), "what replaced what, and why"),
+    ];
+    let width = rows
+        .iter()
+        .map(|(c, _)| c.chars().count())
+        .max()
+        .unwrap_or(0);
+    println!();
+    for (cmd, gloss) in &rows {
+        println!("  {cmd:<width$}   {gloss}");
+    }
+    println!();
+    println!("that is the whole thing. `canon help all` when you want the rest —");
+    println!("who decides what, how you decide, what has gone stale, drawing lots.");
     0
 }
 
@@ -166,7 +195,7 @@ pub fn add(args: &[String]) -> i32 {
 }
 
 pub fn list(args: &[String]) -> i32 {
-    let (_, _, st) = match load() {
+    let (d, _, st) = match load() {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
@@ -179,15 +208,19 @@ pub fn list(args: &[String]) -> i32 {
         println!("{}", serde_json::to_string_pretty(&st).unwrap_or_default());
         return 0;
     }
+    let profile = Profile::load(&d).unwrap_or_default();
     let live: Vec<_> = st.active().collect();
     if live.is_empty() {
-        println!("no live commitments. `canon add \"...\"` to start.");
+        println!(
+            "no {} yet. `canon add \"<the first one>\"` to start.",
+            profile.nouns()
+        );
         return 0;
     }
     for c in &live {
         println!("{}  {}", c.id, c.text);
     }
-    println!("\n{} live", live.len());
+    println!("\n{} live", profile.count(live.len()));
     let carried = st.tolerated().count();
     if carried > 0 {
         println!("{carried} contradiction(s) carried knowingly — `canon list --json` for detail");
