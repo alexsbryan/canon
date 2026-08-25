@@ -18,6 +18,13 @@
 # REPEATS ARE THE POINT. One run is an anecdote; the spread between runs over
 # the same document is the noise floor every published number has to clear
 # (§18.5). The scorer refuses fewer than three.
+#
+# COST. The comparison stage runs once per arrangement and folds the results,
+# so a sweep is `arrangements * k(k+1)/2` calls per run for k blocks of
+# twelve: 20 passes per run on Maple House and 72 on Des Moines at two
+# arrangements. Budget roughly double what a single-arrangement sweep took,
+# and read the scorer's `arrangements` table to see what the second one
+# bought — an arrangement whose `added` column stays empty is pure cost.
 set -eu
 
 # --runs-only produces artifacts and stops. Used when the bar runs in the
@@ -57,7 +64,11 @@ MODEL=${CANON_MODEL:-primary}
 # stands out. Narrowing helps a scorer judging one pair in isolation. It hurts
 # a generative pass, where the block's diversity IS the signal.
 #
-# `CANON_BAR_EMBED=embed` reproduces the losing arm.
+# `CANON_BAR_EMBED=embed` sets it. It no longer reproduces that arm on its
+# own: ordering picks the BASE order, and every arrangement is a permutation
+# of that base, so this now swaps the first arrangement of a union rather than
+# replacing the whole comparison. The refutation above stands for what it
+# tested; it says nothing about similarity ordering as a union member.
 EMBED_MODEL=${CANON_BAR_EMBED-}
 
 if [ "$RUNS_ONLY" -eq 0 ]; then

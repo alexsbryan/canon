@@ -206,6 +206,10 @@ struct Score {
     /// FRACTION of the pairs, and precision and recall both inherit that.
     passes: usize,
     passes_unread: usize,
+    /// What each arrangement of the list contributed: name, passes, distinct
+    /// pairs, and how many of those no earlier arrangement had. The last one
+    /// is what decides whether the union keeps its second arrangement.
+    arrangements: Vec<(String, usize, usize, usize)>,
     hits: BTreeSet<String>,
     /// Planted tensions found INSIDE the region — precision's numerator, so
     /// that it can never exceed its own denominator.
@@ -281,6 +285,22 @@ fn score_run(path: &Path, truth: &Value, region: &Region) -> Score {
             .as_array()
             .map(Vec::len)
             .unwrap_or(0),
+        arrangements: run["tension_arrangements"]
+            .as_array()
+            .map(|a| {
+                a.iter()
+                    .map(|x| {
+                        let n = |k: &str| x[k].as_u64().unwrap_or(0) as usize;
+                        (
+                            x["arrangement"].as_str().unwrap_or("?").to_string(),
+                            n("passes"),
+                            n("proposed"),
+                            n("added"),
+                        )
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
         ..Score::default()
     };
     for t in run["tensions"].as_array().expect("tensions") {
@@ -575,6 +595,36 @@ fn governance_bar() {
     let intra: usize = scores.iter().map(|s| s.intra_section).sum();
     let unmapped: usize = scores.iter().map(|s| s.unmapped).sum();
     println!("excluded: {intra} intra-section pair(s), {unmapped} unmappable, {outside} outside the labelled region");
+
+    // What each arrangement bought. The comparison runs once per arrangement
+    // and folds the results, so every recall number above is a UNION number —
+    // and an arrangement whose `added` column is empty across these runs is
+    // paying `k(k+1)/2` calls for pairs the run already had.
+    let mut by_arrangement: Vec<(String, usize, usize, usize, usize)> = Vec::new();
+    for s in &scores {
+        for (name, passes, proposed, added) in &s.arrangements {
+            match by_arrangement.iter_mut().find(|e| e.0 == *name) {
+                Some(e) => {
+                    e.1 += 1;
+                    e.2 += passes;
+                    e.3 += proposed;
+                    e.4 += added;
+                }
+                None => by_arrangement.push((name.clone(), 1, *passes, *proposed, *added)),
+            }
+        }
+    }
+    if by_arrangement.len() > 1 {
+        println!("arrangements, over {} run(s):", scores.len());
+        for (name, runs, passes, proposed, added) in &by_arrangement {
+            println!(
+                "  {name:<11} {passes:>3} pass(es), {proposed:>3} pair(s), {added:>3} no earlier \
+                 arrangement had  ({:.1} added per run)",
+                *added as f64 / (*runs).max(1) as f64
+            );
+        }
+        println!();
+    }
 
     // Said before the bars, because it qualifies every number above it. A run
     // that could not weigh some of its pairs did not measure what the reader

@@ -14,7 +14,7 @@
 //! a decision someone already made is never re-served as news.
 
 use canon_core::{ActId, Canon, Commitment, Conflict, Disposition};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::model::{self, Client, ModelError};
@@ -135,6 +135,81 @@ fn passes_over(order: &[usize]) -> Vec<Vec<usize>> {
         .collect()
 }
 
+/// How one run lays the list out before [`passes_over`] cuts it into blocks.
+///
+/// Every arrangement is a PERMUTATION, and `passes_over` covers every
+/// unordered pair whatever the order — so an arrangement decides only WHO a
+/// pair is weighed against, never WHICH pairs are weighed. That is what makes
+/// several of them a union rather than a gamble: each one is a complete
+/// comparison on its own, so a second arrangement can only add.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Arrangement {
+    /// The list as the caller gave it — document order, or the similarity
+    /// chain of [`similarity_order`] when an embedding model is configured.
+    Given,
+    /// The block matrix read down its columns rather than across its rows.
+    ///
+    /// Commitments that shared a block in the given order land in different
+    /// ones here, and the company they keep instead is drawn one from each
+    /// old block. Where the list fills at least [`BATCH`] blocks the
+    /// separation is total: no two that shared a block share one again.
+    Transposed,
+}
+
+impl Arrangement {
+    /// The name a run reports this arrangement under. One spelling, in the
+    /// artifact and on the terminal both.
+    pub fn name(self) -> &'static str {
+        match self {
+            Arrangement::Given => "given",
+            Arrangement::Transposed => "transposed",
+        }
+    }
+
+    /// Permute a base order into this arrangement.
+    ///
+    /// A bijection in both arms, which is the whole contract: `passes_over`
+    /// guarantees coverage for any permutation, and guarantees nothing at all
+    /// for a list that gained or lost an entry.
+    fn apply(self, base: &[usize]) -> Vec<usize> {
+        match self {
+            Arrangement::Given => base.to_vec(),
+            Arrangement::Transposed => {
+                let rows = base.len().div_ceil(BATCH);
+                (0..BATCH)
+                    // Down each column, taking one entry from every block
+                    // before moving on. The last row is short whenever the
+                    // count is not a multiple of BATCH, and `get` drops those
+                    // holes rather than inventing positions for them.
+                    .flat_map(|col| (0..rows).map(move |row| row * BATCH + col))
+                    .filter_map(|i| base.get(i).copied())
+                    .collect()
+            }
+        }
+    }
+}
+
+/// The arrangements one comparison run folds into a single answer.
+///
+/// **Measured on two corpora, and what generalises is the DISJOINTNESS.** Two
+/// arrangements of the same list propose overlapping but different tension
+/// sets, so their union exceeds either alone: on the Maple House charter 6 of
+/// 11 planted tensions became 9 of 11 with decoys unchanged at 0, and on the
+/// Des Moines noise ordinance 5 of 11 became 7 of 11 with decoys unchanged at
+/// 2. Neither arrangement beat the other by more than a single tension on its
+/// own, and the precision half of the Maple House result did NOT reproduce on
+/// Des Moines — so what this buys is recall, at `k(k+1)/2` calls per
+/// arrangement, and nothing else is claimed for it.
+///
+/// Those two numbers come from unioning the PROPOSALS of two runs, one
+/// arrangement each, on a tape that held extraction identical. This code is
+/// the mechanism they argue for and not the thing they measured — the bar in
+/// `tests/draft_bar.rs` is what measures it, over three live runs per corpus.
+///
+/// Whether a third arrangement keeps adding is unmeasured. The number that
+/// answers it is `added` in [`ByArrangement`], which every run reports.
+const ARRANGEMENTS: &[Arrangement] = &[Arrangement::Given, Arrangement::Transposed];
+
 /// Order commitments so that near-twins share a block.
 ///
 /// **Coverage is unaffected, by construction.** Block-pairwise compares every
@@ -231,66 +306,127 @@ fn similarity_order(client: &Client, texts: &[&str]) -> Vec<usize> {
 /// and not a partition. That costs `k(k+1)/2` calls for `k` blocks —
 /// quadratic, and the reason the spec names a ceiling on how large a canon
 /// this tool serves.
+///
+/// And it runs that whole comparison once per entry in [`ARRANGEMENTS`],
+/// folding the results into one set. Each arrangement examines every pair, so
+/// this is a union of complete comparisons rather than a sampling of a
+/// partial one: what the second arrangement changes is the company each pair
+/// keeps, and pairs a crowded pass talked past are noticed in a quieter one.
+/// The cost is the call count multiplied by the number of arrangements, and
+/// [`Compared::arrangements`] carries what each of them was worth.
 pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelError> {
     if texts.len() < 2 {
         return Ok(Compared::default());
     }
     if texts.len() <= BATCH {
+        // One pass already holds every pair, so every arrangement of it is
+        // the same comparison run again. A union of one is that one.
         let pairs = one_pass(client, texts, &(0..texts.len()).collect::<Vec<_>>())?;
+        let found = pairs.len();
         return Ok(Compared {
             pairs,
             passes: 1,
             unread: Vec::new(),
+            arrangements: vec![ByArrangement {
+                arrangement: Arrangement::Given.name().to_string(),
+                passes: 1,
+                unread: 0,
+                proposed: found,
+                added: found,
+            }],
         });
     }
 
-    let sets = passes_over(&similarity_order(client, texts));
-    let passes = sets.len();
+    // The base order is chosen ONCE and every arrangement is a permutation of
+    // it, so `similarity_order`'s one embedding call is not paid per
+    // arrangement — and the escape hatch it is behind still decides what the
+    // first arrangement looks like, exactly as it did before the union.
+    let base = similarity_order(client, texts);
+    let plan: Vec<(Arrangement, Vec<Vec<usize>>)> = ARRANGEMENTS
+        .iter()
+        .map(|a| (*a, passes_over(&a.apply(&base))))
+        .collect();
+    let passes: usize = plan.iter().map(|(_, sets)| sets.len()).sum();
     eprintln!(
-        "{} commitments is past what one comparison holds — {passes} passes over blocks of {BATCH}",
-        texts.len()
+        "{} commitments is past what one comparison holds — {passes} passes over blocks of \
+         {BATCH}, {} arrangement(s) of the same list",
+        texts.len(),
+        plan.len()
     );
 
     let mut out: Vec<Proposed> = Vec::new();
     let mut unread: Vec<String> = Vec::new();
+    let mut arrangements: Vec<ByArrangement> = Vec::new();
     let mut last_err: Option<ModelError> = None;
-    for (i, idx) in sets.iter().enumerate() {
-        let done = i + 1;
-        eprint!("\rcomparing {done}/{passes}…");
-        let _ = std::io::Write::flush(&mut std::io::stderr());
-        // One pass failing is not the canon's. The map step has always
-        // recorded a chunk it could not read and kept going; this step threw
-        // away every other comparison for one refusal, and on a 34-section
-        // ordinance that cost a whole run twenty passes in, thirty-three
-        // minutes deep, with the two runs behind it never starting. What a
-        // refusal costs instead is COVERAGE, which is recorded and reported
-        // rather than absorbed (§18.3).
-        let got = match one_pass(client, texts, idx) {
-            Ok(v) => v,
-            Err(e) => {
-                eprintln!("\nwarning: comparison {done}/{passes} produced no answer: {e}");
-                // The positions, not just the pass number. A comparison that
-                // fails once and cannot be reproduced is a mystery for as
-                // long as its INPUT is unrecoverable — and one of these
-                // failed on a Des Moines sweep in a way no synthetic pass of
-                // the same size and shape would repeat. With the positions
-                // recorded, the artifact's own `kept` and `candidates` give
-                // the exact texts back, and the next occurrence is a bug
-                // someone can drive rather than a story about one.
-                unread.push(format!(
-                    "pass {done}/{passes} over kept positions {idx:?}: {e}"
-                ));
-                last_err = Some(e);
-                continue;
+    let mut done = 0usize;
+    for (arrangement, sets) in &plan {
+        // Folded within the arrangement first, so `proposed` counts pairs and
+        // not sightings: a within-block pair is shown to the model in several
+        // passes of the same arrangement by construction.
+        let mut mine: Vec<Proposed> = Vec::new();
+        let mut mine_unread = 0usize;
+        for (i, idx) in sets.iter().enumerate() {
+            done += 1;
+            eprint!("\rcomparing {done}/{passes} ({})…", arrangement.name());
+            let _ = std::io::Write::flush(&mut std::io::stderr());
+            // One pass failing is not the canon's. The map step has always
+            // recorded a chunk it could not read and kept going; this step
+            // threw away every other comparison for one refusal, and on a
+            // 34-section ordinance that cost a whole run twenty passes in,
+            // thirty-three minutes deep, with the two runs behind it never
+            // starting. What a refusal costs instead is COVERAGE, which is
+            // recorded and reported rather than absorbed (§18.3).
+            let got = match one_pass(client, texts, idx) {
+                Ok(v) => v,
+                Err(e) => {
+                    eprintln!("\nwarning: comparison {done}/{passes} produced no answer: {e}");
+                    // The arrangement and the positions, not just the pass
+                    // number. A comparison that fails once and cannot be
+                    // reproduced is a mystery for as long as its INPUT is
+                    // unrecoverable — and one of these failed on a Des Moines
+                    // sweep in a way no synthetic pass of the same size and
+                    // shape would repeat. With the arrangement and positions
+                    // recorded, the artifact's own `kept` and `candidates`
+                    // give the exact texts back, and the next occurrence is a
+                    // bug someone can drive rather than a story about one.
+                    unread.push(format!(
+                        "pass {}/{} of the {} arrangement over kept positions {idx:?}: {e}",
+                        i + 1,
+                        sets.len(),
+                        arrangement.name()
+                    ));
+                    mine_unread += 1;
+                    last_err = Some(e);
+                    continue;
+                }
+            };
+            for p in got {
+                // The same pair can surface in more than one pass. First
+                // reason wins; a pair is one tension however often it is
+                // noticed.
+                if !mine.iter().any(|q| is_same(q, &p)) {
+                    mine.push(p);
+                }
             }
+        }
+        // And the fold across arrangements is the union itself. `added` is
+        // the only number that can retire an arrangement: an arrangement that
+        // adds nothing over several runs is pure cost, and this is where a
+        // reader sees that without instrumenting anything.
+        let mut report = ByArrangement {
+            arrangement: arrangement.name().to_string(),
+            passes: sets.len(),
+            unread: mine_unread,
+            proposed: mine.len(),
+            added: 0,
         };
-        for p in got {
-            // The same pair can surface in more than one pass. First reason
-            // wins; a pair is one tension however often it is noticed.
+        for p in mine {
             if !out.iter().any(|q| is_same(q, &p)) {
+                report.added += 1;
                 out.push(p);
             }
         }
+        arrangements.push(report);
     }
     // Nothing was compared at all. A run reporting zero tensions because zero
     // comparisons happened is the failure §18.3 names, so the real error from
@@ -303,6 +439,14 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
         passes - unread.len(),
         out.len()
     );
+    if arrangements.len() > 1 {
+        for r in &arrangements {
+            eprintln!(
+                "  {:<11} {} pass(es), {} pair(s), {} no earlier arrangement had",
+                r.arrangement, r.passes, r.proposed, r.added
+            );
+        }
+    }
     if !unread.is_empty() {
         // Loud, because every tension number from this run is a number about
         // a fraction of the pairs.
@@ -317,19 +461,39 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
         pairs: out,
         passes,
         unread,
+        arrangements,
     })
+}
+
+/// What one arrangement of the list was worth.
+///
+/// `added` is the load-bearing column: pairs this arrangement proposed that no
+/// earlier one had. A union whose second arrangement adds nothing is paying
+/// double for one comparison, and that has to be visible in the run itself
+/// rather than reconstructed by whoever wonders.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ByArrangement {
+    pub arrangement: String,
+    pub passes: usize,
+    pub unread: usize,
+    /// Distinct pairs this arrangement proposed, its own repeats folded.
+    pub proposed: usize,
+    /// How many of those were new to the union at that point.
+    pub added: usize,
 }
 
 /// What a comparison run weighed, and what it could not.
 ///
-/// `passes` is what was attempted and `unread` what came back unusable, so a
-/// caller can say what fraction of the pair space a number covers instead of
-/// implying all of it.
+/// `passes` is what was attempted across every arrangement and `unread` what
+/// came back unusable, so a caller can say what fraction of the pair space a
+/// number covers instead of implying all of it.
 #[derive(Debug, Default)]
 pub struct Compared {
     pub pairs: Vec<Proposed>,
     pub passes: usize,
     pub unread: Vec<String>,
+    /// One entry per arrangement, in the order they ran.
+    pub arrangements: Vec<ByArrangement>,
 }
 
 fn is_same(a: &Proposed, b: &Proposed) -> bool {

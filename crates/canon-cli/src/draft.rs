@@ -214,6 +214,13 @@ pub struct DraftRun {
     /// the pairs, and a reader who cannot see that is being misled (§18.3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tension_passes_unread: Vec<String>,
+    /// What each arrangement of the kept rules contributed, in the order they
+    /// ran. The comparison runs once per arrangement and folds the results,
+    /// so `added` here is what says whether the extra passes are still
+    /// earning their calls — and a run that cannot answer that has bought a
+    /// mechanism nobody can retire.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tension_arrangements: Vec<tensions::ByArrangement>,
     /// Passages skipped because this canon had already read them.
     ///
     /// A count taken from a run with this set is a count over what was NEW,
@@ -1710,6 +1717,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         tensions: Vec::new(),
         tension_passes: 0,
         tension_passes_unread: Vec::new(),
+        tension_arrangements: Vec::new(),
         failed: None,
         samples,
         stopped_after: None,
@@ -1817,6 +1825,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     artifact.tensions = run_tensions;
     artifact.tension_passes = compared.passes;
     artifact.tension_passes_unread = compared.unread;
+    artifact.tension_arrangements = compared.arrangements;
     artifact.tape = client.tape();
     let path = match persist(dir, &artifact) {
         Ok(p) => p,

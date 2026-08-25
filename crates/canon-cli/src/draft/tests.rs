@@ -669,6 +669,7 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         tensions: Vec::new(),
         tension_passes: 0,
         tension_passes_unread: Vec::new(),
+        tension_arrangements: Vec::new(),
         failed: None,
         samples: 1,
         stopped_after: None,
