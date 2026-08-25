@@ -19,12 +19,13 @@
 # the same document is the noise floor every published number has to clear
 # (§18.5). The scorer refuses fewer than three.
 #
-# COST. The comparison stage runs once per arrangement and folds the results,
-# so a sweep is `arrangements * k(k+1)/2` calls per run for k blocks of
-# twelve: 20 passes per run on Maple House and 72 on Des Moines at two
-# arrangements. Budget roughly double what a single-arrangement sweep took,
-# and read the scorer's `arrangements` table to see what the second one
-# bought — an arrangement whose `added` column stays empty is pure cost.
+# COST. At or below BATCH (24 commitments) one pass holds every pair and the
+# comparison stage is a single call. Above it the stage runs a covering design
+# from `schedule()`: every pair weighed LOOKS (2) times in different company,
+# quadratic in the commitment count. On a 289-commitment canon that is 488
+# passes, against 650 for the two-arrangement union it replaces. The run
+# prints its own pass count before it starts — budget from that line, not
+# from this comment.
 set -eu
 
 # --runs-only produces artifacts and stops. Used when the bar runs in the
@@ -47,29 +48,9 @@ DOC=${CANON_BAR_DOC:-"$ROOT/fixtures/maple-house/maple-house.md"}
 PROFILE=${CANON_BAR_PROFILE:-house}
 ENDPOINT=${CANON_ENDPOINT:-http://localhost:9741/v1}
 MODEL=${CANON_MODEL:-primary}
-# Similarity ordering, and it defaults OFF because it was MEASURED and it lost.
-#
-# `similarity_order` puts near-twins in one comparison block, on the theory
-# that a contradiction should be weighed against the rule it contradicts. The
-# key had never been set here, so it had never been in a scored run. It was,
-# on 2026-08-24, one variable against runs/qwen-27b-because on the same pinned
-# binary: recall 0.55 -> 0.39, decoys 0/7 -> 2/7, reachability 10/11 -> 9/11.
-# Arm runs 2 and 3 had extraction accounting identical to the incumbent, which
-# isolates the loss to ordering alone.
-#
-# WHY, and it is worth knowing before anyone tries this again: the comparison
-# stage is a GENERATIVE pass over a block of 12. Clustering near-twins starves
-# it of contrast — twelve rules that all look alike is a harder discrimination
-# than one quiet-hours rule among eleven unrelated ones, where the conflict
-# stands out. Narrowing helps a scorer judging one pair in isolation. It hurts
-# a generative pass, where the block's diversity IS the signal.
-#
-# `CANON_BAR_EMBED=embed` sets it. It no longer reproduces that arm on its
-# own: ordering picks the BASE order, and every arrangement is a permutation
-# of that base, so this now swaps the first arrangement of a union rather than
-# replacing the whole comparison. The refutation above stands for what it
-# tested; it says nothing about similarity ordering as a union member.
-EMBED_MODEL=${CANON_BAR_EMBED-}
+# CANON_BAR_EMBED is gone along with the `embed_model` config key. Similarity
+# ordering was measured on 2026-08-24 and lost, and the reasoning is recorded
+# where the schedule is built (tensions.rs, `schedule`) rather than here.
 
 if [ "$RUNS_ONLY" -eq 0 ]; then
   cargo build --manifest-path "$ROOT/Cargo.toml" 2>&1 | grep -E '^error' && exit 1
@@ -92,7 +73,6 @@ mkdir -p "$OUT"
   echo "document  $DOC"
   echo "profile   $PROFILE"
   echo "model     $MODEL"
-  echo "ordering  ${EMBED_MODEL:-document order (no embed_model)}"
   echo "endpoint  $ENDPOINT"
   echo "binary    $BIN"
 } > "$OUT/BUILD.txt"
@@ -109,13 +89,6 @@ while [ "$i" -le "$RUNS" ]; do
   "$BIN" init --profile "$PROFILE" >/dev/null
   "$BIN" config set endpoint "$ENDPOINT" >/dev/null
   "$BIN" config set model "$MODEL" >/dev/null
-  # An `if`, not `[ ... ] && ...`: under `set -e` a false test makes the
-  # compound return 1 and kills the sweep, which is the same shape as the `cp`
-  # failure the header above records costing runs 2 and 3.
-  if [ -n "$EMBED_MODEL" ]; then
-    "$BIN" config set embed_model "$EMBED_MODEL" >/dev/null
-  fi
-
   echo "--- run $i/$RUNS ---"
   START=$(date +%s)
   # A run that fails is reported and the bar continues: losing runs 2 and 3

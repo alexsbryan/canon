@@ -117,6 +117,36 @@ pub enum Kind {
     Question,
     /// Something the passage says is deliberately unwritten.
     Silence,
+    /// Something the passage says HAPPENED, or why the body acted.
+    ///
+    /// A recital, a finding, a grievance. Past tense, about a particular
+    /// actor or occasion, with nothing in it to honour or breach — so no
+    /// proposal can ever sit with or against it.
+    ///
+    /// **Measured on the founding corpus.** The Declaration's twenty-nine
+    /// accusations against George III — "He has refused his Assent to Laws"
+    /// — came back as twenty-nine RULES, because a rule was the only shape
+    /// on offer. They are 6.8% of that corpus and they entered the all-pairs
+    /// comparison, where every one of them was weighed against all three
+    /// hundred and seventeen others and could not have conflicted with any.
+    /// A body's founding document usually carries a justification, and a
+    /// justification is not a commitment.
+    Record,
+}
+
+/// The word the model answered with, as a kind.
+///
+/// Named and separate so the fallback is stated once and can be tested. A
+/// word that is not one of the three is a RULE, which is the kind that has to
+/// clear the citation and quantity guards — so a typo lands on the strictest
+/// treatment rather than skipping both.
+pub fn kind_of(word: &str) -> Kind {
+    match word.trim() {
+        "question" => Kind::Question,
+        "silence" => Kind::Silence,
+        "record" => Kind::Record,
+        _ => Kind::Rule,
+    }
 }
 
 impl Kind {
@@ -125,6 +155,29 @@ impl Kind {
             Kind::Rule => "RULE",
             Kind::Question => "QUESTION",
             Kind::Silence => "SILENCE",
+            Kind::Record => "RECORD",
+        }
+    }
+
+    /// Can a proposal sit with or against this?
+    ///
+    /// **The one decider for what enters comparison**, and the reason the
+    /// kinds are enumerated by their effect on adjudication rather than by
+    /// subject matter. Before this the filter was `kind == Kind::Rule`
+    /// written out at the comparison site, so every new kind was a silent
+    /// vote for "not compared" at one call site and "compared" at another.
+    ///
+    /// Comparison is all-pairs and therefore QUADRATIC in what this returns
+    /// true for: on the founding corpus, dropping the twenty-nine recitals
+    /// takes 318 commitments to 289, and 756 comparison passes to 630.
+    /// Modelling the corpus better and making it affordable are the same
+    /// lever, not two projects.
+    pub fn bears(self) -> bool {
+        match self {
+            Kind::Rule => true,
+            // A question is a gap, a silence is a gap held on purpose, and a
+            // record is about the past. None of the three can be breached.
+            Kind::Question | Kind::Silence | Kind::Record => false,
         }
     }
 }
@@ -214,13 +267,13 @@ pub struct DraftRun {
     /// the pairs, and a reader who cannot see that is being misled (§18.3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tension_passes_unread: Vec<String>,
-    /// What each arrangement of the kept rules contributed, in the order they
-    /// ran. The comparison runs once per arrangement and folds the results,
-    /// so `added` here is what says whether the extra passes are still
-    /// earning their calls — and a run that cannot answer that has bought a
-    /// mechanism nobody can retire.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tension_arrangements: Vec<tensions::ByArrangement>,
+    /// The comparison schedule this run used: how many passes, how many
+    /// commitments in one, and how many times every pair was weighed. A
+    /// recall number is a number ABOUT a schedule, and two runs on different
+    /// schedules are not comparable — so the schedule travels with the
+    /// number rather than living in whoever ran it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tension_schedule: Option<tensions::Schedule>,
     /// Passages skipped because this canon had already read them.
     ///
     /// A count taken from a run with this set is a count over what was NEW,
@@ -440,15 +493,20 @@ changed is a commitment.
 The passage is given as numbered sentences, one per line. Each is marked \
 [n]. The markers are not part of the text.
 
-Most of what you return is a RULE. Two other kinds count, and only when the \
-passage says them outright:
+Most of what you return is a RULE. Three other kinds count, and only when \
+the passage says them outright:
 - question: the passage says nobody has decided something, or leaves it open. \
 Write text as the open question.
 - silence: the passage says something is deliberately NOT being written \
 down. Write text as the subject of that silence.
+- record: the passage states what HAPPENED or why the body acted — a \
+grievance, a finding, a recital. Past tense, about a particular actor or \
+occasion, with nothing anyone could keep or break. Write text as what it says \
+happened.
 
 A subject the passage simply does not mention is not a question. A rule that \
-is merely absent is not a silence. Both must be stated.
+is merely absent is not a silence. A rule about how things must be done from \
+now on is not a record, however old the document is.
 
 For each one, return:
 - kind: rule, question, or silence
@@ -516,7 +574,7 @@ fn extract_schema() -> Value {
                 "items": {
                     "type": "object",
                     "properties": {
-                        "kind": { "type": "string", "enum": ["rule", "question", "silence"] },
+                        "kind": { "type": "string", "enum": ["rule", "question", "silence", "record"] },
                         "first": { "type": "integer" },
                         "last": { "type": "integer" },
                         "text": { "type": "string" },
@@ -637,11 +695,7 @@ pub fn extract(
         // Anything but the two named words is a rule, which is the kind that
         // has to clear the citation and quantity guards. A silence let
         // through by a typo would bypass both.
-        let kind = match c.kind.trim() {
-            "question" => Kind::Question,
-            "silence" => Kind::Silence,
-            _ => Kind::Rule,
-        };
+        let kind = kind_of(&c.kind);
         let because = c.because.trim().to_string();
         // Cite-or-abstain, applied to silence. A deliberate silence with no
         // stated reason cannot be told apart from having forgotten, which is
@@ -1717,7 +1771,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         tensions: Vec::new(),
         tension_passes: 0,
         tension_passes_unread: Vec::new(),
-        tension_arrangements: Vec::new(),
+        tension_schedule: None,
         failed: None,
         samples,
         stopped_after: None,
@@ -1798,7 +1852,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     // absence of a rule, held on purpose.
     let kept_texts: Vec<&str> = kept
         .iter()
-        .filter(|i| candidates[**i].kind == Kind::Rule)
+        .filter(|i| candidates[**i].kind.bears())
         .map(|i| candidates[*i].text.as_str())
         .collect();
     // In a dry run nothing is accepted, so tensions runs over every surviving
@@ -1825,7 +1879,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     artifact.tensions = run_tensions;
     artifact.tension_passes = compared.passes;
     artifact.tension_passes_unread = compared.unread;
-    artifact.tension_arrangements = compared.arrangements;
+    artifact.tension_schedule = Some(compared.schedule);
     artifact.tape = client.tape();
     let path = match persist(dir, &artifact) {
         Ok(p) => p,
@@ -1851,11 +1905,12 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
             // found a body of rules or twelve open questions.
             let n = |k: Kind| kept.iter().filter(|i| candidates[**i].kind == k).count();
             println!(
-                "\n{} rule(s), {} question(s), {} silence(s), {} tension(s) proposed. \
-                 Nothing written.",
+                "\n{} rule(s), {} question(s), {} silence(s), {} record(s), \
+                 {} tension(s) proposed. Nothing written.",
                 n(Kind::Rule),
                 n(Kind::Question),
                 n(Kind::Silence),
+                n(Kind::Record),
                 artifact.tensions.len()
             );
             println!("run recorded at {}", path.display());
@@ -1916,9 +1971,25 @@ fn review(
     let stdin = std::io::stdin();
     let mut lines = stdin.lock().lines();
     let mut accepted = Vec::new();
-    for (n, i) in kept.iter().enumerate() {
+    // A record is not offered. It says what happened, and there is no act
+    // that means "the canon now holds that George III refused his Assent" —
+    // asking a person to accept or reject one is asking them to rule on the
+    // past. They are reported in the dry run and in the artifact, where they
+    // are evidence about the document, and they stop there.
+    let offered: Vec<usize> = kept
+        .iter()
+        .copied()
+        .filter(|i| candidates[*i].kind != Kind::Record)
+        .collect();
+    let held = kept.len() - offered.len();
+    if held > 0 {
+        println!(
+            "{held} record(s) of what happened are not offered — nothing in one can be kept or broken."
+        );
+    }
+    for (n, i) in offered.iter().enumerate() {
         let c = &candidates[*i];
-        println!("\nCandidate {} of {}", n + 1, kept.len());
+        println!("\nCandidate {} of {}", n + 1, offered.len());
         // The kind is shown because accepting writes a different act for each
         // one, and "accept" has to mean what the person thought it meant.
         println!("  {:<9} \"{}\"", c.kind.label(), c.text);
@@ -1978,6 +2049,10 @@ fn review(
                 about: text,
                 rationale: c.because.clone(),
             },
+            // Filtered out above. Unreachable rather than mapped to an act,
+            // because inventing one here is how a kind that cannot be
+            // committed to quietly becomes a commitment.
+            Kind::Record => unreachable!("records are not offered for review"),
         };
         let act = crate::cmds::write(dir, kind)?;
         println!("  {}", act.id);

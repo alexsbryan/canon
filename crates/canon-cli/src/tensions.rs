@@ -94,339 +94,212 @@ pub struct Proposed {
 /// tensions in one call, 3 of 11 in blocks of twenty, and 5 of 11 in blocks
 /// of twelve — with zero false positives on the seven labelled compatible
 /// pairs at every size. Recall was the casualty of the batch size, and
-/// discrimination never was. The spec claimed this regime held to about a
-/// hundred commitments; it does not, and that claim has been corrected.
-const BATCH: usize = 12;
-
-/// Cut an order into blocks and pair every block with itself and each other.
+/// discrimination never was.
 ///
-/// Separated from [`detect_over`] because the property that matters is about
-/// this function alone and nothing else: **every unordered pair of positions
-/// appears in at least one returned set, for any order given.** That is what
-/// lets `similarity_order` rearrange the list freely — it moves pairs between
-/// passes and can never drop one — and it is asserted rather than argued.
-///
-/// Not a partition, and the difference is the point. A cross pass over blocks
-/// `x` and `y` shows the model all of `x`, all of `y`, and everything
-/// between, so a WITHIN-block pair is examined again in every cross pass its
-/// block takes part in — `k` times over, against `k`-1 for a pair that
-/// straddles two blocks. Its extra looks are the good ones, too: a self pass
-/// weighs it against `C(BATCH,2)` others where a cross pass weighs it against
-/// `C(2*BATCH,2)`. `detect_over` folds the repeats, so the cost is calls
-/// rather than duplicate tensions — and the asymmetry is precisely why
-/// `similarity_order` is worth its one embedding call, since it decides which
-/// pairs get the many good looks and which get the one crowded one.
-fn passes_over(order: &[usize]) -> Vec<Vec<usize>> {
-    let blocks: Vec<&[usize]> = order.chunks(BATCH).collect();
-    // A pass over fewer than two texts compares nothing. It cannot fail and
-    // cannot find anything, so counting it would pad the coverage this run
-    // reports — the last block is a single commitment whenever the count is
-    // one past a multiple of BATCH.
-    (0..blocks.len())
-        .flat_map(|x| (x..blocks.len()).map(move |y| (x, y)))
-        .map(|(x, y)| {
-            if x == y {
-                blocks[x].to_vec()
-            } else {
-                blocks[x].iter().chain(blocks[y]).copied().collect()
-            }
-        })
-        .filter(|idx| idx.len() >= 2)
-        .collect()
-}
+/// Twenty-four rather than the twelve that measurement named, because the
+/// twelve was a BLOCK size under the old block-pairwise scheme and a block
+/// was compared against another block: 300 of that scheme's 325 passes on a
+/// 289-commitment canon held twenty-four commitments, not twelve. This is the
+/// pass size that was actually measured; it is now stated directly instead of
+/// emerging from two blocks being concatenated.
+const BATCH: usize = 24;
 
-/// How one run lays the list out before [`passes_over`] cuts it into blocks.
+/// How many times every pair is examined, in different company each time.
 ///
-/// Every arrangement is a PERMUTATION, and `passes_over` covers every
-/// unordered pair whatever the order — so an arrangement decides only WHO a
-/// pair is weighed against, never WHICH pairs are weighed. That is what makes
-/// several of them a union rather than a gamble: each one is a complete
-/// comparison on its own, so a second arrangement can only add.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Arrangement {
-    /// The list as the caller gave it — document order, or the similarity
-    /// chain of [`similarity_order`] when an embedding model is configured.
-    Given,
-    /// The block matrix read down its columns rather than across its rows.
-    ///
-    /// Commitments that shared a block in the given order land in different
-    /// ones here, and the company they keep instead is drawn one from each
-    /// old block. Where the list fills at least [`BATCH`] blocks the
-    /// separation is total: no two that shared a block share one again.
-    Transposed,
-}
+/// **The number this replaced was a lottery, not a policy.** Block-pairwise
+/// comparison gave a pair one look if it straddled two blocks and `k` looks
+/// if it sat inside one — measured on a 289-commitment canon: 40,032 pairs
+/// (96.2%) got exactly ONE look and 1,584 pairs (3.8%) got TWENTY-FIVE, with
+/// nothing in between. Which side a pair landed on was decided by whether the
+/// two rules happened to be adjacent in the document.
+///
+/// That distribution is also what the two-arrangement union was buying back:
+/// a second arrangement promotes a different 3.8% out of the one-look
+/// majority, which is why its hits were disjoint from the first's. Asking for
+/// the looks directly is the same purchase made on purpose, spread evenly,
+/// and it costs fewer calls than the union did — 488 passes against 650 at
+/// n=289.
+const LOOKS: usize = 2;
 
-impl Arrangement {
-    /// The name a run reports this arrangement under. One spelling, in the
-    /// artifact and on the terminal both.
-    pub fn name(self) -> &'static str {
-        match self {
-            Arrangement::Given => "given",
-            Arrangement::Transposed => "transposed",
+/// The comparison schedule: which commitments are weighed together, and how
+/// often each pair comes up.
+///
+/// A **covering design** — the classical object for "every pair in at least
+/// one block". Built greedily: seed each block with the commitment in the
+/// most still-unexamined pairs, then grow it by whichever commitment adds the
+/// most unexamined pairs to what is already there. Deterministic throughout,
+/// ties to the lower position, so two runs over one document produce one
+/// schedule and a noise floor stays a property of the model.
+///
+/// **The guarantee is the one block-pairwise made, and it is stronger:**
+/// every unordered pair appears in at least [`LOOKS`] returned sets rather
+/// than in at least one. Asserted rather than argued — see the tests.
+///
+/// Greedy rather than optimal, and the gap is known: the Schönheim bound puts
+/// a perfect covering of 289 commitments in blocks of 24 at 157 passes and
+/// this finds 267. Closing that is a better construction, not a different
+/// contract, and nothing above here would change.
+///
+/// **What the blocks are NOT ordered by, and why it is not coming back.**
+/// Clustering near-twins so a contradiction is weighed against the rule it
+/// contradicts was measured on 2026-08-24, one variable on one pinned binary:
+/// recall 0.55 -> 0.39, decoys 0/7 -> 2/7, reachability 10/11 -> 9/11. A
+/// comparison pass is GENERATIVE, and a block of near-twins starves it of the
+/// contrast that makes a conflict stand out — narrowing helps a scorer judging
+/// one pair in isolation and hurts a pass where the block's diversity IS the
+/// signal. The knob is deleted, not defaulted off.
+fn schedule(n: usize, looks: usize) -> Vec<Vec<usize>> {
+    if n < 2 || looks == 0 {
+        return Vec::new();
+    }
+    // Looks still owed to each unordered pair. `n` is bounded by what a canon
+    // is (the spec names a ceiling), so a dense triangle is the cheap choice.
+    let idx = |a: usize, b: usize| a * n + b;
+    let mut owed = vec![0u32; n * n];
+    for a in 0..n {
+        for b in a + 1..n {
+            owed[idx(a, b)] = looks as u32;
         }
     }
-
-    /// Permute a base order into this arrangement.
-    ///
-    /// A bijection in both arms, which is the whole contract: `passes_over`
-    /// guarantees coverage for any permutation, and guarantees nothing at all
-    /// for a list that gained or lost an entry.
-    fn apply(self, base: &[usize]) -> Vec<usize> {
-        match self {
-            Arrangement::Given => base.to_vec(),
-            Arrangement::Transposed => {
-                let rows = base.len().div_ceil(BATCH);
-                (0..BATCH)
-                    // Down each column, taking one entry from every block
-                    // before moving on. The last row is short whenever the
-                    // count is not a multiple of BATCH, and `get` drops those
-                    // holes rather than inventing positions for them.
-                    .flat_map(|col| (0..rows).map(move |row| row * BATCH + col))
-                    .filter_map(|i| base.get(i).copied())
-                    .collect()
-            }
-        }
-    }
-}
-
-/// The arrangements one comparison run folds into a single answer.
-///
-/// **Measured on two corpora, and what generalises is the DISJOINTNESS.** Two
-/// arrangements of the same list propose overlapping but different tension
-/// sets, so their union exceeds either alone: on the Maple House charter 6 of
-/// 11 planted tensions became 9 of 11 with decoys unchanged at 0, and on the
-/// Des Moines noise ordinance 5 of 11 became 7 of 11 with decoys unchanged at
-/// 2. Neither arrangement beat the other by more than a single tension on its
-/// own, and the precision half of the Maple House result did NOT reproduce on
-/// Des Moines — so what this buys is recall, at `k(k+1)/2` calls per
-/// arrangement, and nothing else is claimed for it.
-///
-/// Those two numbers come from unioning the PROPOSALS of two runs, one
-/// arrangement each, on a tape that held extraction identical. This code is
-/// the mechanism they argue for and not the thing they measured — the bar in
-/// `tests/draft_bar.rs` is what measures it, over three live runs per corpus.
-///
-/// Whether a third arrangement keeps adding is unmeasured. The number that
-/// answers it is `added` in [`ByArrangement`], which every run reports.
-const ARRANGEMENTS: &[Arrangement] = &[Arrangement::Given, Arrangement::Transposed];
-
-/// Order commitments so that near-twins share a block.
-///
-/// **Coverage is unaffected, by construction.** Block-pairwise compares every
-/// block with itself and with every other one, so each unordered pair lands in
-/// exactly one pass whatever order the list is in. Reordering MOVES a pair
-/// between passes; it can never drop one. What it changes is how much company
-/// a pair keeps: a pair inside one block is weighed against `C(12,2)` = 66
-/// others, and a pair split across two blocks against `C(24,2)` = 276.
-///
-/// Measured on the Des Moines corpus: this moves 6 of 11 planted pairs out of
-/// a cross pass and into a self pass, with no coverage change and no extra
-/// model call. It also speaks to the only pass that ever failed there — pass
-/// 16 of 28, the cross pass holding one block of Type "G" permit rules
-/// against the block restating the same rules in an amending ordinance. It
-/// ran 3,094 tokens into a 300s deadline and died, in all three runs, while
-/// the mean pass that finished emitted 234. The same 24 texts through a
-/// smaller model finished in 29s and proposed 2 pairs, so the input is not
-/// inherently pathological — facing one block of near-twins against another
-/// is, and that is the arrangement this removes.
-///
-/// A greedy nearest-neighbour chain rather than a clustering: deterministic,
-/// single-pass, and it needs neither a `k` nor a threshold. Ties go to the
-/// lower position, so two runs over one document order identically.
-fn similarity_order(client: &Client, texts: &[&str]) -> Vec<usize> {
-    let n = texts.len();
-    let document_order = || (0..n).collect::<Vec<usize>>();
-    let vectors = match client.embed(texts) {
-        Ok(v) if v.len() == n => v,
-        // Every one of these keeps the run going in document order, which is
-        // what it always did — but says so, because a quieter comparison is
-        // not the same comparison (§18.3).
-        Ok(v) => {
-            eprintln!(
-                "\nnote: comparing in document order — the endpoint returned {} vector(s) for {n} commitments",
-                v.len()
-            );
-            return document_order();
-        }
-        Err(ModelError::NoEmbedModel) => {
-            eprintln!(
-                "\nnote: comparing in document order — `canon config set embed_model <name>` \
-                 groups near-duplicates into one comparison instead of splitting them across two"
-            );
-            return document_order();
-        }
-        Err(e) => {
-            eprintln!("\nnote: comparing in document order — embedding failed: {e}");
-            return document_order();
+    let owes = |owed: &[u32], a: usize, b: usize| {
+        if a == b {
+            0
+        } else if a < b {
+            owed[idx(a, b)]
+        } else {
+            owed[idx(b, a)]
         }
     };
 
-    let norms: Vec<f32> = vectors
-        .iter()
-        .map(|v| v.iter().map(|x| x * x).sum::<f32>().sqrt())
-        .collect();
-    // A zero vector has no direction, so it is similar to nothing rather than
-    // to everything — which is what dividing by its norm would produce.
-    let cosine = |i: usize, j: usize| -> f32 {
-        if norms[i] == 0.0 || norms[j] == 0.0 {
-            return 0.0;
+    let mut out: Vec<Vec<usize>> = Vec::new();
+    loop {
+        // How many still-owed pairs each commitment sits in.
+        let mut deficit = vec![0usize; n];
+        for a in 0..n {
+            for b in a + 1..n {
+                if owed[idx(a, b)] > 0 {
+                    deficit[a] += 1;
+                    deficit[b] += 1;
+                }
+            }
         }
-        let dot: f32 = vectors[i].iter().zip(&vectors[j]).map(|(a, b)| a * b).sum();
-        dot / (norms[i] * norms[j])
-    };
-
-    let mut order = Vec::with_capacity(n);
-    let mut placed = vec![false; n];
-    order.push(0);
-    placed[0] = true;
-    for _ in 1..n {
-        let last = *order.last().expect("just pushed");
-        let next = (0..n)
-            .filter(|k| !placed[*k])
-            .max_by(|a, b| {
-                cosine(last, *a)
-                    .total_cmp(&cosine(last, *b))
-                    // Equal similarity goes to the lower position, so the
-                    // order is a function of the document and nothing else.
-                    .then(b.cmp(a))
-            })
-            .expect("one unplaced remains");
-        placed[next] = true;
-        order.push(next);
+        let Some(seed) = (0..n).max_by_key(|i| (deficit[*i], std::cmp::Reverse(*i))) else {
+            break;
+        };
+        if deficit[seed] == 0 {
+            break;
+        }
+        let mut block = vec![seed];
+        while block.len() < BATCH.min(n) {
+            let best = (0..n).filter(|i| !block.contains(i)).max_by_key(|i| {
+                let gain = block.iter().filter(|j| owes(&owed, *i, **j) > 0).count();
+                (gain, std::cmp::Reverse(*i))
+            });
+            let Some(next) = best else { break };
+            // A block that can add nothing new is finished. Padding it out
+            // would buy re-examinations nobody asked for, which is the very
+            // thing this replaced.
+            if block.iter().all(|j| owes(&owed, next, *j) == 0) {
+                break;
+            }
+            block.push(next);
+        }
+        if block.len() < 2 {
+            break;
+        }
+        for x in 0..block.len() {
+            for y in x + 1..block.len() {
+                let (a, b) = (block[x].min(block[y]), block[x].max(block[y]));
+                owed[idx(a, b)] = owed[idx(a, b)].saturating_sub(1);
+            }
+        }
+        block.sort_unstable();
+        out.push(block);
     }
-    eprintln!("\nordered {n} commitments by similarity so near-duplicates share a comparison");
-    order
+    out
 }
 
 /// The engine: find tensions among these texts, answering in list positions.
 ///
-/// Above [`BATCH`] the comparison is **block-pairwise**: the list is cut into
-/// blocks and every block is compared with itself and with every other block,
-/// so no pair goes unexamined — see [`passes_over`] for why that is a cover
-/// and not a partition. That costs `k(k+1)/2` calls for `k` blocks —
-/// quadratic, and the reason the spec names a ceiling on how large a canon
-/// this tool serves.
+/// At or below [`BATCH`] one pass already holds every pair, and asking for a
+/// second look at the same crowd is asking the same question again rather
+/// than a different one. Such a run costs exactly one call.
 ///
-/// And it runs that whole comparison once per entry in [`ARRANGEMENTS`],
-/// folding the results into one set. Each arrangement examines every pair, so
-/// this is a union of complete comparisons rather than a sampling of a
-/// partial one: what the second arrangement changes is the company each pair
-/// keeps, and pairs a crowded pass talked past are noticed in a quieter one.
-/// The cost is the call count multiplied by the number of arrangements, and
-/// [`Compared::arrangements`] carries what each of them was worth.
+/// Above it the passes come from [`schedule`]: a covering design in which
+/// every unordered pair appears in at least [`LOOKS`] passes, in different
+/// company each time. A cover and not a partition — no pair is split across
+/// passes and none goes unexamined. The cost stays quadratic in the number of
+/// commitments, which is the reason the spec names a ceiling on how large a
+/// canon this tool serves.
 pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelError> {
     if texts.len() < 2 {
         return Ok(Compared::default());
     }
     if texts.len() <= BATCH {
-        // One pass already holds every pair, so every arrangement of it is
-        // the same comparison run again. A union of one is that one.
+        // One pass already holds every pair. Asking for a second look at the
+        // same crowd is asking the same question again, not a different one.
         let pairs = one_pass(client, texts, &(0..texts.len()).collect::<Vec<_>>())?;
-        let found = pairs.len();
         return Ok(Compared {
             pairs,
             passes: 1,
             unread: Vec::new(),
-            arrangements: vec![ByArrangement {
-                arrangement: Arrangement::Given.name().to_string(),
+            schedule: Schedule {
                 passes: 1,
-                unread: 0,
-                proposed: found,
-                added: found,
-            }],
+                batch: texts.len(),
+                looks: 1,
+            },
         });
     }
 
-    // The base order is chosen ONCE and every arrangement is a permutation of
-    // it, so `similarity_order`'s one embedding call is not paid per
-    // arrangement — and the escape hatch it is behind still decides what the
-    // first arrangement looks like, exactly as it did before the union.
-    let base = similarity_order(client, texts);
-    let plan: Vec<(Arrangement, Vec<Vec<usize>>)> = ARRANGEMENTS
-        .iter()
-        .map(|a| (*a, passes_over(&a.apply(&base))))
-        .collect();
-    let passes: usize = plan.iter().map(|(_, sets)| sets.len()).sum();
+    let sets = schedule(texts.len(), LOOKS);
+    let passes = sets.len();
     eprintln!(
         "{} commitments is past what one comparison holds — {passes} passes over blocks of \
-         {BATCH}, {} arrangement(s) of the same list",
-        texts.len(),
-        plan.len()
+         {BATCH}, every pair weighed {LOOKS} times in different company",
+        texts.len()
     );
 
     let mut out: Vec<Proposed> = Vec::new();
     let mut unread: Vec<String> = Vec::new();
-    let mut arrangements: Vec<ByArrangement> = Vec::new();
     let mut last_err: Option<ModelError> = None;
-    let mut done = 0usize;
-    for (arrangement, sets) in &plan {
-        // Folded within the arrangement first, so `proposed` counts pairs and
-        // not sightings: a within-block pair is shown to the model in several
-        // passes of the same arrangement by construction.
-        let mut mine: Vec<Proposed> = Vec::new();
-        let mut mine_unread = 0usize;
-        for (i, idx) in sets.iter().enumerate() {
-            done += 1;
-            eprint!("\rcomparing {done}/{passes} ({})…", arrangement.name());
-            let _ = std::io::Write::flush(&mut std::io::stderr());
-            // One pass failing is not the canon's. The map step has always
-            // recorded a chunk it could not read and kept going; this step
-            // threw away every other comparison for one refusal, and on a
-            // 34-section ordinance that cost a whole run twenty passes in,
-            // thirty-three minutes deep, with the two runs behind it never
-            // starting. What a refusal costs instead is COVERAGE, which is
-            // recorded and reported rather than absorbed (§18.3).
-            let got = match one_pass(client, texts, idx) {
-                Ok(v) => v,
-                Err(e) => {
-                    eprintln!("\nwarning: comparison {done}/{passes} produced no answer: {e}");
-                    // The arrangement and the positions, not just the pass
-                    // number. A comparison that fails once and cannot be
-                    // reproduced is a mystery for as long as its INPUT is
-                    // unrecoverable — and one of these failed on a Des Moines
-                    // sweep in a way no synthetic pass of the same size and
-                    // shape would repeat. With the arrangement and positions
-                    // recorded, the artifact's own `kept` and `candidates`
-                    // give the exact texts back, and the next occurrence is a
-                    // bug someone can drive rather than a story about one.
-                    unread.push(format!(
-                        "pass {}/{} of the {} arrangement over kept positions {idx:?}: {e}",
-                        i + 1,
-                        sets.len(),
-                        arrangement.name()
-                    ));
-                    mine_unread += 1;
-                    last_err = Some(e);
-                    continue;
-                }
-            };
-            for p in got {
-                // The same pair can surface in more than one pass. First
-                // reason wins; a pair is one tension however often it is
-                // noticed.
-                if !mine.iter().any(|q| is_same(q, &p)) {
-                    mine.push(p);
-                }
+    for (i, idx) in sets.iter().enumerate() {
+        let done = i + 1;
+        eprint!("\rcomparing {done}/{passes}…");
+        let _ = std::io::Write::flush(&mut std::io::stderr());
+        // One pass failing is not the canon's. The map step has always
+        // recorded a chunk it could not read and kept going; this step threw
+        // away every other comparison for one refusal, and on a 34-section
+        // ordinance that cost a whole run twenty passes in, thirty-three
+        // minutes deep, with the two runs behind it never starting. What a
+        // refusal costs instead is COVERAGE, which is recorded and reported
+        // rather than absorbed (§18.3).
+        let got = match one_pass(client, texts, idx) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("\nwarning: comparison {done}/{passes} produced no answer: {e}");
+                // The positions, not just the pass number. A comparison that
+                // fails once and cannot be reproduced is a mystery for as
+                // long as its INPUT is unrecoverable — and one of these
+                // failed on a Des Moines sweep in a way no synthetic pass of
+                // the same size and shape would repeat. With the positions
+                // recorded, the artifact's own `kept` and `candidates` give
+                // the exact texts back, and the next occurrence is a bug
+                // someone can drive rather than a story about one.
+                unread.push(format!(
+                    "pass {done}/{passes} over kept positions {idx:?}: {e}"
+                ));
+                last_err = Some(e);
+                continue;
             }
-        }
-        // And the fold across arrangements is the union itself. `added` is
-        // the only number that can retire an arrangement: an arrangement that
-        // adds nothing over several runs is pure cost, and this is where a
-        // reader sees that without instrumenting anything.
-        let mut report = ByArrangement {
-            arrangement: arrangement.name().to_string(),
-            passes: sets.len(),
-            unread: mine_unread,
-            proposed: mine.len(),
-            added: 0,
         };
-        for p in mine {
+        for p in got {
+            // The same pair can surface in more than one pass — it is weighed
+            // LOOKS times by construction. First reason wins; a pair is one
+            // tension however often it is noticed.
             if !out.iter().any(|q| is_same(q, &p)) {
-                report.added += 1;
                 out.push(p);
             }
         }
-        arrangements.push(report);
     }
     // Nothing was compared at all. A run reporting zero tensions because zero
     // comparisons happened is the failure §18.3 names, so the real error from
@@ -439,14 +312,6 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
         passes - unread.len(),
         out.len()
     );
-    if arrangements.len() > 1 {
-        for r in &arrangements {
-            eprintln!(
-                "  {:<11} {} pass(es), {} pair(s), {} no earlier arrangement had",
-                r.arrangement, r.passes, r.proposed, r.added
-            );
-        }
-    }
     if !unread.is_empty() {
         // Loud, because every tension number from this run is a number about
         // a fraction of the pairs.
@@ -461,39 +326,39 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
         pairs: out,
         passes,
         unread,
-        arrangements,
+        schedule: Schedule {
+            passes,
+            batch: BATCH,
+            looks: LOOKS,
+        },
     })
 }
 
-/// What one arrangement of the list was worth.
+/// The shape of the comparison a run actually ran.
 ///
-/// `added` is the load-bearing column: pairs this arrangement proposed that no
-/// earlier one had. A union whose second arrangement adds nothing is paying
-/// double for one comparison, and that has to be visible in the run itself
-/// rather than reconstructed by whoever wonders.
+/// In the artifact because a recall number is a number about a schedule: a
+/// reader who cannot see how many times each pair was weighed cannot compare
+/// two runs, and `looks` is the knob most likely to move the number.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct ByArrangement {
-    pub arrangement: String,
+pub struct Schedule {
     pub passes: usize,
-    pub unread: usize,
-    /// Distinct pairs this arrangement proposed, its own repeats folded.
-    pub proposed: usize,
-    /// How many of those were new to the union at that point.
-    pub added: usize,
+    /// How many commitments one comparison held.
+    pub batch: usize,
+    /// How many times every pair was examined.
+    pub looks: usize,
 }
 
 /// What a comparison run weighed, and what it could not.
 ///
-/// `passes` is what was attempted across every arrangement and `unread` what
-/// came back unusable, so a caller can say what fraction of the pair space a
-/// number covers instead of implying all of it.
+/// `passes` is what was attempted and `unread` what came back unusable, so a
+/// caller can say what fraction of the pair space a number covers instead of
+/// implying all of it.
 #[derive(Debug, Default)]
 pub struct Compared {
     pub pairs: Vec<Proposed>,
     pub passes: usize,
     pub unread: Vec<String>,
-    /// One entry per arrangement, in the order they ran.
-    pub arrangements: Vec<ByArrangement>,
+    pub schedule: Schedule,
 }
 
 fn is_same(a: &Proposed, b: &Proposed) -> bool {

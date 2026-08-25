@@ -17,10 +17,6 @@ pub enum Key {
     Endpoint,
     /// Model name sent with each request. Most local servers ignore it.
     Model,
-    /// Embedding model, used only to ORDER commitments before comparison so
-    /// that near-twins share a block. Optional: unset means comparison runs
-    /// in document order, which is what it always did.
-    EmbedModel,
     /// Model for the EXTRACT leg only. Unset means `model`, which is what
     /// every leg used before this key existed.
     ///
@@ -34,18 +30,12 @@ pub enum Key {
 }
 
 impl Key {
-    pub const ALL: [Key; 4] = [
-        Key::Endpoint,
-        Key::Model,
-        Key::EmbedModel,
-        Key::ExtractModel,
-    ];
+    pub const ALL: [Key; 3] = [Key::Endpoint, Key::Model, Key::ExtractModel];
 
     pub fn as_str(self) -> &'static str {
         match self {
             Key::Endpoint => "endpoint",
             Key::Model => "model",
-            Key::EmbedModel => "embed_model",
             Key::ExtractModel => "extract_model",
         }
     }
@@ -55,7 +45,6 @@ impl Key {
         match self {
             Key::Endpoint => "CANON_ENDPOINT",
             Key::Model => "CANON_MODEL",
-            Key::EmbedModel => "CANON_EMBED_MODEL",
             Key::ExtractModel => "CANON_EXTRACT_MODEL",
         }
     }
@@ -83,7 +72,6 @@ pub const FILE: &str = "config";
 pub struct Config {
     pub endpoint: Option<String>,
     pub model: Option<String>,
-    pub embed_model: Option<String>,
     pub extract_model: Option<String>,
 }
 
@@ -92,7 +80,6 @@ impl Config {
         match key {
             Key::Endpoint => self.endpoint.as_deref(),
             Key::Model => self.model.as_deref(),
-            Key::EmbedModel => self.embed_model.as_deref(),
             Key::ExtractModel => self.extract_model.as_deref(),
         }
     }
@@ -101,7 +88,6 @@ impl Config {
         let slot = match key {
             Key::Endpoint => &mut self.endpoint,
             Key::Model => &mut self.model,
-            Key::EmbedModel => &mut self.embed_model,
             Key::ExtractModel => &mut self.extract_model,
         };
         *slot = Some(value);

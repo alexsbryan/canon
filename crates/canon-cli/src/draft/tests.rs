@@ -647,6 +647,33 @@ fn a_subject_the_model_did_not_name_refuses_the_fold() {
     assert_eq!(kept, vec![0, 1]);
 }
 
+// ── what a kind DOES, not what it is about ──────────────────
+
+#[test]
+fn only_kinds_that_can_be_breached_are_compared() {
+    // The one decider for what enters the all-pairs comparison. A gap, a gap
+    // held on purpose, and a statement about the past are three different
+    // things and none of them is a commitment a proposal can sit against.
+    assert!(Kind::Rule.bears());
+    assert!(!Kind::Question.bears());
+    assert!(!Kind::Silence.bears());
+    assert!(!Kind::Record.bears());
+}
+
+#[test]
+fn a_record_is_read_as_a_record_and_not_as_a_rule() {
+    // The founding defect in miniature: "He has refused his Assent to Laws"
+    // is an accusation about one person in the past, and before `record`
+    // existed the only shape on offer made it a RULE — which then entered a
+    // quadratic comparison it could never contribute to.
+    assert_eq!(kind_of("record"), Kind::Record);
+    assert_eq!(kind_of(" record "), Kind::Record);
+    assert_eq!(kind_of("rule"), Kind::Rule);
+    // An unknown word is still a rule, so a typo lands on the kind that has
+    // to clear every guard rather than on one that skips them.
+    assert_eq!(kind_of("recrod"), Kind::Rule);
+}
+
 // ── a stage that fails keeps the work before it ─────────────
 
 fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
@@ -669,7 +696,7 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         tensions: Vec::new(),
         tension_passes: 0,
         tension_passes_unread: Vec::new(),
-        tension_arrangements: Vec::new(),
+        tension_schedule: None,
         failed: None,
         samples: 1,
         stopped_after: None,
