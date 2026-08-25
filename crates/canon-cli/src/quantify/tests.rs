@@ -250,3 +250,54 @@ fn a_pair_is_never_split_across_two_calls() {
         }
     }
 }
+
+#[test]
+fn a_universal_quantifier_is_not_a_number_the_citation_must_state() {
+    // **The T1 loss, 2026-08-24.** "Overnight guests are not permitted in the
+    // house at any time for any number of nights" was extracted correctly and
+    // then refused, because the reading returned `any number` as a quantity
+    // and the citation's reading had no matching measure. The guard exists to
+    // catch a rule that MISSTATES a number; "any" is the absence of a numeric
+    // limit, so there was no number to misstate — and the refusal cost the
+    // anchor a planted tension turned on.
+    let rule = [q("any", "number", "guest stay", "any")];
+    let cited = [q("two", "consecutive nights", "guest stay", "2 night")];
+    assert_eq!(
+        unsupported(&rule, &cited),
+        None,
+        "a quantifier is not a quantity the citation has to match"
+    );
+}
+
+#[test]
+fn a_real_number_the_citation_lacks_is_still_refused() {
+    // The guard's actual job, unchanged: the defect it was built for was a
+    // rule reading "at least three hours in advance" over a passage that said
+    // "three days ahead".
+    let rule = [q("three", "hours", "notice", "3 hour")];
+    let cited = [q("three", "days", "notice", "3 day")];
+    assert_eq!(
+        unsupported(&rule, &cited).as_deref(),
+        Some("three hours"),
+        "abstaining on quantifiers must not blunt the guard on numbers"
+    );
+}
+
+#[test]
+fn a_reading_with_no_canonical_form_is_not_judged_either_way() {
+    // `measure()` falls back to the as-written value when canonical is empty,
+    // and "twenty gallons" legitimately carries no digit. The guard abstains
+    // rather than refuse a reading it cannot assess.
+    let rule = [q("twenty", "gallons", "tank", "")];
+    let cited = [q("twenty", "gallons", "tank", "")];
+    assert_eq!(
+        unsupported(&rule, &cited),
+        None,
+        "matching readings are supported"
+    );
+    let cited_other = [q("ten", "gallons", "tank", "")];
+    assert!(
+        unsupported(&rule, &cited_other).is_some(),
+        "an unjudgeable canonical still compares by measure, so a real mismatch fires"
+    );
+}

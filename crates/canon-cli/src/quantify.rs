@@ -76,6 +76,37 @@ impl Quantity {
         !self.measure().is_empty()
     }
 
+    /// Does this state an actual NUMBER — the guard's question, which is not
+    /// the read-time question [`Quantity::states_a_number`] asks.
+    ///
+    /// [`unsupported`] exists to catch a rule that MISSTATES a number. A
+    /// reading that names no number misstates nothing, and refusing it costs
+    /// a real rule for a mismatch that was never numeric.
+    ///
+    /// **Measured 2026-08-24 on the maple-house bar.** The model returned
+    /// `any number` as a quantity of "Overnight guests are not permitted in
+    /// the house at any time for any number of nights", the citation's own
+    /// reading produced no matching measure, and the guard refused the rule —
+    /// costing T1's anchor. "Any" is a universal quantifier: it is the
+    /// ABSENCE of a numeric limit, and reading it as a limit inverts what the
+    /// rule says.
+    ///
+    /// **The test is a digit in the canonical form, and it is not a word
+    /// list.** `SYSTEM` contracts canonical as "digits rather than number
+    /// words", so a real quantity carries a digit there by construction. That
+    /// matters: units are an OPEN set — dBA, dBC, fortnights, therms — which
+    /// is exactly why the hand-kept unit list in `measure.rs` failed and was
+    /// deleted on 2026-08-22. Digits are a closed set of ten (§2).
+    ///
+    /// An EMPTY canonical is not judged. `measure()` then falls back to the
+    /// as-written value, which legitimately carries no digit ("twenty
+    /// gallons"), so the guard abstains rather than refuse on a reading it
+    /// cannot assess — absence reported, never defaulted (§18.3).
+    fn is_numeric(&self) -> bool {
+        let c = self.canonical.trim();
+        c.is_empty() || c.chars().any(|ch| ch.is_ascii_digit())
+    }
+
     /// The measure alone, without what it measures.
     ///
     /// Falls back to the as-written value when no canonical form came back,
@@ -311,18 +342,21 @@ pub fn differs_by_quantity(a: &[Quantity], b: &[Quantity]) -> bool {
 /// to "what does this state" (§10.6).
 pub fn unsupported(rule: &[Quantity], cited: &[Quantity]) -> Option<String> {
     let have: Vec<String> = cited.iter().map(Quantity::measure).collect();
-    rule.iter().find(|q| !have.contains(&q.measure())).map(|q| {
-        // Name what was COMPARED. Reporting `value unit` printed an empty
-        // string for a reading whose value and unit were blank but whose
-        // canonical form was not — so the refusal said the rule stated ``,
-        // and the mismatch it was actually about was invisible.
-        let written = format!("{} {}", q.value, q.unit);
-        if written.trim().is_empty() {
-            q.measure()
-        } else {
-            written.trim().to_string()
-        }
-    })
+    rule.iter()
+        .filter(|q| q.is_numeric())
+        .find(|q| !have.contains(&q.measure()))
+        .map(|q| {
+            // Name what was COMPARED. Reporting `value unit` printed an empty
+            // string for a reading whose value and unit were blank but whose
+            // canonical form was not — so the refusal said the rule stated ``,
+            // and the mismatch it was actually about was invisible.
+            let written = format!("{} {}", q.value, q.unit);
+            if written.trim().is_empty() {
+                q.measure()
+            } else {
+                written.trim().to_string()
+            }
+        })
 }
 
 #[cfg(test)]
