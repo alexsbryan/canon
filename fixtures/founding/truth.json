@@ -1,0 +1,262 @@
+{
+  "corpus_id": "founding",
+  "note": "Ground truth for the founding documents of the United States: the Declaration of Independence, the Articles of Confederation, and the Constitution with all twenty-seven amendments, as transcribed by the National Archives and the Avalon Project. Every `unmarked_supersession` entry is DERIVED, not authored: the Archives prints a note under each amendment naming the article it modified or superseded, and build.py parses those notes out of the same vendored HTML the corpus is built from, refusing anything it cannot parse. The `principle_vs_rule` entries are OURS and each one quotes both passages so the reading can be argued with. Nothing here rests on a document that is not vendored.",
+  "schema_version": 2,
+  "instruments": {
+    "Declaration of Independence": "declaration",
+    "Articles of Confederation": "articles",
+    "U.S. Constitution": "constitution"
+  },
+  "exhaustive": false,
+  "exhaustive_within": {
+    "region": "every pair drawn from the sections the Archives annotates as superseded or modified, the amendments that did so, and the passages named in the authored entries and decoys below",
+    "members": [
+      "articles:II",
+      "articles:IV",
+      "articles:XIII",
+      "constitution:I.10",
+      "constitution:I.2",
+      "constitution:I.3",
+      "constitution:I.4",
+      "constitution:I.8",
+      "constitution:I.9",
+      "constitution:II.1",
+      "constitution:III.2",
+      "constitution:IV.1",
+      "constitution:IV.2",
+      "constitution:VI",
+      "constitution:VII",
+      "constitution:amend.IV",
+      "constitution:amend.V",
+      "constitution:amend.X",
+      "constitution:amend.XI",
+      "constitution:amend.XII",
+      "constitution:amend.XIII.1",
+      "constitution:amend.XIII.2",
+      "constitution:amend.XIV.2",
+      "constitution:amend.XIV.5",
+      "constitution:amend.XV.2",
+      "constitution:amend.XVI",
+      "constitution:amend.XVII",
+      "constitution:amend.XVIII.1",
+      "constitution:amend.XX.2",
+      "constitution:amend.XX.3",
+      "constitution:amend.XXI.1",
+      "constitution:amend.XXV.1",
+      "constitution:amend.XXVI.1",
+      "constitution:amend.XXVI.2",
+      "declaration:self-evident-truths"
+    ]
+  },
+  "tension_types": [
+    "unmarked_supersession",
+    "principle_vs_rule"
+  ],
+  "planted_tensions": [
+    {
+      "id": "S1",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:III.2",
+      "b": "constitution:amend.XI",
+      "why": "Article III, section 2, of the Constitution was modified by amendment 11.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S2",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:II.1",
+      "b": "constitution:amend.XII",
+      "why": "A portion of Article II, section 1 of the Constitution was superseded by the 12th amendment.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S3",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:IV.2",
+      "b": "constitution:amend.XIII.1",
+      "why": "A portion of Article IV, section 2, of the Constitution was superseded by the 13th amendment.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S4",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:I.2",
+      "b": "constitution:amend.XIV.2",
+      "why": "Article I, section 2, of the Constitution was modified by section 2 of the 14th amendment.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S5",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:I.9",
+      "b": "constitution:amend.XVI",
+      "why": "Article I, section 9, of the Constitution was modified by amendment 16.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S6",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:I.3",
+      "b": "constitution:amend.XVII",
+      "why": "Article I, section 3, of the Constitution was modified by the 17th amendment.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S7",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:I.4",
+      "b": "constitution:amend.XX.2",
+      "why": "Article I, section 4, of the Constitution was modified by section 2 of this amendment.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S8",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:amend.XII",
+      "b": "constitution:amend.XX.3",
+      "why": "In addition, a portion of the 12th amendment was superseded by section 3.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S9",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:II.1",
+      "b": "constitution:amend.XXV.1",
+      "why": "Article II, section 1, of the Constitution was affected by the 25th amendment.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S10",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:amend.XIV.2",
+      "b": "constitution:amend.XXVI.1",
+      "why": "Amendment 14, section 2, of the Constitution was modified by section 1 of the 26th amendment.",
+      "source": "National Archives, Constitution of the United States: Amendments 11-27"
+    },
+    {
+      "id": "S11",
+      "type": "unmarked_supersession",
+      "split": "train",
+      "a": "constitution:amend.XVIII.1",
+      "b": "constitution:amend.XXI.1",
+      "quote": "The eighteenth article of amendment to the Constitution of the United States is hereby repealed.",
+      "why": "The 21st repeals the 18th in its own words, and neither is struck from the document.",
+      "source": "U.S. Constitution, Amendment XXI, Section 1"
+    },
+    {
+      "id": "P1",
+      "type": "principle_vs_rule",
+      "split": "test",
+      "a": "declaration:self-evident-truths",
+      "b": "constitution:I.2",
+      "quote_a": "all men are created equal \u2026 endowed by their Creator with certain unalienable Rights \u2026 Life, Liberty and the pursuit of Happiness",
+      "quote_b": "adding to the whole Number of free Persons \u2026 three fifths of all other Persons",
+      "why": "A universal claim of equality, and an apportionment rule that counts some persons as three fifths of one."
+    },
+    {
+      "id": "P2",
+      "type": "principle_vs_rule",
+      "split": "test",
+      "a": "declaration:self-evident-truths",
+      "b": "constitution:IV.2",
+      "quote_a": "unalienable Rights \u2026 Life, Liberty and the pursuit of Happiness",
+      "quote_b": "No Person held to Service or Labour in one State \u2026 shall, in Consequence of any Law or Regulation therein, be discharged from such Service or Labour, but shall be delivered up",
+      "why": "An inalienable right to liberty, and a duty on every State to return a person escaping from service."
+    },
+    {
+      "id": "P3",
+      "type": "principle_vs_rule",
+      "split": "test",
+      "a": "declaration:self-evident-truths",
+      "b": "constitution:I.9",
+      "quote_a": "unalienable Rights \u2026 Life, Liberty and the pursuit of Happiness",
+      "quote_b": "The Migration or Importation of such Persons as any of the States now existing shall think proper to admit, shall not be prohibited by the Congress prior to the Year one thousand eight hundred and eight",
+      "why": "The same right to liberty, and a clause forbidding Congress to end the slave trade for twenty years."
+    },
+    {
+      "id": "P4",
+      "type": "principle_vs_rule",
+      "split": "test",
+      "a": "articles:II",
+      "b": "constitution:VI",
+      "quote_a": "Each state retains its sovereignty, freedom, and independence, and every power, jurisdiction, and right, which is not by this Confederation expressly delegated",
+      "quote_b": "This Constitution, and the Laws of the United States \u2026 shall be the supreme Law of the Land; and the Judges in every State shall be bound thereby, any Thing in the Constitution or Laws of any State to the Contrary notwithstanding",
+      "why": "Retained state sovereignty, and a supremacy clause binding state judges against their own state's law."
+    },
+    {
+      "id": "P5",
+      "type": "principle_vs_rule",
+      "split": "test",
+      "a": "articles:XIII",
+      "b": "constitution:VII",
+      "quote_a": "nor shall any alteration at any time hereafter be made in any of them; unless such alteration be agreed to in a Congress of the United States, and be afterwards confirmed by the legislatures of every State",
+      "quote_b": "The Ratification of the Conventions of nine States, shall be sufficient for the Establishment of this Constitution between the States so ratifying the Same",
+      "why": "Alteration required every legislature; the replacement declared itself established on nine conventions. The founding act is not authorised by the instrument it replaces."
+    },
+    {
+      "id": "P6",
+      "type": "principle_vs_rule",
+      "split": "test",
+      "a": "constitution:I.8",
+      "b": "constitution:amend.X",
+      "quote_a": "To make all Laws which shall be necessary and proper for carrying into Execution the foregoing Powers",
+      "quote_b": "The powers not delegated to the United States by the Constitution, nor prohibited by it to the States, are reserved to the States respectively, or to the people",
+      "why": "A power to make whatever laws are necessary and proper, and a reservation of everything not delegated. Which one bounds the other is the oldest argument in American constitutional law.",
+      "contested": true
+    }
+  ],
+  "expected_non_tensions": [
+    {
+      "id": "N1",
+      "a": "constitution:I.9",
+      "b": "constitution:I.10",
+      "why": "compatible: both forbid bills of attainder and ex post facto laws, one to the Congress and one to the States. Same limit, different party bound.",
+      "split": "test"
+    },
+    {
+      "id": "N2",
+      "a": "constitution:amend.XIII.2",
+      "b": "constitution:amend.XV.2",
+      "why": "compatible: two amendments carrying the same enforcement sentence for different articles.",
+      "split": "test"
+    },
+    {
+      "id": "N3",
+      "a": "constitution:amend.XIV.5",
+      "b": "constitution:amend.XXVI.2",
+      "why": "compatible: the same enforcement sentence again, in two more amendments.",
+      "split": "test"
+    },
+    {
+      "id": "N4",
+      "a": "articles:IV",
+      "b": "constitution:IV.1",
+      "why": "compatible: full faith and credit is restated from the Articles into the Constitution. A rule and its re-enactment are not a tension.",
+      "split": "test"
+    },
+    {
+      "id": "N5",
+      "a": "constitution:amend.IV",
+      "b": "constitution:amend.V",
+      "why": "compatible: unreasonable searches and compelled self-incrimination are different protections, neither limiting the other.",
+      "split": "test"
+    },
+    {
+      "id": "N6",
+      "a": "constitution:I.8",
+      "b": "constitution:I.10",
+      "why": "compatible: Congress may coin money and the States may not. An allocation, not a conflict.",
+      "split": "test"
+    }
+  ]
+}

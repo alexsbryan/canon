@@ -12,3 +12,6 @@
 fixtures/*/runs/*/tree.patch
 fixtures/*/runs/*/tree.status
 fixtures/*/runs/*/tree-untracked.tgz
+
+# build.py leaves one behind on every fixture rebuild.
+__pycache__/
