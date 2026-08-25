@@ -30,7 +30,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 // ── the bars, pre-registered ────────────────────────────────
 //
@@ -61,7 +61,61 @@ const MIN_RUNS: usize = 3;
 /// municipal ordinances is keyed by the code section a document amends and by
 /// the ordinance that amends it — a charter article numeral cannot say which
 /// of two readings of the same section it means.
-fn section_key(heading: &str) -> Option<String> {
+/// `U.S. Constitution, Article I, Section 8` -> `constitution:I.8`.
+///
+/// The fifth key form, and the only one whose vocabulary is not in this file:
+/// a corpus that interleaves several enacting INSTRUMENTS declares them in its
+/// own manifest, because "Article II" names a different rule in the Articles
+/// of Confederation than it does in the Constitution and no amount of parsing
+/// can tell them apart. Two levels, like `ord:<n>/<sec>`, and for the same
+/// reason — the outer level is which instrument is speaking.
+fn instrument_key(heading: &str, instruments: &Map<String, Value>) -> Option<String> {
+    let (doc, rest) = heading.split_once(", ")?;
+    let slug = instruments.get(doc.trim())?.as_str()?;
+    let roman = |s: &str| -> String {
+        s.chars()
+            .take_while(|c| matches!(c, 'I' | 'V' | 'X' | 'L' | 'C'))
+            .collect()
+    };
+    let section = |s: &str| -> Option<String> {
+        let n: String = s
+            .split(", Section ")
+            .nth(1)?
+            .chars()
+            .take_while(char::is_ascii_digit)
+            .collect();
+        (!n.is_empty()).then_some(n)
+    };
+    let numbered = |prefix: &str, mark: &str| -> Option<String> {
+        let after = rest.strip_prefix(prefix)?;
+        let num = roman(after);
+        if num.is_empty() {
+            return None;
+        }
+        let mut key = format!("{slug}:{mark}{num}");
+        if let Some(sec) = section(rest) {
+            key.push('.');
+            key.push_str(&sec);
+        }
+        Some(key)
+    };
+    numbered("Article ", "")
+        .or_else(|| numbered("Amendment ", "amend."))
+        .or_else(|| {
+            // A named part rather than a numbered one: the Declaration's
+            // self-evident truths, a preamble. Lowercased and hyphenated so the
+            // manifest and the heading cannot drift on spacing alone.
+            Some(format!(
+                "{slug}:{}",
+                rest.trim().to_lowercase().replace(' ', "-")
+            ))
+        })
+}
+
+fn section_key(heading: &str, instruments: &Map<String, Value>) -> Option<String> {
+    if let Some(k) = instrument_key(heading, instruments) {
+        return Some(k);
+    }
     // `Sec. 42-258(6)` under an `Ordinance 16,064,` heading names the amending
     // reading; the same section number without one names the codified reading.
     if let Some(sec) = code_section(heading) {
@@ -111,6 +165,10 @@ fn ordinance_number(heading: &str) -> Option<String> {
 
 /// `{"article": "II"}` / `{"date": "2026-02-10"}` from the manifest.
 fn truth_key(side: &Value) -> Option<String> {
+    // A manifest whose corpus keys directly names the key and nothing else.
+    if let Some(k) = side.as_str() {
+        return Some(k.to_string());
+    }
     if let Some(a) = side.get("article").and_then(Value::as_str) {
         return Some(format!("article:{a}"));
     }
@@ -269,11 +327,16 @@ fn score_run(path: &Path, truth: &Value, region: &Region) -> Score {
         .collect();
     let kept = &kept;
 
+    // Which enacting instruments this corpus interleaves, if any. Empty for a
+    // single-document corpus, which is every corpus that existed before this
+    // one, so their keys are unchanged.
+    let empty = Map::new();
+    let instruments = truth["instruments"].as_object().unwrap_or(&empty);
     // candidate position (within `kept`) -> section key
     let section_of = |kept_pos: usize| -> Option<String> {
         let ci = kept.get(kept_pos)?.as_u64()? as usize;
         let chunk = chunks.get(candidates.get(ci)?["chunk"].as_u64()? as usize)?;
-        section_key(chunk["heading"].as_str()?)
+        section_key(chunk["heading"].as_str()?, instruments)
     };
 
     let mut s = Score {
@@ -668,6 +731,9 @@ fn governance_bar() {
 #[ignore = "needs draft runs: ./scripts/draft-bar.sh 3"]
 fn extraction_coverage() {
     let anchors = anchors();
+    let manifest = truth();
+    let empty = Map::new();
+    let instruments = manifest["instruments"].as_object().unwrap_or(&empty);
     let dir = runs_dir();
     let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
         .unwrap_or_else(|e| panic!("no runs at {}: {e}", dir.display()))
@@ -690,9 +756,10 @@ fn extraction_coverage() {
         // exactly what happened here, and it sent me editing the extraction
         // prompt for a defect one stage later.
         let section_of = |c: &Value| -> Option<String> {
-            chunks[c["chunk"].as_u64()? as usize]["heading"]
-                .as_str()
-                .and_then(section_key)
+            section_key(
+                chunks[c["chunk"].as_u64()? as usize]["heading"].as_str()?,
+                instruments,
+            )
         };
         let kept_idx: std::collections::BTreeSet<usize> = kept
             .iter()
@@ -863,18 +930,22 @@ fn section_keys_parse_out_of_the_documents_own_headings() {
     // it produces (§18.4). A section_key that silently returned None would
     // report every pair as unmappable and every score as zero.
     assert_eq!(
-        section_key("Maple House Charter, Article II — Quiet Hours").as_deref(),
+        section_key("Maple House Charter, Article II — Quiet Hours", &Map::new()).as_deref(),
         Some("article:II")
     );
     assert_eq!(
-        section_key("Maple House Charter, Article XI — Quiet Study Hours").as_deref(),
+        section_key(
+            "Maple House Charter, Article XI — Quiet Study Hours",
+            &Map::new()
+        )
+        .as_deref(),
         Some("article:XI")
     );
     assert_eq!(
-        section_key("Decision — 2026-02-10 — Weeknight Quiet Hours").as_deref(),
+        section_key("Decision — 2026-02-10 — Weeknight Quiet Hours", &Map::new()).as_deref(),
         Some("date:2026-02-10")
     );
-    assert_eq!(section_key("Just some prose"), None);
+    assert_eq!(section_key("Just some prose", &Map::new()), None);
 }
 
 #[test]
@@ -889,7 +960,7 @@ fn every_labeled_pair_in_the_manifest_maps_to_a_heading_in_the_document() {
     let present: BTreeSet<String> = doc
         .lines()
         .filter(|l| l.starts_with('#'))
-        .filter_map(|l| section_key(l.trim_start_matches('#').trim()))
+        .filter_map(|l| section_key(l.trim_start_matches('#').trim(), &Map::new()))
         .collect();
     assert_eq!(present.len(), 24, "expected 24 sections, found {present:?}");
 
@@ -912,11 +983,19 @@ fn every_labeled_pair_in_the_manifest_maps_to_a_heading_in_the_document() {
 #[test]
 fn a_charter_article_and_a_dated_decision_still_key_as_they_did() {
     assert_eq!(
-        section_key("# Maple House Charter, Article II — Quiet Hours").as_deref(),
+        section_key(
+            "# Maple House Charter, Article II — Quiet Hours",
+            &Map::new()
+        )
+        .as_deref(),
         Some("article:II")
     );
     assert_eq!(
-        section_key("# Decision — 2026-02-10 — Weeknight Quiet Hours").as_deref(),
+        section_key(
+            "# Decision — 2026-02-10 — Weeknight Quiet Hours",
+            &Map::new()
+        )
+        .as_deref(),
         Some("date:2026-02-10")
     );
 }
@@ -927,14 +1006,70 @@ fn an_ordinance_heading_keys_by_ordinance_not_by_its_date() {
     // same adoption date, so keying on the date would collapse sixteen
     // distinct readings onto one key and score them as one pair.
     assert_eq!(
-        section_key(r#"# Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(6), Type "F" permit"#)
-            .as_deref(),
+        section_key(
+            r#"# Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(6), Type "F" permit"#,
+            &Map::new(),
+        )
+        .as_deref(),
         Some("ord:16064/42-258(6)")
     );
     assert_eq!(
-        section_key(r#"# Ordinance 16,127, adopted 2022-05-23 — Sec. 42-258(17), Type "Q" permit"#)
-            .as_deref(),
+        section_key(
+            r#"# Ordinance 16,127, adopted 2022-05-23 — Sec. 42-258(17), Type "Q" permit"#,
+            &Map::new(),
+        )
+        .as_deref(),
         Some("ord:16127/42-258(17)")
+    );
+}
+
+#[test]
+fn every_key_the_founding_manifest_names_is_a_heading_in_the_corpus() {
+    // The instrument the founding corpus is scored with, validated before any
+    // number it produces (§18.4). Its manifest keys passages directly rather
+    // than by descriptor, so a key that no heading parses to would report the
+    // pair as unmappable and the tension as missed — a scorer defect wearing
+    // a model defect's clothes.
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/founding");
+    let manifest: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("truth.json")).expect("truth.json"),
+    )
+    .expect("truth JSON");
+    let instruments = manifest["instruments"].as_object().expect("instruments");
+    let corpus = std::fs::read_to_string(root.join("founding.md")).expect("founding.md");
+    let headings: BTreeSet<String> = corpus
+        .lines()
+        .filter(|l| l.starts_with("# "))
+        .filter_map(|l| section_key(l.trim_start_matches('#').trim(), instruments))
+        .collect();
+    assert_eq!(
+        headings.len(),
+        91,
+        "every heading must key, and key uniquely"
+    );
+
+    let sides = manifest["planted_tensions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .chain(manifest["expected_non_tensions"].as_array().unwrap())
+        .flat_map(|t| [t["a"].clone(), t["b"].clone()])
+        .filter_map(|v| truth_key(&v));
+    for key in sides {
+        assert!(
+            headings.contains(&key),
+            "the manifest names `{key}`, which no heading in the corpus parses to"
+        );
+    }
+    // And the two levels really do separate the instruments: Article II names
+    // a different rule in each document and must not collapse to one key.
+    assert_ne!(
+        section_key("Articles of Confederation, Article II", instruments),
+        section_key("U.S. Constitution, Article II, Section 1", instruments)
+    );
+    assert_eq!(
+        section_key("U.S. Constitution, Amendment XIV, Section 2", instruments).as_deref(),
+        Some("constitution:amend.XIV.2")
     );
 }
 
@@ -943,9 +1078,14 @@ fn a_codified_section_and_its_amended_reading_are_different_keys() {
     // The whole corpus turns on this: the same section number under two
     // documents is two readings, and a scorer that cannot tell them apart
     // cannot score an unmarked supersession at all.
-    let codified = section_key(r#"# Des Moines Municipal Code, Sec. 42-258(6) — Type "F" permit"#);
-    let amended =
-        section_key(r#"# Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(6), Type "F" permit"#);
+    let codified = section_key(
+        r#"# Des Moines Municipal Code, Sec. 42-258(6) — Type "F" permit"#,
+        &Map::new(),
+    );
+    let amended = section_key(
+        r#"# Ordinance 16,064, adopted 2021-10-18 — Sec. 42-258(6), Type "F" permit"#,
+        &Map::new(),
+    );
     assert_eq!(codified.as_deref(), Some("sec:42-258(6)"));
     assert_ne!(codified, amended);
 }

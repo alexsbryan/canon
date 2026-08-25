@@ -1,0 +1,312 @@
+{
+  "note": "What must survive extraction for each planted tension to be FINDABLE AT ALL. Each anchor is the phrase that carries the tension on its side \u2014 what the amendment changed, or the clause the principle collides with \u2014 taken from the documents and not from anything an extractor produced. Matching is case-insensitive over collapsed whitespace against any candidate drawn from that section. build.py refuses to write this file if a phrase does not appear in the section it names.",
+  "schema_version": 1,
+  "anchors": {
+    "S1": [
+      {
+        "section": "constitution:III.2",
+        "must": [
+          [
+            "Citizens of another State"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XI",
+        "must": [
+          [
+            "shall not be construed to extend to any suit"
+          ]
+        ]
+      }
+    ],
+    "S2": [
+      {
+        "section": "constitution:II.1",
+        "must": [
+          [
+            "vote by Ballot for two Persons"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XII",
+        "must": [
+          [
+            "vote by ballot for President and Vice-President"
+          ]
+        ]
+      }
+    ],
+    "S3": [
+      {
+        "section": "constitution:IV.2",
+        "must": [
+          [
+            "No Person held to Service or Labour"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XIII.1",
+        "must": [
+          [
+            "Neither slavery nor involuntary servitude"
+          ]
+        ]
+      }
+    ],
+    "S4": [
+      {
+        "section": "constitution:I.2",
+        "must": [
+          [
+            "three fifths of all other Persons"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XIV.2",
+        "must": [
+          [
+            "counting the whole number of persons"
+          ]
+        ]
+      }
+    ],
+    "S5": [
+      {
+        "section": "constitution:I.9",
+        "must": [
+          [
+            "Capitation"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XVI",
+        "must": [
+          [
+            "taxes on incomes"
+          ]
+        ]
+      }
+    ],
+    "S6": [
+      {
+        "section": "constitution:I.3",
+        "must": [
+          [
+            "chosen by the Legislature thereof"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XVII",
+        "must": [
+          [
+            "elected by the people thereof"
+          ]
+        ]
+      }
+    ],
+    "S7": [
+      {
+        "section": "constitution:I.4",
+        "must": [
+          [
+            "first Monday in December"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XX.2",
+        "must": [
+          [
+            "day of January"
+          ]
+        ]
+      }
+    ],
+    "S8": [
+      {
+        "section": "constitution:amend.XII",
+        "must": [
+          [
+            "shall choose immediately"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XX.3",
+        "must": [
+          [
+            "Vice President elect shall become President"
+          ]
+        ]
+      }
+    ],
+    "S9": [
+      {
+        "section": "constitution:II.1",
+        "must": [
+          [
+            "devolve on the Vice President"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XXV.1",
+        "must": [
+          [
+            "Vice President shall become President"
+          ]
+        ]
+      }
+    ],
+    "S10": [
+      {
+        "section": "constitution:amend.XIV.2",
+        "must": [
+          [
+            "the right to vote at any election"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XXVI.1",
+        "must": [
+          [
+            "eighteen years of age"
+          ]
+        ]
+      }
+    ],
+    "S11": [
+      {
+        "section": "constitution:amend.XVIII.1",
+        "must": [
+          [
+            "intoxicating liquors"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XXI.1",
+        "must": [
+          [
+            "is hereby repealed"
+          ]
+        ]
+      }
+    ],
+    "P1": [
+      {
+        "section": "declaration:self-evident-truths",
+        "must": [
+          [
+            "all men are created equal"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:I.2",
+        "must": [
+          [
+            "three fifths of all other Persons"
+          ]
+        ]
+      }
+    ],
+    "P2": [
+      {
+        "section": "declaration:self-evident-truths",
+        "must": [
+          [
+            "pursuit of Happiness"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:IV.2",
+        "must": [
+          [
+            "shall be delivered up"
+          ]
+        ]
+      }
+    ],
+    "P3": [
+      {
+        "section": "declaration:self-evident-truths",
+        "must": [
+          [
+            "pursuit of Happiness"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:I.9",
+        "must": [
+          [
+            "Migration or Importation"
+          ]
+        ]
+      }
+    ],
+    "P4": [
+      {
+        "section": "articles:II",
+        "must": [
+          [
+            "retains its sovereignty"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:VI",
+        "must": [
+          [
+            "supreme Law of the Land"
+          ]
+        ]
+      }
+    ],
+    "P5": [
+      {
+        "section": "articles:XIII",
+        "must": [
+          [
+            "legislatures of every State"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:VII",
+        "must": [
+          [
+            "Conventions of nine States"
+          ]
+        ]
+      }
+    ],
+    "P6": [
+      {
+        "section": "constitution:I.8",
+        "must": [
+          [
+            "necessary and proper"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.X",
+        "must": [
+          [
+            "reserved to the States"
+          ]
+        ]
+      }
+    ]
+  }
+}
