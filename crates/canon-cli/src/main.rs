@@ -121,11 +121,17 @@ ADJUDICATE                                    (needs an endpoint)
         --resume                         finish a review, no model call
         --include-ignored                read what .gitignore covers
         --max-chunks <n>                 read at most n passages this run
+        --samples <n> --dry-run          read each passage n times (measurement)
+        --refold <dir> --k <n>           re-fold those readings, no model call
+        --replay <run.json>              re-run a recorded run, no model call
+        --replay <run.json> --live-from <stage>
+                                         replay above <stage>, call for real from it
 
 CONFIGURE
   config show                            what this canon is configured with
   config set endpoint <url>              any OpenAI-compatible server
   config set model <name>                model name to send (default: local)
+  config set extract_model <name>        a different slot for extraction only
 
 FLAGS
   --json          machine-readable on stdout; logs go to stderr

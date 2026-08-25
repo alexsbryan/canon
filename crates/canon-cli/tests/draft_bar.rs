@@ -421,15 +421,44 @@ fn governance_bar() {
     // rather than discarding the work, so the bar has to be the thing that
     // refuses them — silently averaging one in would publish a number over a
     // pipeline that did not finish (§18.3).
+    //
+    // Two ways to stop, and both are refused here. `failed` means a stage
+    // errored. `stopped_after` means a run stopped on purpose — a convergence
+    // arm reads passages N times and stops at extraction, so it has no
+    // tensions at all; scored as a finished run it would read as recall 0.00
+    // and kill the bar for a measurement that never claimed to make one.
     let abandoned: Vec<(PathBuf, String)> = paths
         .iter()
         .filter_map(|p| {
             let raw = std::fs::read_to_string(p).ok()?;
             let v: Value = serde_json::from_str(&raw).ok()?;
-            let why = v["failed"].as_str()?.to_string();
+            let why = v["failed"]
+                .as_str()
+                .or_else(|| v["stopped_after"].as_str())?
+                .to_string();
             Some((p.clone(), why))
         })
         .collect();
+    // A hybrid run is SCORED, and said so.
+    //
+    // Its later stages are real calls and its earlier ones came off a
+    // recording — which holds extraction constant across arms, making it a
+    // better controlled experiment than two live sweeps, not a worse one. But
+    // a reader who cannot see that a number came from a partly replayed run
+    // cannot compare it with one that did not.
+    for p in &paths {
+        if let Some(from) = std::fs::read_to_string(p)
+            .ok()
+            .and_then(|r| serde_json::from_str::<Value>(&r).ok())
+            .and_then(|v| v["replayed_from"].as_str().map(str::to_string))
+        {
+            println!(
+                "  replayed  {}  <- {from}",
+                p.file_name().unwrap().to_string_lossy()
+            );
+        }
+    }
+
     if !abandoned.is_empty() {
         println!("\nnot scored — these runs stopped before the pipeline finished:");
         for (p, why) in &abandoned {
@@ -622,6 +651,32 @@ fn extraction_coverage() {
 
         let mut extracted: std::collections::BTreeMap<String, String> = Default::default();
         let mut survived: std::collections::BTreeMap<String, String> = Default::default();
+        // A THIRD haystack: what a guard refused after extraction produced it.
+        //
+        // `support` removes what it drops from `artifact.candidates` before the
+        // artifact is written, so a rule the model DID find and a guard then
+        // refused was indistinguishable here from a rule the model never
+        // found. Both read as NEVER EXTRACTED, and the two want opposite
+        // fixes — one is a prompt, the other is a guard. Measured 2026-08-24:
+        // T1's anchor was reported as never extracted when the model had in
+        // fact returned "Overnight guests are not permitted ... for any number
+        // of nights" and the quantity guard refused it for stating `any
+        // number`, a universal quantifier it read as a numeral. The evidence
+        // was in the artifact the whole time; this bar simply was not reading
+        // it (§18.3 — absence reported, never defaulted).
+        let mut refused: std::collections::BTreeMap<String, Vec<(String, String)>> =
+            Default::default();
+        for d in run["dropped"]
+            .as_array()
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
+        {
+            let Some(sec) = section_of(d) else { continue };
+            refused.entry(sec).or_default().push((
+                d["text"].as_str().unwrap_or("").to_lowercase(),
+                d["reason"].as_str().unwrap_or("unstated").to_string(),
+            ));
+        }
         for (i, c) in candidates.iter().enumerate() {
             let Some(sec) = section_of(c) else { continue };
             let text = format!(" || {}", c["text"].as_str().unwrap_or("").to_lowercase());
@@ -643,16 +698,26 @@ fn extraction_coverage() {
         let mut findable = Vec::new();
         let mut blocked = Vec::new();
         let mut folded_away = Vec::new();
+        let mut guarded_away = Vec::new();
         for (tid, sides) in anchors["anchors"].as_object().unwrap() {
             let mut missing = Vec::new();
             let mut lost_to_dedupe = Vec::new();
+            let mut lost_to_guard = Vec::new();
             for side in sides.as_array().unwrap() {
                 let section = side["section"].as_str().unwrap_or("").to_string();
                 let ext = extracted.get(&section).cloned().unwrap_or_default();
                 let sur = survived.get(&section).cloned().unwrap_or_default();
+                let refs = refused.get(&section).cloned().unwrap_or_default();
                 for alts in side["must"].as_array().unwrap() {
                     if !has(&ext, alts) {
-                        missing.push(format!("{section} never yielded {alts}"));
+                        // Before calling it never found, ask whether a guard
+                        // refused it — the two want opposite fixes.
+                        match refs.iter().find(|(text, _)| has(text, alts)) {
+                            Some((_, why)) => {
+                                lost_to_guard.push(format!("{section}: {alts} refused — {why}"))
+                            }
+                            None => missing.push(format!("{section} never yielded {alts}")),
+                        }
                     } else if !has(&sur, alts) {
                         // Extraction did its job and the reduce step undid it.
                         lost_to_dedupe.push(format!("{section}: {alts} folded away"));
@@ -661,6 +726,8 @@ fn extraction_coverage() {
             }
             if !missing.is_empty() {
                 blocked.push(format!("{tid}: {}", missing.join("; ")));
+            } else if !lost_to_guard.is_empty() {
+                guarded_away.push(format!("{tid}: {}", lost_to_guard.join("; ")));
             } else if !lost_to_dedupe.is_empty() {
                 folded_away.push(format!("{tid}: {}", lost_to_dedupe.join("; ")));
             } else {
@@ -669,14 +736,18 @@ fn extraction_coverage() {
         }
         let total = anchors["anchors"].as_object().unwrap().len();
         println!(
-            "\n{}  reachable {}/{total}   (extraction missed {}, dedupe folded {})",
+            "\n{}  reachable {}/{total}   (extraction missed {}, a guard refused {}, dedupe folded {})",
             path.file_name().unwrap().to_string_lossy(),
             findable.len(),
             blocked.len(),
+            guarded_away.len(),
             folded_away.len()
         );
         for b in &blocked {
             println!("  NEVER EXTRACTED  {b}");
+        }
+        for g in &guarded_away {
+            println!("  REFUSED BY GUARD {g}");
         }
         for f in &folded_away {
             println!("  FOLDED BY DEDUPE {f}");

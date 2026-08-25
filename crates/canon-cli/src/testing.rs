@@ -92,6 +92,7 @@ impl Mock {
             endpoint: Some(self.base.clone()),
             model: None,
             embed_model: None,
+            extract_model: None,
         })
         .expect("client")
     }
@@ -105,6 +106,7 @@ impl Mock {
             endpoint: Some(self.base.clone()),
             model: None,
             embed_model: Some("test-embed".into()),
+            extract_model: None,
         })
         .expect("client")
     }

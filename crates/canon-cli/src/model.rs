@@ -20,7 +20,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use serde::de::DeserializeOwned;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::config::Config;
@@ -128,6 +128,20 @@ pub fn client_for(dir: &Path, allow_remote: bool) -> Result<Client, ModelError> 
     Ok(client)
 }
 
+/// The client the EXTRACT leg should use: `extract_model` when set, otherwise
+/// the one every leg shares.
+///
+/// Takes an already-acquired client so the locality rule is decided once, in
+/// `client_for`, and cannot be bypassed by asking for a leg — a per-leg slot
+/// is a routing choice, never a privacy one.
+pub fn extract_client(dir: &Path, base: &Client) -> Result<Client, ModelError> {
+    let cfg = Config::load(dir).map_err(ModelError::Config)?;
+    Ok(match cfg.extract_model.as_deref().map(str::trim) {
+        Some(m) if !m.is_empty() => base.with_model(m),
+        _ => base.with_model(base.model()),
+    })
+}
+
 /// Print a model failure and return the exit code it maps to.
 ///
 /// Exit 3 reads as "cannot judge", which is a verdict; the other codes are
@@ -143,12 +157,88 @@ pub fn report(e: ModelError) -> i32 {
     code
 }
 
+/// One exchange with the endpoint: the path it went to, and the raw reply.
+///
+/// The REPLY is what is worth keeping. Everything canon does after a call —
+/// cutting a citation from the passage the model pointed at, refusing a
+/// silence with no reason, refusing a rule that states a number its citation
+/// does not, folding duplicates, thresholding a convergence — is pure code
+/// over this string. Recording it makes every one of those testable against
+/// real model output at zero cost.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TapeEntry {
+    /// Endpoint path, e.g. `chat/completions` or `embeddings`. Checked on
+    /// replay: a tape played against a build that calls a different endpoint
+    /// in a different order is not evidence about that build.
+    pub path: String,
+    /// Which stage asked — the schema name the call already carries
+    /// (`commitments`, `quantities`, `groups`, `tensions`, `bearings`,
+    /// `changes`), or `embeddings`. No new vocabulary: every call site was
+    /// already naming its stage, this just keeps the name.
+    ///
+    /// Defaulted, so a tape recorded before stages were labelled still plays
+    /// end to end — it simply cannot be cut at a stage.
+    #[serde(default)]
+    pub stage: String,
+    pub raw: String,
+}
+
+/// A run's exchanges, being written or being played back.
+///
+/// **Why this is at the transport seam and not per stage.** Every stage
+/// reaches the endpoint through [`Client::post_json`], so one seam records
+/// all of them and no stage has to know it is being taped (§10.6). It is also
+/// the reason a replay costs nothing: the expensive half of a run is the
+/// model, and a tape has already paid for it.
+#[derive(Debug)]
+pub enum Tape {
+    Record(std::cell::RefCell<Vec<TapeEntry>>),
+    /// Playing back, optionally only up to a stage.
+    ///
+    /// `live_from` is what makes an arm on a LATE stage cheap. The stages
+    /// above it come off the tape; from that stage on the calls are real. A
+    /// comparison arm is 10 of ~36 calls, so it costs about five minutes
+    /// instead of twenty — and unlike a full replay it CAN judge a changed
+    /// prompt, because the changed stage is actually run.
+    Play {
+        entries: std::cell::RefCell<std::collections::VecDeque<TapeEntry>>,
+        live_from: Option<String>,
+        live: std::cell::Cell<bool>,
+    },
+}
+
+impl Tape {
+    pub fn record() -> Self {
+        Tape::Record(std::cell::RefCell::new(Vec::new()))
+    }
+
+    pub fn play(entries: Vec<TapeEntry>, live_from: Option<String>) -> Self {
+        Tape::Play {
+            entries: std::cell::RefCell::new(entries.into()),
+            live_from,
+            live: std::cell::Cell::new(false),
+        }
+    }
+
+    /// What was recorded, in order.
+    pub fn entries(&self) -> Vec<TapeEntry> {
+        match self {
+            Tape::Record(v) => v.borrow().clone(),
+            Tape::Play { entries, .. } => entries.borrow().iter().cloned().collect(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Client {
     agent: ureq::Agent,
     endpoint: String,
     model: String,
     embed_model: Option<String>,
+    /// Shared, not owned: `with_model` hands a leg its own client, and a leg
+    /// with its own tape would drop its calls from the run's recording — the
+    /// extract leg, which is 24 of ~36 calls, first.
+    tape: Option<std::rc::Rc<Tape>>,
 }
 
 impl Client {
@@ -175,6 +265,7 @@ impl Client {
             // not have, and guessing a name produces a 404 thirty seconds
             // into a run instead of a clear "ordering unavailable".
             embed_model: cfg.embed_model.clone().filter(|m| !m.trim().is_empty()),
+            tape: None,
         })
     }
 
@@ -189,6 +280,23 @@ impl Client {
     /// cannot be compared with anything, including itself next month.
     pub fn model(&self) -> &str {
         &self.model
+    }
+
+    /// The same client pointed at a different slot.
+    ///
+    /// The endpoint, the agent and the locality decision were already made and
+    /// none of them changes with the model name — only which slot serves the
+    /// call does. `client_for` remains the one place a client is ACQUIRED
+    /// (§10.6); this narrows an acquired one to a leg.
+    pub fn with_model(&self, model: &str) -> Self {
+        Self {
+            agent: self.agent.clone(),
+            endpoint: self.endpoint.clone(),
+            model: model.to_string(),
+            embed_model: self.embed_model.clone(),
+            // One tape per RUN, shared by every leg's client.
+            tape: self.tape.clone(),
+        }
     }
 
     /// The host, parsed without a URL crate — this is the only URL question
@@ -284,7 +392,7 @@ impl Client {
                 "json_schema": { "name": schema_name, "strict": true, "schema": schema },
             }),
         );
-        let refusal = match self.post(&rung1) {
+        let refusal = match self.post(schema_name, &rung1) {
             Ok(text) => return decode(&text),
             Err(e @ ModelError::Refused { .. }) if is_schema_refusal(&e) => e,
             Err(e) => return Err(e),
@@ -303,7 +411,7 @@ impl Client {
         );
         let rung2 = self.request(system, &stated, json!({ "type": "json_object" }));
         // No rung 3. A refusal here is a refusal, and prose is never parsed.
-        decode(&self.post(&rung2)?)
+        decode(&self.post(schema_name, &rung2)?)
     }
 
     fn request(&self, system: &str, user: &str, response_format: Value) -> Value {
@@ -336,8 +444,11 @@ impl Client {
             .embed_model
             .as_deref()
             .ok_or(ModelError::NoEmbedModel)?;
-        let (parsed, raw) =
-            self.post_json("embeddings", &json!({ "model": model, "input": texts }))?;
+        let (parsed, raw) = self.post_json(
+            "embeddings",
+            "embeddings",
+            &json!({ "model": model, "input": texts }),
+        )?;
         let data = parsed
             .get("data")
             .and_then(Value::as_array)
@@ -377,7 +488,120 @@ impl Client {
     ///
     /// The transport half, shared by completions and embeddings so there is
     /// one place that knows how this server reports a refusal (§10.6).
-    fn post_json(&self, path: &str, body: &Value) -> Result<(Value, String), ModelError> {
+    /// Attach a fresh recording tape to this client and every leg made from it.
+    pub fn recording(mut self) -> Self {
+        self.tape = Some(std::rc::Rc::new(Tape::record()));
+        self
+    }
+
+    /// A client that answers from a recording and never reaches the network.
+    ///
+    /// No endpoint is required and no locality check applies, because no call
+    /// leaves the process. The endpoint string is carried only so the artifact
+    /// a replay writes still says which server produced the evidence.
+    pub fn replaying(endpoint: &str, model: &str, entries: Vec<TapeEntry>) -> Self {
+        Self {
+            agent: ureq::AgentBuilder::new().build(),
+            endpoint: endpoint.to_string(),
+            model: model.to_string(),
+            embed_model: None,
+            tape: Some(std::rc::Rc::new(Tape::play(entries, None))),
+        }
+    }
+
+    /// Play a tape on a LIVE client, going real from `live_from` onward.
+    ///
+    /// The client keeps its configured endpoint because the calls from the cut
+    /// stage on are genuine. This is the loop for iterating on a late stage:
+    /// the comparison stage is 10 of ~36 calls, so an arm on it costs the 10.
+    pub fn playing(mut self, entries: Vec<TapeEntry>, live_from: Option<String>) -> Self {
+        self.tape = Some(std::rc::Rc::new(Tape::play(entries, live_from)));
+        self
+    }
+
+    /// A leg's view of this client: same endpoint, same model, SAME tape.
+    ///
+    /// `with_model` is for pointing a leg at a different slot; this is for a
+    /// leg that shares everything. Both share the tape, because a run has one.
+    pub fn for_leg(&self) -> Self {
+        self.with_model(&self.model)
+    }
+
+    /// What this run has recorded so far, in order. Empty when not recording.
+    pub fn tape(&self) -> Vec<TapeEntry> {
+        self.tape.as_ref().map(|t| t.entries()).unwrap_or_default()
+    }
+
+    fn post_json(
+        &self,
+        path: &str,
+        stage: &str,
+        body: &Value,
+    ) -> Result<(Value, String), ModelError> {
+        // A tape being PLAYED answers here, before any transport exists.
+        //
+        // The path is checked rather than assumed. A build that calls a
+        // different endpoint, or the same ones in a different order, is not
+        // the build this tape recorded, and a number scored from it would be
+        // about neither — so it refuses instead of substituting (§18.3).
+        if let Some(Tape::Play {
+            entries,
+            live_from,
+            live,
+        }) = self.tape.as_deref()
+        {
+            // Once the cut stage is reached the tape is done and every call
+            // from here is real — including the rest of THIS stage's calls.
+            if !live.get() && live_from.as_deref() == Some(stage) {
+                live.set(true);
+            }
+            if !live.get() {
+                let entry =
+                    entries
+                        .borrow_mut()
+                        .pop_front()
+                        .ok_or_else(|| ModelError::Malformed {
+                            detail: format!(
+                                "the tape is exhausted: this build asked for a `{path}` call \
+                                 the recording does not have. A change to the CALL SEQUENCE \
+                                 cannot be judged by replay — re-run it live, or cut the tape \
+                                 above the stage you changed with `--live-from`."
+                            ),
+                            raw: String::new(),
+                        })?;
+                if entry.path != path {
+                    return Err(ModelError::Malformed {
+                        detail: format!(
+                            "tape out of step: this build asked for `{path}` where the \
+                             recording has `{}`. Replay judges pure code over recorded \
+                             model output; the calls themselves must match.",
+                            entry.path
+                        ),
+                        raw: String::new(),
+                    });
+                }
+                // A stage label only checks when the recording HAS one: tapes
+                // written before stages were labelled carry `""`, and refusing
+                // those would retire evidence that is still perfectly good for
+                // a full replay.
+                if !entry.stage.is_empty() && entry.stage != stage {
+                    return Err(ModelError::Malformed {
+                        detail: format!(
+                            "tape out of step: the `{stage}` stage asked, but the recording \
+                             has a `{}` call here.",
+                            entry.stage
+                        ),
+                        raw: String::new(),
+                    });
+                }
+                let parsed: Value =
+                    serde_json::from_str(&entry.raw).map_err(|e| ModelError::Malformed {
+                        detail: format!("recorded reply is not JSON: {e}"),
+                        raw: cap(&entry.raw),
+                    })?;
+                return Ok((parsed, entry.raw));
+            }
+        }
         let url = format!("{}/{path}", self.endpoint);
         let response = match self
             .agent
@@ -410,12 +634,22 @@ impl Client {
             detail: format!("response body is not JSON: {e}"),
             raw: cap(&raw),
         })?;
+        // Recorded AFTER the transport succeeded and BEFORE anything
+        // interprets it: what goes on the tape is what the server said, not
+        // what this build made of it.
+        if let Some(Tape::Record(v)) = self.tape.as_deref() {
+            v.borrow_mut().push(TapeEntry {
+                path: path.to_string(),
+                stage: stage.to_string(),
+                raw: raw.clone(),
+            });
+        }
         Ok((parsed, raw))
     }
 
     /// POST once; return the assistant's content string.
-    fn post(&self, body: &Value) -> Result<String, ModelError> {
-        let (parsed, raw) = self.post_json("chat/completions", body)?;
+    fn post(&self, stage: &str, body: &Value) -> Result<String, ModelError> {
+        let (parsed, raw) = self.post_json("chat/completions", stage, body)?;
         let message = parsed
             .get("choices")
             .and_then(|c| c.get(0))

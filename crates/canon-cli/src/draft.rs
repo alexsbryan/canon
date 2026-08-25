@@ -144,6 +144,11 @@ pub struct Candidate {
     /// having forgotten, which is the whole distinction it exists to make.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub because: String,
+    /// Which reading of the passage produced this, when the passage was read
+    /// more than once. Always 0 on a single-sample run, which is every run
+    /// written before `--samples` existed.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub sample: usize,
 }
 
 /// A chunk the endpoint could not answer for.
@@ -227,6 +232,49 @@ pub struct DraftRun {
     /// stopped. The bar refuses to score one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub failed: Option<String>,
+    /// How many times each passage was read. 1 is the ordinary run.
+    ///
+    /// A candidate count from a run with this above 1 is a count over N
+    /// readings, not over the document — comparing it against a single-sample
+    /// count without dividing is comparing two different things.
+    #[serde(default = "one", skip_serializing_if = "is_one")]
+    pub samples: usize,
+    /// Set when this run's earlier stages came off a recording.
+    ///
+    /// Names the artifact and the stage the tape was cut at. Without it a
+    /// hybrid is indistinguishable from a live run in the artifact, and a
+    /// scorer would average a mid-loop probe in with a measurement.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replayed_from: Option<String>,
+    /// Set when a run stopped on purpose rather than on an error.
+    ///
+    /// Distinct from `failed`, which means something went wrong. Both make the
+    /// run EVIDENCE rather than a measurement of the whole pipeline, and the
+    /// bar refuses to score either — but a reader who cannot tell a deliberate
+    /// extract-only arm from a crash is being misled about both (§18.3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stopped_after: Option<String>,
+    /// Every reply the endpoint gave this run, in order.
+    ///
+    /// **This is what makes an arm cost a stage instead of a run.** The
+    /// expensive half of a run is the model; everything canon does afterwards
+    /// — cutting citations, refusing a silence with no reason, refusing a rule
+    /// whose number its citation lacks, folding duplicates, thresholding a
+    /// convergence — is pure code over these strings. With them on disk,
+    /// `--replay` re-runs all of it at zero model cost.
+    ///
+    /// Written on dry runs only: a real run is a person's canon, not evidence,
+    /// and their notes should not be copied into an artifact nobody asked for.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tape: Vec<model::TapeEntry>,
+}
+
+fn one() -> usize {
+    1
+}
+
+fn is_one(n: &usize) -> bool {
+    *n == 1
 }
 
 fn is_zero(n: &usize) -> bool {
@@ -240,7 +288,16 @@ fn is_zero(n: &usize) -> bool {
 /// this. Discarding that makes the next attempt pay for it again and leaves
 /// nobody able to see what the run actually held. The artifact is marked
 /// `failed`, so it reads as evidence and can never be scored as a result.
-fn abandon(dir: &Path, artifact: &mut DraftRun, stage: &str, e: ModelError) -> i32 {
+fn abandon(
+    dir: &Path,
+    artifact: &mut DraftRun,
+    stage: &str,
+    e: ModelError,
+    client: &Client,
+) -> i32 {
+    // The calls that DID land are the expensive half, and a stage failure is
+    // exactly when you want to re-run the code below it without paying again.
+    artifact.tape = client.tape();
     artifact.failed = Some(format!("{stage}: {e}"));
     match persist(dir, artifact) {
         Ok(p) => eprintln!(
@@ -380,8 +437,8 @@ Most of what you return is a RULE. Two other kinds count, and only when the \
 passage says them outright:
 - question: the passage says nobody has decided something, or leaves it open. \
 Write text as the open question.
-- silence: the passage says something is deliberately NOT being written down. \
-Write text as the subject, and because as what leaving it unwritten protects.
+- silence: the passage says something is deliberately NOT being written \
+down. Write text as the subject of that silence.
 
 A subject the passage simply does not mention is not a question. A rule that \
 is merely absent is not a silence. Both must be stated.
@@ -395,6 +452,9 @@ when one sentence states it
 write it in a list of their own commitments. Never write about the author — \
 \"Mornings are protected.\", not \"The speaker intends to protect their \
 mornings.\" It must make sense with no passage in front of it.
+- because: for a silence, what leaving it unwritten protects — a silence \
+without this is refused. For a rule or a question, the reason the passage \
+gives, or an empty string when it gives none.
 
 Rules:
 - Extract every distinct rule the passage states. A passage stating no rule \
@@ -455,7 +515,15 @@ fn extract_schema() -> Value {
                         "text": { "type": "string" },
                         "because": { "type": "string" },
                     },
-                    "required": ["kind", "first", "last", "text"],
+                    // `because` is required so the KEY cannot be omitted.
+                    // It was described in the silence bullet but missing from
+                    // the return list, so a model following that list emitted
+                    // kind/first/last/text and wrote the rationale as a
+                    // trailing "because" clause inside `text` — and every
+                    // silence was then refused for having no stated reason.
+                    // A capability with code, a test and a README section
+                    // that could not fire.
+                    "required": ["kind", "first", "last", "text", "because"],
                     "additionalProperties": false,
                 },
             },
@@ -587,6 +655,8 @@ pub fn extract(
             source: chunk.source.clone(),
             kind,
             because,
+            // The reader tags this; one call cannot know which of N it was.
+            sample: 0,
         });
     }
     Ok((kept, dropped))
@@ -830,6 +900,302 @@ pub fn dedupe(
 
 // ── sources ─────────────────────────────────────────────────
 
+/// The default agreement threshold: more than half the readings.
+///
+/// A default, never a finding. The arm exists to plot k from 1 to N; this is
+/// only what a run that did not choose folds at, so the artifact it writes is
+/// coherent on its own.
+pub fn majority(samples: usize) -> usize {
+    samples / 2 + 1
+}
+
+/// Fold N readings of the same passages into the findings enough of them agree
+/// on, and report the groups the way the reduce step does.
+///
+/// **Deterministic, and no model sees it.** The question a convergence arm
+/// asks is whether N cheap readings beat one expensive one; a model call
+/// inside the fold puts a stochastic step inside the measurement, and then no
+/// point on the k curve can be attributed to k (§18.4). This is also why it is
+/// not `dedupe` with a counter bolted on — `dedupe` IS a model call.
+///
+/// **A group never holds two findings from one reading.** Convergence is a
+/// cross-reading question only: within a single reading the extractor already
+/// decided what was distinct, and folding inside it is second-guessing that
+/// with no evidence. Measured on the baseline artifact of 2026-08-24, a fold
+/// that did merge inside a reading lost two real rules — one sentence
+/// carrying two obligations ("permitted only if every member approves" and
+/// "kept out of the bedroom of any member who objects") collapsed to one
+/// because both cite the same sentence, and a rule whose citation spanned a
+/// whole passage swallowed a second rule cited inside it. A fold that eats
+/// findings depresses every k on the curve and would be read as the fast slot
+/// reading badly.
+///
+/// So two candidates are one finding when they came from DIFFERENT readings
+/// of the same passage, are the same kind, and cite the same words. **Exact
+/// citation, not containment** — containment is what let a long span swallow
+/// a short one above. Case and whitespace are normalised, because a citation
+/// is copied out of the passage by construction (see [`extract`]) and a line
+/// break is not a difference of opinion.
+///
+/// A group survives when at least `k` distinct readings found it. At k=1 over
+/// a single reading nothing folds at all, which is the honest answer: one
+/// reading contains no agreement to measure.
+///
+/// The survivor is the earliest reading's member. Taking the longest or the
+/// most specific would let the fold shop for wording, and an anchor score
+/// matched by phrase over shopped wording is a score about the shopping.
+pub fn converge(candidates: &[Candidate], k: usize) -> (Vec<Vec<usize>>, Vec<usize>) {
+    fn cite(c: &Candidate) -> String {
+        c.quote
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_lowercase()
+    }
+    let cites: Vec<String> = candidates.iter().map(cite).collect();
+
+    // Greedy in index order, so the earliest reading always heads its group
+    // and the result never depends on iteration order.
+    let mut taken = vec![false; candidates.len()];
+    let mut groups: Vec<Vec<usize>> = Vec::new();
+    for i in 0..candidates.len() {
+        if taken[i] {
+            continue;
+        }
+        taken[i] = true;
+        let mut group = vec![i];
+        let mut readings = std::collections::BTreeSet::from([candidates[i].sample]);
+        for j in (i + 1)..candidates.len() {
+            // One member per reading: a reading that says the same thing
+            // twice is one reading, not two votes, and its second saying
+            // belongs to whatever group it heads itself.
+            if taken[j] || readings.contains(&candidates[j].sample) {
+                continue;
+            }
+            let same = candidates[i].chunk == candidates[j].chunk
+                && candidates[i].source == candidates[j].source
+                && candidates[i].kind == candidates[j].kind
+                && cites[i] == cites[j];
+            if same {
+                taken[j] = true;
+                readings.insert(candidates[j].sample);
+                group.push(j);
+            }
+        }
+        if readings.len() >= k {
+            groups.push(group);
+        } else {
+            groups.push(Vec::new());
+        }
+    }
+
+    let kept: Vec<usize> = groups.iter().filter_map(|g| g.first().copied()).collect();
+    // Only real folds are reported, matching what the reduce step records: a
+    // group of one folded nothing.
+    let folded = groups.into_iter().filter(|g| g.len() > 1).collect();
+    (folded, kept)
+}
+
+fn refold(args: &[String], target: &str) -> i32 {
+    let k = match crate::cmds::flag(args, "--k").map(str::parse::<usize>) {
+        Some(Ok(0)) | None => return crate::cmds::fail("--refold needs --k <n>, at least 1"),
+        Some(Err(e)) => return crate::cmds::fail(format!("--k: {e}")),
+        Some(Ok(n)) => n,
+    };
+    let src = Path::new(target);
+    let inputs: Vec<PathBuf> = if src.is_dir() {
+        let mut v: Vec<PathBuf> = match std::fs::read_dir(src) {
+            Ok(rd) => rd
+                .filter_map(|e| e.ok().map(|e| e.path()))
+                .filter(|p| p.extension().is_some_and(|x| x == "json"))
+                .collect(),
+            Err(e) => return crate::cmds::fail(format!("reading {}: {e}", src.display())),
+        };
+        v.sort();
+        v
+    } else {
+        vec![src.to_path_buf()]
+    };
+    if inputs.is_empty() {
+        return crate::cmds::fail(format!("no run artifacts under {}", src.display()));
+    }
+    let out = match crate::cmds::flag(args, "--out") {
+        Some(d) => PathBuf::from(d),
+        None => src.to_path_buf(),
+    };
+    if let Err(e) = std::fs::create_dir_all(&out) {
+        return crate::cmds::fail(format!("creating {}: {e}", out.display()));
+    }
+
+    for path in &inputs {
+        let raw = match std::fs::read_to_string(path) {
+            Ok(r) => r,
+            Err(e) => return crate::cmds::fail(format!("reading {}: {e}", path.display())),
+        };
+        let mut run: DraftRun = match serde_json::from_str(&raw) {
+            Ok(r) => r,
+            Err(e) => return crate::cmds::fail(format!("{}: {e}", path.display())),
+        };
+        // Refolding a single reading at k=2 asks for agreement that cannot
+        // exist, and would report a floor of zero as a finding about k.
+        if k > run.samples {
+            return crate::cmds::fail(format!(
+                "{}: --k {k} over a {}-reading run — no fold can reach it",
+                path.display(),
+                run.samples
+            ));
+        }
+        let (groups, kept) = converge(&run.candidates, k);
+        run.duplicates = groups;
+        run.kept = kept;
+        run.stopped_after = Some(format!(
+            "extract: --samples {}, refolded at k={k} of {}",
+            run.samples, run.samples
+        ));
+        let name = path.file_name().unwrap_or_default();
+        let dest = out.join(name);
+        let body = match serde_json::to_string_pretty(&run) {
+            Ok(b) => b,
+            Err(e) => return crate::cmds::fail(e),
+        };
+        if let Err(e) = std::fs::write(&dest, body) {
+            return crate::cmds::fail(format!("writing {}: {e}", dest.display()));
+        }
+        eprintln!(
+            "{} → k={k}: {} of {} candidate(s) kept",
+            name.to_string_lossy(),
+            run.kept.len(),
+            run.candidates.len()
+        );
+    }
+    eprintln!("{} run(s) refolded into {}", inputs.len(), out.display());
+    0
+}
+
+/// Re-run a recorded run's pipeline against its tape — every stage, no model.
+///
+/// **This is what makes an arm cost a stage instead of a run.** Measured
+/// 2026-08-24: three arms on the maple-house bar cost about three hours of
+/// 27B time, and every one of them re-paid extraction — 24 of roughly 36
+/// calls — for a change that acted AFTER extraction. Nothing in the artifact
+/// let a later stage be re-scored without re-running the earlier ones, so a
+/// one-line guard change and a whole new corpus cost the same hour.
+///
+/// A replay judges PURE CODE over recorded model output: citation cutting,
+/// the silence guard, the quantity guard, the fold, the convergence
+/// threshold, the tension rendering. It cannot judge a change to the calls
+/// themselves — a different prompt, a different schema, a different chunking,
+/// an extra pass — and it does not pretend to: the tape checks each call's
+/// path and refuses when the sequence diverges rather than answering from the
+/// wrong recording (§18.3). "Re-run it live" is the honest answer there.
+///
+/// Chunks come from the artifact, not from the document. A replay measures the
+/// run that was recorded, and re-reading the sources would let the file change
+/// underneath the evidence.
+fn replay(dir: &Path, args: &[String], target: &str) -> i32 {
+    let raw = match std::fs::read_to_string(target) {
+        Ok(r) => r,
+        Err(e) => return crate::cmds::fail(format!("reading {target}: {e}")),
+    };
+    let recorded: DraftRun = match serde_json::from_str(&raw) {
+        Ok(r) => r,
+        Err(e) => return crate::cmds::fail(format!("{target}: {e}")),
+    };
+    if recorded.tape.is_empty() {
+        return crate::cmds::fail(format!(
+            "{target} carries no tape — it was recorded before runs kept their \
+             replies, or it is not a dry run. Only a `--dry-run` artifact can be \
+             replayed."
+        ));
+    }
+    let profile = match Profile::parse(&recorded.profile) {
+        Ok(p) => p,
+        Err(e) => return crate::cmds::fail(format!("{target}: profile: {e}")),
+    };
+    let calls = recorded.tape.len();
+
+    // `--live-from <stage>` cuts the tape: everything above comes off the
+    // recording, that stage on is real. It is what makes an arm on a LATE
+    // stage cheap — the comparison stage is 10 of ~36 calls — and unlike a
+    // full replay it CAN judge a changed prompt, because the stage under test
+    // actually runs.
+    let live_from = crate::cmds::flag(args, "--live-from").map(str::to_string);
+    if let Some(stage) = &live_from {
+        // A stage this recording never made a call for would cut nothing, and
+        // the run would come back a full replay wearing a live label. Named
+        // and refused rather than silently answered (§18.3).
+        let mut have: Vec<&str> = recorded
+            .tape
+            .iter()
+            .map(|e| e.stage.as_str())
+            .filter(|s| !s.is_empty())
+            .collect();
+        have.dedup();
+        if !have.contains(&stage.as_str()) {
+            return crate::cmds::fail(if have.is_empty() {
+                format!(
+                    "{target} was recorded before calls carried a stage label, so it                      cannot be cut. Re-record it, or replay it whole."
+                )
+            } else {
+                format!(
+                    "no `{stage}` stage in {target} — it recorded: {}",
+                    have.join(", ")
+                )
+            });
+        }
+    }
+
+    let client = match &live_from {
+        // Live from a stage means real calls, so the client needs the real
+        // endpoint and the locality rule that comes with acquiring one.
+        Some(stage) => {
+            eprintln!(
+                "replaying {} chunk(s) from {target} up to `{stage}`, then live ({calls} recorded call(s))",
+                recorded.chunks.len()
+            );
+            match model::client_for(dir, crate::cmds::has(args, "--allow-remote")) {
+                // NOT `.recording()`: one client holds one tape, and a
+                // hybrid's would be half played and half live — a recording
+                // that reproduces neither run. A hybrid is a mid-loop probe;
+                // the verdict comes from a full live sweep.
+                Ok(c) => c.playing(recorded.tape, live_from.clone()),
+                Err(e) => return model::report(e),
+            }
+        }
+        None => {
+            eprintln!(
+                "replaying {} chunk(s) and {calls} recorded call(s) from {target} — no model",
+                recorded.chunks.len()
+            );
+            Client::replaying(&recorded.endpoint, &recorded.model, recorded.tape)
+        }
+    };
+    let pipeline = Pipeline {
+        dir,
+        profile,
+        // One tape, one order. The extract leg shares the client rather than
+        // taking its own, because two readers of one tape would interleave.
+        xclient: client.for_leg(),
+        client,
+        chunks: recorded.chunks,
+        sources: recorded.sources,
+        skipped: recorded.skipped,
+        already_read: recorded.already_read,
+        capped: recorded.capped,
+        samples: recorded.samples,
+        // A replay is a measurement and writes nothing to the canon.
+        dry_run: true,
+        replayed_from: Some(match &live_from {
+            Some(stage) => format!("{target} up to `{stage}`, live after"),
+            None => format!("{target}, whole"),
+        }),
+    };
+    // A replay neither consults nor updates what this canon has already read:
+    // it is re-scoring recorded evidence, not reading a feed.
+    let mut seen = Seen::preview(dir);
+    execute(pipeline, &mut seen, args)
+}
+
 fn read_sources(args: &[String]) -> Result<Gathered, String> {
     let mut got = Gathered::default();
     let include_ignored = crate::cmds::has(args, "--include-ignored");
@@ -1055,6 +1421,26 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("  `canon draft --resume` to review it without a second model run.");
         return 2;
     }
+    // How many times each passage is read, and both refusals land HERE — with
+    // the others, before a document is opened or a call is paid for. N
+    // readings folded by agreement is the convergence arm: the question is
+    // whether N cheap readings beat one expensive one, and the fold that
+    // answers it is `converge`, not a model.
+    let samples = match crate::cmds::flag(args, "--samples").map(str::parse::<usize>) {
+        Some(Err(e)) => return crate::cmds::fail(format!("--samples: {e}")),
+        Some(Ok(0)) => return crate::cmds::fail("--samples 0 reads nothing"),
+        Some(Ok(n)) => n,
+        None => 1,
+    };
+    if samples > 1 && !dry_run {
+        // The fold is a measurement instrument, not a review affordance. A
+        // person accepting one at a time should be shown one reading's
+        // findings, not a k threshold nobody asked them about.
+        return crate::cmds::fail(
+            "--samples is for --dry-run: it measures extraction, it does not review",
+        );
+    }
+
     let dir = match crate::cmds::dir() {
         Ok(d) => d,
         Err(e) => return crate::cmds::fail(e),
@@ -1074,6 +1460,12 @@ pub fn run(args: &[String]) -> i32 {
     };
     if crate::cmds::has(args, "--resume") {
         return resume(&dir, profile, &mut seen);
+    }
+    if let Some(target) = crate::cmds::flag(args, "--refold") {
+        return refold(args, target);
+    }
+    if let Some(target) = crate::cmds::flag(args, "--replay") {
+        return replay(&dir, args, target);
     }
     let gathered = match read_sources(args) {
         Ok(s) => s,
@@ -1154,6 +1546,9 @@ pub fn run(args: &[String]) -> i32 {
     }
 
     let client = match model::client_for(&dir, crate::cmds::has(args, "--allow-remote")) {
+        // A dry run is a MEASUREMENT, so it keeps its evidence. A real run is
+        // somebody's canon and records nothing.
+        Ok(c) if dry_run => c.recording(),
         Ok(c) => c,
         Err(e) => return model::report(e),
     };
@@ -1164,37 +1559,125 @@ pub fn run(args: &[String]) -> i32 {
         client.describe()
     );
 
+    // The extract leg may be pointed at its own slot. Everything else on this
+    // run keeps the client `client_for` acquired, so a per-leg routing choice
+    // cannot reach the locality rule.
+    let xclient = match model::extract_client(&dir, &client) {
+        Ok(c) => c,
+        Err(e) => return model::report(e),
+    };
+    if xclient.model() != client.model() {
+        eprintln!(
+            "extracting on {} (rest of the run: {})",
+            xclient.model(),
+            client.model()
+        );
+    }
+
+    let pipeline = Pipeline {
+        dir: &dir,
+        profile,
+        client,
+        xclient,
+        chunks,
+        sources: sources.iter().map(|s| s.name.clone()).collect(),
+        skipped: gathered.skipped.clone(),
+        already_read,
+        capped,
+        samples,
+        dry_run,
+        replayed_from: None,
+    };
+    execute(pipeline, &mut seen, args)
+}
+
+/// Everything a pipeline run needs, however it was assembled.
+///
+/// Two front doors build one of these and hand it to [`execute`]: `run` reads
+/// documents and talks to a server, `replay` reads an artifact and talks to a
+/// tape. One body downstream, so a replayed number and a live number come from
+/// the same code and not from a second implementation of it (§10.6).
+struct Pipeline<'a> {
+    dir: &'a Path,
+    profile: Profile,
+    /// Everything but extraction.
+    client: Client,
+    /// Extraction, which may be pointed at its own slot.
+    xclient: Client,
+    chunks: Vec<Chunk>,
+    sources: Vec<String>,
+    skipped: std::collections::BTreeMap<String, usize>,
+    already_read: usize,
+    capped: usize,
+    samples: usize,
+    dry_run: bool,
+    /// Set when the stages above a cut came off a recording.
+    replayed_from: Option<String>,
+}
+
+fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
+    let Pipeline {
+        dir,
+        profile,
+        client,
+        xclient,
+        chunks,
+        sources,
+        skipped,
+        already_read,
+        capped,
+        samples,
+        dry_run,
+        replayed_from,
+    } = r;
     let mut candidates: Vec<Candidate> = Vec::new();
     let mut dropped: Vec<Dropped> = Vec::new();
     let mut unread: Vec<Unread> = Vec::new();
     for chunk in &chunks {
-        eprint!("\rextracting {}/{}…", chunk.id + 1, chunks.len());
-        let _ = std::io::stderr().flush();
-        match extract(&client, chunk, profile) {
-            Ok((k, d)) => {
-                candidates.extend(k);
-                dropped.extend(d);
-                // Only on an answer. A chunk that errored must stay unseen,
-                // or one bad reply blinds this canon to that passage for
-                // good.
-                if let Err(e) = seen.record(&chunk.text, Why::Read) {
-                    eprintln!("\nwarning: {e}");
-                }
+        for s in 0..samples {
+            if samples > 1 {
+                eprint!(
+                    "\rextracting {}/{} (reading {}/{samples})…",
+                    chunk.id + 1,
+                    chunks.len(),
+                    s + 1
+                );
+            } else {
+                eprint!("\rextracting {}/{}…", chunk.id + 1, chunks.len());
             }
-            // One chunk's failure is not the document's. Record which
-            // passage went unread and keep going; the alternative throws away
-            // every good answer because one reply came back wrong.
-            Err(e) => {
-                eprintln!("\nwarning: {} produced no answer: {e}", chunk.source);
-                unread.push(Unread {
-                    chunk: chunk.id,
-                    source: chunk.source.clone(),
-                    error: e.to_string(),
-                });
+            let _ = std::io::stderr().flush();
+            match extract(&xclient, chunk, profile) {
+                Ok((k, d)) => {
+                    candidates.extend(k.into_iter().map(|mut c| {
+                        c.sample = s;
+                        c
+                    }));
+                    dropped.extend(d);
+                    // Only on an answer. A chunk that errored must stay unseen,
+                    // or one bad reply blinds this canon to that passage for
+                    // good.
+                    if let Err(e) = seen.record(&chunk.text, Why::Read) {
+                        eprintln!("\nwarning: {e}");
+                    }
+                }
+                // One chunk's failure is not the document's. Record which
+                // passage went unread and keep going; the alternative throws away
+                // every good answer because one reply came back wrong.
+                Err(e) => {
+                    eprintln!("\nwarning: {} produced no answer: {e}", chunk.source);
+                    unread.push(Unread {
+                        chunk: chunk.id,
+                        source: chunk.source.clone(),
+                        error: e.to_string(),
+                    });
+                }
             }
         }
     }
-    if unread.len() == chunks.len() {
+    // With N readings a passage counts as unread only when every reading of it
+    // failed — one bad reply out of five is not a hole in the document.
+    let unread_chunks: std::collections::BTreeSet<usize> = unread.iter().map(|u| u.chunk).collect();
+    if unread_chunks.len() == chunks.len() {
         eprintln!("\nno chunk produced an answer.");
         return 3;
     }
@@ -1212,10 +1695,10 @@ pub fn run(args: &[String]) -> i32 {
         endpoint: client.endpoint().to_string(),
         model: client.model().to_string(),
         profile: profile.as_str().to_string(),
-        sources: sources.iter().map(|s| s.name.clone()).collect(),
+        sources: sources.clone(),
         // Recorded so a re-score can tell "the extractor found nothing there"
         // from "nothing there was ever opened" (§18.3).
-        skipped: gathered.skipped.clone(),
+        skipped: skipped.clone(),
         already_read,
         capped,
         chunks: chunks.clone(),
@@ -1228,13 +1711,48 @@ pub fn run(args: &[String]) -> i32 {
         tension_passes: 0,
         tension_passes_unread: Vec::new(),
         failed: None,
+        samples,
+        stopped_after: None,
+        replayed_from,
+        tape: Vec::new(),
     };
+
+    // A convergence run stops here, on purpose.
+    //
+    // What it measures is EXTRACTION — whether N cheap readings recover what
+    // one expensive reading does — and the anchor score reads `candidates`
+    // and `kept`, both of which now exist. Running `support` and `tensions`
+    // over N readings would pay N times for stages this arm is not asking
+    // about, and would confound the curve with a second stage's variance.
+    if samples > 1 {
+        let (groups, kept) = converge(&candidates, majority(samples));
+        artifact.duplicates = groups;
+        artifact.kept = kept;
+        artifact.stopped_after = Some(format!(
+            "extract: --samples {samples}, folded at k={} of {samples}",
+            majority(samples)
+        ));
+        eprintln!(
+            "{} candidate(s) over {samples} reading(s) → {} at k={}",
+            artifact.candidates.len(),
+            artifact.kept.len(),
+            majority(samples)
+        );
+        artifact.tape = client.tape();
+        return match persist(dir, &artifact) {
+            Ok(path) => {
+                eprintln!("run written to {}", path.display());
+                0
+            }
+            Err(e) => crate::cmds::fail(e),
+        };
+    }
 
     // Every rule read once, checked against its own citation, and the reading
     // carried forward to the fold guard.
     let supported = match support(&client, candidates) {
         Ok(v) => v,
-        Err(e) => return abandon(&dir, &mut artifact, "support", e),
+        Err(e) => return abandon(dir, &mut artifact, "support", e, &client),
     };
     if !supported.dropped.is_empty() {
         eprintln!(
@@ -1259,7 +1777,7 @@ pub fn run(args: &[String]) -> i32 {
 
     let (groups, kept) = match dedupe(&client, &candidates, &quantities) {
         Ok(v) => v,
-        Err(e) => return abandon(&dir, &mut artifact, "dedupe", e),
+        Err(e) => return abandon(dir, &mut artifact, "dedupe", e, &client),
     };
     artifact.duplicates = groups.clone();
     artifact.kept = kept.clone();
@@ -1281,7 +1799,7 @@ pub fn run(args: &[String]) -> i32 {
     let compared = if dry_run {
         match tensions::detect_over(&client, &kept_texts) {
             Ok(v) => v,
-            Err(e) => return abandon(&dir, &mut artifact, "tensions", e),
+            Err(e) => return abandon(dir, &mut artifact, "tensions", e, &client),
         }
     } else {
         tensions::Compared::default()
@@ -1299,7 +1817,8 @@ pub fn run(args: &[String]) -> i32 {
     artifact.tensions = run_tensions;
     artifact.tension_passes = compared.passes;
     artifact.tension_passes_unread = compared.unread;
-    let path = match persist(&dir, &artifact) {
+    artifact.tape = client.tape();
+    let path = match persist(dir, &artifact) {
         Ok(p) => p,
         Err(e) => return crate::cmds::fail(e),
     };
@@ -1337,7 +1856,7 @@ pub fn run(args: &[String]) -> i32 {
     eprintln!("run recorded at {}", path.display());
 
     // ── one at a time ───────────────────────────────────────
-    let accepted = match review(&dir, &candidates, &kept, &mut seen) {
+    let accepted = match review(dir, &candidates, &kept, seen) {
         Ok(a) => a,
         Err(e) => return crate::cmds::fail(e),
     };
@@ -1348,7 +1867,7 @@ pub fn run(args: &[String]) -> i32 {
     println!("\n{} accepted.", profile.count(accepted.len()));
 
     // ── the moment it has to produce ────────────────────────
-    let Ok(canon) = store::read(&dir).map(|l| l.derive()) else {
+    let Ok(canon) = store::read(dir).map(|l| l.derive()) else {
         return 0;
     };
     let fresh: Vec<&canon_core::Commitment> = canon
