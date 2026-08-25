@@ -30,16 +30,19 @@ fn a_small_list_is_one_comparison() {
     let t = texts(BATCH);
     let refs: Vec<&str> = t.iter().map(String::as_str).collect();
     let mock = Mock::spawn(vec![(200, found(&[(1, 2, "clash")]))]);
-    let got = detect_over(&mock.client(), &refs).unwrap().pairs;
+    let got = detect_over(&mock.client(), &refs).unwrap();
     assert_eq!(mock.requests().len(), 1, "no batching below the threshold");
     assert_eq!(
-        got,
+        got.pairs,
         vec![Proposed {
             a: 0,
             b: 1,
             reason: "clash".into()
         }]
     );
+    // And no second arrangement: one pass already holds every pair, so
+    // rearranging it would buy the same comparison twice.
+    assert_eq!(got.arrangements.len(), 1, "{:?}", got.arrangements);
 }
 
 #[test]
@@ -51,7 +54,7 @@ fn every_pair_is_examined_by_some_pass() {
     let t = texts(n);
     let refs: Vec<&str> = t.iter().map(String::as_str).collect();
     let blocks = n.div_ceil(BATCH);
-    let passes = blocks * (blocks + 1) / 2;
+    let passes = blocks * (blocks + 1) / 2 * ARRANGEMENTS.len();
     let mock = Mock::spawn(vec![(200, found(&[])); passes]);
     detect_over(&mock.client(), &refs).unwrap();
 
@@ -86,10 +89,11 @@ fn a_pass_answers_in_its_own_numbering_and_is_mapped_back() {
     let n = BATCH * 2;
     let t = texts(n);
     let refs: Vec<&str> = t.iter().map(String::as_str).collect();
-    let passes = 3;
+    let passes = 3 * ARRANGEMENTS.len();
     let mut script = vec![(200, found(&[])); passes];
-    // Passes run (0,0), (0,1), (1,1). The SECOND is the cross-block one; its
-    // positions 1 and BATCH+1 are global commitments 0 and BATCH.
+    // Passes run (0,0), (0,1), (1,1) per arrangement. The SECOND is the
+    // cross-block one of the first arrangement; its positions 1 and BATCH+1
+    // are global commitments 0 and BATCH.
     script[1] = (200, found(&[(1, BATCH + 1, "across the blocks")]));
     let mock = Mock::spawn(script);
     let got = detect_over(&mock.client(), &refs).unwrap().pairs;
@@ -109,11 +113,20 @@ fn the_same_pair_noticed_twice_is_one_tension() {
     let t = texts(n);
     let refs: Vec<&str> = t.iter().map(String::as_str).collect();
     let blocks = n.div_ceil(BATCH);
-    let passes = blocks * (blocks + 1) / 2;
-    // Every pass reports the same first-block pair.
+    let passes = blocks * (blocks + 1) / 2 * ARRANGEMENTS.len();
+    // Every pass reports its own positions 1 and 2. WITHIN one arrangement
+    // that is a single pair noticed in several passes, which is what the fold
+    // is for. ACROSS arrangements the same local numbering names different
+    // commitments — that is the whole point of rearranging — so the union's
+    // own fold is asserted separately, over a pair that really is the same
+    // one, in `a_pair_both_arrangements_notice_is_one_tension_and_adds_once`.
     let mock = Mock::spawn(vec![(200, found(&[(1, 2, "clash")])); passes]);
-    let got = detect_over(&mock.client(), &refs).unwrap().pairs;
-    assert_eq!(got.len(), 1, "{got:?}");
+    let got = detect_over(&mock.client(), &refs).unwrap();
+    assert!(
+        got.arrangements.iter().all(|a| a.proposed == 1),
+        "{:?}",
+        got.arrangements
+    );
 }
 
 #[test]
@@ -138,12 +151,16 @@ fn a_pass_that_produces_no_answer_costs_coverage_not_the_run() {
     let t = texts(2 * BATCH);
     let refs: Vec<&str> = t.iter().map(String::as_str).collect();
 
-    let mock = Mock::spawn(vec![
+    let mut script = vec![
         (200, found(&[(1, 2, "first block")])),
         (503, DEADLINE_503.to_string()),
         // Answers are in the PASS's own numbering; this is the second block.
         (200, found(&[(1, 2, "second block")])),
-    ]);
+    ];
+    // The arrangements after the first find nothing, so what this test
+    // asserts stays a statement about ONE arrangement losing ONE pass.
+    script.resize(3 * ARRANGEMENTS.len(), (200, found(&[])));
+    let mock = Mock::spawn(script);
     let got = detect_over(&mock.client(), &refs).unwrap();
 
     // Both surviving passes' findings are kept, mapped back to global
@@ -152,9 +169,17 @@ fn a_pass_that_produces_no_answer_costs_coverage_not_the_run() {
     assert_eq!((got.pairs[0].a, got.pairs[0].b), (0, 1));
     assert_eq!((got.pairs[1].a, got.pairs[1].b), (BATCH, BATCH + 1));
     // And the run says how much of the pair space it actually weighed.
-    assert_eq!(got.passes, 3);
+    assert_eq!(got.passes, 3 * ARRANGEMENTS.len());
     assert_eq!(got.unread.len(), 1);
-    assert!(got.unread[0].starts_with("pass 2/3 "), "{:?}", got.unread);
+    assert!(
+        got.unread[0].starts_with("pass 2/3 of the given arrangement "),
+        "a lost pass names its arrangement, or it cannot be re-run: {:?}",
+        got.unread
+    );
+    // The per-arrangement accounting carries it too, so a reader does not
+    // have to parse prose to see which arrangement lost coverage.
+    assert_eq!(got.arrangements[0].unread, 1);
+    assert!(got.arrangements[1..].iter().all(|a| a.unread == 0));
     // The failing input is recoverable from the artifact, not just its
     // ordinal — a cross pass over both blocks, so every position appears.
     assert!(
@@ -171,7 +196,10 @@ fn every_pass_failing_is_an_error_not_an_empty_answer() {
     // (§18.3). The error returned is the endpoint's own, not a summary.
     let t = texts(2 * BATCH);
     let refs: Vec<&str> = t.iter().map(String::as_str).collect();
-    let mock = Mock::spawn(vec![(503, DEADLINE_503.to_string()); 3]);
+    let mock = Mock::spawn(vec![
+        (503, DEADLINE_503.to_string());
+        3 * ARRANGEMENTS.len()
+    ]);
     let err = detect_over(&mock.client(), &refs).unwrap_err();
     assert!(
         err.to_string().contains("deadline exceeded"),
@@ -270,6 +298,154 @@ fn a_pair_of_twins_moves_out_of_a_cross_pass_into_a_self_pass() {
     // And the pair is still compared exactly once either way.
     assert!(covered(&listed).contains(&(0, 12)));
     assert!(covered(&together).contains(&(0, 12)));
+}
+
+// ── the union: several arrangements of one list, folded into one answer ──
+
+#[test]
+fn every_arrangement_is_a_permutation_of_the_list() {
+    // The contract the coverage guarantee rests on. An arrangement that
+    // dropped or repeated a position would quietly stop comparing some pairs
+    // while still reporting a full pass count — a smaller comparison wearing
+    // the same number.
+    for n in [2, 13, 24, 25, 47, 83, BATCH * BATCH, BATCH * BATCH + 1] {
+        let base: Vec<usize> = (0..n).collect();
+        for a in ARRANGEMENTS {
+            let mut got = a.apply(&base);
+            got.sort_unstable();
+            assert_eq!(got, base, "{} is not a permutation at n={n}", a.name());
+        }
+    }
+}
+
+#[test]
+fn every_arrangement_on_its_own_compares_every_pair() {
+    // Why this is a union and not a sampling: each arrangement is a COMPLETE
+    // comparison, so a second one can only add. If an arrangement covered
+    // part of the pair space, running two would be trading one blind spot for
+    // another and the fold would hide which.
+    for n in [13, 25, 47, 83] {
+        let base: Vec<usize> = (0..n).collect();
+        for a in ARRANGEMENTS {
+            let mut seen = covered(&a.apply(&base));
+            seen.dedup();
+            assert_eq!(seen, all_pairs(n), "n={n}: {} lost a pair", a.name());
+        }
+    }
+}
+
+#[test]
+fn transposing_splits_every_block_mate_once_the_list_is_deep_enough() {
+    // What the second arrangement is FOR. Two commitments weighed against the
+    // same eleven others twice have been read twice by one crowd; a union
+    // only pays for itself if the second reading is a different crowd.
+    //
+    // Exact at BATCH blocks and partial below it: a block mate moves BATCH
+    // columns away, and there are only `rows` positions per column to move it
+    // into.
+    let n = BATCH * BATCH;
+    let base: Vec<usize> = (0..n).collect();
+    let blocks_of = |order: &[usize]| {
+        let mut at = vec![0usize; n];
+        for (pos, v) in order.iter().enumerate() {
+            at[*v] = pos / BATCH;
+        }
+        at
+    };
+    let given = blocks_of(&Arrangement::Given.apply(&base));
+    let transposed = blocks_of(&Arrangement::Transposed.apply(&base));
+    for a in 0..n {
+        for b in a + 1..n {
+            if given[a] == given[b] {
+                assert_ne!(
+                    transposed[a], transposed[b],
+                    "({a}, {b}) kept the same company in both arrangements"
+                );
+            }
+        }
+    }
+}
+
+/// Two full blocks: three passes per arrangement, and the transposed one
+/// blocks as [0, 12, 1, 13, …] so global 0 and 12 share its first block.
+fn two_blocks() -> Vec<String> {
+    texts(2 * BATCH)
+}
+
+#[test]
+fn a_pair_only_one_arrangement_notices_is_in_the_union() {
+    // The finding the union exists for: on both corpora the two arrangements
+    // proposed overlapping but DIFFERENT tension sets, and the pairs only one
+    // of them saw are the whole return on the second one's calls.
+    let t = two_blocks();
+    let refs: Vec<&str> = t.iter().map(String::as_str).collect();
+    let mut script = vec![(200, found(&[])); 3 * ARRANGEMENTS.len()];
+    // The transposed arrangement's first pass holds 0 and 12 as its positions
+    // 1 and 2. In the given arrangement that pair straddles two blocks and is
+    // weighed against 276 competitors; here it is weighed against 66.
+    script[3] = (200, found(&[(1, 2, "only the transpose was quiet enough")]));
+    let mock = Mock::spawn(script);
+    let got = detect_over(&mock.client(), &refs).unwrap();
+
+    assert_eq!(
+        got.pairs,
+        vec![Proposed {
+            a: 0,
+            b: BATCH,
+            reason: "only the transpose was quiet enough".into()
+        }]
+    );
+    assert_eq!(got.arrangements[0].proposed, 0);
+    assert_eq!(got.arrangements[1].proposed, 1);
+    assert_eq!(got.arrangements[1].added, 1, "and it is counted as new");
+}
+
+#[test]
+fn a_pair_both_arrangements_notice_is_one_tension_and_adds_once() {
+    // The other half of the fold. Without it a union would inflate its own
+    // pair count by however many arrangements agreed, and `added` would stop
+    // being able to say whether the second one earned anything.
+    let t = two_blocks();
+    let refs: Vec<&str> = t.iter().map(String::as_str).collect();
+    let mut script = vec![(200, found(&[])); 3 * ARRANGEMENTS.len()];
+    // Same global pair, reached through two different numberings: the given
+    // arrangement's cross pass, then the transposed arrangement's first pass.
+    script[1] = (
+        200,
+        found(&[(1, BATCH + 1, "the given arrangement's words")]),
+    );
+    script[3] = (200, found(&[(1, 2, "the transposed arrangement's words")]));
+    let mock = Mock::spawn(script);
+    let got = detect_over(&mock.client(), &refs).unwrap();
+
+    assert_eq!(
+        got.pairs,
+        vec![Proposed {
+            a: 0,
+            b: BATCH,
+            reason: "the given arrangement's words".into()
+        }],
+        "one pair, and the first reason for it wins"
+    );
+    assert_eq!(got.arrangements[0].added, 1);
+    assert_eq!(got.arrangements[1].proposed, 1, "it did notice the pair");
+    assert_eq!(got.arrangements[1].added, 0, "but the union already had it");
+}
+
+#[test]
+fn the_arrangements_account_for_every_pass_the_run_attempted() {
+    // A per-arrangement report that does not sum to the run's own pass count
+    // is a report about a different run, and the coverage percentage the bar
+    // prints is computed from that count.
+    let t = two_blocks();
+    let refs: Vec<&str> = t.iter().map(String::as_str).collect();
+    let mock = Mock::spawn(vec![(200, found(&[])); 3 * ARRANGEMENTS.len()]);
+    let got = detect_over(&mock.client(), &refs).unwrap();
+    assert_eq!(got.arrangements.len(), ARRANGEMENTS.len());
+    assert_eq!(
+        got.arrangements.iter().map(|a| a.passes).sum::<usize>(),
+        got.passes
+    );
 }
 
 /// Two-dimensional unit vectors at the given angles, as an embeddings reply.
