@@ -1,0 +1,8 @@
+commit    efb61ad
+dirty     13 uncommitted file(s)
+document  /Users/alexsbryan/dev/canon/fixtures/maple-house/maple-house.md
+profile   house
+model     primary
+ordering  embed
+endpoint  http://localhost:9741/v1
+binary    /tmp/canon-because/canon-pinned

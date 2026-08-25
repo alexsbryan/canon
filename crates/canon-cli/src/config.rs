@@ -21,16 +21,32 @@ pub enum Key {
     /// that near-twins share a block. Optional: unset means comparison runs
     /// in document order, which is what it always did.
     EmbedModel,
+    /// Model for the EXTRACT leg only. Unset means `model`, which is what
+    /// every leg used before this key existed.
+    ///
+    /// One key for one leg, not six keys for six legs. Extraction is the leg
+    /// the evidence speaks to — it is 24 of a maple-house run's ~36 calls, it
+    /// is the only leg whose miss is silent (a rule never found cannot be
+    /// recovered by any later stage), and it is the leg a convergence arm
+    /// samples repeatedly. The other five get a key when a measurement asks
+    /// for one.
+    ExtractModel,
 }
 
 impl Key {
-    pub const ALL: [Key; 3] = [Key::Endpoint, Key::Model, Key::EmbedModel];
+    pub const ALL: [Key; 4] = [
+        Key::Endpoint,
+        Key::Model,
+        Key::EmbedModel,
+        Key::ExtractModel,
+    ];
 
     pub fn as_str(self) -> &'static str {
         match self {
             Key::Endpoint => "endpoint",
             Key::Model => "model",
             Key::EmbedModel => "embed_model",
+            Key::ExtractModel => "extract_model",
         }
     }
 
@@ -40,6 +56,7 @@ impl Key {
             Key::Endpoint => "CANON_ENDPOINT",
             Key::Model => "CANON_MODEL",
             Key::EmbedModel => "CANON_EMBED_MODEL",
+            Key::ExtractModel => "CANON_EXTRACT_MODEL",
         }
     }
 
@@ -67,6 +84,7 @@ pub struct Config {
     pub endpoint: Option<String>,
     pub model: Option<String>,
     pub embed_model: Option<String>,
+    pub extract_model: Option<String>,
 }
 
 impl Config {
@@ -75,6 +93,7 @@ impl Config {
             Key::Endpoint => self.endpoint.as_deref(),
             Key::Model => self.model.as_deref(),
             Key::EmbedModel => self.embed_model.as_deref(),
+            Key::ExtractModel => self.extract_model.as_deref(),
         }
     }
 
@@ -83,6 +102,7 @@ impl Config {
             Key::Endpoint => &mut self.endpoint,
             Key::Model => &mut self.model,
             Key::EmbedModel => &mut self.embed_model,
+            Key::ExtractModel => &mut self.extract_model,
         };
         *slot = Some(value);
     }

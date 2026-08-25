@@ -123,6 +123,7 @@ fn an_unreachable_endpoint_is_a_transport_error_naming_the_url() {
         endpoint: Some("http://127.0.0.1:1/v1".into()),
         model: None,
         embed_model: None,
+        extract_model: None,
     })
     .unwrap();
     let err = ask(&client).expect_err("nothing is listening");
@@ -157,6 +158,7 @@ fn locality_is_decided_conservatively() {
             endpoint: Some(e.into()),
             model: None,
             embed_model: None,
+            extract_model: None,
         })
         .unwrap();
         assert!(c.is_local(), "{e} should be local (host {})", c.host());
@@ -167,6 +169,7 @@ fn locality_is_decided_conservatively() {
             endpoint: Some(e.into()),
             model: None,
             embed_model: None,
+            extract_model: None,
         })
         .unwrap();
         assert!(!c.is_local(), "{e} should be remote (host {})", c.host());
@@ -253,4 +256,142 @@ fn an_omitted_position_is_not_the_first_one() {
     }
     let r: Reply = serde_json::from_str("{}").unwrap();
     assert_eq!(r.first.get(), Some(0));
+}
+
+// ── the tape: record once, replay for nothing ───────────────
+//
+// The measurement this exists for: three arms on the maple-house bar cost
+// about three hours of 27B time on 2026-08-24, and every one re-paid
+// extraction — 24 of ~36 calls — for a change that acted after it.
+
+#[test]
+fn a_recording_keeps_what_the_server_said_in_order() {
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "pairs": ["a"] }).to_string())),
+        (200, completion(&json!({ "pairs": ["b"] }).to_string())),
+    ]);
+    let client = mock.client().recording();
+    for _ in 0..2 {
+        ask(&client).unwrap();
+    }
+    let tape = client.tape();
+    assert_eq!(tape.len(), 2);
+    assert!(tape.iter().all(|e| e.path == "chat/completions"));
+    assert!(tape[0].raw.contains("\\\"a\\\"") || tape[0].raw.contains("a"));
+    assert!(tape[1].raw.contains("b"));
+}
+
+#[test]
+fn a_replay_answers_from_the_tape_and_never_reaches_the_endpoint() {
+    // The endpoint is deliberately somewhere nothing listens. A replay that
+    // reached the network would fail here rather than pass quietly.
+    let mock = Mock::spawn(vec![(
+        200,
+        completion(&json!({ "pairs": ["only"] }).to_string()),
+    )]);
+    let live = mock.client().recording();
+    ask(&live).unwrap();
+
+    let replayed = Client::replaying("http://127.0.0.1:1/v1", "primary", live.tape());
+    let got = ask(&replayed).unwrap();
+    assert_eq!(got.pairs, vec!["only".to_string()]);
+}
+
+#[test]
+fn a_leg_shares_the_runs_tape_rather_than_starting_its_own() {
+    // Caught while building this: `with_model` handed the extract leg a client
+    // with no tape, so the 24 extraction calls — the expensive two thirds of a
+    // run — were silently absent from every recording.
+    let mock = Mock::spawn(vec![
+        (200, completion(&json!({ "pairs": ["leg"] }).to_string())),
+        (200, completion(&json!({ "pairs": ["base"] }).to_string())),
+    ]);
+    let base = mock.client().recording();
+    let leg = base.with_model("fast");
+    ask(&leg).unwrap();
+    ask(&base).unwrap();
+    assert_eq!(base.tape().len(), 2, "the leg's call is on the run's tape");
+    assert_eq!(
+        leg.model(),
+        "fast",
+        "and it still went to the leg's own slot"
+    );
+}
+
+#[test]
+fn a_tape_that_runs_out_refuses_rather_than_inventing_a_reply() {
+    // A build that makes MORE calls than were recorded has changed the call
+    // sequence, and replay cannot judge that. Answering anything here would be
+    // a number about neither build (§18.3).
+    let replayed = Client::replaying("http://127.0.0.1:1/v1", "primary", vec![]);
+    let err = ask(&replayed).expect_err("an empty tape cannot answer");
+    assert_eq!(err.exit_code(), 3, "cannot judge, not an ordinary error");
+    assert!(format!("{err}").contains("exhausted"), "{err}");
+}
+
+#[test]
+fn a_tape_whose_calls_went_elsewhere_refuses() {
+    let tape = vec![TapeEntry {
+        path: "embeddings".into(),
+        stage: "embeddings".into(),
+        raw: completion(&json!({ "pairs": [] }).to_string()),
+    }];
+    let replayed = Client::replaying("http://127.0.0.1:1/v1", "primary", tape);
+    let err =
+        ask(&replayed).expect_err("a completion must not be answered from an embeddings call");
+    assert!(format!("{err}").contains("out of step"), "{err}");
+}
+
+#[test]
+fn a_tape_cut_at_a_stage_plays_above_it_and_goes_live_from_it() {
+    // The loop this exists for: the comparison stage is 10 of ~36 calls, so an
+    // arm on it should cost the 10 and not the 36. Everything above `tensions`
+    // comes off the tape; `tensions` itself is a real call to the mock.
+    let mock = Mock::spawn(vec![(
+        200,
+        completion(&json!({ "pairs": ["live"] }).to_string()),
+    )]);
+    let tape = vec![TapeEntry {
+        path: "chat/completions".into(),
+        stage: "commitments".into(),
+        raw: completion(&json!({ "pairs": ["taped"] }).to_string()),
+    }];
+    let client = mock.client().playing(tape, Some("tensions".into()));
+
+    let above: Pairs = client
+        .complete_json("s", "u", "commitments", &schema())
+        .unwrap();
+    assert_eq!(
+        above.pairs,
+        vec!["taped".to_string()],
+        "above the cut: the tape answers"
+    );
+
+    let at: Pairs = client
+        .complete_json("s", "u", "tensions", &schema())
+        .unwrap();
+    assert_eq!(
+        at.pairs,
+        vec!["live".to_string()],
+        "at the cut: the endpoint answers"
+    );
+    assert_eq!(
+        mock.requests().len(),
+        1,
+        "and only the live stage cost a call"
+    );
+}
+
+#[test]
+fn a_stage_label_that_disagrees_with_the_recording_refuses() {
+    let tape = vec![TapeEntry {
+        path: "chat/completions".into(),
+        stage: "groups".into(),
+        raw: completion(&json!({ "pairs": [] }).to_string()),
+    }];
+    let replayed = Client::replaying("http://127.0.0.1:1/v1", "primary", tape);
+    let err = replayed
+        .complete_json::<Pairs>("s", "u", "commitments", &schema())
+        .expect_err("an extraction must not be answered from a dedupe call");
+    assert!(format!("{err}").contains("out of step"), "{err}");
 }

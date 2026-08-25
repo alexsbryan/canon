@@ -40,6 +40,25 @@ DOC=${CANON_BAR_DOC:-"$ROOT/fixtures/maple-house/maple-house.md"}
 PROFILE=${CANON_BAR_PROFILE:-house}
 ENDPOINT=${CANON_ENDPOINT:-http://localhost:9741/v1}
 MODEL=${CANON_MODEL:-primary}
+# Similarity ordering, and it defaults OFF because it was MEASURED and it lost.
+#
+# `similarity_order` puts near-twins in one comparison block, on the theory
+# that a contradiction should be weighed against the rule it contradicts. The
+# key had never been set here, so it had never been in a scored run. It was,
+# on 2026-08-24, one variable against runs/qwen-27b-because on the same pinned
+# binary: recall 0.55 -> 0.39, decoys 0/7 -> 2/7, reachability 10/11 -> 9/11.
+# Arm runs 2 and 3 had extraction accounting identical to the incumbent, which
+# isolates the loss to ordering alone.
+#
+# WHY, and it is worth knowing before anyone tries this again: the comparison
+# stage is a GENERATIVE pass over a block of 12. Clustering near-twins starves
+# it of contrast — twelve rules that all look alike is a harder discrimination
+# than one quiet-hours rule among eleven unrelated ones, where the conflict
+# stands out. Narrowing helps a scorer judging one pair in isolation. It hurts
+# a generative pass, where the block's diversity IS the signal.
+#
+# `CANON_BAR_EMBED=embed` reproduces the losing arm.
+EMBED_MODEL=${CANON_BAR_EMBED-}
 
 if [ "$RUNS_ONLY" -eq 0 ]; then
   cargo build --manifest-path "$ROOT/Cargo.toml" 2>&1 | grep -E '^error' && exit 1
@@ -62,6 +81,7 @@ mkdir -p "$OUT"
   echo "document  $DOC"
   echo "profile   $PROFILE"
   echo "model     $MODEL"
+  echo "ordering  ${EMBED_MODEL:-document order (no embed_model)}"
   echo "endpoint  $ENDPOINT"
   echo "binary    $BIN"
 } > "$OUT/BUILD.txt"
@@ -78,6 +98,12 @@ while [ "$i" -le "$RUNS" ]; do
   "$BIN" init --profile "$PROFILE" >/dev/null
   "$BIN" config set endpoint "$ENDPOINT" >/dev/null
   "$BIN" config set model "$MODEL" >/dev/null
+  # An `if`, not `[ ... ] && ...`: under `set -e` a false test makes the
+  # compound return 1 and kills the sweep, which is the same shape as the `cp`
+  # failure the header above records costing runs 2 and 3.
+  if [ -n "$EMBED_MODEL" ]; then
+    "$BIN" config set embed_model "$EMBED_MODEL" >/dev/null
+  fi
 
   echo "--- run $i/$RUNS ---"
   START=$(date +%s)
