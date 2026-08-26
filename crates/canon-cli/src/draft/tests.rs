@@ -700,6 +700,7 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         failed: None,
         samples: 1,
         stopped_after: None,
+        checkpoint: None,
         replayed_from: None,
         tape: Vec::new(),
     }
@@ -746,6 +747,146 @@ fn a_stage_that_fails_writes_what_ran_before_it() {
     let why = got.failed.expect("a partial run must say it is one");
     assert!(why.starts_with("tensions:"), "{why}");
     assert!(why.contains("deadline exceeded"), "{why}");
+}
+
+fn taped() -> crate::model::Client {
+    crate::model::Client::replaying(
+        "http://x/v1",
+        "primary",
+        vec![crate::model::TapeEntry {
+            path: "chat/completions".into(),
+            stage: "commitments".into(),
+            raw: "{}".into(),
+        }],
+    )
+}
+
+fn scratch(name: &str) -> std::path::PathBuf {
+    let dir = std::env::temp_dir().join(name);
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+fn runs_in(dir: &std::path::Path) -> Vec<String> {
+    let mut v: Vec<String> = std::fs::read_dir(dir.join(RUNS_DIR))
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .collect();
+    v.sort();
+    v
+}
+
+#[test]
+fn a_killed_run_leaves_its_work_in_a_checkpoint() {
+    // Observed 2026-08-25: a laptop rebooted under a launchd job holding a
+    // founding run that had already read all 104 chunks. `abandon` writes a
+    // stage that ERRORS; nothing wrote a SIGKILL, so two hours of extraction
+    // went with it and have to be paid again.
+    let dir = scratch("canon-checkpoint-keeps-work");
+    let mut artifact = in_flight(
+        chunk_text("house.md", DOC),
+        vec![candidate("Quiet hours start at 11 PM.")],
+    );
+    checkpoint(&dir, &mut artifact, "extract", &taped());
+
+    assert_eq!(runs_in(&dir), vec!["1.partial.json"]);
+    let got: DraftRun = serde_json::from_str(
+        &std::fs::read_to_string(dir.join(RUNS_DIR).join("1.partial.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(got.candidates.len(), 1, "the extraction survives");
+    assert_eq!(got.chunks.len(), 2);
+    assert_eq!(
+        got.checkpoint.as_deref(),
+        Some("extract"),
+        "and it says which stage it got through"
+    );
+    // The tape is the half that makes the kill cheap: with the replies on
+    // disk, `--live-from support` re-runs everything below extraction without
+    // paying the endpoint for it a second time.
+    assert_eq!(got.tape.len(), 1, "the replies ride along");
+}
+
+#[test]
+fn a_second_checkpoint_replaces_the_first() {
+    // One run advancing, not two runs colliding — the opposite of the case
+    // `persist` refuses to overwrite for. A run that left one file per stage
+    // would hand the bar four artifacts for one measurement.
+    let dir = scratch("canon-checkpoint-replaces");
+    let mut artifact = in_flight(chunk_text("house.md", DOC), vec![candidate("Quiet hours.")]);
+    checkpoint(&dir, &mut artifact, "extract", &taped());
+    checkpoint(&dir, &mut artifact, "dedupe", &taped());
+
+    assert_eq!(runs_in(&dir), vec!["1.partial.json"], "one file, not two");
+    let got: DraftRun = serde_json::from_str(
+        &std::fs::read_to_string(dir.join(RUNS_DIR).join("1.partial.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(got.checkpoint.as_deref(), Some("dedupe"), "the later one");
+}
+
+#[test]
+fn a_checkpoint_never_leaks_its_marker_into_the_artifact() {
+    // The bar refuses to score a run carrying `checkpoint`, so a marker left
+    // set after the write would silently un-score every finished run. That
+    // guarantee belongs to the function rather than to whoever remembers to
+    // clear it at the end.
+    let dir = scratch("canon-checkpoint-no-leak");
+    let mut artifact = in_flight(chunk_text("house.md", DOC), vec![candidate("Quiet hours.")]);
+    checkpoint(&dir, &mut artifact, "extract", &taped());
+
+    assert_eq!(artifact.checkpoint, None);
+    let json = serde_json::to_string(&artifact).unwrap();
+    assert!(!json.contains("checkpoint"), "{json}");
+}
+
+#[test]
+fn a_finished_run_removes_its_checkpoint() {
+    // A .partial.json on disk means a run that did not finish, and that has
+    // to keep meaning it.
+    let dir = scratch("canon-checkpoint-cleared");
+    let mut artifact = in_flight(chunk_text("house.md", DOC), vec![candidate("Quiet hours.")]);
+    checkpoint(&dir, &mut artifact, "extract", &taped());
+    assert_eq!(runs_in(&dir), vec!["1.partial.json"]);
+
+    clear_checkpoint(&dir, &artifact);
+    assert!(runs_in(&dir).is_empty(), "the checkpoint is gone");
+    // Clearing twice is not an error: the finishing write and `abandon` can
+    // both reach it, and neither knows what the other did.
+    clear_checkpoint(&dir, &artifact);
+}
+
+#[test]
+fn an_abandoned_run_supersedes_its_checkpoint() {
+    // The failure artifact holds everything the checkpoint did, plus the
+    // stage that ended the run. Keeping both would enter one run twice in the
+    // bar's refusal list.
+    let dir = scratch("canon-checkpoint-superseded");
+    let mut artifact = in_flight(
+        chunk_text("house.md", DOC),
+        vec![candidate("Quiet hours start at 11 PM.")],
+    );
+    let client = taped();
+    checkpoint(&dir, &mut artifact, "dedupe", &client);
+    abandon(
+        &dir,
+        &mut artifact,
+        "tensions",
+        ModelError::Refused {
+            status: 503,
+            detail: "inference deadline exceeded after 300s".into(),
+        },
+        &client,
+    );
+
+    let written = runs_in(&dir);
+    assert_eq!(written.len(), 1, "one artifact for one run: {written:?}");
+    assert!(
+        !written[0].ends_with(".partial.json"),
+        "the survivor is the failure artifact, not the checkpoint: {written:?}"
+    );
 }
 
 #[test]

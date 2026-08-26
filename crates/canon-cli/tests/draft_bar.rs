@@ -505,11 +505,14 @@ fn governance_bar() {
     // refuses them — silently averaging one in would publish a number over a
     // pipeline that did not finish (§18.3).
     //
-    // Two ways to stop, and both are refused here. `failed` means a stage
-    // errored. `stopped_after` means a run stopped on purpose — a convergence
-    // arm reads passages N times and stops at extraction, so it has no
-    // tensions at all; scored as a finished run it would read as recall 0.00
-    // and kill the bar for a measurement that never claimed to make one.
+    // Three ways to stop, and all of them are refused here. `failed` means a
+    // stage errored. `stopped_after` means a run stopped on purpose — a
+    // convergence arm reads passages N times and stops at extraction, so it
+    // has no tensions at all; scored as a finished run it would read as
+    // recall 0.00 and kill the bar for a measurement that never claimed to
+    // make one. `checkpoint` means the process was killed mid-run and this is
+    // the .partial.json it left: strictly less than the run would have
+    // produced, and the sweep script copies it out with the rest.
     let abandoned: Vec<(PathBuf, String)> = paths
         .iter()
         .filter_map(|p| {
@@ -517,8 +520,13 @@ fn governance_bar() {
             let v: Value = serde_json::from_str(&raw).ok()?;
             let why = v["failed"]
                 .as_str()
-                .or_else(|| v["stopped_after"].as_str())?
-                .to_string();
+                .or_else(|| v["stopped_after"].as_str())
+                .map(str::to_string)
+                .or_else(|| {
+                    v["checkpoint"]
+                        .as_str()
+                        .map(|s| format!("killed mid-run, last stage finished: {s}"))
+                })?;
             Some((p.clone(), why))
         })
         .collect();
