@@ -403,6 +403,73 @@ fn checkpoint_path(dir: &Path, run: &DraftRun) -> PathBuf {
     dir.join(RUNS_DIR).join(format!("{}.partial.json", run.at))
 }
 
+/// Does this recording have a hole where a call should be?
+///
+/// Extraction makes exactly one call per chunk per sample. A recording with
+/// fewer lost one, and because the tape is a QUEUE every call after the hole
+/// pops the reply meant for the call before it: wrong citations, wrong
+/// candidates, exit 0.
+///
+/// Measured on the founding checkpoint of 2026-08-26 — 103 calls for 104
+/// chunks, chunk 1 having met a backend 503. Replaying it produced 256
+/// candidates instead of 342, 88 of them dropped for citing a passage they
+/// had nothing to do with, and the only thing that noticed was a stage label
+/// mismatching on the very last call. A hole in the LAST chunk would have
+/// gone through clean.
+///
+/// `taped_reads == 0` means the recording predates stage labels and cannot
+/// be checked this way; those are left alone rather than refused.
+fn tape_hole(target: &str, taped_reads: usize, chunks: usize, samples: usize) -> Option<String> {
+    let expected = chunks * samples;
+    (taped_reads > 0 && taped_reads != expected).then(|| {
+        format!(
+            "{target} recorded {taped_reads} extraction call(s) where {expected} were made \
+             ({chunks} chunk(s), {samples} sample(s)). The recording has a hole: every call \
+             after it would read the reply meant for the call before. Re-run it live."
+        )
+    })
+}
+
+/// May a replay cut its tape at `stage`?
+///
+/// `Some(why)` refuses. The rule is that a cut has to leave something on
+/// EACH side: calls that come off the recording, and calls that genuinely
+/// run. A stage the recording never called would leave nothing live, and the
+/// run would come back a full replay wearing a live label (§18.3).
+///
+/// **A checkpoint inverts that, and it is the reason the marker is worth
+/// carrying.** Its tape stops wherever the run was killed, so the stage you
+/// want to go live from is precisely the one it has no calls for. Refusing
+/// there made a killed run's evidence useless for the resume it was kept
+/// for — the founding run of 2026-08-26 held an hour of extraction, support
+/// and dedupe on disk and could not be continued from any of it.
+fn cut_refusal(
+    target: &str,
+    stage: &str,
+    have: &[&str],
+    checkpoint: Option<&str>,
+) -> Option<String> {
+    if have.contains(&stage) {
+        return None;
+    }
+    if checkpoint.is_some() {
+        // The tape ends because the run was killed, not because this build
+        // calls something the recording never did.
+        return None;
+    }
+    Some(if have.is_empty() {
+        format!(
+            "{target} was recorded before calls carried a stage label, so it cannot be \
+             cut. Re-record it, or replay it whole."
+        )
+    } else {
+        format!(
+            "no `{stage}` stage in {target} — it recorded: {}",
+            have.join(", ")
+        )
+    })
+}
+
 /// Write what the run holds so far, into one file that replaces itself.
 ///
 /// [`abandon`] covers a stage that ERRORS, which is the failure Rust code
@@ -1269,6 +1336,26 @@ fn replay(dir: &Path, args: &[String], target: &str) -> i32 {
     };
     let calls = recorded.tape.len();
 
+    // A tape with a HOLE replays silently wrong, and this is the cheap check
+    // that catches one. Extraction makes exactly one call per chunk per
+    // sample; a recording with fewer lost a call, and every call after the
+    // hole pops the reply meant for the one before it — wrong citations,
+    // wrong candidates, exit 0. Recordings made before calls carried stage
+    // labels cannot be checked this way and are left alone.
+    let taped_reads = recorded
+        .tape
+        .iter()
+        .filter(|e| e.stage == "commitments")
+        .count();
+    if let Some(why) = tape_hole(
+        target,
+        taped_reads,
+        recorded.chunks.len(),
+        recorded.samples.max(1),
+    ) {
+        return crate::cmds::fail(why);
+    }
+
     // `--live-from <stage>` cuts the tape: everything above comes off the
     // recording, that stage on is real. It is what makes an arm on a LATE
     // stage cheap — the comparison stage is 10 of ~36 calls — and unlike a
@@ -1286,17 +1373,14 @@ fn replay(dir: &Path, args: &[String], target: &str) -> i32 {
             .filter(|s| !s.is_empty())
             .collect();
         have.dedup();
-        if !have.contains(&stage.as_str()) {
-            return crate::cmds::fail(if have.is_empty() {
-                format!(
-                    "{target} was recorded before calls carried a stage label, so it                      cannot be cut. Re-record it, or replay it whole."
-                )
-            } else {
-                format!(
-                    "no `{stage}` stage in {target} — it recorded: {}",
-                    have.join(", ")
-                )
-            });
+        match cut_refusal(target, stage, &have, recorded.checkpoint.as_deref()) {
+            Some(why) => return crate::cmds::fail(why),
+            None if !have.contains(&stage.as_str()) => eprintln!(
+                "{target} is a checkpoint (killed after `{}`) — replaying {calls} recorded \
+                 call(s), then live from `{stage}`",
+                recorded.checkpoint.as_deref().unwrap_or("?")
+            ),
+            None => {}
         }
     }
 

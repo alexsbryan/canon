@@ -30,7 +30,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use serde_json::{Map, Value};
+use serde_json::{json, Map, Value};
 
 // ── the bars, pre-registered ────────────────────────────────
 //
@@ -50,6 +50,49 @@ const KILL_DECOY_CEILING: usize = 5;
 
 /// One run is an anecdote.
 const MIN_RUNS: usize = 3;
+
+/// How much of its comparison schedule a run must actually get through
+/// before its tension counts mean anything.
+///
+/// Not 100%. One refused pass out of 690 costs a single pair one of its two
+/// looks, and discarding a six-hour run over that would be its own kind of
+/// waste. Well clear of the 15% that prompted this bar, and a run landing
+/// near it should be re-run rather than argued about.
+const MIN_COVERAGE: f64 = 0.95;
+
+/// A run whose comparison stage never got through its passes.
+///
+/// **The fourth way a run fails to be a measurement, and the only one that
+/// leaves no marker on the artifact.** Every stage ran, nothing errored, the
+/// exit code was zero. On 2026-08-26 a founding run met a daemon shedding
+/// load — `host busy`, instantly, 588 times — and finished with 102 of 690
+/// passes weighed. It carried no `failed`, no `stopped_after` and no
+/// `checkpoint`, so it read exactly like a completed run, and the only
+/// contrary signal was a warning printed after the number.
+///
+/// Deciding it here rather than in `draft` follows the same rule as the
+/// other three: the run keeps its partial work on purpose, so refusing to
+/// SCORE it is the scorer's job (§18.3).
+fn thin_comparison(v: &Value) -> Option<String> {
+    let passes = v["tension_passes"].as_u64()?;
+    // A corpus small enough to fit one pass has nothing to be thin about.
+    if passes == 0 {
+        return None;
+    }
+    let unread = v["tension_passes_unread"]
+        .as_array()
+        .map_or(0, |a| a.len() as u64);
+    let read = passes.saturating_sub(unread);
+    let coverage = read as f64 / passes as f64;
+    (coverage < MIN_COVERAGE).then(|| {
+        format!(
+            "comparison weighed {read} of {passes} passes ({:.0}%), under the {:.0}% a \
+             measurement needs",
+            100.0 * coverage,
+            100.0 * MIN_COVERAGE
+        )
+    })
+}
 
 // ── scoring ─────────────────────────────────────────────────
 
@@ -505,14 +548,17 @@ fn governance_bar() {
     // refuses them — silently averaging one in would publish a number over a
     // pipeline that did not finish (§18.3).
     //
-    // Three ways to stop, and all of them are refused here. `failed` means a
+    // Four ways to fall short of a measurement, and all of them are refused
+    // here. `failed` means a
     // stage errored. `stopped_after` means a run stopped on purpose — a
     // convergence arm reads passages N times and stops at extraction, so it
     // has no tensions at all; scored as a finished run it would read as
     // recall 0.00 and kill the bar for a measurement that never claimed to
     // make one. `checkpoint` means the process was killed mid-run and this is
     // the .partial.json it left: strictly less than the run would have
-    // produced, and the sweep script copies it out with the rest.
+    // produced, and the sweep script copies it out with the rest. The fourth
+    // is thin comparison coverage, which leaves no marker at all — see
+    // [`thin_comparison`].
     let abandoned: Vec<(PathBuf, String)> = paths
         .iter()
         .filter_map(|p| {
@@ -526,7 +572,8 @@ fn governance_bar() {
                     v["checkpoint"]
                         .as_str()
                         .map(|s| format!("killed mid-run, last stage finished: {s}"))
-                })?;
+                })
+                .or_else(|| thin_comparison(&v))?;
             Some((p.clone(), why))
         })
         .collect();
@@ -1109,4 +1156,50 @@ fn the_manifest_and_the_document_agree_on_key_shape() {
         truth_key(&json!({"ordinance": "16064", "section": "42-258(6)"})).as_deref(),
         Some("ord:16064/42-258(6)")
     );
+}
+
+#[test]
+fn a_run_that_barely_compared_anything_is_not_a_measurement() {
+    // Observed 2026-08-26. A founding run met a daemon shedding load and
+    // finished with 102 of 690 passes weighed. Nothing errored, every stage
+    // ran, the exit code was zero — so `failed`, `stopped_after` and
+    // `checkpoint` were all absent and it read as a complete run. The only
+    // contrary signal was a warning printed after the number.
+    let thin = json!({
+        "tension_passes": 690,
+        "tension_passes_unread": vec![""; 588],
+    });
+    let why = thin_comparison(&thin).expect("refused");
+    assert!(why.contains("102 of 690"), "{why}");
+    assert!(why.contains("15%"), "names the coverage it got: {why}");
+
+    // One lost pass out of 690 costs a single pair one of its two looks.
+    // Discarding a six-hour run for that would be its own waste.
+    let whole = json!({
+        "tension_passes": 690,
+        "tension_passes_unread": vec![""; 1],
+    });
+    assert_eq!(thin_comparison(&whole), None);
+
+    // The bar bites somewhere between, and not before.
+    let at_bar = json!({
+        "tension_passes": 100,
+        "tension_passes_unread": vec![""; 5],
+    });
+    assert_eq!(
+        thin_comparison(&at_bar),
+        None,
+        "95% is the bar, not under it"
+    );
+    let under = json!({
+        "tension_passes": 100,
+        "tension_passes_unread": vec![""; 6],
+    });
+    assert!(thin_comparison(&under).is_some(), "94% is under it");
+
+    // A corpus small enough to fit one pass has nothing to be thin about,
+    // and a run with no comparison stage is judged by the other three
+    // markers, not invented into a failure here.
+    assert_eq!(thin_comparison(&json!({"tension_passes": 0})), None);
+    assert_eq!(thin_comparison(&json!({})), None);
 }

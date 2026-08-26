@@ -316,7 +316,7 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
         // Loud, because every tension number from this run is a number about
         // a fraction of the pairs.
         eprintln!(
-            "WARNING: {} of {passes} comparison(s) went unread — this run weighed {:.0}% of the pairs",
+            "WARNING: {} of {passes} comparison(s) went unread — this run weighed {:.0}% of the passes",
             unread.len(),
             100.0 * (passes - unread.len()) as f64 / passes as f64
         );
