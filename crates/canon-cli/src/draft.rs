@@ -314,6 +314,20 @@ pub struct DraftRun {
     /// extract-only arm from a crash is being misled about both (§18.3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stopped_after: Option<String>,
+    /// Set while a run is STILL GOING, naming the last stage that finished.
+    ///
+    /// The third way a run can be incomplete, and the only one no Rust code
+    /// gets to report. `failed` means a stage errored and `stopped_after`
+    /// means a run stopped on purpose — both are written by code that ran.
+    /// This one means the process was KILLED: SIGKILL, an OOM kill, a power
+    /// cut, a laptop rebooting under a launchd job. Like the other two it
+    /// makes the run EVIDENCE and never a measurement, and the bar refuses to
+    /// score it.
+    ///
+    /// It appears only in the `.partial.json` that [`checkpoint`] writes and
+    /// a finishing run removes, so a finished artifact never carries it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checkpoint: Option<String>,
     /// Every reply the endpoint gave this run, in order.
     ///
     /// **This is what makes an arm cost a stage instead of a run.** The
@@ -360,15 +374,95 @@ fn abandon(
     artifact.tape = client.tape();
     artifact.failed = Some(format!("{stage}: {e}"));
     match persist(dir, artifact) {
-        Ok(p) => eprintln!(
-            "the {stage} step failed. What ran before it is kept at {}",
-            p.display()
-        ),
-        Err(w) => {
-            eprintln!("the {stage} step failed, and the partial run could not be written: {w}")
+        Ok(p) => {
+            // This artifact supersedes the checkpoint — it holds everything
+            // the checkpoint did, plus the stage that ended the run. Keeping
+            // both would enter one run twice in the bar's refusal list.
+            clear_checkpoint(dir, artifact);
+            eprintln!(
+                "the {stage} step failed. What ran before it is kept at {}",
+                p.display()
+            );
         }
+        // And here the checkpoint STAYS. It is now the only copy of the work
+        // this run paid for.
+        Err(w) => eprintln!(
+            "the {stage} step failed, and the partial run could not be written: {w} — \
+             the last checkpoint is still at {}",
+            checkpoint_path(dir, artifact).display()
+        ),
     }
     model::report(e)
+}
+
+/// The one file a run checkpoints into.
+///
+/// Keyed by `at` so it belongs to this run and no other, and `.partial` so
+/// that neither a reader nor a glob over finished runs mistakes it for one.
+fn checkpoint_path(dir: &Path, run: &DraftRun) -> PathBuf {
+    dir.join(RUNS_DIR).join(format!("{}.partial.json", run.at))
+}
+
+/// Write what the run holds so far, into one file that replaces itself.
+///
+/// [`abandon`] covers a stage that ERRORS, which is the failure Rust code
+/// gets to see. This covers the one it does not: the process is killed and
+/// nothing of ours runs at all. On 2026-08-25 a reboot took a founding run
+/// that had already read all 104 chunks and left NOTHING on disk, because the
+/// artifact was written only at the end — so those two hours have to be paid
+/// again.
+///
+/// **What it actually saves is the tape.** With the extraction replies on
+/// disk, `--replay <partial> --live-from support` re-runs every stage below
+/// extraction without paying the endpoint for it a second time, which is the
+/// mechanism an arm already uses to cost a stage instead of a run.
+///
+/// Unlike [`persist`] this OVERWRITES, and the difference is deliberate.
+/// `persist` refuses to, because two runs landing in one second are two
+/// measurements and one must not eat the other. A checkpoint is the SAME run
+/// advancing: what it replaces describes a strictly earlier moment of itself.
+///
+/// A checkpoint that cannot be written does not end the run — a full disk
+/// should not abort two hours of work at stage one — but it says so loudly,
+/// because an operator who believes a kill is survivable and finds out
+/// afterwards that it was not has been misled by silence (§18.3).
+///
+/// The marker is set only for the duration of the write. A finished artifact
+/// must not carry one, and making that a property of this function rather
+/// than a line somebody has to remember at the end is the difference between
+/// an invariant and a habit (§7).
+fn checkpoint(dir: &Path, artifact: &mut DraftRun, after: &str, client: &Client) {
+    artifact.checkpoint = Some(after.to_string());
+    artifact.tape = client.tape();
+    let path = checkpoint_path(dir, artifact);
+    let wrote = serde_json::to_string_pretty(&artifact)
+        .map_err(|e| e.to_string())
+        .and_then(|body| {
+            std::fs::create_dir_all(dir.join(RUNS_DIR)).map_err(|e| e.to_string())?;
+            std::fs::write(&path, body).map_err(|e| format!("{}: {e}", path.display()))
+        });
+    match wrote {
+        Ok(()) => eprintln!("  checkpoint after {after} -> {}", path.display()),
+        Err(e) => eprintln!(
+            "WARNING: could not checkpoint after {after} ({e}) — if this run is \
+             killed, the calls it has already paid for are lost"
+        ),
+    }
+    artifact.checkpoint = None;
+}
+
+/// Remove a run's checkpoint, once it has written the artifact superseding it.
+///
+/// A `.partial.json` on disk means a run that did not finish. One left behind
+/// by a run that DID tells the next reader a lie, and hands the bar a second
+/// artifact for a single run.
+fn clear_checkpoint(dir: &Path, run: &DraftRun) {
+    let path = checkpoint_path(dir, run);
+    match std::fs::remove_file(&path) {
+        Ok(()) => {}
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(e) => eprintln!("WARNING: {} could not be removed: {e}", path.display()),
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1775,9 +1869,14 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         failed: None,
         samples,
         stopped_after: None,
+        checkpoint: None,
         replayed_from,
         tape: Vec::new(),
     };
+
+    // Extraction is the long pole — 104 chunks at ~42s is over an hour on the
+    // founding corpus — and until this line it lived only in memory.
+    checkpoint(dir, &mut artifact, "extract", &client);
 
     // A convergence run stops here, on purpose.
     //
@@ -1803,6 +1902,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         artifact.tape = client.tape();
         return match persist(dir, &artifact) {
             Ok(path) => {
+                clear_checkpoint(dir, &artifact);
                 eprintln!("run written to {}", path.display());
                 0
             }
@@ -1826,6 +1926,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     let (candidates, quantities) = (supported.candidates, supported.quantities);
     artifact.candidates = candidates.clone();
     artifact.dropped = dropped.clone();
+    checkpoint(dir, &mut artifact, "support", &client);
     if !unread.is_empty() {
         // Loud, because every number computed from this run is a number about
         // a fraction of the document.
@@ -1843,6 +1944,9 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     };
     artifact.duplicates = groups.clone();
     artifact.kept = kept.clone();
+    // The last one before the comparison stage, which on a large canon is
+    // hundreds of passes and hours of wall clock.
+    checkpoint(dir, &mut artifact, "dedupe", &client);
     if !groups.is_empty() {
         eprintln!("{} duplicate group(s) folded", groups.len());
     }
@@ -1885,6 +1989,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         Ok(p) => p,
         Err(e) => return crate::cmds::fail(e),
     };
+    clear_checkpoint(dir, &artifact);
 
     if dry_run {
         if crate::cmds::has(args, "--json") {
