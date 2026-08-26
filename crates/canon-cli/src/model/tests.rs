@@ -332,6 +332,7 @@ fn a_tape_whose_calls_went_elsewhere_refuses() {
         path: "embeddings".into(),
         stage: "embeddings".into(),
         raw: completion(&json!({ "pairs": [] }).to_string()),
+        status: 200,
     }];
     let replayed = Client::replaying("http://127.0.0.1:1/v1", "primary", tape);
     let err =
@@ -352,6 +353,7 @@ fn a_tape_cut_at_a_stage_plays_above_it_and_goes_live_from_it() {
         path: "chat/completions".into(),
         stage: "commitments".into(),
         raw: completion(&json!({ "pairs": ["taped"] }).to_string()),
+        status: 200,
     }];
     let client = mock.client().playing(tape, Some("tensions".into()));
 
@@ -385,10 +387,164 @@ fn a_stage_label_that_disagrees_with_the_recording_refuses() {
         path: "chat/completions".into(),
         stage: "groups".into(),
         raw: completion(&json!({ "pairs": [] }).to_string()),
+        status: 200,
     }];
     let replayed = Client::replaying("http://127.0.0.1:1/v1", "primary", tape);
     let err = replayed
         .complete_json::<Pairs>("s", "u", "commitments", &schema())
         .expect_err("an extraction must not be answered from a dedupe call");
     assert!(format!("{err}").contains("out of step"), "{err}");
+}
+
+// ── backpressure ────────────────────────────────────────────
+
+#[test]
+fn a_busy_host_is_told_apart_from_one_that_declined() {
+    // The whole decision: waiting helps a host that is over capacity and
+    // cannot help one that has refused the request itself. Retrying the
+    // second burns a call to learn what it already knows (§18.3).
+    assert!(is_backpressure(429, ""), "rate limited, unambiguously");
+    assert!(
+        is_backpressure(
+            503,
+            r#"{"error":"host busy: ~7000 ms predicted wait at queue position 3"}"#
+        ),
+        "the queue is full and the request never ran"
+    );
+    assert!(
+        is_backpressure(500, r#"{"error":"host busy: ~4000 ms predicted wait"}"#),
+        "a 500 that names the queue is still backpressure"
+    );
+    assert!(!is_backpressure(400, "bad request"));
+    assert!(!is_backpressure(404, "no such model"));
+    // The one that makes the status alone useless. This daemon answers 503
+    // for a request that RAN and blew its deadline as well as for a full
+    // queue, and retrying the former spends another 300s on a request
+    // already known to be too expensive.
+    assert!(
+        !is_backpressure(
+            503,
+            r#"{"error":{"message":"local inference failed: inference deadline exceeded after 300s","type":"backend_error"}}"#
+        ),
+        "a blown deadline is not the host asking us to come back"
+    );
+    // The one that matters: a 200 carrying a model refusal. `post` maps a
+    // declining model to Refused{status: 200}, and no amount of waiting
+    // changes its mind — retrying it would double every refusal.
+    assert!(
+        !is_backpressure(200, "the model declined: host busy is not a thing I do"),
+        "a model declining is not the host asking us to come back"
+    );
+}
+
+#[test]
+fn backoff_grows_then_caps_then_gives_up() {
+    use std::time::Duration;
+    let secs = |a: usize, w: u64| backoff(a, Duration::from_secs(w)).map(|d| d.as_secs());
+    assert_eq!(
+        secs(1, 0),
+        Some(2),
+        "starts small — a spike may clear at once"
+    );
+    assert_eq!(secs(2, 2), Some(4));
+    assert_eq!(secs(3, 6), Some(8));
+    assert_eq!(secs(4, 14), Some(16));
+    assert_eq!(
+        secs(5, 30),
+        Some(30),
+        "capped, so it polls rather than sleeps"
+    );
+    assert_eq!(
+        secs(9, 30),
+        Some(30),
+        "and stays capped however long it runs"
+    );
+    // The budget is what stops a retry becoming a hang.
+    assert_eq!(secs(6, 300), None, "budget spent");
+    assert_eq!(
+        secs(6, 290),
+        Some(10),
+        "the last wait is trimmed to what is left"
+    );
+    assert_eq!(
+        secs(0, 0),
+        None,
+        "attempt 0 is the original call, not a retry"
+    );
+}
+
+#[test]
+fn a_busy_host_is_waited_out_rather_than_counted_as_a_failure() {
+    // Observed 2026-08-26: the daemon shed load for about eight minutes
+    // during a founding sweep's comparison stage. Nothing waited, so 588 of
+    // 690 passes came back refused inside eight minutes and the run reported
+    // 15% coverage. One retry is the difference between a slow run and a
+    // meaningless one.
+    let busy = r#"{"error":"host busy: ~7000 ms predicted wait at queue position 3","reason":"local_queue"}"#;
+    let mock = Mock::spawn(vec![
+        (503, busy.to_string()),
+        (200, completion(r#"{"pairs":["a"]}"#)),
+    ]);
+    let got = ask(&mock.client()).expect("the retry answers");
+    assert_eq!(got.pairs, vec!["a".to_string()]);
+    assert_eq!(
+        mock.requests().len(),
+        2,
+        "the call was made twice: once refused, once answered"
+    );
+}
+
+#[test]
+fn a_refusal_that_is_not_backpressure_is_never_retried() {
+    // The ladder above already spends a second call on a schema downgrade.
+    // Retrying a plain refusal on top of that would double every failure in
+    // the run for nothing.
+    let mock = Mock::spawn(vec![(404, r#"{"error":"no such model"}"#.to_string())]);
+    let err = ask(&mock.client()).expect_err("must not succeed");
+    assert!(
+        matches!(err, ModelError::Refused { status: 404, .. }),
+        "{err:?}"
+    );
+    assert_eq!(mock.requests().len(), 1, "exactly one call");
+}
+
+#[test]
+fn the_tape_records_a_refusal_so_a_replay_stays_in_step() {
+    // The founding run of 2026-08-26 lost chunk 1 to a backend 503. Because
+    // only successes were taped, replaying it fed chunk 2's reply to chunk 1
+    // and every later passage read the reply meant for its predecessor: 256
+    // candidates instead of 342, 88 of them dropped for citing a passage
+    // they had nothing to do with. Exit 0 throughout.
+    let mock = Mock::spawn(vec![
+        (
+            503,
+            r#"{"error":{"message":"MTP process(verify) failed"}}"#.to_string(),
+        ),
+        (200, completion(r#"{"pairs":["second"]}"#)),
+    ]);
+    let client = mock.client().recording();
+    ask(&client).expect_err("the first call is refused");
+    ask(&client).expect("the second answers");
+
+    let tape = client.tape();
+    assert_eq!(
+        tape.len(),
+        2,
+        "BOTH calls are on the tape, not just the one that worked"
+    );
+    assert_eq!(tape[0].status, 503);
+    assert_eq!(tape[1].status, 200);
+
+    // And replaying it reproduces the refusal in the same position, so the
+    // second call still gets the second reply.
+    let replayed = Client::replaying("http://x/v1", "primary", tape);
+    let err = ask(&replayed).expect_err("the recorded refusal replays as one");
+    assert!(
+        matches!(err, ModelError::Refused { status: 503, .. }),
+        "{err:?}"
+    );
+    assert_eq!(
+        ask(&replayed).expect("still in step").pairs,
+        vec!["second".to_string()]
+    );
 }

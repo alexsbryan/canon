@@ -174,6 +174,27 @@ pub struct TapeEntry {
     #[serde(default)]
     pub stage: String,
     pub raw: String,
+    /// The status this reply came back with. 200 is an answer.
+    ///
+    /// **A tape that records only successes cannot be replayed faithfully.**
+    /// A failed call used to leave no entry at all, so every later call
+    /// popped the reply meant for its predecessor. The founding run of
+    /// 2026-08-26 lost chunk 1 to a backend error; replaying its tape read
+    /// all 103 remaining passages against the wrong reply and produced 256
+    /// candidates instead of 342, with 88 dropped for citations pointing at
+    /// somebody else's passage. Nothing said so until a stage label happened
+    /// to mismatch on the very last call — and had the gap been in the LAST
+    /// chunk, nothing would have said so at all.
+    #[serde(default = "ok_status", skip_serializing_if = "is_ok_status")]
+    pub status: u16,
+}
+
+fn ok_status() -> u16 {
+    200
+}
+
+fn is_ok_status(s: &u16) -> bool {
+    *s == 200
 }
 
 /// A run's exchanges, being written or being played back.
@@ -231,6 +252,77 @@ pub struct Client {
     /// with its own tape would drop its calls from the run's recording — the
     /// extract leg, which is 24 of ~36 calls, first.
     tape: Option<std::rc::Rc<Tape>>,
+    /// Consecutive calls that have waited out the whole backpressure budget.
+    ///
+    /// Shared for the same reason the tape is: this counts how the HOST is
+    /// behaving, and a leg with its own counter would never reach the
+    /// give-up threshold no matter how long the endpoint stayed down.
+    busy_streak: std::rc::Rc<std::cell::Cell<usize>>,
+}
+
+// ── backpressure ────────────────────────────────────────────
+
+/// What one call will wait out before giving up, and the ceiling on a single
+/// sleep between attempts.
+///
+/// Sized from the failure they exist for. On 2026-08-26 the daemon shed load
+/// for about eight minutes while a founding sweep was in its comparison
+/// stage. Nothing waited — every refusal returned instantly — so 588 of 690
+/// passes burned in that window and the run reported 15% coverage.
+const BACKPRESSURE_BUDGET: Duration = Duration::from_secs(300);
+const BACKPRESSURE_CAP: Duration = Duration::from_secs(30);
+
+/// Consecutive calls allowed to exhaust the budget before the run gives up.
+///
+/// Retrying without this trades one failure for a worse one: 690 passes each
+/// waiting out five minutes is two and a half days of looking busy. Three
+/// exhausted calls is a host that is not returning on the timescale this run
+/// cares about, so the stage abandons — which writes the artifact and says
+/// why, instead of hanging.
+const BACKPRESSURE_GIVE_UP_AFTER: usize = 3;
+
+/// Is this refusal the host asking us to come back, or declining outright?
+///
+/// The distinction is whether waiting can possibly help. A 429 or a 503 says
+/// "over capacity right now"; a 400 or a 404 will say the same thing however
+/// long we wait, and retrying one burns a call to learn nothing (§18.3).
+pub fn is_backpressure(status: u16, detail: &str) -> bool {
+    // 429 is the protocol's own unambiguous "come back later".
+    if status == 429 {
+        return true;
+    }
+    // 503 is NOT unambiguous, and treating it as if it were broke two
+    // existing tests the first time this was written. This daemon answers
+    // 503 both for "the queue is full and your request never ran" and for
+    // "your request ran and blew its 300s inference deadline". Retrying the
+    // second spends another 300 seconds arriving in the same place, on a
+    // request already known to be too expensive. Only the body separates
+    // them, so the body is what decides.
+    //
+    // Never a 200 either: there the "refusal" is the MODEL declining, and no
+    // amount of waiting changes its mind.
+    status != 200 && (detail.contains("host busy") || detail.contains("queue position"))
+}
+
+/// How long to wait before retry `attempt` (1-based), given what this call
+/// has already waited. `None` means the budget is spent.
+///
+/// Doubling from two seconds and capped, so a spike that clears in ten
+/// seconds costs ten seconds rather than a fixed penalty, and a long one
+/// settles into a steady poll instead of sleeping for minutes at a stretch.
+pub fn backoff(attempt: usize, waited: Duration) -> Option<Duration> {
+    if attempt == 0 || waited >= BACKPRESSURE_BUDGET {
+        return None;
+    }
+    let secs = 2u64
+        .saturating_pow(u32::try_from(attempt.min(16)).unwrap_or(16))
+        .min(BACKPRESSURE_CAP.as_secs());
+    let d = Duration::from_secs(secs).min(BACKPRESSURE_BUDGET - waited);
+    if d.is_zero() {
+        None
+    } else {
+        Some(d)
+    }
 }
 
 impl Client {
@@ -249,6 +341,7 @@ impl Client {
             .build();
         Ok(Self {
             agent,
+            busy_streak: Default::default(),
             endpoint,
             // Most local servers serve one model and ignore this field, but
             // the OpenAI schema requires it, so something must be sent.
@@ -286,6 +379,7 @@ impl Client {
             model: model.to_string(),
             // One tape per RUN, shared by every leg's client.
             tape: self.tape.clone(),
+            busy_streak: self.busy_streak.clone(),
         }
     }
 
@@ -438,6 +532,7 @@ impl Client {
             endpoint: endpoint.to_string(),
             model: model.to_string(),
             tape: Some(std::rc::Rc::new(Tape::play(entries, None))),
+            busy_streak: Default::default(),
         }
     }
 
@@ -526,6 +621,14 @@ impl Client {
                         raw: String::new(),
                     });
                 }
+                // A recorded refusal is replayed AS a refusal. Anything else
+                // would make the replay a different run from the one taped.
+                if entry.status != 200 {
+                    return Err(ModelError::Refused {
+                        status: entry.status,
+                        detail: cap(&entry.raw),
+                    });
+                }
                 let parsed: Value =
                     serde_json::from_str(&entry.raw).map_err(|e| ModelError::Malformed {
                         detail: format!("recorded reply is not JSON: {e}"),
@@ -535,27 +638,60 @@ impl Client {
             }
         }
         let url = format!("{}/{path}", self.endpoint);
-        let response = match self
-            .agent
-            .post(&url)
-            .set("content-type", "application/json")
-            // `send_string` rather than `send_json`: the reply is parsed by
-            // hand anyway, so ureq's `json` feature would buy nothing.
-            .send_string(&body.to_string())
-        {
-            Ok(r) => r,
-            Err(ureq::Error::Status(status, r)) => {
-                let detail = r.into_string().unwrap_or_else(|e| e.to_string());
-                return Err(ModelError::Refused {
-                    status,
-                    detail: cap(detail.trim()),
-                });
-            }
-            Err(ureq::Error::Transport(t)) => {
-                return Err(ModelError::Transport {
-                    url,
-                    detail: t.to_string(),
-                })
+        let mut waited = Duration::ZERO;
+        let mut attempt = 0usize;
+        let response = loop {
+            match self
+                .agent
+                .post(&url)
+                .set("content-type", "application/json")
+                // `send_string` rather than `send_json`: the reply is parsed by
+                // hand anyway, so ureq's `json` feature would buy nothing.
+                .send_string(&body.to_string())
+            {
+                Ok(r) => {
+                    self.busy_streak.set(0);
+                    break r;
+                }
+                Err(ureq::Error::Status(status, r)) => {
+                    let detail = cap(r.into_string().unwrap_or_else(|e| e.to_string()).trim());
+                    if !is_backpressure(status, &detail) {
+                        self.tape_entry(path, stage, &detail, status);
+                        return Err(ModelError::Refused { status, detail });
+                    }
+                    attempt += 1;
+                    let Some(d) = backoff(attempt, waited) else {
+                        let streak = self.busy_streak.get() + 1;
+                        self.busy_streak.set(streak);
+                        self.tape_entry(path, stage, &detail, status);
+                        if streak >= BACKPRESSURE_GIVE_UP_AFTER {
+                            return Err(ModelError::Refused {
+                                status,
+                                detail: format!(
+                                    "the host has been busy for {streak} calls running, each \
+                                     waiting out {}s. Giving up rather than turning an outage \
+                                     into a hang. Last reply: {detail}",
+                                    BACKPRESSURE_BUDGET.as_secs()
+                                ),
+                            });
+                        }
+                        return Err(ModelError::Refused { status, detail });
+                    };
+                    // Loud. A run that silently takes an hour longer than it
+                    // should is a run nobody can account for afterwards.
+                    eprintln!(
+                        "\n  host busy (HTTP {status}) — waiting {}s, then retry {attempt}",
+                        d.as_secs()
+                    );
+                    std::thread::sleep(d);
+                    waited += d;
+                }
+                Err(ureq::Error::Transport(t)) => {
+                    return Err(ModelError::Transport {
+                        url: url.clone(),
+                        detail: t.to_string(),
+                    })
+                }
             }
         };
         let raw = response.into_string().map_err(|e| ModelError::Transport {
@@ -569,14 +705,25 @@ impl Client {
         // Recorded AFTER the transport succeeded and BEFORE anything
         // interprets it: what goes on the tape is what the server said, not
         // what this build made of it.
+        self.tape_entry(path, stage, &raw, 200);
+        Ok((parsed, raw))
+    }
+
+    /// Put one exchange on the tape, answer or refusal alike.
+    ///
+    /// Every call that reached the endpoint gets an entry, because the tape's
+    /// job is to let a replay make the SAME sequence of calls. Skipping the
+    /// failures is what let a single lost chunk shift every later reply by
+    /// one — see [`TapeEntry::status`].
+    fn tape_entry(&self, path: &str, stage: &str, raw: &str, status: u16) {
         if let Some(Tape::Record(v)) = self.tape.as_deref() {
             v.borrow_mut().push(TapeEntry {
                 path: path.to_string(),
                 stage: stage.to_string(),
-                raw: raw.clone(),
+                raw: raw.to_string(),
+                status,
             });
         }
-        Ok((parsed, raw))
     }
 
     /// POST once; return the assistant's content string.

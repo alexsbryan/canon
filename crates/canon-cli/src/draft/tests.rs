@@ -757,6 +757,7 @@ fn taped() -> crate::model::Client {
             path: "chat/completions".into(),
             stage: "commitments".into(),
             raw: "{}".into(),
+            status: 200,
         }],
     )
 }
@@ -776,6 +777,60 @@ fn runs_in(dir: &std::path::Path) -> Vec<String> {
         .collect();
     v.sort();
     v
+}
+
+#[test]
+fn a_recording_with_a_hole_in_it_is_refused_rather_than_replayed() {
+    // The founding checkpoint of 2026-08-26 held 103 extraction calls for
+    // 104 chunks: chunk 1 had met a backend 503 and left no entry. Replaying
+    // it fed every passage the reply meant for the one before — 256
+    // candidates instead of 342, 88 dropped for citing somebody else's
+    // passage — and the only thing that noticed was a stage label
+    // mismatching on the very last call. Had the hole been in the LAST
+    // chunk, nothing would have noticed at all.
+    let why = tape_hole("ckpt.json", 103, 104, 1).expect("refused");
+    assert!(why.contains("103 extraction call(s) where 104"), "{why}");
+    assert!(why.contains("hole"), "{why}");
+
+    // A complete recording passes, at one sample or many.
+    assert_eq!(tape_hole("r.json", 104, 104, 1), None);
+    assert_eq!(tape_hole("r.json", 312, 104, 3), None);
+    assert!(
+        tape_hole("r.json", 311, 104, 3).is_some(),
+        "a hole at 3 samples too"
+    );
+
+    // A recording made before calls carried stage labels cannot be checked
+    // this way, and is left alone rather than refused on no evidence.
+    assert_eq!(tape_hole("old.json", 0, 104, 1), None);
+}
+
+#[test]
+fn a_cut_needs_something_on_both_sides_unless_the_run_was_killed() {
+    // A cut has to leave calls on the tape AND calls to actually make. A
+    // stage the recording never called leaves nothing live, so the run comes
+    // back a full replay wearing a live label.
+    let have = ["commitments", "quantities"];
+    assert_eq!(cut_refusal("r.json", "quantities", &have, None), None);
+
+    let why = cut_refusal("r.json", "tensions", &have, None).expect("refused");
+    assert!(why.contains("no `tensions` stage"), "{why}");
+    assert!(
+        why.contains("commitments, quantities"),
+        "names what it has: {why}"
+    );
+
+    let why = cut_refusal("old.json", "tensions", &[], None).expect("refused");
+    assert!(why.contains("before calls carried a stage label"), "{why}");
+
+    // And the inversion. A checkpoint's tape stops where the run was killed,
+    // so the stage worth going live from is exactly the one it lacks —
+    // refusing it is what made the founding run's saved hour unusable.
+    assert_eq!(
+        cut_refusal("ckpt.json", "tensions", &have, Some("dedupe")),
+        None,
+        "a checkpoint may be cut at the stage it never reached"
+    );
 }
 
 #[test]
