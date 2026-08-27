@@ -144,7 +144,12 @@ fn the_reading_prompt_forbids_normalising_the_units_away() {
 fn a_number_the_citation_never_states_is_unsupported() {
     let rule = [q("three", "hours", "notice", "3 hour")];
     let cited = [q("three", "days", "notice", "3 day")];
-    assert_eq!(unsupported(&rule, &cited).as_deref(), Some("three hours"));
+    let text = "Notice must be given at least three hours in advance.";
+    let quote = "Notice must be given at least three days ahead.";
+    assert_eq!(
+        unsupported(&rule, &cited, text, quote).as_deref(),
+        Some("three hours")
+    );
 }
 
 #[test]
@@ -158,22 +163,44 @@ fn a_citation_may_state_more_than_the_rule_it_supports() {
         q("7", "AM", "quiet hours end", "07:00"),
         q("2", "guests", "occupancy", "2 guest"),
     ];
-    assert_eq!(unsupported(&rule, &cited), None);
+    assert_eq!(
+        unsupported(
+            &rule,
+            &cited,
+            "Quiet hours start at 11 PM.",
+            "Quiet hours run from 11 PM to 7 AM, and no more than 2 guests may stay."
+        ),
+        None
+    );
 }
 
 #[test]
 fn a_rule_stating_no_number_is_supported_by_any_citation() {
     assert_eq!(
-        unsupported(&[], &[q("85", "dBA", "sound level", "85 dBA")]),
+        unsupported(
+            &[],
+            &[q("85", "dBA", "sound level", "85 dBA")],
+            "Amplified sound is capped.",
+            "Amplified sound must not exceed 85 dBA."
+        ),
         None
     );
-    assert_eq!(unsupported(&[], &[]), None);
+    assert_eq!(unsupported(&[], &[], "", ""), None);
 }
 
 #[test]
 fn a_citation_stating_no_number_cannot_support_one_that_does() {
     let rule = [q("85", "dBC", "sound level", "85 dBC")];
-    assert_eq!(unsupported(&rule, &[]).as_deref(), Some("85 dBC"));
+    assert_eq!(
+        unsupported(
+            &rule,
+            &[],
+            "Amplified sound must not exceed 85 dBC at the property line.",
+            "Amplified sound must not exceed the level the board sets."
+        )
+        .as_deref(),
+        Some("85 dBC")
+    );
 }
 
 #[test]
@@ -183,7 +210,15 @@ fn what_a_number_counts_is_not_compared() {
     // checked, so the paraphrase survives and a wrong NUMBER still does not.
     let rule = [q("2", "nights", "length of stay", "2 night")];
     let cited = [q("2", "nights", "consecutive nights per week", "2 night")];
-    assert_eq!(unsupported(&rule, &cited), None);
+    assert_eq!(
+        unsupported(
+            &rule,
+            &cited,
+            "A stay runs no longer than 2 nights.",
+            "No guest may stay more than 2 nights in any seven-day period."
+        ),
+        None
+    );
 }
 
 #[test]
@@ -207,7 +242,7 @@ fn an_answer_with_no_number_in_it_is_not_a_quantity() {
     assert_eq!(got[0].len(), 1, "the empty entry is dropped: {:?}", got[0]);
     assert_eq!(got[0][0].value, "85");
     // And nothing downstream can be refused for stating it.
-    assert_eq!(unsupported(&got[0], &got[0]), None);
+    assert_eq!(unsupported(&got[0], &got[0], "a rule", "a rule"), None);
 }
 
 #[test]
@@ -263,7 +298,12 @@ fn a_universal_quantifier_is_not_a_number_the_citation_must_state() {
     let rule = [q("any", "number", "guest stay", "any")];
     let cited = [q("two", "consecutive nights", "guest stay", "2 night")];
     assert_eq!(
-        unsupported(&rule, &cited),
+        unsupported(
+            &rule,
+            &cited,
+            "Overnight guests are not permitted for any number of nights.",
+            "Overnight guests are not permitted for two consecutive nights."
+        ),
         None,
         "a quantifier is not a quantity the citation has to match"
     );
@@ -277,7 +317,13 @@ fn a_real_number_the_citation_lacks_is_still_refused() {
     let rule = [q("three", "hours", "notice", "3 hour")];
     let cited = [q("three", "days", "notice", "3 day")];
     assert_eq!(
-        unsupported(&rule, &cited).as_deref(),
+        unsupported(
+            &rule,
+            &cited,
+            "Notice must be given at least three hours in advance.",
+            "Notice must be given three days ahead."
+        )
+        .as_deref(),
         Some("three hours"),
         "abstaining on quantifiers must not blunt the guard on numbers"
     );
@@ -291,13 +337,71 @@ fn a_reading_with_no_canonical_form_is_not_judged_either_way() {
     let rule = [q("twenty", "gallons", "tank", "")];
     let cited = [q("twenty", "gallons", "tank", "")];
     assert_eq!(
-        unsupported(&rule, &cited),
+        unsupported(
+            &rule,
+            &cited,
+            "The tank holds twenty gallons.",
+            "The tank holds twenty gallons."
+        ),
         None,
         "matching readings are supported"
     );
     let cited_other = [q("ten", "gallons", "tank", "")];
     assert!(
-        unsupported(&rule, &cited_other).is_some(),
+        unsupported(
+            &rule,
+            &cited_other,
+            "The tank holds twenty gallons.",
+            "The tank holds ten gallons."
+        )
+        .is_some(),
         "an unjudgeable canonical still compares by measure, so a real mismatch fires"
+    );
+}
+
+#[test]
+fn a_quantity_the_citation_states_verbatim_is_not_refused() {
+    // **Five of the eight founding refusals, 2026-08-26.** The rule and its
+    // citation are read in ONE call precisely so the two readings agree; when
+    // they do not, the reading is wrong and the text is not. `two thirds` sits
+    // in the cited sentence in the rule's own words, and the reader simply did
+    // not return it on the citation side.
+    let rule = [q("two", "thirds", "majority", "2/3")];
+    let cited = [];
+    assert_eq!(
+        unsupported(
+            &rule,
+            &cited,
+            "The Congress shall propose Amendments whenever two thirds of both Houses \
+             deem it necessary.",
+            "The Congress, whenever two thirds of both Houses shall deem it necessary, \
+             shall propose Amendments to this Constitution."
+        ),
+        None,
+        "a citation carrying the words carries the number"
+    );
+}
+
+#[test]
+fn a_quantity_the_rule_never_states_is_not_refused() {
+    // **The eighth founding refusal.** "Electors shall meet in their respective
+    // states and vote by ballot for President and Vice-President" states no
+    // number, and the reading returned `1` anyway — from "one of whom, at
+    // least" in the citation. The rule was refused for a claim it never made,
+    // and it carried the anchor for planted supersession S2.
+    let rule = [q("1", "", "elector count", "1")];
+    let cited = [];
+    assert_eq!(
+        unsupported(
+            &rule,
+            &cited,
+            "Electors shall meet in their respective states and vote by ballot for \
+             President and Vice-President.",
+            "The Electors shall meet in their respective states and vote by ballot for \
+             President and Vice-President, one of whom, at least, shall not be an \
+             inhabitant of the same state with themselves."
+        ),
+        None,
+        "a rule cannot misstate a number it does not state"
     );
 }

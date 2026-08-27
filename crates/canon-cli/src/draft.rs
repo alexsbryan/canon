@@ -131,6 +131,22 @@ pub enum Kind {
     /// hundred and seventeen others and could not have conflicted with any.
     /// A body's founding document usually carries a justification, and a
     /// justification is not a commitment.
+    ///
+    /// **The first run after this kind shipped minted ONE record in 342
+    /// candidates, and that was a prompt defect, not a modelling one
+    /// (2026-08-26).** Two of the three grievance chunks came back
+    /// `{"commitments": []}` — the extractor read twenty-two accusations and
+    /// returned nothing. The prompt asked for "normative commitments",
+    /// defined one as "something that says how things should be", and closed
+    /// with "a passage stating no rule returns an empty list"; a model
+    /// returning nothing for a page of grievances was obeying it. The
+    /// `record` bullet contradicted the task statement instead of extending
+    /// it. Adding `record` to the return-field list — the fix the code shape
+    /// suggests — changed nothing on its own; widening the closing rule and
+    /// the task statement took the same twenty-two grievances from 0 to 11.
+    /// Of the three records the extractor DID mint, two more died to a
+    /// citation guard that had not yet been told what kind it was refusing
+    /// (see [`Kind::span_max`]).
     Record,
 }
 
@@ -172,12 +188,43 @@ impl Kind {
     /// takes 318 commitments to 289, and 756 comparison passes to 630.
     /// Modelling the corpus better and making it affordable are the same
     /// lever, not two projects.
+    ///
+    /// **That saving has never been this function's (2026-08-26).** The
+    /// 2026-08-26 run carried 330 bearing candidates and ONE record, because
+    /// the recitals were not classified out here — they were never extracted
+    /// (see [`Kind::Record`]). The cost was already absent, so the number
+    /// above is what this SHOULD save once the extractor mints recitals
+    /// again, not what it has been observed saving.
     pub fn bears(self) -> bool {
         match self {
             Kind::Rule => true,
             // A question is a gap, a silence is a gap held on purpose, and a
             // record is about the past. None of the three can be breached.
             Kind::Question | Kind::Silence | Kind::Record => false,
+        }
+    }
+
+    /// The widest citation this kind may make, in sentences of a passage that
+    /// has `have` of them.
+    ///
+    /// **The second kind-blind decider, found 2026-08-26.** `locate::cite`
+    /// ran twelve lines BEFORE the kind was read, so [`locate::SPAN_MAX`] —
+    /// justified for a rule, and whose own refusal text says "evidences the
+    /// passage, not the rule" — was applied to every kind. The Declaration's
+    /// chunk 5 returned THREE records and two were refused for citing five
+    /// sentences, which is how `Kind::Record` came to fire once in 342
+    /// candidates and read as an extractor that declines to mint recitals.
+    ///
+    /// A rule states itself in a sentence or two. A record is about an
+    /// occasion, and a passage narrates an occasion across a paragraph. So
+    /// the share of the passage is the honest measure for a recital rather
+    /// than a count fitted to the two citations that were refused — and it is
+    /// never stricter than a rule's, so a short passage cannot make a record
+    /// harder to cite than the commitment beside it.
+    pub fn span_max(self, have: usize) -> usize {
+        match self {
+            Kind::Rule | Kind::Question | Kind::Silence => locate::SPAN_MAX,
+            Kind::Record => (have / 2).max(locate::SPAN_MAX),
         }
     }
 }
@@ -639,10 +686,11 @@ pub fn chunk_text(path: &str, text: &str) -> Vec<Chunk> {
 // ── map: extract (one completion per chunk) ─────────────────
 
 const EXTRACT_SYSTEM: &str = "\
-You extract normative commitments from a passage.
+You read a passage and return what it states.
 
-A commitment is a rule, a standard, or a stated value — something that says \
-how things should be.
+Most of what a passage states is a COMMITMENT — a rule, a standard, or a \
+stated value, something that says how things should be. Some passages state \
+no commitment at all and state something else; return that instead.
 
 A passage often records a decision, and a decision that changes a rule \
 STATES a rule. Extract the rule it establishes, not the meeting that \
@@ -670,7 +718,7 @@ is merely absent is not a silence. A rule about how things must be done from \
 now on is not a record, however old the document is.
 
 For each one, return:
-- kind: rule, question, or silence
+- kind: rule, question, silence, or record
 - first: the marker of the sentence that states the rule
 - last: the marker of the last sentence the rule runs to — the same as first \
 when one sentence states it
@@ -683,8 +731,8 @@ without this is refused. For a rule or a question, the reason the passage \
 gives, or an empty string when it gives none.
 
 Rules:
-- Extract every distinct rule the passage states. A passage stating no rule \
-returns an empty list.
+- Extract every distinct rule, question, silence and record the passage \
+states. A passage stating none of the four returns an empty list.
 - Point at the fewest sentences that state the rule, and never more than \
 three.
 - first and last must be markers this passage has. Never write one it does \
@@ -813,10 +861,10 @@ pub fn extract(
     let user = match &chunk.heading {
         Some(h) => format!(
             "Section title, for context only — it has no marker and cannot be \
-             cited: \"{h}\"\n\nPassage:\n{shown}\nReturn the commitments this \
-             passage states."
+             cited: \"{h}\"\n\nPassage:\n{shown}\nReturn what this passage \
+             states."
         ),
-        None => format!("Passage:\n{shown}\nReturn the commitments this passage states."),
+        None => format!("Passage:\n{shown}\nReturn what this passage states."),
     };
     let got: Extracted = client.complete_json(&system, &user, "commitments", &extract_schema())?;
     let mut kept = Vec::new();
@@ -843,20 +891,23 @@ pub fn extract(
             ));
             continue;
         };
-        let quote = match locate::cite(&chunk.text, &spans, first, last) {
+        // The kind is resolved FIRST because the citation guard needs it:
+        // how wide a citation may be is a property of what is being cited.
+        // Anything but the three named words is a rule, which is the kind
+        // that has to clear the citation and quantity guards. A silence let
+        // through by a typo would bypass both.
+        let kind = kind_of(&c.kind);
+        // The citation proves the words are the passage's. Whether the RULE
+        // matches them is a different reading over different text, and it is
+        // its own stage — see `support`.
+        let quote = match locate::cite(&chunk.text, &spans, first, last, kind.span_max(spans.len()))
+        {
             Ok(q) => q,
             Err(e) => {
                 dropped.push(refuse(text, String::new(), e.to_string()));
                 continue;
             }
         };
-        // The citation proves the words are the passage's. Whether the RULE
-        // matches them is a different reading over different text, and it is
-        // its own stage — see `support`.
-        // Anything but the two named words is a rule, which is the kind that
-        // has to clear the citation and quantity guards. A silence let
-        // through by a typo would bypass both.
-        let kind = kind_of(&c.kind);
         let because = c.because.trim().to_string();
         // Cite-or-abstain, applied to silence. A deliberate silence with no
         // stated reason cannot be told apart from having forgotten, which is
@@ -944,7 +995,9 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
     let mut quantities = Vec::new();
     let mut dropped = Vec::new();
     for (c, (rule, cited)) in rules.into_iter().zip(read) {
-        match quantify::unsupported(&rule, &cited) {
+        // The rule and its citation travel to the guard alongside their
+        // readings: a reading can be wrong, the text cannot.
+        match quantify::unsupported(&rule, &cited, &c.text, &c.quote) {
             Some(m) => dropped.push(Dropped {
                 text: c.text,
                 quote: c.quote,

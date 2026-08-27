@@ -107,6 +107,22 @@ impl Quantity {
         c.is_empty() || c.chars().any(|ch| ch.is_ascii_digit())
     }
 
+    /// The quantity as the rule wrote it: `two thirds`, `ten Days (Sundays
+    /// excepted)`. Falls back to the canonical measure for a reading whose
+    /// value and unit are both blank, which has nothing as-written to show.
+    ///
+    /// Named because [`unsupported`] both REPORTS this form and now looks for
+    /// it in the text; two spellings of one form would let the guard refuse a
+    /// rule while naming a string it never searched for.
+    fn written(&self) -> String {
+        let w = format!("{} {}", self.value, self.unit);
+        if w.trim().is_empty() {
+            self.measure()
+        } else {
+            w.trim().to_string()
+        }
+    }
+
     /// The measure alone, without what it measures.
     ///
     /// Falls back to the as-written value when no canonical form came back,
@@ -340,23 +356,44 @@ pub fn differs_by_quantity(a: &[Quantity], b: &[Quantity]) -> bool {
 /// direction. Both sides are read by the model now and compared here as
 /// structure — the same reading the fold guard uses, so there is one answer
 /// to "what does this state" (§10.6).
-pub fn unsupported(rule: &[Quantity], cited: &[Quantity]) -> Option<String> {
+pub fn unsupported(
+    rule: &[Quantity],
+    cited: &[Quantity],
+    rule_text: &str,
+    cited_text: &str,
+) -> Option<String> {
     let have: Vec<String> = cited.iter().map(Quantity::measure).collect();
+    let rule_words = flat(rule_text);
+    let cited_words = flat(cited_text);
     rule.iter()
         .filter(|q| q.is_numeric())
-        .find(|q| !have.contains(&q.measure()))
-        .map(|q| {
-            // Name what was COMPARED. Reporting `value unit` printed an empty
-            // string for a reading whose value and unit were blank but whose
-            // canonical form was not — so the refusal said the rule stated ``,
-            // and the mismatch it was actually about was invisible.
-            let written = format!("{} {}", q.value, q.unit);
-            if written.trim().is_empty() {
-                q.measure()
-            } else {
-                written.trim().to_string()
-            }
+        // What the READING says: the citation carries no matching measure.
+        .filter(|q| !have.contains(&q.measure()))
+        // What the TEXT says. A reading is one model call and it can be wrong
+        // in both directions; these two facts are not, and a guard that
+        // refuses a rule against a citation the reader misread is refusing on
+        // no evidence at all (§18.3, §11).
+        //
+        // **Measured on the founding corpus, 2026-08-26.** All eight refusals
+        // in the 2026-08-26 sweep were false. Five named a quantity present
+        // VERBATIM in the citation the reader had just been shown alongside
+        // the rule — `annually`, `two thirds`, `two`, `three`, `ten Days
+        // (Sundays excepted)`. One named `1` for "Electors shall meet in
+        // their respective states and vote by ballot", a rule that states no
+        // number at all: the reading invented it, and the rule was refused
+        // for a claim it never made. Two of the eight carried the anchors for
+        // planted supersessions S2 and S8.
+        .find(|q| {
+            let w = flat(&q.written());
+            // A rule cannot misstate a number it does not visibly state, and
+            // a citation that carries the words carries the number.
+            !w.is_empty() && rule_words.contains(&w) && !cited_words.contains(&w)
         })
+        // Name what was COMPARED. Reporting `value unit` printed an empty
+        // string for a reading whose value and unit were blank but whose
+        // canonical form was not — so the refusal said the rule stated ``,
+        // and the mismatch it was actually about was invisible.
+        .map(Quantity::written)
 }
 
 #[cfg(test)]
