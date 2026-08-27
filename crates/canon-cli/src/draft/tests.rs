@@ -218,6 +218,20 @@ fn candidate(text: &str) -> Candidate {
     }
 }
 
+/// A candidate whose citation says something the rule does not.
+///
+/// `candidate` makes the quote a copy of the rule text, which is right for
+/// most fixtures and wrong for every test about the two DISAGREEING: the
+/// mocked reading would say the citation states `three days` while the
+/// citation string beside it said `three hours`. The guard reads both, so a
+/// fixture that contradicts its own reading tests nothing it claims to.
+fn candidate_citing(text: &str, quote: &str) -> Candidate {
+    Candidate {
+        quote: quote.into(),
+        ..candidate(text)
+    }
+}
+
 /// One reading's finding: which sample said it, and the words it cited.
 fn read(sample: usize, quote: &str, text: &str) -> Candidate {
     Candidate {
@@ -364,8 +378,9 @@ fn a_rule_stating_a_number_its_citation_does_not_is_dropped() {
     // against a live endpoint — a candidate reading "at least three hours in
     // advance" over a sentence that said "three days ahead". Worse than a
     // missing rule, because the citation makes it look checked.
-    let cands = vec![candidate(
+    let cands = vec![candidate_citing(
         "Guests are announced at least three hours in advance.",
+        "Guests are announced three days ahead.",
     )];
     // ONE call: the rule at 1 and its citation at 2, read together so their
     // canonical forms are agreed against each other rather than by luck.
@@ -420,7 +435,10 @@ fn a_unit_nobody_listed_is_still_checked_against_the_citation() {
     // dB(A) and dB(C) permit different sound. `measure.rs` read both as
     // stating no measure at all, so a rule could claim either and no guard
     // could tell. Nothing here knows what a decibel is.
-    let cands = vec![candidate("Sound equipment may register up to 85 dBCs.")];
+    let cands = vec![candidate_citing(
+        "Sound equipment may register up to 85 dBCs.",
+        "Sound equipment may register up to 85 dBAs.",
+    )];
     let mock = Mock::spawn(vec![(
         200,
         read_as(&[
@@ -449,7 +467,10 @@ fn the_surviving_rules_carry_their_own_reading_forward() {
     // symptom until a fold goes wrong, and nothing downstream could see it.
     let cands = vec![
         candidate("Quiet hours start at 11 PM."),
-        candidate("Guests are announced three hours ahead."),
+        candidate_citing(
+            "Guests are announced three hours ahead.",
+            "Guests are announced three days ahead.",
+        ),
         candidate("The kitchen is cleaned after use."),
     ];
     // Three pairs interleaved into one call: rule, citation, rule, citation…
@@ -672,6 +693,100 @@ fn a_record_is_read_as_a_record_and_not_as_a_rule() {
     // An unknown word is still a rule, so a typo lands on the kind that has
     // to clear every guard rather than on one that skips them.
     assert_eq!(kind_of("recrod"), Kind::Rule);
+}
+
+/// Twelve sentences, so a record's share of the passage (half, six) is wider
+/// than a rule's flat three and the two limits can be told apart.
+const GRIEVANCES: &str = "\
+He has refused his Assent to Laws, the most wholesome and necessary.
+He has forbidden his Governors to pass Laws of pressing importance.
+He has called together legislative bodies at places unusual and distant.
+He has dissolved Representative Houses repeatedly and with firmness.
+He has refused for a long time to cause others to be elected.
+He has endeavoured to prevent the population of these States.
+He has obstructed the Administration of Justice in the colonies.
+He has made Judges dependent on his Will alone for their tenure.
+He has erected a multitude of New Offices to harass our people.
+He has kept among us, in times of peace, Standing Armies.
+He has affected to render the Military independent of Civil power.
+He has combined with others to subject us to a foreign jurisdiction.
+";
+
+#[test]
+fn a_recital_may_cite_a_paragraph_where_a_rule_may_not() {
+    // **Measured on the founding corpus, 2026-08-26.** `locate::cite` ran
+    // BEFORE the kind was resolved, so a rule's three-sentence limit was
+    // applied to records too. The Declaration's chunk 5 returned three
+    // records; two cited five sentences and were refused, leaving ONE record
+    // in 342 candidates — which was banked as "the extractor declines to mint
+    // from grievances" when the extractor had in fact minted three.
+    //
+    // A rule states itself in a sentence or two. A recital is about an
+    // occasion, and a passage narrates an occasion across a paragraph.
+    let chunks = chunk_text("founding.md", GRIEVANCES);
+    let span = 5;
+    assert!(
+        span > locate::SPAN_MAX,
+        "the span must be illegal for a rule"
+    );
+
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted_kinds(&[(
+            "record",
+            1,
+            span,
+            "The King has dissolved houses, obstructed justice and kept armies here.",
+            "",
+        )]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert_eq!(
+        kept.len(),
+        1,
+        "a recital may span its paragraph: {dropped:#?}"
+    );
+    assert_eq!(kept[0].kind, Kind::Record);
+
+    // The same citation, offered as a rule, is still refused — widening the
+    // limit for recitals must not widen it for commitments.
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted_kinds(&[(
+            "rule",
+            1,
+            span,
+            "The King has dissolved houses, obstructed justice and kept armies here.",
+            "",
+        )]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert!(kept.is_empty(), "{kept:#?}");
+    assert!(
+        dropped[0].reason.contains("evidences the passage"),
+        "{:?}",
+        dropped[0].reason
+    );
+}
+
+#[test]
+fn a_recital_still_may_not_cite_the_whole_passage() {
+    // The limit is a SHARE, not an exemption. Citing the passage entire is
+    // what the chunk id already records, and it is the failure the width
+    // guard exists for — a recital gets a wider licence, not no licence.
+    let chunks = chunk_text("founding.md", GRIEVANCES);
+    let all = 12;
+    let mock = Mock::spawn(vec![(
+        200,
+        extracted_kinds(&[("record", 1, all, "The King did many things.", "")]),
+    )]);
+    let (kept, dropped) = extract(&mock.client(), &chunks[0], Profile::House).unwrap();
+    assert!(kept.is_empty(), "{kept:#?}");
+    assert!(
+        dropped[0].reason.contains("evidences the passage"),
+        "{:?}",
+        dropped[0].reason
+    );
 }
 
 // ── a stage that fails keeps the work before it ─────────────

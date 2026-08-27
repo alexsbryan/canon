@@ -782,6 +782,32 @@ fn governance_bar() {
 /// solely to move quiet hours to 10:00 PM, and extraction kept only the
 /// sentence saying what had NOT changed — putting T5 and T10 out of reach
 /// before the comparison started.
+///
+/// **What "reachable" means here, and what it does not (corrected
+/// 2026-08-26).** The anchors are phrases lifted VERBATIM from the documents
+/// — their own file says so. The extractor is instructed to paraphrase, and
+/// writes "one self-contained sentence stating the rule as the holder would
+/// write it". Matching a verbatim source phrase against a paraphrase agrees
+/// only by luck, and this bar was doing exactly that: it read `c["text"]`
+/// alone and reported 9 of 17 founding tensions unreachable. SIX of those
+/// eight verdicts were false and were checked by hand — `amend.XIII.1`'s
+/// anchor "Neither slavery nor involuntary servitude" was extracted as
+/// "Slavery and involuntary servitude shall not exist within the United
+/// States"; `amend.XXI.1`'s "is hereby repealed" as "is repealed";
+/// `amend.XVII`'s "elected by the people thereof" as "elected by the people
+/// of their respective States".
+///
+/// So the verdict now runs over the candidate's TEXT **or** its CITATION,
+/// which is verbatim by construction (`locate::cite` cuts it out of the
+/// passage). That answers the question this bar is for — did extraction keep
+/// the passage within reach — and it is a CEILING, not a prediction: a
+/// section that yields many candidates clears it easily.
+///
+/// The text-only count is still computed and printed, because comparison
+/// sees `c.text` and nothing else (`tensions::compare`). The gap between the
+/// two is the paraphrase gap, and it is a real fact about the corpus rather
+/// than an instrument fault. Neither number alone is the recall ceiling, and
+/// both have been read as one.
 #[test]
 #[ignore = "needs draft runs: ./scripts/draft-bar.sh 3"]
 fn extraction_coverage() {
@@ -849,12 +875,23 @@ fn extraction_coverage() {
                 d["reason"].as_str().unwrap_or("unstated").to_string(),
             ));
         }
+        let mut stated: std::collections::BTreeMap<String, String> = Default::default();
         for (i, c) in candidates.iter().enumerate() {
             let Some(sec) = section_of(c) else { continue };
-            let text = format!(" || {}", c["text"].as_str().unwrap_or("").to_lowercase());
-            extracted.entry(sec.clone()).or_default().push_str(&text);
+            let words = format!(" || {}", c["text"].as_str().unwrap_or("").to_lowercase());
+            // The citation is verbatim by construction, so it is where a
+            // source-phrase anchor can actually land.
+            let evidence = format!(
+                "{words} || {}",
+                c["quote"].as_str().unwrap_or("").to_lowercase()
+            );
+            extracted
+                .entry(sec.clone())
+                .or_default()
+                .push_str(&evidence);
+            stated.entry(sec.clone()).or_default().push_str(&words);
             if kept_idx.contains(&i) {
-                survived.entry(sec).or_default().push_str(&text);
+                survived.entry(sec).or_default().push_str(&evidence);
             }
         }
         // Any one alternative satisfies an anchor.
@@ -906,6 +943,26 @@ fn extraction_coverage() {
                 findable.push(tid.clone());
             }
         }
+        // The same anchors against the candidates' OWN sentences, which is
+        // all the comparison stage ever sees. Not a verdict — the distance
+        // between this and `findable` is the paraphrase gap.
+        let in_own_words = anchors["anchors"]
+            .as_object()
+            .unwrap()
+            .values()
+            .filter(|sides| {
+                sides.as_array().unwrap().iter().all(|side| {
+                    let sec = side["section"].as_str().unwrap_or("").to_string();
+                    let hay = stated.get(&sec).cloned().unwrap_or_default();
+                    side["must"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .all(|a| has(&hay, a))
+                })
+            })
+            .count();
+
         let total = anchors["anchors"].as_object().unwrap().len();
         println!(
             "\n{}  reachable {}/{total}   (extraction missed {}, a guard refused {}, dedupe folded {})",
@@ -914,6 +971,11 @@ fn extraction_coverage() {
             blocked.len(),
             guarded_away.len(),
             folded_away.len()
+        );
+        println!(
+            "  of those, {in_own_words}/{total} carry the anchor in a candidate's own sentence; \
+             {} reach comparison only as paraphrase",
+            findable.len().saturating_sub(in_own_words)
         );
         for b in &blocked {
             println!("  NEVER EXTRACTED  {b}");

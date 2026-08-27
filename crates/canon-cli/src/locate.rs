@@ -53,6 +53,10 @@ pub const QUOTE_MIN: usize = 20;
 /// A rule and its qualifier can straddle a sentence break; a rule pointing at
 /// half a page is pointing at the passage, which is what the chunk id already
 /// records.
+///
+/// This is the limit for a commitment. It is NOT the limit for every kind —
+/// see [`crate::draft::Kind::span_max`], which is the one decider and passes
+/// the answer to [`cite`].
 pub const SPAN_MAX: usize = 3;
 
 /// A citation that does not point at sentences this passage has.
@@ -246,11 +250,18 @@ pub fn offered(text: &str, spans: &[Range<usize>]) -> Offered {
 /// separated them in the document — a newline, a list marker, a table pipe —
 /// is carried along. A citation is a contiguous slice of its passage or it is
 /// an error; there is no third outcome and nothing is repaired quietly.
+/// `max` is the widest citation this candidate's KIND may make. It is a
+/// parameter rather than [`SPAN_MAX`] read from here because the limit is a
+/// property of what is being cited — a rule states itself in a sentence or
+/// two, a recital narrates an occasion across a paragraph — and a citation
+/// guard that cannot see the kind refuses the wrong things (see
+/// [`crate::draft::Kind::span_max`]).
 pub fn cite(
     text: &str,
     spans: &[Range<usize>],
     first: usize,
     last: usize,
+    max: usize,
 ) -> Result<String, Miscited> {
     let have = spans.len();
     if first < 1 || last < 1 || first > have || last > have {
@@ -260,7 +271,7 @@ pub fn cite(
         return Err(Miscited::Backwards { first, last });
     }
     let n = last - first + 1;
-    if n > SPAN_MAX {
+    if n > max {
         return Err(Miscited::TooWide { n });
     }
     let quoted = text[spans[first - 1].start..spans[last - 1].end].trim();

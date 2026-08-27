@@ -44,7 +44,7 @@ fn every_citation_is_a_slice_of_its_passage() {
         assert!(!spans.is_empty(), "no sentences in:\n{text}");
         for first in 1..=spans.len() {
             for last in first..=(first + SPAN_MAX - 1).min(spans.len()) {
-                if let Ok(quoted) = cite(text, &spans, first, last) {
+                if let Ok(quoted) = cite(text, &spans, first, last, SPAN_MAX) {
                     assert!(
                         text.contains(&quoted),
                         "cite({first},{last}) is not in its passage:\n{quoted}"
@@ -95,7 +95,7 @@ fn a_span_carries_the_document_between_its_sentences() {
     // Sentences 1 and 2 are cited together; what separated them in the
     // source comes along, so the result is still one contiguous slice.
     let spans = units(ORDINANCE).0;
-    let quoted = cite(ORDINANCE, &spans, 1, 2).unwrap();
+    let quoted = cite(ORDINANCE, &spans, 1, 2, SPAN_MAX).unwrap();
     assert!(quoted.starts_with("(2) Type \"B\" permit"), "{quoted}");
     assert!(quoted.contains("whichever\ndistance is closer"), "{quoted}");
     assert!(ORDINANCE.contains(&quoted));
@@ -192,7 +192,7 @@ fn prose_with_no_markers_still_splits() {
 #[test]
 fn an_index_the_passage_does_not_have_is_refused() {
     let spans = units(EXCEPTIONS).0;
-    let err = cite(EXCEPTIONS, &spans, 12, 12).unwrap_err();
+    let err = cite(EXCEPTIONS, &spans, 12, 12, SPAN_MAX).unwrap_err();
     assert_eq!(
         err,
         Miscited::OutOfRange {
@@ -203,7 +203,7 @@ fn an_index_the_passage_does_not_have_is_refused() {
     );
     assert_eq!(err.to_string(), "cited sentence 12, but the passage has 4");
     // Zero is not a position either — a missing field must not read as one.
-    assert!(cite(EXCEPTIONS, &spans, 0, 0).is_err());
+    assert!(cite(EXCEPTIONS, &spans, 0, 0, SPAN_MAX).is_err());
 }
 
 #[test]
@@ -212,7 +212,7 @@ fn a_backwards_span_is_refused_rather_than_swapped() {
     // see is broken (§18.3). It is refused, counted, and reported.
     let spans = units(EXCEPTIONS).0;
     assert_eq!(
-        cite(EXCEPTIONS, &spans, 3, 2).unwrap_err(),
+        cite(EXCEPTIONS, &spans, 3, 2, SPAN_MAX).unwrap_err(),
         Miscited::Backwards { first: 3, last: 2 }
     );
 }
@@ -221,10 +221,10 @@ fn a_backwards_span_is_refused_rather_than_swapped() {
 fn a_citation_wider_than_the_cap_is_refused() {
     let spans = units(ORDINANCE).0;
     assert_eq!(
-        cite(ORDINANCE, &spans, 1, 4).unwrap_err(),
+        cite(ORDINANCE, &spans, 1, 4, SPAN_MAX).unwrap_err(),
         Miscited::TooWide { n: 4 }
     );
-    assert!(cite(ORDINANCE, &spans, 1, SPAN_MAX).is_ok());
+    assert!(cite(ORDINANCE, &spans, 1, SPAN_MAX, SPAN_MAX).is_ok());
 }
 
 #[test]
@@ -232,10 +232,10 @@ fn a_span_too_short_to_be_evidence_is_refused() {
     let text = "Be quiet.\n\nQuiet hours run from 11:00 PM until 7:00 AM.";
     let spans = units(text).0;
     assert_eq!(
-        cite(text, &spans, 1, 1).unwrap_err(),
+        cite(text, &spans, 1, 1, SPAN_MAX).unwrap_err(),
         Miscited::TooShort { chars: 9 }
     );
-    assert!(cite(text, &spans, 2, 2).is_ok());
+    assert!(cite(text, &spans, 2, 2, SPAN_MAX).is_ok());
 }
 
 #[test]
@@ -347,7 +347,7 @@ fn a_passage_with_no_prose_structure_is_cited_by_line() {
         // thing. A span, because one line is often too short to evidence
         // anything on its own — which SPAN_MAX allows for and QUOTE_MIN
         // still polices, so the fallback cannot smuggle a fragment through.
-        let quoted = cite(text, &spans, 1, 2).unwrap_or_else(|e| panic!("{name}: {e}"));
+        let quoted = cite(text, &spans, 1, 2, SPAN_MAX).unwrap_or_else(|e| panic!("{name}: {e}"));
         assert!(
             quoted.len() < text.len(),
             "{name}: cite(1,2) returned {} of {} chars",
@@ -367,7 +367,10 @@ fn a_line_too_short_to_be_evidence_is_still_refused() {
     let (spans, basis) = units(yaml);
     assert_eq!(basis, Basis::Lines);
     assert!(
-        matches!(cite(yaml, &spans, 2, 2), Err(Miscited::TooShort { .. })),
+        matches!(
+            cite(yaml, &spans, 2, 2, SPAN_MAX),
+            Err(Miscited::TooShort { .. })
+        ),
         "a fourteen-character line is not evidence"
     );
 }
