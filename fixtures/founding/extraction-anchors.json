@@ -1,6 +1,6 @@
 {
-  "note": "What must survive extraction for each planted tension to be FINDABLE AT ALL. Each anchor is the phrase that carries the tension on its side \u2014 what the amendment changed, or the clause the principle collides with \u2014 taken from the documents and not from anything an extractor produced. Matching is case-insensitive over collapsed whitespace against any candidate drawn from that section. build.py refuses to write this file if a phrase does not appear in the section it names.",
-  "schema_version": 1,
+  "note": "What must survive extraction for each planted tension to be FINDABLE AT ALL. Each anchor is the phrase that carries the tension on its side \u2014 what the amendment changed, or the clause the principle collides with \u2014 taken from the documents and not from anything an extractor produced. Matching is case-insensitive over collapsed whitespace against any candidate drawn from that section. build.py refuses to write this file if a phrase does not appear in the section it names. `decoys` carries the same for the labelled COMPATIBLE pairs, kept in its own key so a reachability denominator over `anchors` stays 17. Two readings use these: the section-level one (did anything this section produced carry the phrase) and the candidate-level one (which single commitment to hand a two-up comparison). The second matches a candidate's OWN text first and its citation only as a fallback, because the comparison stage reads the text and never the citation.",
+  "schema_version": 2,
   "anchors": {
     "S1": [
       {
@@ -33,7 +33,7 @@
         "section": "constitution:amend.XII",
         "must": [
           [
-            "vote by ballot for President and Vice-President"
+            "distinct ballots"
           ]
         ]
       }
@@ -51,7 +51,7 @@
         "section": "constitution:amend.XIII.1",
         "must": [
           [
-            "Neither slavery nor involuntary servitude"
+            "involuntary servitude"
           ]
         ]
       }
@@ -105,7 +105,7 @@
         "section": "constitution:amend.XVII",
         "must": [
           [
-            "elected by the people thereof"
+            "elected by the people"
           ]
         ]
       }
@@ -133,7 +133,7 @@
         "section": "constitution:amend.XII",
         "must": [
           [
-            "shall choose immediately"
+            "fourth day of March"
           ]
         ]
       },
@@ -141,7 +141,7 @@
         "section": "constitution:amend.XX.3",
         "must": [
           [
-            "Vice President elect shall become President"
+            "before the time fixed"
           ]
         ]
       }
@@ -249,7 +249,7 @@
         "section": "constitution:I.9",
         "must": [
           [
-            "Migration or Importation"
+            "shall not be prohibited"
           ]
         ]
       }
@@ -304,6 +304,116 @@
         "must": [
           [
             "reserved to the States"
+          ]
+        ]
+      }
+    ]
+  },
+  "decoys": {
+    "N1": [
+      {
+        "section": "constitution:I.9",
+        "must": [
+          [
+            "Bill of Attainder"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:I.10",
+        "must": [
+          [
+            "Bill of Attainder"
+          ]
+        ]
+      }
+    ],
+    "N2": [
+      {
+        "section": "constitution:amend.XIII.2",
+        "must": [
+          [
+            "appropriate legislation"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XV.2",
+        "must": [
+          [
+            "appropriate legislation"
+          ]
+        ]
+      }
+    ],
+    "N3": [
+      {
+        "section": "constitution:amend.XIV.5",
+        "must": [
+          [
+            "appropriate legislation"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.XXVI.2",
+        "must": [
+          [
+            "appropriate legislation"
+          ]
+        ]
+      }
+    ],
+    "N4": [
+      {
+        "section": "articles:IV",
+        "must": [
+          [
+            "full faith and credit"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:IV.1",
+        "must": [
+          [
+            "Full Faith and Credit"
+          ]
+        ]
+      }
+    ],
+    "N5": [
+      {
+        "section": "constitution:amend.IV",
+        "must": [
+          [
+            "unreasonable searches and seizures"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:amend.V",
+        "must": [
+          [
+            "witness against himself"
+          ]
+        ]
+      }
+    ],
+    "N6": [
+      {
+        "section": "constitution:I.8",
+        "must": [
+          [
+            "coin Money"
+          ]
+        ]
+      },
+      {
+        "section": "constitution:I.10",
+        "must": [
+          [
+            "coin Money"
           ]
         ]
       }

@@ -30,6 +30,9 @@ Rules:
 - Commitments about different subjects are not a tension.
 - A general rule and a specific case of it are not a tension.
 - One commitment being harder to keep than another is not a tension.
+- But two commitments governing the same situation that name different dates, \
+ages, counts or thresholds ARE a tension: honouring one breaks the other, and \
+near-identical wording makes this more likely, not less.
 - Report each pair once.
 - Write the reason as one or two sentences describing the situation. Quote or \
 paraphrase a commitment; never refer to one by its number.";

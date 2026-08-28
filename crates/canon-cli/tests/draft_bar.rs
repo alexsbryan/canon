@@ -1265,3 +1265,668 @@ fn a_run_that_barely_compared_anything_is_not_a_measurement() {
     assert_eq!(thin_comparison(&json!({"tension_passes": 0})), None);
     assert_eq!(thin_comparison(&json!({})), None);
 }
+
+// ── two-up: can the comparison stage see a tension at all? ───
+//
+// The sweep is six hours and has never finished. This asks the cheapest
+// version of its question — hand the stage the two commitments that carry a
+// planted tension, ALONE, and see whether it says so — for seventeen model
+// calls and about two minutes.
+//
+// **It is an UPPER BOUND, not a proof.** Two-up is strictly easier than the
+// real window, where the same pair arrives among twenty-two distractors.
+// Passing here does not mean the sweep succeeds; failing here means it
+// cannot, and no sweep should be paid for.
+//
+// It runs the SHIPPED path and adds no production code: a canon holding
+// exactly two commitments is at or below `BATCH`, so `canon tensions` makes
+// exactly one comparison pass over exactly that pair.
+
+/// How many of the eleven supersessions must be visible two-up before a
+/// sweep is worth its six hours.
+///
+/// Derived, not chosen. Publication needs mean recall >= 0.50 over the
+/// eleven, which is 5.5 pairs, which is six. If the stage cannot see six
+/// when handed both sides alone, it certainly cannot see six inside a
+/// 24-wide window, and the publish gate is unreachable by construction.
+const TWO_UP_FLOOR: usize = 6;
+
+/// The endpoint the two-up loop calls, matching `scripts/draft-bar.sh`.
+fn two_up_endpoint() -> (String, String) {
+    (
+        std::env::var("CANON_ENDPOINT").unwrap_or_else(|_| "http://localhost:9741/v1".into()),
+        std::env::var("CANON_MODEL").unwrap_or_else(|_| "primary".into()),
+    )
+}
+
+/// Which haystack named the candidate — and therefore how much the pair is
+/// worth.
+///
+/// `OwnWords` is the strong grade: the comparison stage reads `c.text` and
+/// nothing else, so a candidate selected on its own sentence was selected on
+/// the evidence the stage will actually be handed. `Citation` is weaker — the
+/// anchor was found in a verbatim quote the stage never sees, and the pair is
+/// only as good as the extractor's paraphrase of it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Grade {
+    OwnWords,
+    Citation,
+}
+
+impl std::fmt::Display for Grade {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Grade::OwnWords => "own words",
+            Grade::Citation => "citation",
+        })
+    }
+}
+
+/// A planted tension resolved to the two commitments the stage will be handed,
+/// and the evidence each side was chosen on.
+struct Pairing {
+    id: String,
+    kind: String,
+    a: (usize, Grade),
+    b: (usize, Grade),
+}
+
+/// One side of a planted tension, resolved to the candidate that carries it.
+///
+/// **The anchors were authored for a SECTION-level question and this is a
+/// CANDIDATE-level one.** `extraction_coverage` asks "did anything this
+/// section produced carry the phrase", and text-OR-citation is the right
+/// haystack for it. Two-up asks which single commitment to hand the stage,
+/// and the stage reads `c.text` alone — so selecting on a citation selects on
+/// evidence the thing being measured cannot see. Written the other way first,
+/// and it cost a whole 17-call run: `constitution:III.2` resolved to "the
+/// judicial Power shall extend to all Cases in Law and Equity" rather than to
+/// "...cases between a State and Citizens of another State", because all
+/// fourteen candidates from that section share one wide citation containing
+/// the anchor. The stage was handed a pair that does not conflict and was
+/// right to say so.
+///
+/// So: prefer the candidate whose OWN sentence carries every `must` group
+/// (alternatives within a group are any-of), fall back to the citation only
+/// when no candidate in the section states it, and REFUSE when the fallback
+/// cannot name one. 152 of this corpus's 334 candidates share a citation with
+/// a sibling, so "lowest index wins" among them is a coin toss wearing a
+/// number (§18.3 — absence is reported, never defaulted).
+fn side_to_candidate(
+    run: &Value,
+    instruments: &Map<String, Value>,
+    side: &Value,
+) -> Result<(usize, Grade), String> {
+    let want = side["section"].as_str().unwrap_or("").to_string();
+    let chunks = run["chunks"].as_array().ok_or("run has no chunks")?;
+    let candidates = run["candidates"]
+        .as_array()
+        .ok_or("run has no candidates")?;
+    let groups = side["must"].as_array().ok_or("a side must carry `must`")?;
+
+    let carries = |hay: &str| -> bool {
+        groups.iter().all(|alts| {
+            alts.as_array()
+                .map(|a| {
+                    a.iter()
+                        .any(|m| hay.contains(&m.as_str().unwrap_or("").to_lowercase()))
+                })
+                .unwrap_or(false)
+        })
+    };
+
+    let mut in_section = 0usize;
+    let mut own: Vec<usize> = Vec::new();
+    let mut cited: Vec<usize> = Vec::new();
+    for (i, c) in candidates.iter().enumerate() {
+        let heading = c["chunk"]
+            .as_u64()
+            .and_then(|n| chunks.get(n as usize))
+            .and_then(|ch| ch["heading"].as_str());
+        let Some(sec) = heading.and_then(|h| section_key(h, instruments)) else {
+            continue;
+        };
+        if sec != want {
+            continue;
+        }
+        in_section += 1;
+        if carries(&c["text"].as_str().unwrap_or("").to_lowercase()) {
+            own.push(i);
+        } else if carries(&c["quote"].as_str().unwrap_or("").to_lowercase()) {
+            cited.push(i);
+        }
+    }
+    // Several candidates stating the phrase themselves are each a legitimate
+    // carrier of it; the lowest keeps two runs of this resolver in agreement.
+    if let Some(i) = own.first() {
+        return Ok((*i, Grade::OwnWords));
+    }
+    match cited.len() {
+        1 => Ok((cited[0], Grade::Citation)),
+        0 if in_section == 0 => Err(format!("{want}: no candidate came from that section")),
+        0 => Err(format!(
+            "{want}: {in_section} candidate(s), none carrying {groups:?}"
+        )),
+        n => Err(format!(
+            "{want}: no candidate STATES {groups:?}, and {n} share a citation carrying it \
+             ({}) — the anchor cannot name one",
+            cited
+                .iter()
+                .take(6)
+                .map(|i| format!("c{i}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )),
+    }
+}
+
+/// Run one comparison over exactly two commitments, on the shipped path.
+///
+/// `Ok(true)` the stage named the pair, `Ok(false)` it saw nothing, `Err` it
+/// could not judge. The third is never folded into the second: a refused call
+/// counted as "not seen" would quietly deflate the number this exists to
+/// produce (§18.3).
+fn two_up_once(bin: &Path, scratch: &Path, a: &str, b: &str) -> Result<bool, String> {
+    let (endpoint, model) = two_up_endpoint();
+    let dir = scratch.join(".canon");
+    let _ = std::fs::remove_dir_all(scratch);
+    std::fs::create_dir_all(&dir).map_err(|e| format!("scratch: {e}"))?;
+
+    let run = |args: &[&str]| -> Result<std::process::Output, String> {
+        std::process::Command::new(bin)
+            .args(args)
+            .env("CANON_DIR", &dir)
+            .env("CANON_ENDPOINT", &endpoint)
+            .env("CANON_MODEL", &model)
+            .output()
+            .map_err(|e| format!("{bin:?} {args:?}: {e}"))
+    };
+    let must = |args: &[&str]| -> Result<(), String> {
+        let out = run(args)?;
+        if out.status.success() {
+            return Ok(());
+        }
+        Err(format!(
+            "canon {} exited {:?}: {}",
+            args[0],
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr).trim()
+        ))
+    };
+    must(&["init", "--profile", "house"])?;
+    must(&["add", a])?;
+    must(&["add", b])?;
+
+    let out = run(&["tensions", "--json"])?;
+    if !out.status.success() {
+        return Err(format!(
+            "tensions exited {:?}: {}",
+            out.status.code(),
+            String::from_utf8_lossy(&out.stderr).trim()
+        ));
+    }
+    let body = String::from_utf8_lossy(&out.stdout);
+    let found: Value = serde_json::from_str(body.trim())
+        .map_err(|e| format!("tensions --json: {e} in {body:?}"))?;
+    let pairs = found.as_array().ok_or("tensions --json is not an array")?;
+    // Two commitments admit exactly one unordered pair, so any entry at all
+    // is that pair. Nothing to match on, and matching on ids would assert
+    // against `add`'s hashing rather than against the stage.
+    Ok(!pairs.is_empty())
+}
+
+#[test]
+#[ignore = "makes 17 live model calls: CANON_BAR_RUNS=fixtures/founding/runs/qwen-27b CANON_BAR_TRUTH=fixtures/founding/truth.json CANON_BAR_ANCHORS=fixtures/founding/extraction-anchors.json cargo test --test draft_bar -- --ignored two_up --nocapture"]
+fn two_up_upper_bound() {
+    let anchors = anchors();
+    let manifest = truth();
+    let empty = Map::new();
+    let instruments = manifest["instruments"].as_object().unwrap_or(&empty);
+    // Decoys carry the kind `decoy` and are counted apart from everything
+    // else. A recall figure with no false-positive figure beside it is the
+    // half of the measurement that flatters (§18.6).
+    let kinds: std::collections::BTreeMap<String, String> = manifest["planted_tensions"]
+        .as_array()
+        .expect("planted_tensions")
+        .iter()
+        .filter_map(|p| {
+            Some((
+                p["id"].as_str()?.to_string(),
+                p["type"].as_str().unwrap_or("unlabelled").to_string(),
+            ))
+        })
+        .chain(
+            manifest["expected_non_tensions"]
+                .as_array()
+                .map(|v| v.as_slice())
+                .unwrap_or(&[])
+                .iter()
+                .filter_map(|p| Some((p["id"].as_str()?.to_string(), "decoy".to_string()))),
+        )
+        .collect();
+
+    // ONE artifact, named. Resolution is the only thing that varies between
+    // runs and any one of them yields a valid upper bound; a mean over two
+    // instruments would be about neither (§18.4).
+    let dir = runs_dir();
+    let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .unwrap_or_else(|e| {
+            panic!(
+                "no runs at {}: {e}{}",
+                dir.display(),
+                runs_one_level_down(&dir)
+            )
+        })
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().is_some_and(|x| x == "json"))
+        .collect();
+    paths.sort();
+    let path = paths
+        .last()
+        .unwrap_or_else(|| panic!("no runs at {}{}", dir.display(), runs_one_level_down(&dir)));
+    let run: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+
+    let bin = Path::new(env!("CARGO_BIN_EXE_canon"));
+    let (endpoint, model) = two_up_endpoint();
+    println!("\ntwo-up  upper bound on the comparison stage");
+    println!("  artifact {}", path.display());
+    println!("  endpoint {endpoint} (model {model})");
+    println!("  binary   {}", bin.display());
+
+    // Resolve first, print the bill, then spend it. A resolver failure is
+    // free to discover and costs a model call to discover late.
+    let mut resolved: Vec<Pairing> = Vec::new();
+    let mut unresolved: Vec<(String, String, String)> = Vec::new();
+    let empty_map = Map::new();
+    let sides_of = anchors["anchors"]
+        .as_object()
+        .expect("anchors")
+        .iter()
+        .chain(anchors["decoys"].as_object().unwrap_or(&empty_map));
+    for (tid, sides) in sides_of {
+        let kind = kinds
+            .get(tid)
+            .cloned()
+            .unwrap_or_else(|| "unlabelled".into());
+        let sides = sides.as_array().expect("sides");
+        assert_eq!(sides.len(), 2, "{tid}: two-up needs exactly two sides");
+        match (
+            side_to_candidate(&run, instruments, &sides[0]),
+            side_to_candidate(&run, instruments, &sides[1]),
+        ) {
+            (Ok(a), Ok(b)) => resolved.push(Pairing {
+                id: tid.clone(),
+                kind,
+                a,
+                b,
+            }),
+            (a, b) => unresolved.push((
+                tid.clone(),
+                kind,
+                [a.err(), b.err()]
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<_>>()
+                    .join("; "),
+            )),
+        }
+    }
+    // By id, not by the tuple: `Grade` has no ordering and does not need one.
+    resolved.sort_by(|x, y| x.id.cmp(&y.id));
+    unresolved.sort_by(|x, y| x.0.cmp(&y.0));
+    let both_own = resolved
+        .iter()
+        .filter(|p| p.a.1 == Grade::OwnWords && p.b.1 == Grade::OwnWords)
+        .count();
+    println!(
+        "  {} of {} pairs resolve to a candidate pair — {} model call(s)",
+        resolved.len(),
+        anchors["anchors"].as_object().unwrap().len()
+            + anchors["decoys"].as_object().map(Map::len).unwrap_or(0),
+        resolved.len()
+    );
+    println!(
+        "  {both_own} of those name both sides from the candidates' OWN sentences, \
+         which is all the stage reads\n"
+    );
+
+    // The free half, runnable on its own. Resolution is where a founding
+    // corpus most often stops the instrument, and discovering that after
+    // seventeen model calls is paying to learn something that was already
+    // on disk.
+    let dry = std::env::var("CANON_BAR_TWO_UP_DRY").is_ok();
+
+    // How many times each pair is asked. ONE IS AN ANECDOTE HERE TOO, and
+    // this instrument was believed silent until it was checked: temperature is
+    // 0.0 and two runs agreed on 12 of 12 pairs, which read as determinism.
+    // The third run reproduced 16 of 17 and flipped P2 from not-seen to seen
+    // on identical candidate indices — so a one-run delta cannot be told from
+    // the endpoint's own wobble, and any arm compared at n=1 is measuring
+    // noise (§18.5). Majority decides; the flip count is printed as the
+    // instrument's own noise reading and belongs beside every number here.
+    let runs: usize = std::env::var("CANON_BAR_TWO_UP_RUNS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .filter(|n| *n > 0)
+        .unwrap_or(1);
+
+    let candidates = run["candidates"].as_array().unwrap();
+    let scratch = std::env::var("CANON_BAR_TWO_UP_OUT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| dir.join("two-up"));
+    let mut seen: Vec<String> = Vec::new();
+    let mut blind: Vec<String> = Vec::new();
+    let mut refused: Vec<(String, String)> = Vec::new();
+    let mut rows: Vec<Value> = Vec::new();
+    let mut flips = 0usize;
+
+    for Pairing {
+        id: tid,
+        kind,
+        a: (a, ga),
+        b: (b, gb),
+    } in &resolved
+    {
+        let ta = candidates[*a]["text"].as_str().unwrap_or("");
+        let tb = candidates[*b]["text"].as_str().unwrap_or("");
+        let how = format!("c{a} [{ga}] x c{b} [{gb}]");
+        if dry {
+            println!("  would ask   {tid} [{kind}]  {how}");
+            println!("      a: {ta}");
+            println!("      b: {tb}");
+            continue;
+        }
+        // One retry per ask, because a shed is a property of the host and not
+        // of the stage. Twice refused is reported as refused, never as
+        // not-seen.
+        let mut votes: Vec<bool> = Vec::new();
+        let mut failed: Option<String> = None;
+        for _ in 0..runs {
+            let mut verdict = two_up_once(bin, &scratch.join(tid), ta, tb);
+            if verdict.is_err() {
+                verdict = two_up_once(bin, &scratch.join(tid), ta, tb);
+            }
+            match verdict {
+                Ok(v) => votes.push(v),
+                Err(e) => {
+                    failed = Some(e);
+                    break;
+                }
+            }
+        }
+        // The per-pair canon is throwaway — two acts and a profile — and it
+        // sits under the runs directory where the evidence sidecars live. Left
+        // behind, 21 of them turn `git add` on that directory into a commit of
+        // scratch. The sidecar is the artifact; this is not.
+        let _ = std::fs::remove_dir_all(scratch.join(tid));
+
+        let yes = votes.iter().filter(|v| **v).count();
+        let majority = yes * 2 > votes.len();
+        let flipped = yes > 0 && yes < votes.len();
+        if flipped {
+            flips += 1;
+        }
+        let tally = if runs > 1 {
+            format!(
+                "  [{yes}/{} {}]",
+                votes.len(),
+                if flipped { "FLIPPED" } else { "stable" }
+            )
+        } else {
+            String::new()
+        };
+        match &failed {
+            Some(e) => {
+                refused.push((tid.clone(), e.clone()));
+                println!("  REFUSED   {tid} [{kind}]  {e}");
+            }
+            None if majority => {
+                seen.push(tid.clone());
+                println!("  SEEN      {tid} [{kind}]  {how}{tally}");
+            }
+            None => {
+                blind.push(tid.clone());
+                println!("  not seen  {tid} [{kind}]  {how}{tally}");
+                println!("      a: {ta}");
+                println!("      b: {tb}");
+            }
+        }
+        rows.push(json!({
+            "id": tid,
+            "type": kind,
+            "a": { "candidate": a, "text": ta, "resolved_by": ga.to_string() },
+            "b": { "candidate": b, "text": tb, "resolved_by": gb.to_string() },
+            "votes_seen": yes,
+            "votes_cast": votes.len(),
+            "flipped": flipped,
+            "verdict": match (&failed, majority) {
+                (Some(_), _) => "refused",
+                (None, true) => "seen",
+                (None, false) => "not_seen",
+            },
+            "error": failed,
+        }));
+    }
+    for (tid, kind, why) in &unresolved {
+        println!("  UNRESOLVED {tid} [{kind}]  {why}");
+        rows.push(json!({ "id": tid, "type": kind, "verdict": "unresolved", "error": why }));
+    }
+
+    if dry {
+        println!(
+            "\n  dry run — {} pair(s) would be asked, {} unresolved. Nothing was spent.",
+            resolved.len(),
+            unresolved.len()
+        );
+        return;
+    }
+
+    let of_kind = |ids: &[String], k: &str| -> usize {
+        ids.iter()
+            .filter(|t| kinds.get(*t).map(String::as_str) == Some(k))
+            .count()
+    };
+    let planted_of = |k: &str| kinds.values().filter(|v| *v == k).count();
+    let sup_seen = of_kind(&seen, "unmarked_supersession");
+    let sup_total = planted_of("unmarked_supersession");
+    let pri_seen = of_kind(&seen, "principle_vs_rule");
+    let pri_total = planted_of("principle_vs_rule");
+    // A decoy "seen" is a FALSE POSITIVE: the pair is labelled compatible.
+    let decoy_flagged = of_kind(&seen, "decoy");
+    let decoy_total = planted_of("decoy");
+
+    // The data lands whatever the verdict is — a refusal that ships no
+    // evidence cannot be argued with.
+    let out = json!({
+        "at": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0),
+        "instrument": "two-up",
+        "bound": "upper — each pair shown alone, not in a 24-wide window",
+        "artifact": path.display().to_string(),
+        "endpoint": endpoint,
+        "model": model,
+        "floor": TWO_UP_FLOOR,
+        "runs_per_pair": runs,
+        "pairs_that_flipped": flips,
+        "supersessions": { "seen": sup_seen, "of": sup_total },
+        "principles": { "seen": pri_seen, "of": pri_total },
+        "decoys_flagged": { "flagged": decoy_flagged, "of": decoy_total },
+        "unresolved": unresolved.len(),
+        "refused": refused.len(),
+        "tensions": rows,
+    });
+    let _ = std::fs::create_dir_all(&scratch);
+    let sidecar = scratch.join(format!("two-up-{}.json", out["at"].as_u64().unwrap_or(0)));
+    if let Err(e) = std::fs::write(&sidecar, serde_json::to_string_pretty(&out).unwrap()) {
+        println!("\nwarning: could not write {}: {e}", sidecar.display());
+    } else {
+        println!("\n  evidence {}", sidecar.display());
+    }
+
+    println!(
+        "\n  supersessions {sup_seen}/{sup_total}   principles {pri_seen}/{pri_total}   \
+         DECOYS FLAGGED {decoy_flagged}/{decoy_total}   unresolved {}   refused {}",
+        unresolved.len(),
+        refused.len()
+    );
+    println!("  UPPER BOUND — each pair was shown alone. The sweep shows it among 22 others.");
+    if runs > 1 {
+        println!(
+            "  n={runs} per pair, majority decides. {flips} pair(s) did not answer the same way \
+             every time — that is this instrument's noise floor, and no delta smaller than it \
+             is readable."
+        );
+    } else {
+        println!(
+            "  n=1. Runs of 2026-08-27 reproduced 16 of 17 and flipped one; set \
+             CANON_BAR_TWO_UP_RUNS=3 before comparing this against another arm."
+        );
+    }
+
+    // Four verdicts, not two (§18.1). A refused call is never folded into
+    // "not seen", and a pair the anchors could not resolve never reached the
+    // stage at all — so a shortfall counted against the full eleven would
+    // blame the stage for the fixture.
+    assert!(
+        refused.is_empty(),
+        "{} pair(s) could not be judged, twice each — this is not a measurement: {refused:?}",
+        refused.len()
+    );
+
+    // Two-up is strictly easier than the sweep, so this is a floor of sanity
+    // rather than the sweep's bar: a stage flagging most of the labelled
+    // compatible pairs when shown two commitments alone is not discriminating
+    // at all, and any recall number it produces is noise.
+    assert!(
+        decoy_flagged < KILL_DECOY_CEILING,
+        "{decoy_flagged} of {decoy_total} COMPATIBLE pairs were called tensions, at or past the \
+         ceiling of {KILL_DECOY_CEILING}. Recall is not meaningful beside this."
+    );
+
+    let sup_unresolved = unresolved
+        .iter()
+        .filter(|(_, k, _)| k == "unmarked_supersession")
+        .count();
+    let reachable = sup_seen + sup_unresolved;
+    if sup_seen >= TWO_UP_FLOOR {
+        // Met on a subset is met. Nothing the unresolved pairs could have
+        // done would take it back below the floor.
+        return;
+    }
+    assert!(
+        reachable < TWO_UP_FLOOR,
+        "CANNOT JUDGE. The stage saw {sup_seen} of the {} supersessions it was shown, and \
+         {sup_unresolved} more never reached it because the anchors could not name one \
+         candidate — so the true figure is somewhere in {sup_seen}..={reachable} against a \
+         floor of {TWO_UP_FLOOR}. THE FIXTURE IS THE BLOCKER, NOT THE COMPARISON PROMPT: \
+         give those sides an anchor phrase that appears in a candidate's own sentence, \
+         then re-run. Do not touch the prompt on this evidence, and do not buy a sweep.",
+        sup_total - sup_unresolved
+    );
+    panic!(
+        "two-up saw {sup_seen} of {sup_total} supersessions and could reach at most \
+         {reachable}, under the floor of {TWO_UP_FLOOR}. The comparison prompt is the lever — \
+         fix it here, where a pass costs one call, not in a six-hour sweep."
+    );
+}
+
+#[test]
+fn a_side_resolves_to_the_one_candidate_that_carries_the_whole_anchor() {
+    // The resolver's own gate, run with no endpoint: a resolver that silently
+    // returned the wrong candidate would send seventeen correct pairs to the
+    // stage as seventeen wrong ones, and the number would look like a model
+    // failure (§18.4 — validate the instrument before the result).
+    let instruments = Map::new();
+    let run = json!({
+        "chunks": [
+            { "heading": "Maple House Charter, Article II — Quiet Hours" },
+            { "heading": "Maple House Charter, Article XI — Quiet Study Hours" }
+        ],
+        "candidates": [
+            // Right section, carries neither group.
+            { "chunk": 0, "text": "Bins go out on Tuesday.", "quote": "Bins go out on Tuesday." },
+            // Right section, carries ONE group. A section-wide reading would
+            // accept this; two-up must not, because the stage is handed one
+            // commitment and would never see the other half.
+            { "chunk": 0, "text": "Quiet hours begin at ten.", "quote": "Quiet hours begin at ten." },
+            // Wrong section, carries both. Proves the section actually binds.
+            { "chunk": 1, "text": "Quiet hours begin at ten and end at seven.",
+              "quote": "Quiet hours begin at ten and end at seven." },
+            // Right section, carries both — in the citation, not the text,
+            // which is where a verbatim source phrase usually lands.
+            { "chunk": 0, "text": "Nights are for sleeping.",
+              "quote": "Quiet hours begin at ten and end at seven." }
+        ]
+    });
+    let side = |sec: &str, must: Value| json!({ "section": sec, "must": must });
+    let both = json!([["quiet hours begin at ten"], ["end at seven"]]);
+
+    // No candidate STATES both groups, exactly one cites both: the weak
+    // grade, and it says so rather than passing as the strong one.
+    assert_eq!(
+        side_to_candidate(&run, &instruments, &side("article:II", both.clone())),
+        Ok((3, Grade::Citation)),
+        "the one candidate in the right section whose citation carries EVERY group"
+    );
+
+    // Any-of within a group, and a candidate that states it outranks any
+    // number of candidates that merely cite it.
+    assert_eq!(
+        side_to_candidate(
+            &run,
+            &instruments,
+            &side(
+                "article:II",
+                json!([["never appears", "quiet hours begin at ten"]])
+            )
+        ),
+        Ok((1, Grade::OwnWords))
+    );
+
+    // A section with candidates but no carrier, and a section with none, are
+    // different findings and say so.
+    let none = side_to_candidate(
+        &run,
+        &instruments,
+        &side("article:II", json!([["bicycles"]])),
+    );
+    assert!(
+        none.as_ref()
+            .unwrap_err()
+            .contains("3 candidate(s), none carrying"),
+        "{none:?}"
+    );
+    let empty = side_to_candidate(&run, &instruments, &side("article:IV", both));
+    assert!(
+        empty
+            .as_ref()
+            .unwrap_err()
+            .contains("no candidate came from that section"),
+        "{empty:?}"
+    );
+
+    // Two candidates sharing one wide citation that carries the anchor, and
+    // neither stating it. This is the shape that cost a 17-call run: 152 of
+    // the founding corpus's 334 candidates share a citation with a sibling,
+    // so picking the lowest index is arbitrary and must refuse instead.
+    let shared = json!({
+        "chunks": [{ "heading": "Maple House Charter, Article II — Quiet Hours" }],
+        "candidates": [
+            { "chunk": 0, "text": "Nights are for sleeping.",
+              "quote": "Quiet hours begin at ten and end at seven." },
+            { "chunk": 0, "text": "Mornings are for coffee.",
+              "quote": "Quiet hours begin at ten and end at seven." }
+        ]
+    });
+    let tie = side_to_candidate(
+        &shared,
+        &instruments,
+        &side("article:II", json!([["quiet hours begin at ten"]])),
+    );
+    let why = tie.as_ref().unwrap_err();
+    assert!(why.contains("2 share a citation"), "{why}");
+    assert!(why.contains("c0, c1"), "names them: {why}");
+    assert!(why.contains("cannot name one"), "{why}");
+}
