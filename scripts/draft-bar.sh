@@ -80,7 +80,17 @@ echo
 
 i=1
 while [ "$i" -le "$RUNS" ]; do
-  SCRATCH=$(mktemp -d)
+  # Scratch lives beside the artifacts, NOT under $TMPDIR.
+  #
+  # `mktemp -d` resolves under $TMPDIR, which on macOS is /var/folders/...
+  # and is purged on boot exactly like /tmp. The per-stage checkpoints
+  # (`<at>.partial.json`) are written INTO $CANON_DIR, so a reboot under a
+  # running sweep destroys the one thing they exist to protect — which is
+  # how the 2026-08-25 sweep lost two hours of extraction. Override with
+  # CANON_BAR_SCRATCH; anywhere is fine except a directory the OS reclaims.
+  SCRATCH="${CANON_BAR_SCRATCH:-$OUT/scratch}/run-$i"
+  rm -rf "$SCRATCH"
+  mkdir -p "$SCRATCH"
   CANON_DIR="$SCRATCH/.canon"
   export CANON_DIR CANON_ACTOR="bench:draft-bar"
   # The fixture is a house charter, so the canon is a house canon: the
@@ -94,10 +104,16 @@ while [ "$i" -le "$RUNS" ]; do
   # A run that fails is reported and the bar continues: losing runs 2 and 3
   # because run 1 died leaves no measurement at all, and a missing run is
   # visible in the scorer's count.
+  # `rc` is captured on the spot. It used to be read as `$?` inside the
+  # else branch, where the arithmetic expansion on the line before had
+  # already overwritten it with the `date` subshell's status — so a failed
+  # run reported "exit 0" and read as a pass that happened to be slow.
   if "$BIN" draft --dry-run --from "$DOC" >/dev/null; then
+    rc=0
     echo "  $(( $(date +%s) - START ))s"
   else
-    echo "  FAILED after $(( $(date +%s) - START ))s (exit $?)"
+    rc=$?
+    echo "  FAILED after $(( $(date +%s) - START ))s (exit $rc)"
   fi
 
   # Name the artifact by run ordinal AND its own timestamp, so a re-run
@@ -111,13 +127,24 @@ while [ "$i" -le "$RUNS" ]; do
     [ -e "$f" ] || { echo "  (no artifact: this run produced nothing)"; break; }
     cp "$f" "$OUT/run-$(basename "$f")"
   done
-  rm -rf "$SCRATCH"
+  # A failed run keeps its scratch: the checkpoints inside it are the only
+  # route to resuming six hours of work, and they are worth more than the
+  # disk they sit on. A run that exited 0 has already cleared its own.
+  if [ "$rc" -eq 0 ]; then
+    rm -rf "$SCRATCH"
+  else
+    echo "  checkpoints kept: $CANON_DIR/draft-runs/"
+  fi
   i=$((i + 1))
 done
 
 echo
 if [ "$RUNS_ONLY" -eq 1 ]; then
-  echo "$(ls "$OUT" | wc -l | tr -d ' ') artifact(s) in $OUT"
+  # Count RUN artifacts, not directory entries. `ls "$OUT" | wc -l` counted
+  # BUILD.txt and the scratch dir too, so a sweep where every run failed
+  # still reported "2 artifact(s)" — a number that reads as evidence and
+  # was measuring the wrong noun.
+  echo "$(ls "$OUT"/run-*.json 2>/dev/null | wc -l | tr -d ' ') run artifact(s) in $OUT"
   echo "score them: cargo test --test draft_bar -- --ignored --nocapture"
   exit 0
 fi

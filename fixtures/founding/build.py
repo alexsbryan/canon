@@ -512,41 +512,96 @@ def emit_truth(sections):
 # Every phrase here is a semantic invariant — a name, a measure, a verb the
 # rule turns on — rather than a span whose wording a reader could restyle.
 
+# Six entries were corrected on 2026-08-27 against the rule stated directly
+# above, which they had never satisfied. The two-up bar surfaced them: each
+# named a span whose wording a paraphrase restyles, so no candidate STATED it
+# and the pair could not be resolved to a commitment at all. Extraction had
+# produced a perfectly good sentence for every one of them. Marked (was: ...).
+#
+# S8 is a different and worse defect — both sides named the wrong PROVISION.
+# The corpus carries the Archives' own markup for what Amendment XX superseded,
+# and it is the only bracketed-and-starred span in the corpus: "[And if the
+# House of Representatives shall not choose a President ... before the fourth
+# day of March next following, then the Vice-President shall act as President
+# ...]*". So the superseded portion of XII is the March-4th clause, not the
+# House-chooses-immediately clause, and its counterpart in XX.3 is the
+# President-not-chosen provision, not the President-elect-died one — the
+# latter is new law, not a supersession. The old `b` phrase differed from
+# S9's by one word, which is what a copied line looks like.
+
 ANCHOR = {
     "S1":  ("Citizens of another State", "shall not be construed to extend to any suit"),
-    "S2":  ("vote by Ballot for two Persons", "vote by ballot for President and Vice-President"),
-    "S3":  ("No Person held to Service or Labour", "Neither slavery nor involuntary servitude"),
+    # was: ("...", "vote by ballot for President and Vice-President") — the
+    # opening clause, which XII did not change. The change is the SPLIT.
+    "S2":  ("vote by Ballot for two Persons", "distinct ballots"),
+    # was: ("...", "Neither slavery nor involuntary servitude") — "Neither/nor"
+    # is syntax any paraphrase reorders; the noun phrase is the invariant.
+    "S3":  ("No Person held to Service or Labour", "involuntary servitude"),
     "S4":  ("three fifths of all other Persons", "counting the whole number of persons"),
     "S5":  ("Capitation", "taxes on incomes"),
-    "S6":  ("chosen by the Legislature thereof", "elected by the people thereof"),
+    # was: ("...", "elected by the people thereof") — "thereof" is a back
+    # reference to the source's own sentence and does not survive rewriting.
+    "S6":  ("chosen by the Legislature thereof", "elected by the people"),
     "S7":  ("first Monday in December", "day of January"),
-    "S8":  ("shall choose immediately", "Vice President elect shall become President"),
+    # was: ("shall choose immediately", "Vice President elect shall become
+    # President") — both wrong provisions. See the note above the table.
+    "S8":  ("fourth day of March", "before the time fixed"),
     "S9":  ("devolve on the Vice President", "Vice President shall become President"),
     "S10": ("the right to vote at any election", "eighteen years of age"),
     "S11": ("intoxicating liquors", "is hereby repealed"),
     "P1":  ("all men are created equal", "three fifths of all other Persons"),
     "P2":  ("pursuit of Happiness", "shall be delivered up"),
-    "P3":  ("pursuit of Happiness", "Migration or Importation"),
+    # was: ("...", "Migration or Importation") — a two-word disjunction the
+    # extractor renders as "importation of persons", dropping half of it. The
+    # verb the rule turns on is the prohibition laid on Congress.
+    "P3":  ("pursuit of Happiness", "shall not be prohibited"),
     "P4":  ("retains its sovereignty", "supreme Law of the Land"),
     "P5":  ("legislatures of every State", "Conventions of nine States"),
     "P6":  ("necessary and proper", "reserved to the States"),
 }
 
+# The same, for the six labelled COMPATIBLE pairs. A recall number with no
+# false-positive number beside it is half a measurement, and the half that
+# flatters: any change making the comparison stage more suspicious buys
+# tensions it should not have found, and shows up as pure gain if nobody
+# counts the decoys. Emitted under a SEPARATE key so `extraction_coverage`'s
+# reachability denominator stays 17 and cannot silently become 23.
+#
+# For the five pairs that look alike, the anchor is the phrase they SHARE —
+# that resemblance is the whole trap, so it is what must survive extraction.
+# N5 is the exception: its two sides are unrelated protections, so each is
+# anchored on its own.
+DECOY = {
+    "N1": ("Bill of Attainder", "Bill of Attainder"),
+    "N2": ("appropriate legislation", "appropriate legislation"),
+    "N3": ("appropriate legislation", "appropriate legislation"),
+    "N4": ("full faith and credit", "Full Faith and Credit"),
+    "N5": ("unreasonable searches and seizures", "witness against himself"),
+    "N6": ("coin Money", "coin Money"),
+}
+
 
 def emit_anchors(sections, truth):
     text = {key_of(h): " ".join(t.split()) for h, t in sections}
-    out, missing = {}, []
-    for t in truth["planted_tensions"]:
-        pair = ANCHOR.get(t["id"])
-        if not pair:
-            missing.append(f"{t['id']}: no anchor")
-            continue
-        entry = []
-        for side, phrase in zip(("a", "b"), pair):
-            if phrase.lower() not in text.get(t[side], "").lower():
-                missing.append(f"{t['id']} {side} ({t[side]}): {phrase!r}")
-            entry.append({"section": t[side], "must": [[phrase]]})
-        out[t["id"]] = entry
+    missing = []
+
+    def resolve(entries, table, label):
+        out = {}
+        for t in entries:
+            pair = table.get(t["id"])
+            if not pair:
+                missing.append(f"{t['id']}: no {label}")
+                continue
+            entry = []
+            for side, phrase in zip(("a", "b"), pair):
+                if phrase.lower() not in text.get(t[side], "").lower():
+                    missing.append(f"{t['id']} {side} ({t[side]}): {phrase!r}")
+                entry.append({"section": t[side], "must": [[phrase]]})
+            out[t["id"]] = entry
+        return out
+
+    out = resolve(truth["planted_tensions"], ANCHOR, "anchor")
+    decoys = resolve(truth["expected_non_tensions"], DECOY, "decoy anchor")
     if missing:
         raise SystemExit("anchors do not name text in the corpus:\n  " + "\n  ".join(missing))
     return {
@@ -556,10 +611,17 @@ def emit_anchors(sections, truth):
             "changed, or the clause the principle collides with — taken from the documents and "
             "not from anything an extractor produced. Matching is case-insensitive over collapsed "
             "whitespace against any candidate drawn from that section. build.py refuses to write "
-            "this file if a phrase does not appear in the section it names."
+            "this file if a phrase does not appear in the section it names. `decoys` carries the "
+            "same for the labelled COMPATIBLE pairs, kept in its own key so a reachability "
+            "denominator over `anchors` stays 17. Two readings use these: the section-level one "
+            "(did anything this section produced carry the phrase) and the candidate-level one "
+            "(which single commitment to hand a two-up comparison). The second matches a "
+            "candidate's OWN text first and its citation only as a fallback, because the "
+            "comparison stage reads the text and never the citation."
         ),
-        "schema_version": 1,
+        "schema_version": 2,
         "anchors": out,
+        "decoys": decoys,
     }
 
 
