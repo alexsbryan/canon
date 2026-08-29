@@ -124,26 +124,49 @@ nothing.
 A model call is refused unless the endpoint is on this machine, unless
 you pass `--allow-remote`. Every call prints which endpoint it used.
 
-### About the endpoint
+### The endpoint, and a shout to Commonwealth
 
-The reference setup is the commonwealth-ai mesh daemon at
-`localhost:9741`, model alias `primary`, on a 27B-class model. Worth
-saying plainly: every accuracy figure and every bench script here was
-measured against that.
+canon was built against **[Commonwealth](https://github.com/alexsbryan/commonwealth-ai)**
+and every accuracy figure and bench script here was measured on it —
+`localhost:9741`, model alias `primary`, a 27B-class model. It's a sister
+project and it's worth knowing about on its own, because it solves the
+problem a house hits about ten minutes after deciding to run its own
+model: **the good model doesn't fit on anybody's laptop.**
 
-canon itself speaks plain OpenAI chat completions and carries no
-connector, no vendor schema and no endpoint of its own, so llama.cpp,
-vllm or anything compatible will run it. But "runs" and "has the
-batteries" are different claims.
+Commonwealth pools machines. Yours, and ones belonging to people you
+trust. It splits a model's layers across them, and you talk to the result
+as if it were running locally — three 64 GB machines hold a model no one
+of them could. The mesh is symmetric: no master node, every machine runs
+the same code, and when someone shuts their laptop the rest reform around
+it.
 
-Two things to know before you assume they're the same. canon asks the
-server to enforce a JSON schema; if yours can't, it retries once in plain
-JSON mode with the schema in the prompt and says so on stderr. It never
-parses prose. And model size is what actually moves quality here —
-reading documents and spotting contradictions is the hard part, and a
-small local model will propose worse rules and miss more conflicts than
-anything measured in this repo. Run `./scripts/draft-bar.sh 3` against
-your own endpoint to find out where you land.
+The part that should sound familiar: **its trust model is social rather
+than cryptographic.** You join a mesh because someone you know invited
+you. No token, no blockchain, no central registry — each node holds all
+the state there is. That's the same bet canon makes about rules, made
+about hardware. A house that already pools a kitchen can pool GPUs.
+
+It serves an OpenAI-compatible API, so canon just sees one local model.
+There's no separate binary to babysit — the mesh lives inside the
+Sovereign daemon, and you create or join one with `sovereign mesh create`
+and `sovereign mesh join`. Start with
+[Run a model bigger than your machine](https://github.com/alexsbryan/commonwealth-ai/blob/main/docs/RUN_A_BIGGER_MODEL.md).
+
+**Other servers work too.** canon speaks plain OpenAI chat completions
+and carries no connector, no vendor schema and no endpoint of its own, so
+llama.cpp, vllm or anything compatible will run it. But "runs" and "has
+the batteries" are different claims, and two things separate them.
+
+canon asks the server to enforce a JSON schema. If yours can't, it
+retries once in plain JSON mode with the schema in the prompt and says so
+on stderr. It never parses prose.
+
+And model size is what actually moves quality here. Reading documents and
+spotting contradictions is the hard part, and a small local model
+proposes worse rules and misses more conflicts than anything measured in
+this repo. That's the gap Commonwealth exists to close. Run
+`./scripts/draft-bar.sh 3` against your own endpoint to find out where
+you land.
 
 ## Can software hold governance?
 
@@ -260,6 +283,9 @@ figure is worse than none.
   primitives, the line between mechanism and policy, and eighteen
   technologies of political economy tested against them.
 - [DEMO_PLAN.md](./DEMO_PLAN.md) — the founding-documents ledger.
+- [Commonwealth](https://github.com/alexsbryan/commonwealth-ai) — pool
+  your machines with people you trust and run a model none of them could
+  hold alone. What canon was built and measured against.
 
 ## Build
 
