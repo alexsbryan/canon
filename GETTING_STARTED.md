@@ -27,13 +27,23 @@ don't have Rust, `rustup.rs` is a one-line installer.
 
 ### Pointing it at a model
 
-The reference setup is the commonwealth-ai mesh daemon on a 27B-class
-model. Every accuracy measurement in this repo was taken against it:
+The reference setup is
+**[Commonwealth](https://github.com/alexsbryan/commonwealth-ai)** on a
+27B-class model. Every accuracy measurement in this repo was taken
+against it:
 
 ```sh
 canon config set endpoint http://localhost:9741/v1
 canon config set model primary
 ```
+
+Commonwealth is worth a look for a house specifically. The model that's
+good at this doesn't fit on one laptop, and Commonwealth pools machines —
+yours and ones belonging to people you trust — splitting a model's layers
+across them so you talk to it as if it were local. You join a mesh
+because someone invited you; there's no token and no central registry.
+A house that already pools a kitchen can pool GPUs. Start with
+[Run a model bigger than your machine](https://github.com/alexsbryan/commonwealth-ai/blob/main/docs/RUN_A_BIGGER_MODEL.md).
 
 Any OpenAI-compatible server will also run it — canon sends plain chat
 completions and carries no vendor anything:
