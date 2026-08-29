@@ -110,10 +110,26 @@ your machine.
 
 ## What needs a model, and what doesn't
 
-**Needs an endpoint:** `draft`, `check`, `tensions`, `rebase`. Point at
-any OpenAI-compatible server, normally one on your own laptop. A call is
+**Needs an endpoint:** `draft`, `check`, `tensions`, `rebase`. A call is
 **refused unless the endpoint is on this machine** unless you pass
 `--allow-remote`, and every call prints which endpoint it used.
+
+**The reference setup is the commonwealth-ai mesh daemon** at
+`localhost:9741`, model alias `primary`, and it is worth saying plainly:
+every accuracy figure and every bench script in this repo was measured
+against that, on a 27B-class model. Canon itself speaks plain OpenAI chat
+completions and carries no connector, no vendor schema and no endpoint of
+its own, so llama.cpp, vllm or anything compatible will run it — but
+"runs" and "has the batteries" are different claims.
+
+Two honest caveats on a generic server. Canon asks it to **enforce a JSON
+schema**; if it can't, canon retries once in plain JSON mode with the
+schema in the prompt and *says so on stderr* rather than substituting
+quietly, and it never parses prose. And **model size is what moves
+quality** — reading documents and finding contradictions is the hard part
+here, and a small model will propose worse rules and miss more conflicts
+than anything measured in this repo. `./scripts/draft-bar.sh 3` tells you
+where your own endpoint lands.
 
 **Needs nothing:** everything else — `add`, `list`, `why`, `supersede`,
 `retract`, `accept`, `question`, `open`, `silence`, `undo`, `log`,
@@ -197,9 +213,9 @@ So: point a tool at the founding documents of a country, cold, and ask
 it which rules contradict which.
 
 **Where it stands, with the caveat load-bearing.** Shown the two
-commitments alone, it finds **9 of the 11 supersessions** and calls none
-of the four testable decoys a conflict. That is an **upper bound, not a
-score** — the real run shows each pair among twenty-two others, and that
+commitments alone, on a 27B-class model, it finds **9 of the 11
+supersessions** and calls none of the four testable decoys a conflict.
+That is an **upper bound, not a score** — the real run shows each pair among twenty-two others, and that
 run has never completed. It is the most interesting unfinished thing in
 this repo, and `DEMO_PLAN.md` is the honest ledger of what has and
 hasn't been measured, including the bars written down before the data
@@ -219,8 +235,10 @@ wrong some of the time and makes that cheap to catch.
 
 Accuracy is measured against two vendored documents — a house charter
 (`fixtures/maple-house`) and municipal code
-(`fixtures/des-moines-noise`) — and the scripts ship here so you can
-measure it against your own:
+(`fixtures/des-moines-noise`) — always naming the model and endpoint that
+produced a run, because a number that cannot say which build it describes
+cannot be compared with anything. The scripts ship here so you can measure
+your own setup rather than inherit ours:
 
 ```sh
 ./scripts/draft-bar.sh 3                        # runs against your endpoint
