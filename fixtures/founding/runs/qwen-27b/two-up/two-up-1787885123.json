@@ -1,0 +1,243 @@
+{
+  "artifact": "/Users/alexsbryan/dev/canon/fixtures/founding/runs/qwen-27b/run-1787735501.json",
+  "at": 1787885123,
+  "bound": "upper — each pair shown alone, not in a 24-wide window",
+  "endpoint": "http://localhost:9741/v1",
+  "floor": 6,
+  "instrument": "two-up",
+  "model": "primary",
+  "principles": {
+    "of": 6,
+    "seen": 3
+  },
+  "refused": 0,
+  "supersessions": {
+    "of": 11,
+    "seen": 5
+  },
+  "tensions": [
+    {
+      "a": {
+        "candidate": 0,
+        "resolved_by": "own words",
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 87,
+        "resolved_by": "own words",
+        "text": "The Number for apportionment is determined by adding to the whole Number of free Persons, including those bound to Service for a Term of Years, and excluding Indians not taxed, three fifths of all other Persons."
+      },
+      "error": null,
+      "id": "P1",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 0,
+        "resolved_by": "own words",
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 211,
+        "resolved_by": "own words",
+        "text": "A person charged with Treason, Felony, or other Crime who flees from Justice and is found in another State shall be delivered up on Demand of the executive Authority of the state they fled from to be removed to the state having Jurisdiction of the Crime."
+      },
+      "error": null,
+      "id": "P2",
+      "type": "principle_vs_rule",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 12,
+        "resolved_by": "own words",
+        "text": "Each state retains its sovereignty, freedom, and independence, along with every power, jurisdiction, and right not expressly delegated to the United States in Congress assembled."
+      },
+      "b": {
+        "candidate": 225,
+        "resolved_by": "own words",
+        "text": "This Constitution, the laws of the United States made in pursuance thereof, and all treaties made or to be made under the authority of the United States are the supreme law of the land, binding on judges in every state notwithstanding any contrary state constitution or law."
+      },
+      "error": null,
+      "id": "P4",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 79,
+        "resolved_by": "own words",
+        "text": "No alteration may be made in any Article unless agreed to in a Congress of the United States and afterwards confirmed by the legislatures of every State."
+      },
+      "b": {
+        "candidate": 228,
+        "resolved_by": "citation",
+        "text": "Ratification by nine States is sufficient for the Establishment of this Constitution between the States so ratifying it."
+      },
+      "error": null,
+      "id": "P5",
+      "type": "principle_vs_rule",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 131,
+        "resolved_by": "own words",
+        "text": "Congress makes all laws necessary and proper for executing its enumerated powers and other powers vested in the U.S. Government or any department or officer thereof."
+      },
+      "b": {
+        "candidate": 257,
+        "resolved_by": "own words",
+        "text": "Powers not delegated to the United States by the Constitution and not prohibited to the States are reserved to the States or to the people."
+      },
+      "error": null,
+      "id": "P6",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 197,
+        "resolved_by": "own words",
+        "text": "The judicial Power shall extend to cases between a State and Citizens of another State."
+      },
+      "b": {
+        "candidate": 258,
+        "resolved_by": "own words",
+        "text": "The Judicial power of the United States shall not be construed to extend to any suit in law or equity commenced or prosecuted against one of the United States by Citizens of another State, or by Citizens or Subjects of any Foreign State."
+      },
+      "error": null,
+      "id": "S1",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 284,
+        "resolved_by": "citation",
+        "text": "When the right to vote is denied or abridged for male inhabitants twenty-one years of age and citizens of the United States (except for participation in rebellion or other crime), the basis of representation in that State shall be reduced in proportion to the number of such disenfranchised citizens relative to all male citizens twenty-one years of age in the State."
+      },
+      "b": {
+        "candidate": 330,
+        "resolved_by": "own words",
+        "text": "The right of citizens of the United States who are eighteen years of age or older to vote shall not be denied or abridged by the United States or any State on account of age."
+      },
+      "error": null,
+      "id": "S10",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 297,
+        "resolved_by": "own words",
+        "text": "One year after ratification of this article, the manufacture, sale, or transportation of intoxicating liquors within, the importation thereof into, or the exportation thereof from the United States and all territory subject to its jurisdiction for beverage purposes is prohibited."
+      },
+      "b": {
+        "candidate": 312,
+        "resolved_by": "citation",
+        "text": "The eighteenth article of amendment to the Constitution of the United States is repealed."
+      },
+      "error": null,
+      "id": "S11",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 87,
+        "resolved_by": "own words",
+        "text": "The Number for apportionment is determined by adding to the whole Number of free Persons, including those bound to Service for a Term of Years, and excluding Indians not taxed, three fifths of all other Persons."
+      },
+      "b": {
+        "candidate": 283,
+        "resolved_by": "own words",
+        "text": "Representatives shall be apportioned among the several States according to their respective numbers, counting the whole number of persons in each State, excluding Indians not taxed."
+      },
+      "error": null,
+      "id": "S4",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 136,
+        "resolved_by": "own words",
+        "text": "No capitation or other direct tax shall be laid unless in proportion to the census or enumeration directed to be taken."
+      },
+      "b": {
+        "candidate": 291,
+        "resolved_by": "own words",
+        "text": "The Congress shall have power to lay and collect taxes on incomes from whatever source derived without apportionment among the several States and without regard to any census or enumeration."
+      },
+      "error": null,
+      "id": "S5",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 104,
+        "resolved_by": "own words",
+        "text": "The Congress shall assemble at least once in every Year on the first Monday in December unless they appoint a different Day by Law."
+      },
+      "b": {
+        "candidate": 305,
+        "resolved_by": "own words",
+        "text": "Such meeting shall begin at noon on the 3d day of January, unless they shall by law appoint a different day."
+      },
+      "error": null,
+      "id": "S7",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 170,
+        "resolved_by": "own words",
+        "text": "In case of the Removal, Death, Resignation, or Inability of the President, the powers and duties devolve on the Vice President until the disability is removed or a new President is elected."
+      },
+      "b": {
+        "candidate": 323,
+        "resolved_by": "own words",
+        "text": "In case of the removal of the President from office or of his death or resignation, the Vice President shall become President."
+      },
+      "error": null,
+      "id": "S9",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "error": "constitution:I.9: no candidate STATES [Array [String(\"Migration or Importation\")]], and 2 share a citation carrying it (c132, c133) — the anchor cannot name one",
+      "id": "P3",
+      "type": "principle_vs_rule",
+      "verdict": "unresolved"
+    },
+    {
+      "error": "constitution:amend.XII: no candidate STATES [Array [String(\"vote by ballot for President and Vice-President\")]], and 8 share a citation carrying it (c259, c260, c261, c262, c263, c264) — the anchor cannot name one",
+      "id": "S2",
+      "type": "unmarked_supersession",
+      "verdict": "unresolved"
+    },
+    {
+      "error": "constitution:amend.XIII.1: no candidate STATES [Array [String(\"Neither slavery nor involuntary servitude\")]], and 2 share a citation carrying it (c276, c277) — the anchor cannot name one",
+      "id": "S3",
+      "type": "unmarked_supersession",
+      "verdict": "unresolved"
+    },
+    {
+      "error": "constitution:amend.XVII: no candidate STATES [Array [String(\"elected by the people thereof\")]], and 2 share a citation carrying it (c292, c293) — the anchor cannot name one",
+      "id": "S6",
+      "type": "unmarked_supersession",
+      "verdict": "unresolved"
+    },
+    {
+      "error": "constitution:amend.XII: no candidate STATES [Array [String(\"shall choose immediately\")]], and 8 share a citation carrying it (c259, c260, c261, c262, c263, c264) — the anchor cannot name one",
+      "id": "S8",
+      "type": "unmarked_supersession",
+      "verdict": "unresolved"
+    }
+  ],
+  "unresolved": 5
+}

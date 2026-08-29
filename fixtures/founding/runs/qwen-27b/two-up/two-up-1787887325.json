@@ -1,0 +1,373 @@
+{
+  "artifact": "/Users/alexsbryan/dev/canon/fixtures/founding/runs/qwen-27b/run-1787735501.json",
+  "at": 1787887325,
+  "bound": "upper — each pair shown alone, not in a 24-wide window",
+  "decoys_flagged": {
+    "flagged": 0,
+    "of": 6
+  },
+  "endpoint": "http://localhost:9741/v1",
+  "floor": 6,
+  "instrument": "two-up",
+  "model": "primary",
+  "principles": {
+    "of": 6,
+    "seen": 5
+  },
+  "refused": 0,
+  "supersessions": {
+    "of": 11,
+    "seen": 7
+  },
+  "tensions": [
+    {
+      "a": {
+        "candidate": 135,
+        "resolved_by": "own words",
+        "text": "No bill of attainder or ex post facto law shall be passed."
+      },
+      "b": {
+        "candidate": 149,
+        "resolved_by": "own words",
+        "text": "No State shall pass any Bill of Attainder."
+      },
+      "error": null,
+      "id": "N1",
+      "type": "decoy",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 278,
+        "resolved_by": "own words",
+        "text": "Congress shall have power to enforce this article by appropriate legislation."
+      },
+      "b": {
+        "candidate": 290,
+        "resolved_by": "own words",
+        "text": "The Congress shall have power to enforce this article by appropriate legislation."
+      },
+      "error": null,
+      "id": "N2",
+      "type": "decoy",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 22,
+        "resolved_by": "own words",
+        "text": "Full faith and credit shall be given in each State to the records, acts, and judicial proceedings of the courts and magistrates of every other State."
+      },
+      "b": {
+        "candidate": 209,
+        "resolved_by": "own words",
+        "text": "Full Faith and Credit shall be given in each State to the public Acts, Records, and judicial Proceedings of every other State."
+      },
+      "error": null,
+      "id": "N4",
+      "type": "decoy",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 237,
+        "resolved_by": "own words",
+        "text": "The right of the people to be secure in their persons, houses, papers, and effects against unreasonable searches and seizures shall not be violated."
+      },
+      "b": {
+        "candidate": 241,
+        "resolved_by": "own words",
+        "text": "No person shall be compelled in any criminal case to be a witness against himself."
+      },
+      "error": null,
+      "id": "N5",
+      "type": "decoy",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 0,
+        "resolved_by": "own words",
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 87,
+        "resolved_by": "own words",
+        "text": "The Number for apportionment is determined by adding to the whole Number of free Persons, including those bound to Service for a Term of Years, and excluding Indians not taxed, three fifths of all other Persons."
+      },
+      "error": null,
+      "id": "P1",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 0,
+        "resolved_by": "own words",
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 211,
+        "resolved_by": "own words",
+        "text": "A person charged with Treason, Felony, or other Crime who flees from Justice and is found in another State shall be delivered up on Demand of the executive Authority of the state they fled from to be removed to the state having Jurisdiction of the Crime."
+      },
+      "error": null,
+      "id": "P2",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 0,
+        "resolved_by": "own words",
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 132,
+        "resolved_by": "own words",
+        "text": "The importation of persons shall not be prohibited by Congress prior to the year one thousand eight hundred and eight."
+      },
+      "error": null,
+      "id": "P3",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 12,
+        "resolved_by": "own words",
+        "text": "Each state retains its sovereignty, freedom, and independence, along with every power, jurisdiction, and right not expressly delegated to the United States in Congress assembled."
+      },
+      "b": {
+        "candidate": 225,
+        "resolved_by": "own words",
+        "text": "This Constitution, the laws of the United States made in pursuance thereof, and all treaties made or to be made under the authority of the United States are the supreme law of the land, binding on judges in every state notwithstanding any contrary state constitution or law."
+      },
+      "error": null,
+      "id": "P4",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 79,
+        "resolved_by": "own words",
+        "text": "No alteration may be made in any Article unless agreed to in a Congress of the United States and afterwards confirmed by the legislatures of every State."
+      },
+      "b": {
+        "candidate": 228,
+        "resolved_by": "citation",
+        "text": "Ratification by nine States is sufficient for the Establishment of this Constitution between the States so ratifying it."
+      },
+      "error": null,
+      "id": "P5",
+      "type": "principle_vs_rule",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 131,
+        "resolved_by": "own words",
+        "text": "Congress makes all laws necessary and proper for executing its enumerated powers and other powers vested in the U.S. Government or any department or officer thereof."
+      },
+      "b": {
+        "candidate": 257,
+        "resolved_by": "own words",
+        "text": "Powers not delegated to the United States by the Constitution and not prohibited to the States are reserved to the States or to the people."
+      },
+      "error": null,
+      "id": "P6",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 197,
+        "resolved_by": "own words",
+        "text": "The judicial Power shall extend to cases between a State and Citizens of another State."
+      },
+      "b": {
+        "candidate": 258,
+        "resolved_by": "own words",
+        "text": "The Judicial power of the United States shall not be construed to extend to any suit in law or equity commenced or prosecuted against one of the United States by Citizens of another State, or by Citizens or Subjects of any Foreign State."
+      },
+      "error": null,
+      "id": "S1",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 284,
+        "resolved_by": "citation",
+        "text": "When the right to vote is denied or abridged for male inhabitants twenty-one years of age and citizens of the United States (except for participation in rebellion or other crime), the basis of representation in that State shall be reduced in proportion to the number of such disenfranchised citizens relative to all male citizens twenty-one years of age in the State."
+      },
+      "b": {
+        "candidate": 330,
+        "resolved_by": "own words",
+        "text": "The right of citizens of the United States who are eighteen years of age or older to vote shall not be denied or abridged by the United States or any State on account of age."
+      },
+      "error": null,
+      "id": "S10",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 297,
+        "resolved_by": "own words",
+        "text": "One year after ratification of this article, the manufacture, sale, or transportation of intoxicating liquors within, the importation thereof into, or the exportation thereof from the United States and all territory subject to its jurisdiction for beverage purposes is prohibited."
+      },
+      "b": {
+        "candidate": 312,
+        "resolved_by": "citation",
+        "text": "The eighteenth article of amendment to the Constitution of the United States is repealed."
+      },
+      "error": null,
+      "id": "S11",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 164,
+        "resolved_by": "own words",
+        "text": "The Electors shall meet in their respective States and vote by Ballot for two Persons, of whom one at least shall not be an Inhabitant of the same State with themselves, make a List of all the Persons voted for and of the Number of Votes for each, sign and certify that List, and transmit it sealed to the Seat of the Government of the United States directed to the President of the Senate."
+      },
+      "b": {
+        "candidate": 260,
+        "resolved_by": "own words",
+        "text": "Electors shall name on their ballots the person voted for as President and in distinct ballots the person voted for as Vice-President."
+      },
+      "error": null,
+      "id": "S2",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 212,
+        "resolved_by": "own words",
+        "text": "No Person held to Service or Labour in one State under its Laws who escapes into another shall be discharged from such Service or Labour due to any Law or Regulation therein, but shall be delivered up on Claim of the Party to whom such Service or Labour may be due."
+      },
+      "b": {
+        "candidate": 276,
+        "resolved_by": "own words",
+        "text": "Slavery and involuntary servitude shall not exist within the United States or any place subject to its jurisdiction."
+      },
+      "error": null,
+      "id": "S3",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 87,
+        "resolved_by": "own words",
+        "text": "The Number for apportionment is determined by adding to the whole Number of free Persons, including those bound to Service for a Term of Years, and excluding Indians not taxed, three fifths of all other Persons."
+      },
+      "b": {
+        "candidate": 283,
+        "resolved_by": "own words",
+        "text": "Representatives shall be apportioned among the several States according to their respective numbers, counting the whole number of persons in each State, excluding Indians not taxed."
+      },
+      "error": null,
+      "id": "S4",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 136,
+        "resolved_by": "own words",
+        "text": "No capitation or other direct tax shall be laid unless in proportion to the census or enumeration directed to be taken."
+      },
+      "b": {
+        "candidate": 291,
+        "resolved_by": "own words",
+        "text": "The Congress shall have power to lay and collect taxes on incomes from whatever source derived without apportionment among the several States and without regard to any census or enumeration."
+      },
+      "error": null,
+      "id": "S5",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 92,
+        "resolved_by": "own words",
+        "text": "The Senate of the United States is composed of two Senators from each State, chosen by the Legislature thereof for six years, and each Senator has one vote."
+      },
+      "b": {
+        "candidate": 292,
+        "resolved_by": "own words",
+        "text": "Senators are elected by the people of their respective States for six years."
+      },
+      "error": null,
+      "id": "S6",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 104,
+        "resolved_by": "own words",
+        "text": "The Congress shall assemble at least once in every Year on the first Monday in December unless they appoint a different Day by Law."
+      },
+      "b": {
+        "candidate": 305,
+        "resolved_by": "own words",
+        "text": "Such meeting shall begin at noon on the 3d day of January, unless they shall by law appoint a different day."
+      },
+      "error": null,
+      "id": "S7",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 270,
+        "resolved_by": "own words",
+        "text": "If the House does not choose a President before the fourth day of March next following, the Vice-President shall act as President."
+      },
+      "b": {
+        "candidate": 307,
+        "resolved_by": "own words",
+        "text": "If a President has not been chosen before the time fixed for the beginning of his term or if the President elect fails to qualify, the Vice President elect acts as President until a President qualifies."
+      },
+      "error": null,
+      "id": "S8",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 170,
+        "resolved_by": "own words",
+        "text": "In case of the Removal, Death, Resignation, or Inability of the President, the powers and duties devolve on the Vice President until the disability is removed or a new President is elected."
+      },
+      "b": {
+        "candidate": 323,
+        "resolved_by": "own words",
+        "text": "In case of the removal of the President from office or of his death or resignation, the Vice President shall become President."
+      },
+      "error": null,
+      "id": "S9",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "error": "constitution:amend.XIV.5: no candidate came from that section; constitution:amend.XXVI.2: no candidate came from that section",
+      "id": "N3",
+      "type": "decoy",
+      "verdict": "unresolved"
+    },
+    {
+      "error": "constitution:I.8: 7 candidate(s), none carrying [Array [String(\"coin Money\")]]",
+      "id": "N6",
+      "type": "decoy",
+      "verdict": "unresolved"
+    }
+  ],
+  "unresolved": 2
+}

@@ -1,0 +1,259 @@
+{
+  "artifact": "/Users/alexsbryan/dev/canon/fixtures/founding/runs/qwen-27b/run-1787735501.json",
+  "at": 1787884597,
+  "bound": "upper — each pair shown alone, not in a 24-wide window",
+  "endpoint": "http://localhost:9741/v1",
+  "floor": 6,
+  "instrument": "two-up",
+  "model": "primary",
+  "principles": {
+    "of": 6,
+    "seen": 5
+  },
+  "refused": 0,
+  "supersessions": {
+    "of": 11,
+    "seen": 5
+  },
+  "tensions": [
+    {
+      "a": {
+        "candidate": 0,
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 86,
+        "text": "Representatives and direct Taxes shall be apportioned among the several States according to their respective Numbers."
+      },
+      "error": null,
+      "id": "P1",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 0,
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 211,
+        "text": "A person charged with Treason, Felony, or other Crime who flees from Justice and is found in another State shall be delivered up on Demand of the executive Authority of the state they fled from to be removed to the state having Jurisdiction of the Crime."
+      },
+      "error": null,
+      "id": "P2",
+      "type": "principle_vs_rule",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 0,
+        "text": "All men are created equal and endowed with unalienable rights to Life, Liberty, and the pursuit of Happiness."
+      },
+      "b": {
+        "candidate": 132,
+        "text": "The importation of persons shall not be prohibited by Congress prior to the year one thousand eight hundred and eight."
+      },
+      "error": null,
+      "id": "P3",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 12,
+        "text": "Each state retains its sovereignty, freedom, and independence, along with every power, jurisdiction, and right not expressly delegated to the United States in Congress assembled."
+      },
+      "b": {
+        "candidate": 225,
+        "text": "This Constitution, the laws of the United States made in pursuance thereof, and all treaties made or to be made under the authority of the United States are the supreme law of the land, binding on judges in every state notwithstanding any contrary state constitution or law."
+      },
+      "error": null,
+      "id": "P4",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 78,
+        "text": "The Articles of Confederation shall be inviolably observed by every State and the Union shall be perpetual."
+      },
+      "b": {
+        "candidate": 228,
+        "text": "Ratification by nine States is sufficient for the Establishment of this Constitution between the States so ratifying it."
+      },
+      "error": null,
+      "id": "P5",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 131,
+        "text": "Congress makes all laws necessary and proper for executing its enumerated powers and other powers vested in the U.S. Government or any department or officer thereof."
+      },
+      "b": {
+        "candidate": 257,
+        "text": "Powers not delegated to the United States by the Constitution and not prohibited to the States are reserved to the States or to the people."
+      },
+      "error": null,
+      "id": "P6",
+      "type": "principle_vs_rule",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 192,
+        "text": "The judicial Power shall extend to all Cases in Law and Equity arising under this Constitution, the Laws of the United States, and Treaties made or which shall be made under their Authority."
+      },
+      "b": {
+        "candidate": 258,
+        "text": "The Judicial power of the United States shall not be construed to extend to any suit in law or equity commenced or prosecuted against one of the United States by Citizens of another State, or by Citizens or Subjects of any Foreign State."
+      },
+      "error": null,
+      "id": "S1",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 284,
+        "text": "When the right to vote is denied or abridged for male inhabitants twenty-one years of age and citizens of the United States (except for participation in rebellion or other crime), the basis of representation in that State shall be reduced in proportion to the number of such disenfranchised citizens relative to all male citizens twenty-one years of age in the State."
+      },
+      "b": {
+        "candidate": 330,
+        "text": "The right of citizens of the United States who are eighteen years of age or older to vote shall not be denied or abridged by the United States or any State on account of age."
+      },
+      "error": null,
+      "id": "S10",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 297,
+        "text": "One year after ratification of this article, the manufacture, sale, or transportation of intoxicating liquors within, the importation thereof into, or the exportation thereof from the United States and all territory subject to its jurisdiction for beverage purposes is prohibited."
+      },
+      "b": {
+        "candidate": 312,
+        "text": "The eighteenth article of amendment to the Constitution of the United States is repealed."
+      },
+      "error": null,
+      "id": "S11",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 164,
+        "text": "The Electors shall meet in their respective States and vote by Ballot for two Persons, of whom one at least shall not be an Inhabitant of the same State with themselves, make a List of all the Persons voted for and of the Number of Votes for each, sign and certify that List, and transmit it sealed to the Seat of the Government of the United States directed to the President of the Senate."
+      },
+      "b": {
+        "candidate": 259,
+        "text": "At least one of the persons voted for as President or Vice-President shall not be an inhabitant of the same state with themselves."
+      },
+      "error": null,
+      "id": "S2",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 212,
+        "text": "No Person held to Service or Labour in one State under its Laws who escapes into another shall be discharged from such Service or Labour due to any Law or Regulation therein, but shall be delivered up on Claim of the Party to whom such Service or Labour may be due."
+      },
+      "b": {
+        "candidate": 276,
+        "text": "Slavery and involuntary servitude shall not exist within the United States or any place subject to its jurisdiction."
+      },
+      "error": null,
+      "id": "S3",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 86,
+        "text": "Representatives and direct Taxes shall be apportioned among the several States according to their respective Numbers."
+      },
+      "b": {
+        "candidate": 283,
+        "text": "Representatives shall be apportioned among the several States according to their respective numbers, counting the whole number of persons in each State, excluding Indians not taxed."
+      },
+      "error": null,
+      "id": "S4",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 136,
+        "text": "No capitation or other direct tax shall be laid unless in proportion to the census or enumeration directed to be taken."
+      },
+      "b": {
+        "candidate": 291,
+        "text": "The Congress shall have power to lay and collect taxes on incomes from whatever source derived without apportionment among the several States and without regard to any census or enumeration."
+      },
+      "error": null,
+      "id": "S5",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 92,
+        "text": "The Senate of the United States is composed of two Senators from each State, chosen by the Legislature thereof for six years, and each Senator has one vote."
+      },
+      "b": {
+        "candidate": 292,
+        "text": "Senators are elected by the people of their respective States for six years."
+      },
+      "error": null,
+      "id": "S6",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    },
+    {
+      "a": {
+        "candidate": 104,
+        "text": "The Congress shall assemble at least once in every Year on the first Monday in December unless they appoint a different Day by Law."
+      },
+      "b": {
+        "candidate": 304,
+        "text": "The Congress shall assemble at least once in every year."
+      },
+      "error": null,
+      "id": "S7",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 259,
+        "text": "At least one of the persons voted for as President or Vice-President shall not be an inhabitant of the same state with themselves."
+      },
+      "b": {
+        "candidate": 306,
+        "text": "If the President elect has died at the time fixed for the beginning of the term, the Vice President elect shall become President."
+      },
+      "error": null,
+      "id": "S8",
+      "type": "unmarked_supersession",
+      "verdict": "not_seen"
+    },
+    {
+      "a": {
+        "candidate": 170,
+        "text": "In case of the Removal, Death, Resignation, or Inability of the President, the powers and duties devolve on the Vice President until the disability is removed or a new President is elected."
+      },
+      "b": {
+        "candidate": 323,
+        "text": "In case of the removal of the President from office or of his death or resignation, the Vice President shall become President."
+      },
+      "error": null,
+      "id": "S9",
+      "type": "unmarked_supersession",
+      "verdict": "seen"
+    }
+  ],
+  "unresolved": 0
+}

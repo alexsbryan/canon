@@ -1,0 +1,7 @@
+commit    e7d1b4f
+dirty     1 uncommitted file(s)
+document  /Users/alexsbryan/dev/canon/fixtures/founding/founding.md
+profile   house
+model     primary
+endpoint  http://localhost:9741/v1
+binary    /Users/alexsbryan/.canon-runs/founding-20260826/canon-pinned
