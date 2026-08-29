@@ -19,6 +19,13 @@ Then you review, one at a time. There is deliberately **no
 
 **New here? → [GETTING_STARTED.md](./GETTING_STARTED.md).**
 
+It is a house tool, and it is also a bet: that how a group decides things
+can live in software as *mechanism* rather than as a page in a wiki — that
+standing, objections, scopes, deliberate silences and drawn lots are data
+structures, and that "what would a different rule have done to us?" is a
+question with an answer. [Skip to the two experiments](#can-software-actually-hold-governance)
+if that is the part you came for. One of them is the United States.
+
 ## Point it at the mess
 
 **There is no format list.** Anything under that folder which is text
@@ -116,6 +123,88 @@ any OpenAI-compatible server, normally one on your own laptop. A call is
 use. In a house, one person runs the model half; everyone else needs
 nothing.
 
+## Can software actually hold governance?
+
+That is the real question, and canon takes two swings at it — one
+serious, one cheeky.
+
+### The serious one: Ostrom's eight principles are the acceptance test
+
+Elinor Ostrom spent a career documenting what commons that *don't*
+collapse have in common, and got it down to eight design principles.
+They are the bar here, and the same eight marks have to clear in a
+twelve-person house and in a codebase.
+
+The decision layer is pure — `Log -> Canon -> policy -> Decision`, no
+filesystem, no network, no model — so a whole history of governance
+replays in milliseconds:
+
+```sh
+canon replay fixtures/fernwood-commons
+```
+
+```text
+42 step(s), all as expected
+```
+
+That is 42 governance decisions in **0.036 seconds** with no endpoint:
+standing granted and withdrawn, an objection blocking a thing, a scope
+handed down, a lot drawn from a sealed seed nobody could steer.
+
+But the counterfactual is the better trick. **What would a different
+rule have done to the last six months?** is the question a group
+actually has before changing how it decides, and it is usually
+unanswerable. Here it is a flag:
+
+```sh
+canon replay fixtures/fernwood-commons --policy default
+```
+
+```text
+a-sabotage-proposal-dies-on-unaddressed.because: expected "cautious: irreversible", got "default: nothing bears on it"
+the-same-thing-reversible-is-not-refused.authority: expected "act-and-notify", got "ask-one"
+
+20 mismatch(es)
+```
+
+Twenty places the house's actual history would have gone differently
+under another rule, named individually, in 36 milliseconds, against the
+real record. That is what it means for governance to be a thing software
+can hold rather than a thing software stores.
+
+### The cheeky one: we handed it the United States
+
+`fixtures/founding/` is the Declaration of Independence, the Articles of
+Confederation, and the Constitution with all twenty-seven amendments —
+91 sections, 12,672 words, built from vendored National Archives and
+Avalon Project transcripts.
+
+**The ground truth is the good part, because we didn't write it.** The
+Archives prints a note under each amendment naming the article it
+modified or superseded. `build.py` parses those notes out of the same
+HTML the corpus is built from and refuses anything it cannot parse. Out
+falls **eleven supersessions nobody planted** — the 11th Amendment
+against Article III's judicial power, the 17th against senators chosen
+by state legislatures, the 13th against the fugitive slave clause, the
+16th against the ban on unapportioned direct taxes.
+
+Then six tensions we *did* author, each quoting both passages so the
+reading can be argued with — all men are created equal, against the
+three-fifths clause. And six decoys: pairs that look like contradictions
+and are not, like two amendments carrying the same enforcement sentence.
+
+So: point a tool at the founding documents of a country, cold, and ask
+it which rules contradict which.
+
+**Where it stands, with the caveat load-bearing.** Shown the two
+commitments alone, it finds **9 of the 11 supersessions** and calls none
+of the four testable decoys a conflict. That is an **upper bound, not a
+score** — the real run shows each pair among twenty-two others, and that
+run has never completed. It is the most interesting unfinished thing in
+this repo, and `DEMO_PLAN.md` is the honest ledger of what has and
+hasn't been measured, including the bars written down before the data
+that tests them.
+
 ## Status — read this before you rely on it
 
 **Early. Another group has not used this yet.** You would be among the
@@ -148,8 +237,11 @@ accuracy figure is worse than none.
 - `canon --help` — seven verbs · `canon help all` — all of them.
 - [SPEC.md](./SPEC.md) — the file format, **CC0**. Adopting the format
   is not a lock-in decision.
-- [PRIMITIVES.md](./PRIMITIVES.md) — the design argument. Ostrom's eight
-  design principles are the acceptance test.
+- [PRIMITIVES.md](./PRIMITIVES.md) — the design argument: nine
+  primitives, the line between mechanism and policy, and eighteen
+  technologies of political economy tested against them.
+- [DEMO_PLAN.md](./DEMO_PLAN.md) — the founding-documents ledger: what
+  is measured, what isn't, and the bars written before the data.
 
 ## Build
 
