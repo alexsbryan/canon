@@ -1,59 +1,60 @@
-# Getting started — a house's first hour
+# Getting started
 
 For a shared house, coliving community, or any group that already has
 rules scattered across chat, documents and memory, and has never seen
 them in one place.
 
-Most of the hour is the conversation, not the tool.
+About an hour. Most of it is the conversation, not the tool.
 
----
+## What you'll need
 
-## 1. Install
+- **A terminal**, and the `canon` binary (below).
+- **The documents you already have**, gathered loosely into one folder.
+  A handbook in whatever state it's in, meeting notes, a Slack export,
+  the onboarding email you send new housemates. Don't tidy them.
+- **A language model**, for the reading step only. One person in the
+  house needs this. Everything from step 6 works without one.
+
+## Install
 
 ```sh
 git clone <this repo> && cd canon
 cargo build --release
 ```
 
-Binary at `target/release/canon`. Put it on your `PATH`. If you don't
-have Rust, `rustup.rs` is a one-line installer.
+The binary lands at `target/release/canon`. Put it on your `PATH`. If you
+don't have Rust, `rustup.rs` is a one-line installer.
 
-**For the ingest step you need a language model.** Only one person in the
-house needs it, and everything from step 6 onward works without one.
+### Pointing it at a model
 
-**The reference setup is the commonwealth-ai mesh daemon**, and being straight about that matters: every accuracy
-measurement in this repo was taken against it, on a 27B-class model.
+The reference setup is the commonwealth-ai mesh daemon on a 27B-class
+model. Every accuracy measurement in this repo was taken against it:
 
 ```sh
 canon config set endpoint http://localhost:9741/v1
 canon config set model primary
 ```
 
-Any OpenAI-compatible server will also work — canon sends plain chat
+Any OpenAI-compatible server will also run it — canon sends plain chat
 completions and carries no vendor anything:
 
 ```sh
 canon config set endpoint http://localhost:8080/v1   # llama.cpp, vllm, …
-canon config set model <the model name that server expects>
+canon config set model <the name that server expects>
 ```
 
-Two things to know before you assume that is equivalent.
+Two things before you assume that's equivalent. canon asks the server to
+enforce a JSON schema; if yours can't, it retries once in plain JSON mode
+with the schema in the prompt and tells you it did. It never parses
+prose. And model size is what actually moves quality — a small model on a
+laptop proposes worse rules and misses more contradictions than the
+numbers here suggest. That's a different quality regime, not a fallback
+with the same batteries. `./scripts/draft-bar.sh 3` tells you where yours
+lands.
 
-**Canon asks the server to enforce a JSON schema.** If yours can't, canon
-retries once with plain JSON mode and the schema stated in the prompt —
-and it prints that it did, because a silent substitution is how you end
-up trusting a weaker mechanism than you think you have. It never falls
-back to parsing prose.
+## Set it up
 
-**Model size is the thing that actually moves quality.** Reading a
-document and proposing rules is the hard part of this tool, and a small
-model on a laptop will propose worse rules and miss more contradictions
-than the numbers in this repo suggest. That is not a fallback path with
-the same batteries; it is a different quality regime. Run
-`./scripts/draft-bar.sh 3` against your own endpoint if you want to know
-where yours actually lands.
-
-## 2. Start a canon
+**1. Start a canon.**
 
 ```sh
 canon init --profile house
@@ -70,36 +71,26 @@ that is the whole thing. `canon help all` when you want the rest —
 who decides what, how you decide, what has gone stale, drawing lots.
 ```
 
-`--profile house` makes the tool say **rule** rather than *commitment*,
-and phrase answers as *which conversation this needs* rather than as a
+`--profile house` makes the tool say **rule** instead of *commitment*,
+and phrase its answers as which conversation this needs rather than as a
 verdict.
 
-> Don't set `CANON_ACTOR`. Left alone, canon records acts as
-> `human:<your git name>`. Setting it to a bare name marks your
-> decisions as machine-written and prints
-> `warning: adjudication(s) were not authored by a person` — a guard
-> that exists so automation can't quietly write your house's rules.
+Don't set `CANON_ACTOR`. Left alone, canon records acts as
+`human:<your git name>`. Set it to a bare name and your decisions get
+marked machine-written, with a warning to match — a guard that exists so
+automation can't quietly write your house's rules.
 
-## 3. Point it at everything you already have
-
-This is the step that matters. Gather it loosely — a folder is fine, and
-it does not need tidying first:
-
-- the house handbook, whatever state it's in
-- meeting notes, minutes, the shared doc
-- a Slack or Discord export
-- the onboarding email you send new housemates
+**2. Point it at everything you already have.**
 
 ```sh
 canon draft --from ~/house-stuff
 ```
 
-**There is no format list.** Anything under there that is text gets read,
-whatever it's called — `.org`, `.eml`, a `NOTES` file with no extension,
-a transcript pasted into a `.log`. Don't convert anything.
+There's no format list. Anything under there that's text gets read,
+whatever it's called. Don't convert anything.
 
-**Chat is read as chat**, not as prose. Messages are rendered with who
-said them and cut into bursts on a time gap, so a rule found in a channel
+Chat is read as chat, not as prose. Messages get rendered with who said
+them and cut into bursts on a time gap, so a rule found in a channel
 cites the exchange it was decided in:
 
 ```text
@@ -119,37 +110,36 @@ cat transcript.txt | canon draft --from - --as '#house'  # anything, via stdin
 canon draft --max-chunks 20                              # just try a bit first
 ```
 
-`--as` names the source so the citation reads `#house:3-4` rather than
-`stdin:3-4` — worth it on a chat feed, where the passage has scrolled
-away by the time anyone reads the proposal.
+`--as` names the source, so a citation reads `#house:3-4` rather than
+`stdin:3-4`. Worth it on a chat feed, where the passage has scrolled away
+by the time anyone reads the proposal.
 
-## 4. Review together — this is the governance conversation
+**3. Review together.**
 
-Proposals come one at a time and you accept, skip or reject each. There
-is **no `--accept-all`**, on purpose: a canon adopted wholesale is one
-nobody has read, and going through them together is usually the first
-time a house has seen its own rules as a list.
+This is the governance conversation, and it's the point of the whole
+step. Proposals come one at a time and you accept, skip or reject each.
+There's no `--accept-all` — going through them together is usually the
+first time a house has seen its own rules as a list.
 
-**Judge every one.** The model misses real rules and proposes things
-that aren't rules. Two things make that cheap to catch:
+Judge every one. The model misses real rules and proposes things that
+aren't rules. Two things make that cheap to catch:
 
-**Every proposal quotes the passage it came from.** Canon cuts the quote
-out of your own file, so a citation that isn't in your document can't
-happen. If a proposed rule has no source you recognise, reject it.
+Every proposal quotes the passage it came from, cut out of your own file,
+so a citation that isn't in your document can't happen. If a proposed
+rule has no source you recognise, reject it.
 
-**It finds three kinds, not one.** A rule is a rule. *"Nobody has ever
-said who looks after the allotment"* is a **question**. *"Decided not to
-make a rota — it would turn a kindness into a duty"* is a **silence**: a
-thing you decided *not* to have. Silences are the ones houses lose, and
-losing them is why the same proposal comes back every spring.
+And it finds three kinds, not one. A rule is a rule. *"Nobody's ever said
+who looks after the allotment"* is a **question**. *"We decided not to
+make a rota — it'd turn a kindness into a duty"* is a **silence**,
+something you decided not to have. Silences are the ones houses lose.
 
-**`[s]kip` records nothing** — skip means *not now*. Only `[r]eject`
-means no, and a rejected proposal is not raised again.
+Skip means *not now* and records nothing. Only reject means no, and a
+rejected proposal doesn't come back.
 
-Long review? `canon draft --resume` picks it back up later with no second
+Long review? `canon draft --resume` picks it up later with no second
 model run.
 
-## 5. See what you didn't read
+**4. Check what it didn't read.**
 
 ```text
 3 file(s) were not read:
@@ -158,28 +148,36 @@ model run.
   Naming a file directly reads it whatever it is; --include-ignored reads what .gitignore covers.
 ```
 
-Canon reports every file it passed over and why, before you spend a model
-run on the rest. Three cases, each with a
-way round it:
+Three cases: your own `.gitignore` calls it generated, it's structured
+data holding no conversation, or it's too big to be writing. Point at a
+file directly and it gets read regardless.
 
-- **your own `.gitignore` calls it generated** — `--include-ignored`
-- **structured data holding no conversation** (a lockfile read as prose
-  proposes rules cited to dependency names)
-- **too big to be writing**
-
-Naming a file directly reads it regardless — a walk is a guess about
-intent, `--from thatfile` isn't.
-
-## 6. Now the everyday half — no model needed
-
-From here nothing calls a model.
+**5. Look at what you've got.**
 
 ```sh
-canon list                       # what's live
-canon add "<a rule>"             # the one you thought of afterwards
+canon list
 ```
 
-**Changing a rule keeps the reason.** Don't edit; supersede:
+```text
+can-0bc00855477c  Quiet hours are 10pm to 7am.
+can-3664f149e633  Whoever cooks does not wash up.
+can-ffc1e6e30686  Anyone can invite a guest for up to three nights.
+
+3 rules live
+```
+
+Those `can-…` ids are how you refer to a rule later. You only need enough
+of one to be unambiguous.
+
+**6. Now the everyday half.**
+
+Nothing from here calls a model.
+
+```sh
+canon add "<the rule you thought of afterwards>"
+```
+
+Changing a rule keeps the reason. Don't edit — supersede:
 
 ```sh
 canon supersede can-ffc1e6e30686 \
@@ -204,12 +202,12 @@ can-e7ab38908043  Anyone can invite a guest for up to three nights; longer needs
   status: in force
 ```
 
-A year later, *"why do we have this rule about guests?"* has an answer
-and nobody had to remember it. The `-m` reason isn't politeness — a rule
-with no reason can't be revisited well, because you can't tell whether
-the thing it protected against still exists.
+A year later, *why do we have this rule about guests?* has an answer and
+nobody had to remember it. The `-m` reason isn't politeness. A rule with
+no reason can't be revisited well, because you can't tell whether the
+thing it protected against still exists.
 
-Record the two other shapes by hand as they come up:
+Record the other two shapes by hand as they come up:
 
 ```sh
 canon question "Who looks after the plants when everyone travels at once?"
@@ -222,7 +220,7 @@ can-66fcda050a09  unwritten on purpose: "a chore rota"
   `canon check --about "a chore rota"` will say so rather than call it a gap
 ```
 
-## 7. Share it with the house
+**7. Share it.**
 
 ```sh
 canon share            # a block you paste into your group chat
@@ -244,22 +242,16 @@ the right trade for a chat thread. A block edited after it was sent is
 refused rather than adopted under the sender's name.
 
 If the canon lives in a git repo everyone just pulls it, and
-`canon merge-driver` (run bare for setup) means two people adding rules
-on the same day isn't a conflict.
+`canon merge-driver` (run it bare for setup) means two people adding
+rules on the same day isn't a conflict.
 
-## 8. Keep feeding it
+## What to expect
 
-The house keeps talking after the first hour. Point canon at the channel
-again whenever you like:
-
-```sh
-canon draft --from ~/house-stuff
-```
-
-`.canon/seen` records which passages were already extracted and which
-proposals you turned down, so a second pass costs you the **new**
-material only, and a rule you rejected isn't proposed again. It's ingest
-hygiene, not governance: nothing in it is a rule, and deleting it costs a
+The first pass over your documents is the expensive one. After that,
+`.canon/seen` remembers which passages it already pulled from and which
+proposals you turned down, so pointing canon at the same channel next
+month costs you the new material only. It's ingest hygiene, not
+governance — nothing in it is a rule, and deleting it costs a
 re-extraction and changes nothing you decided.
 
 Once you have a body of rules, two more model-backed verbs earn their
@@ -270,10 +262,11 @@ canon check "convert the spare room into a studio"   # what does this run agains
 canon tensions                                       # which of our rules conflict?
 ```
 
-## 9. Later: decide how you decide
+## Later: decide how you decide
 
 Worth doing after a few weeks, not on day one. Until you set a policy,
-canon holds no opinion about how many objections stop a thing.
+canon holds no opinion about how many objections stop a thing — it names
+the rule you're up against and stops.
 
 ```sh
 canon policy show
@@ -281,13 +274,27 @@ canon policy set consent -m "One reasoned objection stops a thing."
 ```
 
 Rules available: `default`, `consent`, `threshold`,
-`supermajority --of 2/3`, `subsidiarity`. The policy is itself a
-recorded act, so it can be questioned, superseded and explained like any
-other. `canon grant` gives someone standing over a scope, `canon who
-<scope>` answers who may decide something, `canon overdue` lists what has
-passed a review date.
+`supermajority --of 2/3`, `subsidiarity`. The policy is itself a recorded
+act, so you can question it, supersede it and explain it like any other.
 
----
+`canon grant` gives someone standing over a scope. `canon who <scope>`
+answers who may decide something without asking a person.
+`canon overdue` lists what's passed a review date you set with
+`canon horizon`.
+
+## If it gets something wrong
+
+Nothing is destroyed and everything is revertible, including a revert.
+
+```sh
+canon undo <act-id> -m "<why>"
+canon retract <id> -m "<why>"      # withdraw a rule, no replacement
+canon log                          # the raw acts, oldest first
+```
+
+The whole canon is `.canon/acts.jsonl`, one line per decision. It's
+yours, it diffs, and it greps. If canon vanished tomorrow the file would
+still say what your house decided.
 
 ## The short version
 
@@ -305,5 +312,3 @@ passed a review date.
 | undo anything | `canon undo <act-id> -m "<why>"` |
 | share | `canon share` |
 | everything else | `canon help all` |
-
-Nothing is destroyed, everything is revertible, and the file is yours.
