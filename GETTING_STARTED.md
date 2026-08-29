@@ -18,15 +18,40 @@ cargo build --release
 Binary at `target/release/canon`. Put it on your `PATH`. If you don't
 have Rust, `rustup.rs` is a one-line installer.
 
-**For the ingest step you need a language model on your machine** —
-llama.cpp, Ollama, LM Studio, anything OpenAI-compatible:
+**For the ingest step you need a language model.** Only one person in the
+house needs it, and everything from step 6 onward works without one.
+
+**The reference setup is the commonwealth-ai mesh daemon**, and being straight about that matters: every accuracy
+measurement in this repo was taken against it, on a 27B-class model.
 
 ```sh
-canon config set endpoint http://localhost:8080/v1
+canon config set endpoint http://localhost:9741/v1
+canon config set model primary
 ```
 
-Only one person in the house needs this. Everything after step 4 works
-without it.
+Any OpenAI-compatible server will also work — canon sends plain chat
+completions and carries no vendor anything:
+
+```sh
+canon config set endpoint http://localhost:8080/v1   # llama.cpp, vllm, …
+canon config set model <the model name that server expects>
+```
+
+Two things to know before you assume that is equivalent.
+
+**Canon asks the server to enforce a JSON schema.** If yours can't, canon
+retries once with plain JSON mode and the schema stated in the prompt —
+and it prints that it did, because a silent substitution is how you end
+up trusting a weaker mechanism than you think you have. It never falls
+back to parsing prose.
+
+**Model size is the thing that actually moves quality.** Reading a
+document and proposing rules is the hard part of this tool, and a small
+model on a laptop will propose worse rules and miss more contradictions
+than the numbers in this repo suggest. That is not a fallback path with
+the same batteries; it is a different quality regime. Run
+`./scripts/draft-bar.sh 3` against your own endpoint if you want to know
+where yours actually lands.
 
 ## 2. Start a canon
 
