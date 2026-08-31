@@ -1,0 +1,194 @@
+{
+  "boundary-who-holds-the-inner": {
+    "policy": "subsidiarity",
+    "deciders": [
+      "human:brigitta",
+      "human:cristen",
+      "human:fridolin",
+      "human:aloys",
+      "human:dorli",
+      "human:emmerich"
+    ],
+    "holders": [
+      "human:brigitta",
+      "human:cristen",
+      "human:fridolin"
+    ]
+  },
+  "boundary-an-insider-decides": {
+    "outcome": "supported",
+    "rule": "subsidiarity",
+    "authority": "act",
+    "because": "including you",
+    "cites": [
+      "@wintered-cattle"
+    ]
+  },
+  "boundary-an-outsider-does-not": {
+    "outcome": "supported",
+    "authority": "ask-one",
+    "because": "not you"
+  },
+  "boundary-nobody-holds-this": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "nobody holds standing over `quarry`"
+  },
+  "congruence-forked-and-diverged": {
+    "lineage": null,
+    "generation": null,
+    "inherited": 0,
+    "local": 8
+  },
+  "collective-choice-under-the-new-rule": {
+    "outcome": "supported",
+    "authority": "act",
+    "rule": "threshold",
+    "because": "1 against, 2 needed",
+    "voices": [
+      "human:brigitta"
+    ]
+  },
+  "monitors-adjudication-is-surfaced": {
+    "unattended": []
+  },
+  "monitors-standing-lapsed": {
+    "count": 1,
+    "targets": [
+      "@monitor-grant"
+    ]
+  },
+  "monitors-record-is-queryable": {
+    "positions": 1,
+    "decided": 0
+  },
+  "graduated-first": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "rule": "graduated/default",
+    "because": "0 prior decision(s)",
+    "cites": [
+      "@marked-trees"
+    ]
+  },
+  "graduated-second": {
+    "outcome": "conflicts",
+    "authority": "ask-panel",
+    "rule": "graduated/default",
+    "because": "1 prior decision(s)",
+    "cites": [
+      "@marked-trees"
+    ]
+  },
+  "graduated-third": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "rule": "graduated/default",
+    "because": "2 prior decision(s)",
+    "cites": [
+      "@marked-trees"
+    ]
+  },
+  "graduated-a-different-subject-restarts": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "because": "0 prior decision(s) about `grazing the waste before the alp opens`"
+  },
+  "conflict-before": {
+    "acts": 33,
+    "tolerated": 0,
+    "live": 8
+  },
+  "conflict-surfaced": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "because": "one is enough",
+    "cites": [
+      "@one-herd",
+      "@high-snow-waits"
+    ]
+  },
+  "conflict-after": {
+    "acts": 34,
+    "tolerated": 1,
+    "live": 8
+  },
+  "organize-the-fork-keeps-what-it-wrote": {
+    "generation": null,
+    "inherited": 0,
+    "local": 8
+  },
+  "nesting-the-outer": {
+    "policy": "cautious/entrenched/consent",
+    "deciders": [
+      "human:aloys",
+      "human:brigitta",
+      "human:cristen",
+      "human:dorli",
+      "human:emmerich",
+      "human:fridolin"
+    ],
+    "holders": [
+      "human:aloys",
+      "human:brigitta",
+      "human:cristen",
+      "human:dorli",
+      "human:emmerich",
+      "human:fridolin"
+    ]
+  },
+  "nesting-the-inner": {
+    "policy": "threshold",
+    "deciders": [
+      "human:brigitta",
+      "human:cristen",
+      "human:aloys",
+      "human:dorli",
+      "human:emmerich",
+      "human:fridolin"
+    ],
+    "holders": [
+      "human:brigitta",
+      "human:cristen"
+    ]
+  },
+  "entrenchment-amending-a-convention": {
+    "outcome": "supported",
+    "authority": "act",
+    "because": "no objection"
+  },
+  "entrenchment-amending-a-principle": {
+    "outcome": "supported",
+    "authority": "ask-panel",
+    "because": "entrenched: amends a `principle`"
+  },
+  "reversible-irreversible-and-unsupported": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "cautious: irreversible",
+    "cites": []
+  },
+  "reversible-the-same-behind-a-flag": {
+    "outcome": "unaddressed",
+    "authority": "act-and-notify"
+  },
+  "silence-is-not-a-gap": {
+    "outcome": "unaddressed",
+    "silence": true
+  },
+  "draw-before-anyone-opened-refuses": {
+    "error": "nobody opened a secret, so there is no seed \u2014 and there is no default seed"
+  },
+  "draw-the-panel": {
+    "pool": 5,
+    "withheld": [
+      "human:emmerich"
+    ],
+    "seats": [
+      "human:fridolin",
+      "human:cristen",
+      "human:dorli"
+    ],
+    "seed": "1ab197df75906fb65e682ca1836dad68a8cfa24dbe11dcc71444b2049915e281"
+  }
+}

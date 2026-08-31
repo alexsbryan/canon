@@ -1,0 +1,75 @@
+// T\u00f6rbel alpine commons — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"village.alp"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"village.alp","actor":"human:brigitta","about":"counting cattle onto the alp","proposal":"count the herd at the gate on the day rather than off the winter hay","positions":[{"citing":"@wintered-cattle","pull":"toward","because":"the count at the gate is the number the alp actually carries"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"village.alp","actor":"human:dorli","about":"counting cattle onto the alp","proposal":"count the herd at the gate on the day rather than off the winter hay","positions":[{"citing":"@wintered-cattle","pull":"toward","because":"the count at the gate is the number the alp actually carries"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"quarry","actor":"human:brigitta","about":"the quarry","proposal":"open the old quarry for building stone again","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-08-01","by":"human:brigitta","op":"policy","scope":"village.alp","text":"Two of us have to object before an alp decision stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"village.alp","actor":"human:dorli","about":"counting cattle onto the alp","proposal":"count the herd at the gate on the day rather than off the winter hay","positions":[{"actor":"human:brigitta","pull":"against","because":"the winter hay is the whole point: it ties what you may graze in summer to what you can feed in winter, and a gate count cuts that tie"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-08-10","by":"human:fridolin","op":"position","about":"a load of timber from an unmarked stand","citing":"@marked-trees","pull":"against","because":"the stand was not marked and the season is not open"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-08-11","by":"human:fridolin","as":"monitor-dismiss","op":"dismiss","a":"@one-herd","b":"@high-snow-waits","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-10-06"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"human:fridolin"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"village.forest","about":"cutting timber outside the marked stand","proposal":"take a load from the unmarked stand to re-roof a barn","positions":[{"citing":"@marked-trees","pull":"against","because":"the marking is how the village keeps a forest that will still hold the slope above the houses"}]}
+{"step":"act","at":"2025-10-07","by":"human:aloys","op":"decided","about":"cutting timber outside the marked stand","outcome":"conflicts","authority":"ask-one","rationale":"the barn roof was open to the weather and we let it stand"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"village.forest","about":"cutting timber outside the marked stand","proposal":"take a second load from the unmarked stand for the same barn","positions":[{"citing":"@marked-trees","pull":"against","because":"the marking is how the village keeps a forest that will still hold the slope above the houses"}]}
+{"step":"act","at":"2025-10-08","by":"human:aloys","op":"decided","about":"cutting timber outside the marked stand","outcome":"conflicts","authority":"ask-panel","rationale":"the assembly agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"village.forest","about":"cutting timber outside the marked stand","proposal":"take the winter's firewood from the unmarked stand","positions":[{"citing":"@marked-trees","pull":"against","because":"the marking is how the village keeps a forest that will still hold the slope above the houses"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"village.forest","about":"grazing the waste before the alp opens","proposal":"graze the waste land in May before the alp opens","positions":[{"citing":"@marked-trees","pull":"against","because":"the marking is how the village keeps a forest that will still hold the slope above the houses"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"going up on the named day","proposal":"let the two highest households follow a week after the herd when their meadows are still under snow","positions":[{"citing":"@one-herd","pull":"against","because":"a herd that goes up in pieces is a herd nobody can count and a pasture eaten unevenly"},{"citing":"@high-snow-waits","pull":"toward","because":"a household that must go up on the named day with no hay left is a household that sells its cows"}]}
+{"step":"act","at":"2025-10-09","by":"human:brigitta","op":"accept","a":"@one-herd","b":"@high-snow-waits","rationale":"two households are above the treeline and the snow line moves; carrying it costs one uneven week and the alternative costs the village two herds, which is why it has a date on it","revisit":"2026-03-29"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"village"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"village.alp"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"the lead cow","proposal":"let the household with the most cows name the lead cow","amends":"@bell-order","positions":[{"actor":"human:dorli","pull":"toward","because":"the gathering argument takes longer than the walk up does"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"going up as one herd","proposal":"let any household follow within a week of the named day","amends":"@one-herd","positions":[{"actor":"human:dorli","pull":"toward","because":"the count can be taken on the alp as easily as at the gate"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the old high hut","proposal":"pull down the high hut and use the timber on the lower one","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the old high hut","proposal":"pull down the high hut and use the timber on the lower one","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"who takes the first watch on the alp","proposal":"set a watch rota for the alp season","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-11-21","by":"human:aloys","as":"panel","op":"draw_commit","scope":"village","count":3,"after_ts":1764460800,"rationale":"three of us to look at the going-up rule for a month"}
+{"step":"act","at":"2025-11-22","by":"human:aloys","op":"draw_secret","commit":"@panel","digest":"d2ceb5e0e0ff9088cb0f1b96fa51d26e21a5f079650a4b564fd956fd5b3138cd"}
+{"step":"act","at":"2025-11-22","by":"human:brigitta","op":"draw_secret","commit":"@panel","digest":"5088afae475e4ed0a4e4d49e6b091acd21c756fcccf6b47f2a14d914e698d181"}
+{"step":"act","at":"2025-11-22","by":"human:cristen","op":"draw_secret","commit":"@panel","digest":"11868609baa93dfec74e308c45fe3810a0eb43ab1609754dcf44e8ffdd1dfa60"}
+{"step":"act","at":"2025-11-22","by":"human:dorli","op":"draw_secret","commit":"@panel","digest":"9b49c52d7b139836826c62c9978df7bf313ab4dc287f8c4817521d580cc1962f"}
+{"step":"act","at":"2025-11-22","by":"human:emmerich","op":"draw_secret","commit":"@panel","digest":"5e01860a5eff70f2eadbe70633993940f95460cc5f1fb8d9b3f7c76f87046118"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-12-02"}
+{"step":"act","at":"2025-12-02","by":"human:aloys","op":"draw_reveal","commit":"@panel","secret":"torbel-alpine-aloys-panel"}
+{"step":"act","at":"2025-12-02","by":"human:brigitta","op":"draw_reveal","commit":"@panel","secret":"torbel-alpine-brigitta-panel"}
+{"step":"act","at":"2025-12-02","by":"human:cristen","op":"draw_reveal","commit":"@panel","secret":"torbel-alpine-cristen-panel"}
+{"step":"act","at":"2025-12-02","by":"human:dorli","op":"draw_reveal","commit":"@panel","secret":"torbel-alpine-dorli-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

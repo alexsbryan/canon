@@ -1,0 +1,76 @@
+// Parkside allotments — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"site.polytunnel"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"site.polytunnel","actor":"human:gopal","about":"polytunnel venting","proposal":"fit an automatic vent opener and drop the before-nine rule","positions":[{"citing":"@tunnel-vented","pull":"toward","because":"an opener vents on temperature, which is what the rule was reaching for"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"site.polytunnel","actor":"human:elias","about":"polytunnel venting","proposal":"fit an automatic vent opener and drop the before-nine rule","positions":[{"citing":"@tunnel-vented","pull":"toward","because":"an opener vents on temperature, which is what the rule was reaching for"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"carpark","actor":"human:gopal","about":"the car park","proposal":"mark out bays and put a barrier on the car park","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-05-23","by":"human:gopal","op":"policy","scope":"site.polytunnel","text":"Two of us have to object before a polytunnel thing stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"site.polytunnel","actor":"human:elias","about":"polytunnel venting","proposal":"fit an automatic vent opener and drop the before-nine rule","positions":[{"actor":"human:gopal","pull":"against","because":"the openers stick in the first hot week every year and nobody notices until the seedlings have gone"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-06-01","by":"human:tam","op":"position","about":"the standpipe ran at two in the afternoon","citing":"@hose-hours","pull":"against","because":"the meter shows a draw between ten and six and the rule names those hours"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-06-02","by":"human:tam","as":"monitor-dismiss","op":"dismiss","a":"@no-bare-soil","b":"@dig-in-autumn","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-07-28"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"human:tam"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"site.water","about":"watering in the middle of the day","proposal":"water the new fruit trees at midday through the dry spell","positions":[{"citing":"@hose-hours","pull":"against","because":"midday water is mostly lost to the air and the standpipe pressure is shared with everyone above the bend"}]}
+{"step":"act","at":"2025-07-29","by":"human:winnie","op":"decided","about":"watering in the middle of the day","outcome":"conflicts","authority":"ask-one","rationale":"the trees were newly in and we left it there"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"site.water","about":"watering in the middle of the day","proposal":"water the squash bed at midday because it wilted","positions":[{"citing":"@hose-hours","pull":"against","because":"midday water is mostly lost to the air and the standpipe pressure is shared with everyone above the bend"}]}
+{"step":"act","at":"2025-07-30","by":"human:winnie","op":"decided","about":"watering in the middle of the day","outcome":"conflicts","authority":"ask-panel","rationale":"the site agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"site.water","about":"watering in the middle of the day","proposal":"water the whole top row at midday every day this week","positions":[{"citing":"@hose-hours","pull":"against","because":"midday water is mostly lost to the air and the standpipe pressure is shared with everyone above the bend"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"site.water","about":"burning green waste on the site","proposal":"burn the green waste heap at the bottom of the site","positions":[{"citing":"@hose-hours","pull":"against","because":"midday water is mostly lost to the air and the standpipe pressure is shared with everyone above the bend"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"bare beds over winter","proposal":"leave the two clay beds turned and bare from October so the frost can work on them","positions":[{"citing":"@no-bare-soil","pull":"against","because":"bare soil over winter is soil off the site by March"},{"citing":"@dig-in-autumn","pull":"toward","because":"clay that is not frosted is clay nobody can work in spring"}]}
+{"step":"act","at":"2025-07-31","by":"human:gopal","op":"accept","a":"@no-bare-soil","b":"@dig-in-autumn","rationale":"the two beds are the only heavy clay on the site and they are at the bottom where the run-off is caught; revisit when the swale is dug","revisit":"2026-01-18"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-08-01","by":"human:winnie","op":"adopt","lineage":"growing-commons","generation":"g4","source":"https://example.org/growing-commons"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"site"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"site.polytunnel"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"path cutting","proposal":"cut every path with the site mower on one Saturday a month","amends":"@paths-cut","positions":[{"actor":"human:elias","pull":"toward","because":"half the paths are never cut and the mower is already here"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"winter cover","proposal":"allow a bed to be left bare if it is sheeted","amends":"@no-bare-soil","positions":[{"actor":"human:elias","pull":"toward","because":"a sheet holds the soil, which is the thing the rule is actually about"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the old orchard","proposal":"take out the three dead apples and put plots on that corner","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the old orchard","proposal":"take out the three dead apples and put plots on that corner","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"who opens the gate on a Sunday morning","proposal":"put a Sunday gate rota on the noticeboard","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-09-12","by":"human:winnie","as":"panel","op":"draw_commit","scope":"site","count":3,"after_ts":1758412800,"rationale":"three people to look at the winter cover rule for a month"}
+{"step":"act","at":"2025-09-13","by":"human:winnie","op":"draw_secret","commit":"@panel","digest":"0ab4825defe482be4f4e8f4ff2b64f5e33263a43caaf847d1e599e40c789a815"}
+{"step":"act","at":"2025-09-13","by":"human:gopal","op":"draw_secret","commit":"@panel","digest":"4778090332afc7710f9f6d7b4e4d8d6584dcc6d9b763e84c6ba2341636fbe3dc"}
+{"step":"act","at":"2025-09-13","by":"human:marta","op":"draw_secret","commit":"@panel","digest":"a652fd2858a8f50e566f4ac34e95cfeaec3825074555f3eccde5b71ee86e72b7"}
+{"step":"act","at":"2025-09-13","by":"human:elias","op":"draw_secret","commit":"@panel","digest":"55e6847ce57e2ca42cf3d78c1099afa9b890ec29f25f60ba507824ae5119a736"}
+{"step":"act","at":"2025-09-13","by":"human:bridie","op":"draw_secret","commit":"@panel","digest":"e3a575a07c854c65134c167f86dc2f1b9817b6149603d59bb38c67279d1c2742"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-09-23"}
+{"step":"act","at":"2025-09-23","by":"human:winnie","op":"draw_reveal","commit":"@panel","secret":"parkside-allotments-winnie-panel"}
+{"step":"act","at":"2025-09-23","by":"human:gopal","op":"draw_reveal","commit":"@panel","secret":"parkside-allotments-gopal-panel"}
+{"step":"act","at":"2025-09-23","by":"human:marta","op":"draw_reveal","commit":"@panel","secret":"parkside-allotments-marta-panel"}
+{"step":"act","at":"2025-09-23","by":"human:elias","op":"draw_reveal","commit":"@panel","secret":"parkside-allotments-elias-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

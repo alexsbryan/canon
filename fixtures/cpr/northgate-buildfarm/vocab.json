@@ -1,0 +1,149 @@
+{
+  "institution": "Northgate build farm",
+  "kind": "shared continuous-integration capacity",
+  "one_line": "Six teams, forty runners, and a queue that is always somebody else's fault.",
+  "start": "2025-01-20",
+  "lineage": "shared-infra-canon",
+  "generation": "g5",
+  "generation_next": "g6",
+  "source": "https://example.org/shared-infra-canon",
+  "outer": "farm",
+  "inner_leaf": "runners",
+  "ladder_leaf": "queue",
+  "unheld": "storage",
+  "steward": "human:mairead",
+  "members": [
+    "human:mairead",
+    "human:ilya",
+    "human:zuri",
+    "human:paolo",
+    "human:hanna",
+    "human:ravi",
+    "human:sena",
+    "human:tomi",
+    "human:vive",
+    "human:wilkes",
+    "human:agnes",
+    "human:bo",
+    "human:cheng",
+    "human:dmitri",
+    "human:elif",
+    "human:fumiko",
+    "human:gitte",
+    "human:hoa",
+    "human:ida",
+    "human:jarek",
+    "human:kira",
+    "human:lore",
+    "human:mihai",
+    "human:nadja"
+  ],
+  "insiders": [
+    "human:ilya",
+    "human:zuri"
+  ],
+  "outsider": "human:paolo",
+  "monitor": "agent:queuewatch",
+  "ladder_decider": "human:mairead",
+  "upstream_actor": "human:infra-board",
+  "insider_rationale": "maintains the runner images",
+  "monitor_rationale": "reports queue depth and long holds; four months, then we look again",
+  "c": {
+    "ladder": {
+      "label": "queue-share",
+      "text": "No team holds more than a third of the runners for longer than an hour."
+    },
+    "shared": {
+      "label": "capacity-buys",
+      "text": "New capacity is agreed before it is bought, because everyone pays for it."
+    },
+    "access": {
+      "label": "every-team-builds",
+      "text": "Every team can submit to the farm without asking anybody."
+    },
+    "inner_a": {
+      "label": "runner-images-pinned",
+      "text": "A runner image is pinned to a digest and rebuilt, never mutated in place."
+    },
+    "inner_b": {
+      "label": "runner-clean",
+      "text": "A runner is returned to its image between jobs."
+    },
+    "clash_a": {
+      "label": "fair-queue",
+      "text": "Jobs are served in the order they arrive."
+    },
+    "clash_b": {
+      "label": "release-first",
+      "text": "A release build jumps the queue, because a release that waits is an outage that waits."
+    },
+    "extra": {
+      "label": "job-labels",
+      "text": "A job carries the team that submitted it as a label."
+    }
+  },
+  "policy": {
+    "root": "One reasoned objection stops a change. Amending something ranked a principle takes the group. Anything we cannot roll back is not decided by silence.",
+    "inner": "Whoever maintains the runner images decides the runners.",
+    "unheld": "Storage is decided by whoever holds it.",
+    "ladder": "The first time we ask. The second time the group asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a runner change stops."
+  },
+  "inner_proposal": {
+    "about": "runner images",
+    "text": "add a warm cache layer to the runner image",
+    "because": "a cache baked into the digest is still pinned and still reproducible"
+  },
+  "inner_objection": "a cache in the image means two runs on the same digest can differ, which is the thing the pin was for",
+  "unheld_proposal": {
+    "about": "artifact storage",
+    "text": "move build artifacts to the cheaper cold bucket after a week"
+  },
+  "monitor_watch": {
+    "about": "one team held thirty runners for three hours",
+    "because": "the hold ran past an hour and past a third of the farm",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "holding more than a third of the farm",
+    "first": "run the full matrix on every push for the migration week",
+    "second": "run the full matrix again for the follow-up migration",
+    "third": "run the full matrix nightly from now on",
+    "because": "a third of the farm held for hours is every other team's build waiting behind it",
+    "ruling_1": "we let the migration week stand",
+    "ruling_2": "the group agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "submitting jobs with no timeout",
+    "text": "submit the soak tests with no timeout set"
+  },
+  "clash": {
+    "about": "a release jumping the queue",
+    "text": "let the release pipeline preempt running jobs, not just queued ones",
+    "because_a": "a queue that can be jumped is not a queue, and every team will find a reason to be a release",
+    "because_b": "a release that waits behind a soak test is an outage that waits behind a soak test",
+    "carried": "preemption is bounded to the release branch and the branch is protected, so the escape hatch has a lock on it; revisit when a second branch needs it"
+  },
+  "amend_convention": {
+    "about": "job labels",
+    "text": "drop the team label and read the team off the branch prefix",
+    "because": "the prefix is already there and the label is forgotten half the time"
+  },
+  "amend_principle": {
+    "about": "queue order",
+    "text": "serve short jobs ahead of long ones when the queue is deep",
+    "because": "shortest-first clears a deep queue faster for everybody, including the long jobs"
+  },
+  "irreversible": {
+    "about": "the old runner fleet",
+    "text": "decommission the old runner fleet and return the hardware"
+  },
+  "silence": {
+    "about": "how long a build is allowed to take",
+    "rationale": "a number would be set by whoever had the slowest build that quarter, and every team already argues its own case better than a limit would",
+    "proposal": "set a maximum build time for every pipeline"
+  },
+  "panel": {
+    "rationale": "three people to look at the preemption rule for a month"
+  }
+}

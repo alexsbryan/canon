@@ -1,0 +1,59 @@
+// Parkside allotments — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-03-24","by":"human:winnie","op":"adopt","lineage":"growing-commons","generation":"g3","source":"https://example.org/growing-commons"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-03-25","by":"human:winnie","as":"hose-hours","op":"assert","text":"The hose is off between ten in the morning and six in the evening.","from":"can-cf6bc393f5"}
+{"at":"2025-03-25","by":"human:winnie","as":"site-buys","op":"assert","text":"Anything bought out of the plot fees is agreed before it is bought.","from":"can-c0e844b6c0"}
+{"at":"2025-03-25","by":"human:winnie","as":"one-key","op":"assert","text":"Every plotholder holds a gate key.","from":"can-ed652ff7bd"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-04-06","by":"human:gopal","as":"tunnel-vented","op":"assert","text":"The polytunnel is vented before nine on any day forecast over twenty-five."}
+{"at":"2025-04-06","by":"human:marta","as":"tunnel-trays","op":"assert","text":"Seed trays in the tunnel carry a plot number and a sowing date."}
+{"at":"2025-04-06","by":"human:elias","as":"no-bare-soil","op":"assert","text":"A bed is not left bare over winter."}
+{"at":"2025-04-06","by":"human:elias","as":"dig-in-autumn","op":"assert","text":"Heavy clay beds are turned in autumn and left to the frost."}
+{"at":"2025-04-06","by":"human:winnie","as":"paths-cut","op":"assert","text":"The grass path beside your plot is yours to cut."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-04-09","by":"human:winnie","op":"scoped","commitment":"@tunnel-vented","scope":"site.polytunnel"}
+{"at":"2025-04-09","by":"human:winnie","op":"scoped","commitment":"@tunnel-trays","scope":"site.polytunnel"}
+{"at":"2025-04-09","by":"human:winnie","op":"scoped","commitment":"@hose-hours","scope":"site.water"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-04-10","by":"human:winnie","op":"rank","commitment":"@no-bare-soil","rank":"principle"}
+{"at":"2025-04-10","by":"human:winnie","op":"rank","commitment":"@hose-hours","rank":"principle"}
+{"at":"2025-04-10","by":"human:winnie","op":"rank","commitment":"@paths-cut","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:winnie","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:gopal","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:marta","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:elias","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:bridie","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:seyi","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:tam","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:una","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:vic","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:yannick","scope":"site"}
+{"at":"2025-03-26","by":"human:winnie","op":"grant","holder":"human:zofia","scope":"site"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-03-27","by":"human:winnie","op":"grant","holder":"human:gopal","scope":"site.polytunnel","rationale":"runs the propagation benches"}
+{"at":"2025-03-27","by":"human:winnie","op":"grant","holder":"human:marta","scope":"site.polytunnel","rationale":"runs the propagation benches"}
+{"at":"2025-03-27","by":"human:winnie","op":"grant","holder":"human:seyi","scope":"site.polytunnel","rationale":"runs the propagation benches"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-03-28","by":"human:winnie","as":"monitor-grant","op":"grant","holder":"human:tam","scope":"site.polytunnel","horizon":1753142400,"rationale":"reads the standpipe meter this season; four months, then somebody else does"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-03-29","by":"human:winnie","as":"root-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the site, and anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-03-29","by":"human:winnie","as":"inner-policy","op":"policy","scope":"site.polytunnel","text":"Whoever runs the propagation benches decides the polytunnel.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-03-29","by":"human:winnie","as":"unheld-policy","op":"policy","scope":"carpark","text":"The car park is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-03-29","by":"human:winnie","as":"ladder-policy","op":"policy","scope":"site.water","text":"The first time we ask. The second time the site asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-04-12","by":"human:winnie","op":"silence","about":"who opens the gate on a Sunday morning","rationale":"somebody is always there by eight and writing a rota would make the first person late instead of early"}

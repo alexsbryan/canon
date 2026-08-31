@@ -796,6 +796,7 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         schema: RUN_SCHEMA.into(),
         at: 1,
         endpoint: "http://localhost:9741/v1".into(),
+        served_model: None,
         model: "primary".into(),
         profile: "house".into(),
         sources: vec!["ordinance.md".into()],

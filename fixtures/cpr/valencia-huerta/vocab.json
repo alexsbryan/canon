@@ -1,0 +1,139 @@
+{
+  "institution": "Huerta canal community",
+  "kind": "a gravity irrigation canal and the farms along it",
+  "one_line": "One canal, its turns taken in a fixed order, and a court that sits on Thursdays and writes nothing down.",
+  "start": "2025-04-14",
+  "lineage": "huerta-ordinances",
+  "generation": "g4",
+  "generation_next": "g5",
+  "source": "https://example.org/huerta-ordinances",
+  "outer": "canal",
+  "inner_leaf": "headgate",
+  "ladder_leaf": "turn",
+  "unheld": "wellfield",
+  "steward": "human:vicent",
+  "members": [
+    "human:vicent",
+    "human:amparo",
+    "human:bernat",
+    "human:carme",
+    "human:dolors",
+    "human:enric",
+    "human:ferran",
+    "human:gemma",
+    "human:hilari",
+    "human:immaculada",
+    "human:jordi"
+  ],
+  "insiders": [
+    "human:amparo",
+    "human:bernat",
+    "human:dolors",
+    "human:enric",
+    "human:ferran"
+  ],
+  "outsider": "human:carme",
+  "monitor": "agent:gatewatch",
+  "ladder_decider": "human:vicent",
+  "upstream_actor": "human:basin-authority",
+  "insider_rationale": "elected ditch-riders for this canal",
+  "monitor_rationale": "logs headgate openings and closings; four months, then we look again",
+  "c": {
+    "ladder": {
+      "label": "turn-order",
+      "text": "Water is taken in the order of the ditch, head to tail, and a turn missed is a turn waited for."
+    },
+    "shared": {
+      "label": "canal-works",
+      "text": "Work on the canal itself is agreed before it is paid for out of the common fund."
+    },
+    "access": {
+      "label": "land-carries-water",
+      "text": "The right to water belongs to the land, and passes with it."
+    },
+    "inner_a": {
+      "label": "gate-by-rider",
+      "text": "The headgate is opened and shut by a ditch-rider, never by the farm taking the water."
+    },
+    "inner_b": {
+      "label": "gate-logged",
+      "text": "Every opening of the headgate is called out and logged the same day."
+    },
+    "clash_a": {
+      "label": "no-storage",
+      "text": "Water is taken to the field, not held in a private pond."
+    },
+    "clash_b": {
+      "label": "night-turns-stored",
+      "text": "A turn that falls at night may be held until morning rather than run onto a dark field."
+    },
+    "extra": {
+      "label": "gate-marks",
+      "text": "A headgate carries the mark of the farm it serves."
+    }
+  },
+  "policy": {
+    "root": "We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing an ordinance takes the assembly, and anything that cannot be undone is not decided by silence.",
+    "inner": "Whoever the canal elected as ditch-riders decides the headgate.",
+    "unheld": "The wellfield is decided by whoever holds it.",
+    "ladder": "The first time the canal asks. The second time the assembly asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a headgate decision stops."
+  },
+  "inner_proposal": {
+    "about": "who works the headgate",
+    "text": "let a farm open its own headgate when the rider is at the far end",
+    "because": "a turn lost waiting for the rider is water down the tail of the canal"
+  },
+  "inner_objection": "the rider at the gate is the whole reason nobody argues about how long a turn ran",
+  "unheld_proposal": {
+    "about": "the wellfield",
+    "text": "sink two more wells to carry the canal through August"
+  },
+  "monitor_watch": {
+    "about": "a gate open out of turn at first light",
+    "because": "the gate was opened before the turn above it had closed",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "taking water out of turn",
+    "first": "take an hour ahead of turn while the tail is still running",
+    "second": "take another hour ahead of turn for the same field",
+    "third": "take the whole turn a day early through the dry week",
+    "because": "an hour taken early is an hour the farm below waited for and did not get",
+    "ruling_1": "the seedbed was going and we let it stand",
+    "ruling_2": "the assembly agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "widening a field ditch",
+    "text": "widen the field ditch so the turn runs off faster"
+  },
+  "clash": {
+    "about": "holding a night turn until morning",
+    "text": "let the three tail farms hold a night turn in the old pond and run it at first light",
+    "because_a": "water held in a private pond is water the canal cannot see and cannot count",
+    "because_b": "a night turn run onto a dark field is a turn spent on the road and the ditch bank",
+    "carried": "the pond is on the tail where nothing runs below it, and the alternative is three farms taking their turns twice; revisit when the night gate is automated"
+  },
+  "amend_convention": {
+    "about": "gate marks",
+    "text": "number the gates instead of marking them with the farm",
+    "because": "farms change hands and the marks have not been repainted in years"
+  },
+  "amend_principle": {
+    "about": "storing water",
+    "text": "allow a pond on any farm below the last gate",
+    "because": "nothing runs below the last gate, so nothing there can be taken from anybody"
+  },
+  "irreversible": {
+    "about": "the old brick channel",
+    "text": "break out the old brick channel and line the whole run in concrete"
+  },
+  "silence": {
+    "about": "who clears the grating after a storm",
+    "rationale": "whoever is nearest has always gone, and a duty would make it late rather than immediate",
+    "proposal": "set a rota for clearing the grating"
+  },
+  "panel": {
+    "rationale": "three of us to look at the night-turn rule for a month"
+  }
+}

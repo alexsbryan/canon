@@ -1,0 +1,76 @@
+// Meridian monorepo, with the scheduler's rule set elsewhere — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"repo.engine.scheduler"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"repo.engine.scheduler","actor":"human:kofi","about":"scheduler ordering","proposal":"sort the ready queue by deadline instead of by arrival","positions":[{"citing":"@sched-deterministic","pull":"toward","because":"arrival order is deterministic but it is not the order anybody wants"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"repo.engine.scheduler","actor":"human:sol","about":"scheduler ordering","proposal":"sort the ready queue by deadline instead of by arrival","positions":[{"citing":"@sched-deterministic","pull":"toward","because":"arrival order is deterministic but it is not the order anybody wants"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"infra","actor":"human:kofi","about":"build infrastructure","proposal":"move the build cache onto the new object store","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"repo.engine.scheduler","actor":"human:sol","about":"scheduler ordering","proposal":"sort the ready queue by deadline instead of by arrival","positions":[{"actor":"human:kofi","pull":"against","because":"deadline order is deterministic only while every task has a deadline, and half of them do not"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-04-20","by":"agent:ciwatch","op":"position","about":"the v2 rollout renamed a response field","citing":"@api-compat","pull":"against","because":"two callers in this repository still read the old field name"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-04-21","by":"agent:ciwatch","as":"monitor-dismiss","op":"dismiss","a":"@no-flaky-skips","b":"@green-main","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-06-16"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:ciwatch"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"repo.api","about":"changing a published endpoint","proposal":"rename the `owner` field on the task body","positions":[{"citing":"@api-compat","pull":"against","because":"a caller that has not moved yet reads the old shape and gets nothing"}]}
+{"step":"act","at":"2025-06-17","by":"human:rhea","op":"decided","about":"changing a published endpoint","outcome":"conflicts","authority":"ask-one","rationale":"shipped behind a reader shim and we left it there"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"repo.api","about":"changing a published endpoint","proposal":"drop the `retries` field from the run body","positions":[{"citing":"@api-compat","pull":"against","because":"a caller that has not moved yet reads the old shape and gets nothing"}]}
+{"step":"act","at":"2025-06-18","by":"human:rhea","op":"decided","about":"changing a published endpoint","outcome":"conflicts","authority":"ask-panel","rationale":"the group agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"repo.api","about":"changing a published endpoint","proposal":"change `status` from a string to an enum on the queue body","positions":[{"citing":"@api-compat","pull":"against","because":"a caller that has not moved yet reads the old shape and gets nothing"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"repo.api","about":"adding a required config key","proposal":"make the queue name a required key with no default","positions":[{"citing":"@api-compat","pull":"against","because":"a caller that has not moved yet reads the old shape and gets nothing"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"a test that fails once a fortnight","proposal":"skip the timing-sensitive scheduler test until the clock injection lands","positions":[{"citing":"@no-flaky-skips","pull":"against","because":"a skipped test is a test that will never be fixed and everybody knows it"},{"citing":"@green-main","pull":"toward","because":"a fortnightly red main teaches everyone to ignore a red main, which costs more"}]}
+{"step":"act","at":"2025-06-19","by":"human:kofi","op":"accept","a":"@no-flaky-skips","b":"@green-main","rationale":"the clock injection is written and behind review; carrying this is cheaper than either horn for exactly as long as that review takes","revisit":"2025-12-07"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-06-20","by":"human:rhea","op":"adopt","lineage":"platform-engineering-canon","generation":"g12","source":"https://example.org/platform-engineering-canon"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"repo"}
+{"step":"who","name":"nesting-the-middle","principle":8,"strength":"mechanism","scope":"repo.engine"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"repo.engine.scheduler"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"commit subjects","proposal":"allow a bare ticket reference as a commit subject","amends":"@commit-subject","positions":[{"actor":"human:sol","pull":"toward","because":"the ticket says more than any one line could and it is one click away"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"skipping tests","proposal":"allow a skip when it carries a dated comment and an owner","amends":"@no-flaky-skips","positions":[{"actor":"human:sol","pull":"toward","because":"a dated skip with a name on it is checkable, and a deleted test is not"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the v1 scheduler","proposal":"delete the v1 scheduler and the migration path with it","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the v1 scheduler","proposal":"delete the v1 scheduler and the migration path with it","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"how much comment is enough","proposal":"require a doc comment on every public item","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-08-01","by":"human:rhea","as":"panel","op":"draw_commit","scope":"repo","count":3,"after_ts":1754784000,"rationale":"three people to look at the skip rule for a month"}
+{"step":"act","at":"2025-08-02","by":"human:rhea","op":"draw_secret","commit":"@panel","digest":"20b5afe337f251f2c4523a3e1687201e45059cf2dae4596c5a934ba5dba8871e"}
+{"step":"act","at":"2025-08-02","by":"human:kofi","op":"draw_secret","commit":"@panel","digest":"82e48dc19101871c6adef41c1c75c544465cbd3e7b2a72d00a4cc528cc2de493"}
+{"step":"act","at":"2025-08-02","by":"human:mina","op":"draw_secret","commit":"@panel","digest":"9a1c48f5251e83281255312f682fcb94f8848db19c9d7e4c98b4d0a5d00b18c8"}
+{"step":"act","at":"2025-08-02","by":"human:sol","op":"draw_secret","commit":"@panel","digest":"8fec9a460d1e2f605c88bdabc7c418526fd7798f5c6ef05fb0a35712b1df54c3"}
+{"step":"act","at":"2025-08-02","by":"human:tariq","op":"draw_secret","commit":"@panel","digest":"62b29d003a7bcfe17808d5b7eb45e81f0d11adee4b435daa29ebd0aeba9dd153"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-08-12"}
+{"step":"act","at":"2025-08-12","by":"human:rhea","op":"draw_reveal","commit":"@panel","secret":"meridian-imposed-rules-rhea-panel"}
+{"step":"act","at":"2025-08-12","by":"human:kofi","op":"draw_reveal","commit":"@panel","secret":"meridian-imposed-rules-kofi-panel"}
+{"step":"act","at":"2025-08-12","by":"human:mina","op":"draw_reveal","commit":"@panel","secret":"meridian-imposed-rules-mina-panel"}
+{"step":"act","at":"2025-08-12","by":"human:sol","op":"draw_reveal","commit":"@panel","secret":"meridian-imposed-rules-sol-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

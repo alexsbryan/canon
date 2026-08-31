@@ -1,0 +1,67 @@
+{
+  "corpus_id": "des-moines-noise",
+  "schema_version": 1,
+  "note": "The same eight questions asked of a document of the opposite kind. Written by hand from the corpus, before any run was scored against it. A principle marked `absent` is a claim about the DOCUMENT and not about canon: the material is not in the text, so an extractor that produced it would be inventing, and the honest score for that principle is that it cannot be reached.",
+  "kind": "externally imposed",
+  "kind_note": "A municipal noise ordinance. The people bound by it did not write it and cannot change it by any procedure the document describes. Ostrom's argument predicts that a corpus of this kind carries strong boundaries and enforcement and no collective choice at all — and this manifest is the pre-registered form of that prediction. If extraction returns the same eight-principle profile for this corpus as for a house's own charter, the instrument is not measuring what it claims to.",
+  "principles": {
+    "1": {
+      "name": "clearly defined boundaries",
+      "status": "present",
+      "why": "The code draws boundaries harder than any self-governed corpus here: zones by land use, a decibel number per zone, and a named noise sensitive area.",
+      "anchors": [
+        { "heading": "42-254", "must": [["noise sensitive area", "residential real property boundary", "receiving land use"]] },
+        { "heading": "42-256", "must": [["residential real property boundary", "noise sensitive area"]] }
+      ]
+    },
+    "2": {
+      "name": "congruence with local conditions",
+      "status": "present",
+      "why": "Limits vary by zone and by hour, and the permit types are written for named local activities. That is congruence with conditions, arrived at by a legislature rather than by the people making the noise.",
+      "anchors": [
+        { "heading": "42-254", "must": [["10:00 p.m.", "7:00 a.m.", "at all times"]] },
+        { "heading": "42-251", "must": [["exception", "exempt", "shall not apply"]] }
+      ]
+    },
+    "3": {
+      "name": "collective-choice arrangements",
+      "status": "absent",
+      "why": "Nothing in this corpus lets the people bound by the rule change the rule. Ordinances arrive already adopted; there is no meeting, no vote, no agenda and no petition anywhere in the text. This is the principle the document is missing, and it is missing by design rather than by omission.",
+      "anchors": []
+    },
+    "4": {
+      "name": "monitors accountable to appropriators",
+      "status": "absent",
+      "why": "There ARE monitors — 'the official of any department charged with enforcement' — and they are accountable to the city, not to the people they monitor. Ostrom's fourth principle is specifically about accountability to appropriators, and no passage in this corpus creates any. The presence of enforcement without that accountability is exactly the distinction the principle draws, so a run that scores this principle reached has confused a monitor for an accountable one.",
+      "anchors": []
+    },
+    "5": {
+      "name": "graduated sanctions",
+      "status": "present",
+      "why": "An order to halt first; an injunction, or treatment as an ordinary code violation, if the sound has not abated. Two rungs, in one passage — more graduation than the house charter has.",
+      "anchors": [
+        { "heading": "42-254", "must": [["immediate halt", "injunction", "has not abated"]] }
+      ]
+    },
+    "6": {
+      "name": "rapid, low-cost conflict resolution",
+      "status": "absent",
+      "why": "The forum this corpus names is a court. That is the opposite end of Ostrom's sixth principle, which is about arenas that are rapid and cheap precisely so that a court is not needed.",
+      "anchors": []
+    },
+    "7": {
+      "name": "rights to organize not undermined",
+      "status": "absent",
+      "why": "The corpus grants no right to organise and describes no body the governed could form. A variance is applied for, not decided together.",
+      "anchors": []
+    },
+    "8": {
+      "name": "nested enterprises",
+      "status": "present",
+      "why": "Article, section and permit type nest, and a permit is a rule for one activity inside a rule for one zone inside a rule for the city.",
+      "anchors": [
+        { "heading": "42-258", "must": [["permit", "variance"]] }
+      ]
+    }
+  }
+}

@@ -1,0 +1,61 @@
+// Huerta canal community — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-04-14","by":"human:vicent","op":"adopt","lineage":"huerta-ordinances","generation":"g4","source":"https://example.org/huerta-ordinances"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-04-15","by":"human:vicent","as":"turn-order","op":"assert","text":"Water is taken in the order of the ditch, head to tail, and a turn missed is a turn waited for.","from":"can-65484583f6"}
+{"at":"2025-04-15","by":"human:vicent","as":"canal-works","op":"assert","text":"Work on the canal itself is agreed before it is paid for out of the common fund.","from":"can-4d86bdccc7"}
+{"at":"2025-04-15","by":"human:vicent","as":"land-carries-water","op":"assert","text":"The right to water belongs to the land, and passes with it.","from":"can-e978be7901"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-04-27","by":"human:amparo","as":"gate-by-rider","op":"assert","text":"The headgate is opened and shut by a ditch-rider, never by the farm taking the water."}
+{"at":"2025-04-27","by":"human:bernat","as":"gate-logged","op":"assert","text":"Every opening of the headgate is called out and logged the same day."}
+{"at":"2025-04-27","by":"human:carme","as":"no-storage","op":"assert","text":"Water is taken to the field, not held in a private pond."}
+{"at":"2025-04-27","by":"human:carme","as":"night-turns-stored","op":"assert","text":"A turn that falls at night may be held until morning rather than run onto a dark field."}
+{"at":"2025-04-27","by":"human:vicent","as":"gate-marks","op":"assert","text":"A headgate carries the mark of the farm it serves."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-04-30","by":"human:vicent","op":"scoped","commitment":"@gate-by-rider","scope":"canal.headgate"}
+{"at":"2025-04-30","by":"human:vicent","op":"scoped","commitment":"@gate-logged","scope":"canal.headgate"}
+{"at":"2025-04-30","by":"human:vicent","op":"scoped","commitment":"@turn-order","scope":"canal.turn"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-05-01","by":"human:vicent","op":"rank","commitment":"@no-storage","rank":"principle"}
+{"at":"2025-05-01","by":"human:vicent","op":"rank","commitment":"@turn-order","rank":"principle"}
+{"at":"2025-05-01","by":"human:vicent","op":"rank","commitment":"@gate-marks","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:vicent","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:amparo","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:bernat","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:carme","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:dolors","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:enric","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:ferran","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:gemma","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:hilari","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:immaculada","scope":"canal"}
+{"at":"2025-04-16","by":"human:vicent","op":"grant","holder":"human:jordi","scope":"canal"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-04-17","by":"human:vicent","op":"grant","holder":"human:amparo","scope":"canal.headgate","rationale":"elected ditch-riders for this canal"}
+{"at":"2025-04-17","by":"human:vicent","op":"grant","holder":"human:bernat","scope":"canal.headgate","rationale":"elected ditch-riders for this canal"}
+{"at":"2025-04-17","by":"human:vicent","op":"grant","holder":"human:dolors","scope":"canal.headgate","rationale":"elected ditch-riders for this canal"}
+{"at":"2025-04-17","by":"human:vicent","op":"grant","holder":"human:enric","scope":"canal.headgate","rationale":"elected ditch-riders for this canal"}
+{"at":"2025-04-17","by":"human:vicent","op":"grant","holder":"human:ferran","scope":"canal.headgate","rationale":"elected ditch-riders for this canal"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-04-18","by":"human:vicent","as":"monitor-grant","op":"grant","holder":"agent:gatewatch","scope":"canal.headgate","horizon":1754956800,"rationale":"logs headgate openings and closings; four months, then we look again"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-04-19","by":"human:vicent","as":"root-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing an ordinance takes the assembly, and anything that cannot be undone is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-04-19","by":"human:vicent","as":"inner-policy","op":"policy","scope":"canal.headgate","text":"Whoever the canal elected as ditch-riders decides the headgate.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-04-19","by":"human:vicent","as":"unheld-policy","op":"policy","scope":"wellfield","text":"The wellfield is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-04-19","by":"human:vicent","as":"ladder-policy","op":"policy","scope":"canal.turn","text":"The first time the canal asks. The second time the assembly asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-05-03","by":"human:vicent","op":"silence","about":"who clears the grating after a storm","rationale":"whoever is nearest has always gone, and a duty would make it late rather than immediate"}

@@ -1,0 +1,58 @@
+// Alanya inshore fishery — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-09-08","by":"human:kemal","op":"adopt","lineage":"coastal-cooperative-canon","generation":"g3","source":"https://example.org/coastal-cooperative-canon"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-09-09","by":"human:kemal","as":"one-site-one-day","op":"assert","text":"A boat fishes the site it drew that day, and no other.","from":"can-fca704a7ef"}
+{"at":"2025-09-09","by":"human:kemal","as":"cooperative-buys","op":"assert","text":"Anything bought out of the cooperative's fund is agreed before it is bought.","from":"can-bf6730c540"}
+{"at":"2025-09-09","by":"human:kemal","as":"licensed-locals","op":"assert","text":"A licensed local boat may enter the draw; nobody else may.","from":"can-c7246d112b"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-09-21","by":"human:ayla","as":"sites-named","op":"assert","text":"The sites are a written list, spaced so that no boat's net reaches the next."}
+{"at":"2025-09-21","by":"human:bora","as":"sites-rotate","op":"assert","text":"Assignments move east one site a day through the season, then west."}
+{"at":"2025-09-21","by":"human:cemre","as":"no-swapping","op":"assert","text":"A drawn site is not traded, because a traded site is a bought site."}
+{"at":"2025-09-21","by":"human:cemre","as":"engine-trouble","op":"assert","text":"A boat that cannot reach its site does not lose the day."}
+{"at":"2025-09-21","by":"human:kemal","as":"list-posted","op":"assert","text":"The day's assignments are posted in the coffeehouse by dark."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-09-24","by":"human:kemal","op":"scoped","commitment":"@sites-named","scope":"fishery.sites"}
+{"at":"2025-09-24","by":"human:kemal","op":"scoped","commitment":"@sites-rotate","scope":"fishery.sites"}
+{"at":"2025-09-24","by":"human:kemal","op":"scoped","commitment":"@one-site-one-day","scope":"fishery.season"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-09-25","by":"human:kemal","op":"rank","commitment":"@no-swapping","rank":"principle"}
+{"at":"2025-09-25","by":"human:kemal","op":"rank","commitment":"@one-site-one-day","rank":"principle"}
+{"at":"2025-09-25","by":"human:kemal","op":"rank","commitment":"@list-posted","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:kemal","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:ayla","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:bora","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:cemre","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:deniz","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:ege","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:fikret","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:gul","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:halim","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:irem","scope":"fishery"}
+{"at":"2025-09-10","by":"human:kemal","op":"grant","holder":"human:jale","scope":"fishery"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-09-11","by":"human:kemal","op":"grant","holder":"human:ayla","scope":"fishery.sites","rationale":"keep the list of named sites"}
+{"at":"2025-09-11","by":"human:kemal","op":"grant","holder":"human:bora","scope":"fishery.sites","rationale":"keep the list of named sites"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-09-12","by":"human:kemal","as":"monitor-grant","op":"grant","holder":"agent:logwatch","scope":"fishery.sites","horizon":1767657600,"rationale":"reads the landing logs against the site list; four months, then we look again"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-09-13","by":"human:kemal","as":"root-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the cooperative, and anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-09-13","by":"human:kemal","as":"inner-policy","op":"policy","scope":"fishery.sites","text":"Whoever keeps the list of sites decides the sites.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-09-13","by":"human:kemal","as":"unheld-policy","op":"policy","scope":"harbour","text":"The harbour itself is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-09-13","by":"human:kemal","as":"ladder-policy","op":"policy","scope":"fishery.season","text":"The first time we ask. The second time the cooperative asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-09-27","by":"human:kemal","op":"silence","about":"who tows a boat in when one goes down","rationale":"the nearest boat has always gone and always will, and a rota would put a name on something that has never once needed one"}

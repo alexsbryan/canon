@@ -1,0 +1,63 @@
+// Crosswalk Coliving — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-04-07","by":"human:tomas","op":"adopt","lineage":"coliving-commons","generation":"g6","source":"https://example.org/coliving-commons"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-04-08","by":"human:tomas","as":"boiler-hours","op":"assert","text":"The boiler is not run between midnight and six.","from":"can-688f64b066"}
+{"at":"2025-04-08","by":"human:tomas","as":"big-buys","op":"assert","text":"Anything bought for the whole building is agreed before it is bought.","from":"can-0b370fa90d"}
+{"at":"2025-04-08","by":"human:tomas","as":"everyone-enters","op":"assert","text":"Everyone who lives here can open every shared door.","from":"can-4c60dcc7b2"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-04-20","by":"human:yara","as":"roof-two-up","op":"assert","text":"Nobody goes onto the roof alone after dark."}
+{"at":"2025-04-20","by":"human:isla","as":"roof-watered","op":"assert","text":"Whoever is last on the roof waters the beds."}
+{"at":"2025-04-20","by":"human:petra","as":"quiet-roof","op":"assert","text":"The roof is quiet after ten, because it is over somebody's bedroom."}
+{"at":"2025-04-20","by":"human:petra","as":"summer-roof","op":"assert","text":"In July the roof is where the building eats together."}
+{"at":"2025-04-20","by":"human:tomas","as":"chairs-stacked","op":"assert","text":"Roof chairs are stacked against the wall when you leave."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-04-23","by":"human:tomas","op":"scoped","commitment":"@roof-two-up","scope":"building.commons.roof"}
+{"at":"2025-04-23","by":"human:tomas","op":"scoped","commitment":"@roof-watered","scope":"building.commons.roof"}
+{"at":"2025-04-23","by":"human:tomas","op":"scoped","commitment":"@boiler-hours","scope":"building.boiler"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-04-24","by":"human:tomas","op":"rank","commitment":"@quiet-roof","rank":"principle"}
+{"at":"2025-04-24","by":"human:tomas","op":"rank","commitment":"@boiler-hours","rank":"principle"}
+{"at":"2025-04-24","by":"human:tomas","op":"rank","commitment":"@chairs-stacked","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:tomas","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:yara","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:isla","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:petra","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:noel","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:andre","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:beatriz","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:cai","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:dilan","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:eira","scope":"building"}
+{"at":"2025-04-09","by":"human:tomas","op":"grant","holder":"human:fen","scope":"building"}
+// A THIRD level, where the commons has one. Same op, one dot deeper.
+{"at":"2025-04-10","by":"human:tomas","op":"grant","holder":"human:andre","scope":"building.commons","rationale":"looks after the shared floors"}
+{"at":"2025-04-10","by":"human:tomas","op":"grant","holder":"human:beatriz","scope":"building.commons","rationale":"looks after the shared floors"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-04-10","by":"human:tomas","op":"grant","holder":"human:yara","scope":"building.commons.roof","rationale":"keeps the roof garden alive"}
+{"at":"2025-04-10","by":"human:tomas","op":"grant","holder":"human:isla","scope":"building.commons.roof","rationale":"keeps the roof garden alive"}
+{"at":"2025-04-10","by":"human:tomas","op":"grant","holder":"human:noel","scope":"building.commons.roof","rationale":"keeps the roof garden alive"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-04-11","by":"human:tomas","as":"monitor-grant","op":"grant","holder":"agent:meterwatch","scope":"building.commons.roof","horizon":1754352000,"rationale":"reads the boiler meter nightly; four months, then we look again"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-04-12","by":"human:tomas","as":"root-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the building, and anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-04-12","by":"human:tomas","as":"middle-policy","op":"policy","scope":"building.commons","text":"Whoever looks after the shared floors decides the shared floors.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-04-12","by":"human:tomas","as":"inner-policy","op":"policy","scope":"building.commons.roof","text":"Whoever keeps the roof decides the roof.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-04-12","by":"human:tomas","as":"unheld-policy","op":"policy","scope":"basement","text":"The basement is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-04-12","by":"human:tomas","as":"ladder-policy","op":"policy","scope":"building.boiler","text":"The first time we ask. The second time the building asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-04-26","by":"human:tomas","op":"silence","about":"who takes a parcel in for somebody out at work","rationale":"everyone already does it, and the first person to write it down would make it a shift rather than a favour"}

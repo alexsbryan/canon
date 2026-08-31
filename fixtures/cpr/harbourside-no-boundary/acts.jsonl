@@ -1,0 +1,55 @@
+// Harbourside Makerspace, with the laser held by nobody — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-03-03","by":"human:nadia","op":"adopt","lineage":"makerspace-commons","generation":"g4","source":"https://example.org/makerspace-commons"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-03-04","by":"human:nadia","as":"stock-logged","op":"assert","text":"Plywood taken off the rack is logged the same day it is taken.","from":"can-367fa0215b"}
+{"at":"2025-03-04","by":"human:nadia","as":"bought-together","op":"assert","text":"Anything bought out of subs is agreed before it is bought.","from":"can-a5b856f1f7"}
+{"at":"2025-03-04","by":"human:nadia","as":"keyholders","op":"assert","text":"Every member in good standing holds a key.","from":"can-82819d8822"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-03-16","by":"human:felix","as":"laser-supervised","op":"assert","text":"Nobody runs the laser cutter alone until they have been signed off."}
+{"at":"2025-03-16","by":"human:imogen","as":"laser-extraction","op":"assert","text":"The extraction fan runs for the whole cut and five minutes after."}
+{"at":"2025-03-16","by":"human:wren","as":"bench-clear","op":"assert","text":"A bench is left clear at the end of a session."}
+{"at":"2025-03-16","by":"human:wren","as":"long-jobs","op":"assert","text":"A job that runs overnight can stay set up on the far bench."}
+{"at":"2025-03-16","by":"human:nadia","as":"labels","op":"assert","text":"Personal material is labelled with a name and a date."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-03-19","by":"human:nadia","op":"scoped","commitment":"@laser-supervised","scope":"space.laser"}
+{"at":"2025-03-19","by":"human:nadia","op":"scoped","commitment":"@laser-extraction","scope":"space.laser"}
+{"at":"2025-03-19","by":"human:nadia","op":"scoped","commitment":"@stock-logged","scope":"space.stock"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-03-20","by":"human:nadia","op":"rank","commitment":"@bench-clear","rank":"principle"}
+{"at":"2025-03-20","by":"human:nadia","op":"rank","commitment":"@stock-logged","rank":"principle"}
+{"at":"2025-03-20","by":"human:nadia","op":"rank","commitment":"@labels","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:nadia","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:felix","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:imogen","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:wren","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:bo","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:cass","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:dov","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:esme","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:hal","scope":"space"}
+{"at":"2025-03-05","by":"human:nadia","op":"grant","holder":"human:jun","scope":"space"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-03-07","by":"human:nadia","as":"monitor-grant","op":"grant","holder":"agent:stockbot","scope":"space.laser","horizon":1751328000,"rationale":"watches the consumables shelf; four months, then we look again"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-03-08","by":"human:nadia","as":"root-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the group, and anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-03-08","by":"human:nadia","as":"inner-policy","op":"policy","scope":"space.laser","text":"Whoever runs the laser inductions decides the laser.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-03-08","by":"human:nadia","as":"unheld-policy","op":"policy","scope":"yard","text":"The yard is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-03-08","by":"human:nadia","as":"ladder-policy","op":"policy","scope":"space.stock","text":"The first time we ask. The second time the group asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-03-22","by":"human:nadia","op":"silence","about":"who sweeps at the end of the night","rationale":"it has sorted itself out every week for two years, and a rota would turn a kindness into a duty"}

@@ -1,0 +1,121 @@
+{
+  "institution": "Alanya inshore fishery",
+  "kind": "a coastal fishery with named sites and a yearly lottery",
+  "one_line": "A hundred boats, a written list of named fishing spots, and a draw each September that assigns them.",
+  "start": "2025-09-08",
+
+  "lineage": "coastal-cooperative-canon",
+  "generation": "g3",
+  "generation_next": "g4",
+  "source": "https://example.org/coastal-cooperative-canon",
+
+  "outer": "fishery",
+  "inner_leaf": "sites",
+  "ladder_leaf": "season",
+  "unheld": "harbour",
+
+  "steward": "human:kemal",
+  "members": ["human:kemal", "human:ayla", "human:bora", "human:cemre",
+              "human:deniz", "human:ege", "human:fikret", "human:gul",
+              "human:halim", "human:irem", "human:jale"],
+  "insiders": ["human:ayla", "human:bora"],
+  "outsider": "human:cemre",
+  "monitor": "agent:logwatch",
+  "ladder_decider": "human:kemal",
+  "upstream_actor": "human:ministry-inspector",
+  "insider_rationale": "keep the list of named sites",
+  "monitor_rationale": "reads the landing logs against the site list; four months, then we look again",
+
+  "c": {
+    "ladder":  {"label": "one-site-one-day",
+                "text": "A boat fishes the site it drew that day, and no other."},
+    "shared":  {"label": "cooperative-buys",
+                "text": "Anything bought out of the cooperative's fund is agreed before it is bought."},
+    "access":  {"label": "licensed-locals",
+                "text": "A licensed local boat may enter the draw; nobody else may."},
+    "inner_a": {"label": "sites-named",
+                "text": "The sites are a written list, spaced so that no boat's net reaches the next."},
+    "inner_b": {"label": "sites-rotate",
+                "text": "Assignments move east one site a day through the season, then west."},
+    "clash_a": {"label": "no-swapping",
+                "text": "A drawn site is not traded, because a traded site is a bought site."},
+    "clash_b": {"label": "engine-trouble",
+                "text": "A boat that cannot reach its site does not lose the day."},
+    "extra":   {"label": "list-posted",
+                "text": "The day's assignments are posted in the coffeehouse by dark."}
+  },
+
+  "policy": {
+    "root": "We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the cooperative, and anything we cannot undo is not decided by silence.",
+    "inner": "Whoever keeps the list of sites decides the sites.",
+    "unheld": "The harbour itself is decided by whoever holds it.",
+    "ladder": "The first time we ask. The second time the cooperative asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a change to the sites stops."
+  },
+
+  "inner_proposal": {
+    "about": "the spacing of the sites",
+    "text": "add four sites between the existing ones for the short-net boats",
+    "because": "a short net does not reach the next site, so the spacing that protects the long nets is spare capacity"
+  },
+  "inner_objection": "the spacing is measured off the longest net in the fleet, and the fleet's nets change faster than the list does",
+
+  "unheld_proposal": {
+    "about": "the harbour",
+    "text": "dredge the harbour mouth and lengthen the eastern mole"
+  },
+
+  "monitor_watch": {
+    "about": "a landing logged from a site that was not drawn",
+    "because": "the boat's log names a site assigned to another boat that day",
+    "dismissal": "these two do not really conflict"
+  },
+
+  "ladder_subject": {
+    "about": "fishing a site you did not draw",
+    "first": "work the neighbouring site because the drawn one was fouled",
+    "second": "work the neighbouring site again on the following day",
+    "third": "work the good eastern sites for the rest of the week",
+    "because": "a site fished by two boats is a site that produces for neither, which is what the list exists to prevent",
+    "ruling_1": "the drawn site had a net down in it and we let it stand",
+    "ruling_2": "the cooperative agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "landing outside the cooperative",
+    "text": "land the catch at the next harbour when the price is better there"
+  },
+
+  "clash": {
+    "about": "a boat that cannot reach its site",
+    "text": "let a boat with a failed engine take the nearest free site for the day",
+    "because_a": "a site taken outside the draw is a site somebody chose, and choosing is what the draw removes",
+    "because_b": "a boat that loses the day for a failed engine loses the week, and the fleet is small enough to feel it",
+    "carried": "the free site is only ever the one nobody drew, and the engine is checked by two others before the day is given; revisit at the next September draw"
+  },
+
+  "amend_convention": {
+    "about": "posting the list",
+    "text": "post the day's assignments to the cooperative's phone group instead of the coffeehouse",
+    "because": "half the fleet is at sea when the list goes up on the wall"
+  },
+  "amend_principle": {
+    "about": "trading sites",
+    "text": "allow two boats to swap sites if both tell the keeper first",
+    "because": "a declared swap is visible, and the thing the rule fears is the undeclared one"
+  },
+
+  "irreversible": {
+    "about": "the western sites",
+    "text": "strike the four western sites off the list for good and let the ground rest"
+  },
+
+  "silence": {
+    "about": "who tows a boat in when one goes down",
+    "rationale": "the nearest boat has always gone and always will, and a rota would put a name on something that has never once needed one",
+    "proposal": "set a towing rota for the season"
+  },
+
+  "panel": {
+    "rationale": "three of us to look at the swapping rule for a month"
+  }
+}

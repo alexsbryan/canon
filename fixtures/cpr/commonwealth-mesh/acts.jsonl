@@ -1,0 +1,59 @@
+// Southside compute mesh — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-05-12","by":"human:oyelaran","op":"adopt","lineage":"commonwealth-mesh-canon","generation":"g2","source":"https://example.org/commonwealth-mesh-canon"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-05-13","by":"human:oyelaran","as":"residency-notice","op":"assert","text":"A machine leaving the mesh gives an hour's notice before its layers go.","from":"can-4c1f2ab90a"}
+{"at":"2025-05-13","by":"human:oyelaran","as":"pooled-buys","op":"assert","text":"Hardware bought out of the pot is agreed before it is bought.","from":"can-8b6eff57a8"}
+{"at":"2025-05-13","by":"human:oyelaran","as":"invited-in","op":"assert","text":"You join because somebody already here vouched for you, and that is the whole of the trust model.","from":"can-25dd3c7553"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-05-25","by":"human:huang","as":"weights-pinned","op":"assert","text":"A model's weights are pinned to a digest, and the digest is what people talk about."}
+{"at":"2025-05-25","by":"human:brannon","as":"weights-two-copies","op":"assert","text":"Every layer lives on at least two machines before it is served."}
+{"at":"2025-05-25","by":"human:ferrante","as":"nobody-idles","op":"assert","text":"A machine in the mesh is available to the mesh, not held back for its owner."}
+{"at":"2025-05-25","by":"human:ferrante","as":"own-machine-first","op":"assert","text":"Your own work on your own machine comes before the mesh's."}
+{"at":"2025-05-25","by":"human:oyelaran","as":"node-names","op":"assert","text":"A node is named for its household, not for its hardware."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-05-28","by":"human:oyelaran","op":"scoped","commitment":"@weights-pinned","scope":"mesh.weights"}
+{"at":"2025-05-28","by":"human:oyelaran","op":"scoped","commitment":"@weights-two-copies","scope":"mesh.weights"}
+{"at":"2025-05-28","by":"human:oyelaran","op":"scoped","commitment":"@residency-notice","scope":"mesh.residency"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-05-29","by":"human:oyelaran","op":"rank","commitment":"@nobody-idles","rank":"principle"}
+{"at":"2025-05-29","by":"human:oyelaran","op":"rank","commitment":"@residency-notice","rank":"principle"}
+{"at":"2025-05-29","by":"human:oyelaran","op":"rank","commitment":"@node-names","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:oyelaran","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:huang","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:brannon","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:ferrante","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:okonkwo","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:salgado","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:novak","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:aritz","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:demir","scope":"mesh"}
+{"at":"2025-05-14","by":"human:oyelaran","op":"grant","holder":"human:laurin","scope":"mesh"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-05-15","by":"human:oyelaran","op":"grant","holder":"human:huang","scope":"mesh.weights","rationale":"holds the two machines the layers actually sit on"}
+{"at":"2025-05-15","by":"human:oyelaran","op":"grant","holder":"human:brannon","scope":"mesh.weights","rationale":"holds the two machines the layers actually sit on"}
+{"at":"2025-05-15","by":"human:oyelaran","op":"grant","holder":"human:okonkwo","scope":"mesh.weights","rationale":"holds the two machines the layers actually sit on"}
+{"at":"2025-05-15","by":"human:oyelaran","op":"grant","holder":"human:salgado","scope":"mesh.weights","rationale":"holds the two machines the layers actually sit on"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-05-16","by":"human:oyelaran","as":"monitor-grant","op":"grant","holder":"agent:shardwatch","scope":"mesh.weights","horizon":1757376000,"rationale":"reports layer placement and eviction; four months, then we look again"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-05-17","by":"human:oyelaran","as":"root-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the mesh, and anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-05-17","by":"human:oyelaran","as":"inner-policy","op":"policy","scope":"mesh.weights","text":"Whoever holds the machines the layers sit on decides the weights.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-05-17","by":"human:oyelaran","as":"unheld-policy","op":"policy","scope":"billing","text":"Billing is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-05-17","by":"human:oyelaran","as":"ladder-policy","op":"policy","scope":"mesh.residency","text":"The first time we ask. The second time the mesh asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-05-31","by":"human:oyelaran","op":"silence","about":"how much of your machine you owe the mesh","rationale":"every share anybody proposed was either unenforceable or the reason somebody would leave, and the informal answer has held for a year"}

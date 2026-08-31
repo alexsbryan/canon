@@ -1,0 +1,76 @@
+// Southside compute mesh — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"mesh.weights"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"mesh.weights","actor":"human:huang","about":"which model the mesh serves","proposal":"pin the mesh to the new 70B digest and drop the old one","positions":[{"citing":"@weights-pinned","pull":"toward","because":"two pinned digests is two answers to what `primary` means"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"mesh.weights","actor":"human:ferrante","about":"which model the mesh serves","proposal":"pin the mesh to the new 70B digest and drop the old one","positions":[{"citing":"@weights-pinned","pull":"toward","because":"two pinned digests is two answers to what `primary` means"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"billing","actor":"human:huang","about":"electricity","proposal":"split the electricity cost by measured GPU-hours","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-07-11","by":"human:huang","op":"policy","scope":"mesh.weights","text":"Two of us have to object before a weights change stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"mesh.weights","actor":"human:ferrante","about":"which model the mesh serves","proposal":"pin the mesh to the new 70B digest and drop the old one","positions":[{"actor":"human:huang","pull":"against","because":"the old digest is what every household's scripts name, and dropping it breaks them the same evening"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-07-20","by":"agent:shardwatch","op":"position","about":"a node dropped mid-generation","citing":"@residency-notice","pull":"against","because":"the node held four layers with no second copy and left without notice"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-07-21","by":"agent:shardwatch","as":"monitor-dismiss","op":"dismiss","a":"@nobody-idles","b":"@own-machine-first","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-09-15"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:shardwatch"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"mesh.residency","about":"leaving the mesh without notice","proposal":"shut the laptop at the end of the day without an hour's notice","positions":[{"citing":"@residency-notice","pull":"against","because":"layers on a machine that vanishes are layers the mesh has to re-place mid-request"}]}
+{"step":"act","at":"2025-09-16","by":"human:oyelaran","op":"decided","about":"leaving the mesh without notice","outcome":"conflicts","authority":"ask-one","rationale":"it was a battery going flat and we left it there"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"mesh.residency","about":"leaving the mesh without notice","proposal":"take the desktop off for a reinstall without an hour's notice","positions":[{"citing":"@residency-notice","pull":"against","because":"layers on a machine that vanishes are layers the mesh has to re-place mid-request"}]}
+{"step":"act","at":"2025-09-17","by":"human:oyelaran","op":"decided","about":"leaving the mesh without notice","outcome":"conflicts","authority":"ask-panel","rationale":"the mesh agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"mesh.residency","about":"leaving the mesh without notice","proposal":"pull the big machine off during a run without an hour's notice","positions":[{"citing":"@residency-notice","pull":"against","because":"layers on a machine that vanishes are layers the mesh has to re-place mid-request"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"mesh.residency","about":"serving a second model at once","proposal":"hold a second model resident alongside the primary one","positions":[{"citing":"@residency-notice","pull":"against","because":"layers on a machine that vanishes are layers the mesh has to re-place mid-request"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"a household's own long job","proposal":"let a household take its machine's whole GPU for a two-day fine-tune","positions":[{"citing":"@nobody-idles","pull":"against","because":"a machine held back for its owner is a machine the mesh planned around and does not have"},{"citing":"@own-machine-first","pull":"toward","because":"a mesh you cannot use your own hardware in is a mesh people leave"}]}
+{"step":"act","at":"2025-09-18","by":"human:huang","op":"accept","a":"@nobody-idles","b":"@own-machine-first","rationale":"the mesh is small enough to reroute two days of layers and large enough that nobody would stay if it could not; revisit when a fourth household joins","revisit":"2026-03-08"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-09-19","by":"human:oyelaran","op":"adopt","lineage":"commonwealth-mesh-canon","generation":"g3","source":"https://example.org/commonwealth-mesh-canon"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"mesh"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"mesh.weights"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"node naming","proposal":"name nodes for their GPU so placement decisions read at a glance","amends":"@node-names","positions":[{"actor":"human:ferrante","pull":"toward","because":"the household name says nothing about what will fit on it"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"idle machines","proposal":"let a household mark its machine reserved for a stated window","amends":"@nobody-idles","positions":[{"actor":"human:ferrante","pull":"toward","because":"a stated window is something the placement can plan around, which an unannounced withdrawal is not"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the old weights","proposal":"delete the old digest from every machine to free the disk","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the old weights","proposal":"delete the old digest from every machine to free the disk","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"how much of your machine you owe the mesh","proposal":"set a minimum share of each machine that the mesh may always use","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-10-31","by":"human:oyelaran","as":"panel","op":"draw_commit","scope":"mesh","count":3,"after_ts":1762646400,"rationale":"three people to look at the residency rule for a month"}
+{"step":"act","at":"2025-11-01","by":"human:oyelaran","op":"draw_secret","commit":"@panel","digest":"40e7c80269e2574259b2b9ba70b24f9ee49a3109ede094e7b120e62f2e48a4d2"}
+{"step":"act","at":"2025-11-01","by":"human:huang","op":"draw_secret","commit":"@panel","digest":"dfec5eceb6433c0f62cf4e5d1ee008e9102d70748cc0ca736a55ec31f78c105e"}
+{"step":"act","at":"2025-11-01","by":"human:brannon","op":"draw_secret","commit":"@panel","digest":"065c08bb54a260644ff9cc5b86dba8951afd2ab414406922b7887d07dd0ca7ee"}
+{"step":"act","at":"2025-11-01","by":"human:ferrante","op":"draw_secret","commit":"@panel","digest":"0f4a0a5df06532885420cbb641681ac7143318b329a7b4bd830774433a083039"}
+{"step":"act","at":"2025-11-01","by":"human:okonkwo","op":"draw_secret","commit":"@panel","digest":"4e33a32f4cc58f4729f6c7c3251efa3d06b313acb19314b2a899ce8621608bb7"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-11-11"}
+{"step":"act","at":"2025-11-11","by":"human:oyelaran","op":"draw_reveal","commit":"@panel","secret":"commonwealth-mesh-oyelaran-panel"}
+{"step":"act","at":"2025-11-11","by":"human:huang","op":"draw_reveal","commit":"@panel","secret":"commonwealth-mesh-huang-panel"}
+{"step":"act","at":"2025-11-11","by":"human:brannon","op":"draw_reveal","commit":"@panel","secret":"commonwealth-mesh-brannon-panel"}
+{"step":"act","at":"2025-11-11","by":"human:ferrante","op":"draw_reveal","commit":"@panel","secret":"commonwealth-mesh-ferrante-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

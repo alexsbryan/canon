@@ -23,7 +23,8 @@
 //! come from the one place that mints them and the result is ordinary acts.
 //!
 //! This is a loader, not a second format. Nothing downstream sees a label, and
-//! `canon replay --dump` writes the wire form.
+//! `canon replay <dir> --out <path>` writes the wire form — a real canon you
+//! can run every other verb against.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -101,6 +102,10 @@ pub fn load_seed(raw: &str) -> Result<(Vec<Act>, BTreeMap<String, ActId>), Strin
 /// What a step is, and what the world looked like after it.
 pub struct Step {
     pub name: String,
+    /// What was actually proposed, for the steps that propose something. The
+    /// step's NAME is what the fixture author called the case; this is what
+    /// the house was deciding, and it is the one a person recognises.
+    pub subject: Option<String>,
     /// Which of Ostrom's eight this demonstrates, when it demonstrates one.
     pub principle: Option<u8>,
     /// `mechanism` — the tool provides it. `affordance` — the tool permits it
@@ -112,6 +117,11 @@ pub struct Step {
 }
 
 pub struct Replay {
+    /// Every act the run minted, seed and scenario together. The seed file
+    /// is only about three quarters of this house: the agent's adjudication,
+    /// the sanctions ladder, the carried contradiction and the sortition draw
+    /// all arrive as `act` steps in the scenario.
+    pub acts: Vec<Act>,
     pub steps: Vec<Step>,
     pub labels: BTreeMap<String, ActId>,
     /// The rule every step was decided under, when one was forced.
@@ -182,10 +192,21 @@ pub fn run_scenario(
             }
             "who" => {
                 let scope = scope_of(&body, "scope").map_err(at)?;
+                let deciders = canon.who_decides(&scope, now);
+                // `deciders` is deepest-first, which renders the levels but
+                // does not NAME them: when the narrow holders happen to sort
+                // first, a two-level boundary and a one-level one print the
+                // same list. `holders` is the deepest level on its own — the
+                // set subsidiarity would actually route to.
+                let deepest = deciders.first().map(|g| g.scope.depth());
                 json!({
-                    "deciders": canon
-                        .who_decides(&scope, now)
+                    "deciders": deciders
                         .iter()
+                        .map(|g| g.actor.clone())
+                        .collect::<Vec<_>>(),
+                    "holders": deciders
+                        .iter()
+                        .filter(|g| Some(g.scope.depth()) == deepest)
                         .map(|g| g.actor.clone())
                         .collect::<Vec<_>>(),
                     "policy": canon.policy_for(Some(&scope)).name(),
@@ -251,6 +272,10 @@ pub fn run_scenario(
 
         steps.push(Step {
             name,
+            subject: body
+                .get("proposal")
+                .and_then(|v| v.as_str())
+                .map(str::to_string),
             principle: body
                 .get("principle")
                 .and_then(Value::as_u64)
@@ -263,6 +288,7 @@ pub fn run_scenario(
         });
     }
     Ok(Replay {
+        acts: acts.clone(),
         steps,
         labels,
         forced: override_policy,
@@ -376,6 +402,89 @@ fn check_step(
     }))
 }
 
+// ── the counterfactual, in English ──────────────────────────
+
+/// One decision that a rule the community did not adopt would have changed.
+pub struct Divergence {
+    pub name: String,
+    pub subject: String,
+    pub was: (String, String),
+    pub would: (String, String),
+}
+
+/// Diff two passes over the same history.
+///
+/// **Two passes, not a diff against `expected.json`.** The fixture's expected
+/// values happen to be the adopted rule's answers, so comparing against them
+/// looks equivalent — but it only works where a fixture exists, and it reports
+/// "the file said X" when the question is "our rule said X". Deciding the same
+/// log twice, once under each rule, answers the question that was asked.
+pub fn diverge(adopted: &Replay, forced: &Replay) -> Vec<Divergence> {
+    let mut out = Vec::new();
+    for (a, f) in adopted.steps.iter().zip(&forced.steps) {
+        let read = |s: &Step, k: &str| {
+            s.result.get(k).and_then(Value::as_str).unwrap_or("").to_string()
+        };
+        // Only steps that produce a ruling can diverge. `who`, `lineage` and
+        // the standing queries answer the same way under any policy.
+        let (aa, fa) = (read(a, "authority"), read(f, "authority"));
+        if aa.is_empty() || (aa == fa && read(a, "outcome") == read(f, "outcome")) {
+            continue;
+        }
+        // `because` is prefixed with the rule that produced it, and the rule
+        // is already named in the heading — so the prefix is noise here.
+        let trim = |s: String| match s.split_once(": ") {
+            Some((_, rest)) => rest.to_string(),
+            None => s,
+        };
+        let rung = |raw: &str| {
+            canon_core::Authority::parse(raw).map_or_else(|| raw.to_string(), |x| x.prose().into())
+        };
+        out.push(Divergence {
+            name: a.name.clone(),
+            subject: a.subject.clone().unwrap_or_else(|| a.name.replace('-', " ")),
+            was: (rung(&aa), trim(read(a, "because"))),
+            would: (rung(&fa), trim(read(f, "because"))),
+        });
+    }
+    out
+}
+
+/// What a group actually wants to read before changing how it decides.
+pub fn render_divergence(rows: &[Divergence], forced: &str, total: usize) -> String {
+    // Deliberately NOT "instead of <rule>". A canon runs several rules at
+    // once — one at the root, another over the kitchen, a third over the
+    // laundry — and naming any single one of them here would be false.
+    let head = |what: String| {
+        format!("Under `{forced}` instead of the rules this canon adopted, {what}\n")
+    };
+    if rows.is_empty() {
+        return head(format!("nothing changes. All {total} decision(s) land the same way."));
+    }
+    let mut out = head(format!("{} of {total} decision(s) change.", rows.len()));
+    // The width of the rung column, so the reasons line up and the eye can
+    // run down what changed. Clamped like `check`'s stakes table.
+    let w = rows
+        .iter()
+        .flat_map(|r| [r.was.0.len(), r.would.0.len()])
+        .max()
+        .unwrap_or(0)
+        .min(30);
+    for r in rows {
+        let twice = rows.iter().filter(|o| o.subject == r.subject).count() > 1;
+        let qualifier = if twice {
+            format!("   ({})", r.name.replace('-', " "))
+        } else {
+            String::new()
+        };
+        out.push_str(&format!("\n  {}{qualifier}\n", r.subject));
+        for (label, (rung, why)) in [("was", &r.was), ("would", &r.would)] {
+            out.push_str(&format!("    {label:<6}{rung:<w$}  {why}\n"));
+        }
+    }
+    out
+}
+
 // ── the verb ────────────────────────────────────────────────
 
 /// Compare a run against what the fixture said would happen.
@@ -421,7 +530,10 @@ fn resolve_expected(v: &Value, labels: &BTreeMap<String, ActId>) -> Value {
 pub fn run(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(dir) = pos.first() else {
-        return fail("usage: canon replay <fixture-dir> [--policy <rule>] [--json]");
+        return fail(
+            "usage: canon replay <fixture-dir> [--policy <rule>] [--brief] \
+             [--out <dir> [--profile <name>]] [--json]",
+        );
     };
     let dir = Path::new(dir);
     let read = |name: &str| {
@@ -441,10 +553,49 @@ pub fn run(args: &[String]) -> i32 {
             other => return fail(format!("`{other}` is not a rule this verb can force")),
         },
     };
-    let replay = match run_scenario(&seed, &scenario, forced) {
+    let replay = match run_scenario(&seed, &scenario, forced.clone()) {
         Ok(r) => r,
         Err(e) => return fail(e),
     };
+
+    // The counterfactual, decided twice. A forced run on its own can say what
+    // happened under the other rule; it takes the adopted rule's own pass to
+    // say what CHANGED, which is the question a group actually has.
+    let counterfactual = match &forced {
+        None => None,
+        Some(rule) => match run_scenario(&seed, &scenario, None) {
+            Err(e) => return fail(e),
+            Ok(adopted) => {
+                let rows = diverge(&adopted, &replay);
+                Some(render_divergence(&rows, &rule.name(), adopted.steps.len()))
+            }
+        },
+    };
+
+    // `--out` materialises the fixture as a real canon. The seed dialect is a
+    // loader for the ordinary format, so this writes ordinary acts with the
+    // ids `Act::new` already minted — the same ids this verb prints, stable
+    // across machines because they are derived from the body.
+    if let Some(out) = flag(args, "--out") {
+        let out = Path::new(out);
+        let profile = flag(args, "--profile").unwrap_or("house");
+        if let Err(e) = std::fs::create_dir_all(out)
+            .and_then(|()| {
+                std::fs::write(out.join(crate::store::FILE), Log::from_acts(replay.acts.clone()).render())
+            })
+            .and_then(|()| std::fs::write(out.join("profile"), format!("{profile}\n")))
+        {
+            return fail(format!("writing {}: {e}", out.display()));
+        }
+        crate::store::ignore_local(out);
+        println!(
+            "{} act(s) written to {}\n\nCANON_DIR={} canon list",
+            replay.acts.len(),
+            out.display(),
+            out.display()
+        );
+        return 0;
+    }
 
     if has(args, "--json") {
         let out: Map<String, Value> = replay
@@ -459,7 +610,16 @@ pub fn run(args: &[String]) -> i32 {
             // a replay of what happened from a replay of what would have.
             println!("decided under a forced rule: {}\n", rule.name());
         }
+        if let Some(text) = &counterfactual {
+            print!("{text}");
+        }
+        // `--brief` is the whole answer and nothing else. The step-by-step
+        // listing below is what you read when you are debugging a fixture,
+        // not what you read when you are deciding whether to change a rule.
         for s in &replay.steps {
+            if has(args, "--brief") {
+                break;
+            }
             let head = match (&s.principle, &s.strength) {
                 (Some(n), Some(m)) => format!("  [Ostrom {n}, {m}]"),
                 _ => String::new(),
@@ -487,7 +647,13 @@ pub fn run(args: &[String]) -> i32 {
         eprintln!("{step}.{key}: expected {want}, got {got}");
     }
     eprintln!("\n{} mismatch(es)", bad.len());
-    1
+    // A COUNTERFACTUAL HAS NO PASS. `expected.json` records what the rules
+    // this canon adopted produce; a forced run answers a different question,
+    // so differing from that file is the point rather than a failure. The
+    // lines above are still printed — they say which recorded answers moved —
+    // but exiting non-zero here would report "what if we decided differently"
+    // as a broken fixture.
+    i32::from(replay.forced.is_none())
 }
 
 fn compact(v: &Value) -> String {

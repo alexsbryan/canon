@@ -1,0 +1,889 @@
+{
+  "schema": "canon-draft-run/v1",
+  "at": 1788150300,
+  "endpoint": "http://localhost:9841/v1",
+  "model": "primary",
+  "served_model": "Qwen3.8-27B-UD-Q6_K_XL",
+  "profile": "house",
+  "sources": [
+    "maple-house.md"
+  ],
+  "chunks": [
+    {
+      "id": 0,
+      "source": "maple-house.md:3-8",
+      "heading": "Maple House Charter, Article I — Overnight Guests",
+      "text": "Members may host overnight guests in their own private rooms. Any single\nguest may stay no more than two consecutive nights within any seven-day\nperiod, so that no guest gradually becomes an unofficial resident of the\nhouse. Whenever a guest is in the shared common areas, the hosting member\nmust accompany them. Each member is fully responsible for the conduct of\ntheir guests for the entire duration of the visit."
+    },
+    {
+      "id": 1,
+      "source": "maple-house.md:12-17",
+      "heading": "Maple House Charter, Article II — Quiet Hours",
+      "text": "Quiet hours are observed every night, running from 11:00 PM until 7:00 AM\nthe following morning. During quiet hours, conversation in the common areas\nmust be kept low, and any music, television, or video games must be played\nthrough headphones. A member who anticipates unavoidable late-night noise\nis required to give the rest of the house advance notice so that everyone\ncan reliably sleep."
+    },
+    {
+      "id": 2,
+      "source": "maple-house.md:21-25",
+      "heading": "Maple House Charter, Article III — Kitchen Cleanup",
+      "text": "The kitchen must be cleaned by whoever used it, immediately after that\nperson finishes cooking or eating. Cleaning means washing every dish you\nused, wiping down the counters and the stovetop, and taking out the trash\nwhen the bin is full. Leaving dirty dishes in the sink overnight is never\npermitted, no matter how late the hour or how tired the cook."
+    },
+    {
+      "id": 3,
+      "source": "maple-house.md:29-33",
+      "heading": "Maple House Charter, Article IV — Common Spaces",
+      "text": "The living room, the dining room, and the back porch are common areas that\nbelong equally to every member of the house. No member may reserve a common\narea for their own exclusive use, even temporarily, and no member may treat\na common area as a personal extension of their bedroom. These shared spaces\nmust remain open and available to all members at all times."
+    },
+    {
+      "id": 4,
+      "source": "maple-house.md:37-41",
+      "heading": "Maple House Charter, Article V — Shared Chores",
+      "text": "All members share the household chores equally, following the rotating\nweekly schedule posted in the kitchen. Every member is assigned the same\nnumber of chore slots each month, and no member is exempt from the rotation\nfor any reason whatsoever. A member who cannot complete an assigned chore is\nrequired to arrange a direct swap with another member ahead of time."
+    },
+    {
+      "id": 5,
+      "source": "maple-house.md:45-49",
+      "heading": "Maple House Charter, Article VI — Pets",
+      "text": "No member may keep a pet of any kind in the house, with the single exception\nof fish kept in a tank no larger than twenty gallons. This rule exists to\nprotect members who have allergies and to avoid noise, odor, and damage to\nthe shared furnishings. A member who wishes to pet-sit an animal for someone\noutside the house must obtain unanimous consent from all members first."
+    },
+    {
+      "id": 6,
+      "source": "maple-house.md:53-57",
+      "heading": "Maple House Charter, Article VII — Smoking",
+      "text": "Smoking of any kind is forbidden everywhere inside the house, including\ninside a member's own private bedroom. The prohibition covers cigarettes,\ncigars, pipes, and vaporizers alike. It exists to keep the shared air clean\nand to reduce the risk of fire. Each member is responsible for ensuring that\ntheir visitors also refrain from smoking indoors during any visit."
+    },
+    {
+      "id": 7,
+      "source": "maple-house.md:61-65",
+      "heading": "Maple House Charter, Article VIII — Rent and Dues",
+      "text": "Each member must pay their share of the rent on or before the first day of\nevery month by transferring it to the house account. The monthly house dues\nthat cover shared cleaning supplies and paper goods are due on that same day.\nA member who anticipates any difficulty paying on time is required to notify\nthe house treasurer before the first of the month."
+    },
+    {
+      "id": 8,
+      "source": "maple-house.md:69-73",
+      "heading": "Maple House Charter, Article IX — Personal Belongings",
+      "text": "Members must keep their personal belongings in their own bedrooms or in\ntheir assigned storage space. A personal item left in a common area for more\nthan one full day may be moved by any other member to the owner's bedroom\ndoor. Perishable personal food left out in a common area may be thrown away\nafter a day. This keeps the shared spaces usable for everyone."
+    },
+    {
+      "id": 9,
+      "source": "maple-house.md:77-81",
+      "heading": "Maple House Charter, Article X — House Decisions",
+      "text": "The house meets on the first Sunday of every month to make decisions\ntogether. A decision passes by a simple majority of the members present, and\na recorded decision amends or extends this Charter from the date it is made.\nAny member may place an item on the meeting agenda by posting it on the\nkitchen board at least two days before the meeting."
+    },
+    {
+      "id": 10,
+      "source": "maple-house.md:85-89",
+      "heading": "Decision — 2026-01-12 — Guest Logbook",
+      "text": "To keep track of who is in the house at any time, the members resolved that\nevery overnight guest must be signed into the guest logbook kept by the\nfront door, recording the guest's name and the dates of their stay. The\nhosting member is responsible for making the entry before the guest's first\nnight. This record is meant to help with safety and accountability."
+    },
+    {
+      "id": 11,
+      "source": "maple-house.md:93-97",
+      "heading": "Decision — 2026-02-10 — Weeknight Quiet Hours",
+      "text": "After repeated complaints about noise on work nights, the house met and\nresolved to move the start of quiet hours earlier during the week. Effective\nimmediately, quiet hours now begin at 10:00 PM on Sunday through Thursday\nnights, a full hour earlier than the Charter originally set. The 7:00 AM end\ntime and the Friday and Saturday start times are left unchanged."
+    },
+    {
+      "id": 12,
+      "source": "maple-house.md:101-105",
+      "heading": "Decision — 2026-02-24 — Backyard Quiet",
+      "text": "Following complaints about late gatherings outdoors, the house resolved that\nthe quiet-hours rule also applies to the backyard and the back porch, not\nonly to the indoor common areas. During quiet hours, members and any guests\nmust keep outdoor conversation low and must not run outdoor speakers. This\ndecision extends the existing quiet hours rather than changing their times."
+    },
+    {
+      "id": 13,
+      "source": "maple-house.md:109-113",
+      "heading": "Decision — 2026-03-14 — Guest Policy Revisited",
+      "text": "Following a long discussion about privacy, crowding, and the shared cost of\nutilities, the house resolved to stop allowing overnight guests altogether.\nEffective this month, overnight guests are no longer permitted in the house\nat any time, for any number of nights, in any bedroom. Members may still\nhost visitors during the daytime, but every visitor must leave by 10:00 PM."
+    },
+    {
+      "id": 14,
+      "source": "maple-house.md:117-122",
+      "heading": "Decision — 2026-03-28 — Guest Parking",
+      "text": "To settle ongoing confusion about where visitors should leave their cars,\nthe house resolved to set aside the two marked spaces at the far end of the\ndriveway specifically for visitor and guest parking. Guests are welcome to\nleave a vehicle parked in those two spaces overnight without needing any\npermit. This decision is strictly about parking and changes nothing about\nwhether or how long guests may stay in the house."
+    },
+    {
+      "id": 15,
+      "source": "maple-house.md:126-130",
+      "heading": "Decision — 2026-04-02 — Cooking and Cleanup",
+      "text": "Recognizing that whichever member cooks dinner for the whole house already\ncontributes a great deal of effort, the house resolved that whoever cooks\nthe shared house dinner is excused from cleaning the kitchen on that night.\nOn those evenings, the work of washing the dishes, wiping the counters, and\ntaking out the trash falls instead to the members who sat down and ate."
+    },
+    {
+      "id": 16,
+      "source": "maple-house.md:134-138",
+      "heading": "Decision — 2026-04-18 — Fridge Labeling",
+      "text": "To cut down on food going to waste and on disputes over groceries, the house\nresolved that members must label their personal food in the shared\nrefrigerator with their name and the date it was placed there. Any unlabeled\nfood in the fridge may be treated as communal and eaten by anyone in the\nhouse. This decision adds to the kitchen rules rather than replacing them."
+    },
+    {
+      "id": 17,
+      "source": "maple-house.md:142-146",
+      "heading": "Decision — 2026-05-06 — Dining Room Reservations",
+      "text": "To make room for the occasional birthday or study group, the house resolved\nthat a member may reserve the dining room for their own private event up to\ntwice a month by signing the shared calendar at least three days ahead. For\nthe booked hours of a reserved event, the dining room is closed to the other\nmembers so that the host can use the space."
+    },
+    {
+      "id": 18,
+      "source": "maple-house.md:150-154",
+      "heading": "Decision — 2026-05-20 — Travel Chore Exemption",
+      "text": "Recognizing that several members travel frequently for work, the house\nresolved that any member who is away from the house for more than two\nconsecutive weeks is fully exempt from the chore rotation for the entire\nperiod they are gone. The remaining members will quietly cover the absent\nmember's chore slots, and the absent member owes no make-up chores on return."
+    },
+    {
+      "id": 19,
+      "source": "maple-house.md:158-162",
+      "heading": "Decision — 2026-06-03 — House Cat",
+      "text": "After a heartfelt request and a long debate, the house resolved by majority\nvote to allow one house cat, to be adopted and cared for collectively by the\nmembers. The cat is permitted only if every current member gives written\napproval beforehand, and it must be kept out of the bedroom of any member who\nobjects on the grounds of allergies."
+    },
+    {
+      "id": 20,
+      "source": "maple-house.md:166-170",
+      "heading": "Decision — 2026-06-10 — Porch Smoking",
+      "text": "In response to requests from members who smoke, the house resolved that\nsmoking is now permitted outdoors on the back porch only, provided that the\nsmoker uses the sand bucket and sits at least ten feet away from any open\nwindow. Smoking of every kind remains completely forbidden everywhere inside\nthe house, exactly as before."
+    },
+    {
+      "id": 21,
+      "source": "maple-house.md:174-178",
+      "heading": "Decision — 2026-06-15 — Late Rent Fee",
+      "text": "To encourage everyone to pay on time, the house resolved that a member whose\nrent share has not arrived in the house account by the fifth day of the\nmonth owes an additional late fee of twenty-five dollars on top of the rent.\nThe treasurer will send a reminder to all members two days before the\nmonthly deadline."
+    },
+    {
+      "id": 22,
+      "source": "maple-house.md:182-187",
+      "heading": "Maple House Charter, Article XI — Quiet Study Hours",
+      "text": "The dining room is set aside as a silent study space every weeknight from\n7:00 PM until 9:00 PM. During those hours the dining room is reserved for\nquiet individual work and may not be used for meals, conversation, or\ngatherings. Members who need to eat during that window should use the\nkitchen or their own rooms so that the study hours stay undisturbed for\nthose who are working."
+    },
+    {
+      "id": 23,
+      "source": "maple-house.md:191-196",
+      "heading": "Decision — 2026-06-22 — Thursday Movie Nights",
+      "text": "To give the house a shared social evening, the members resolved to hold a\nmovie night in the living room on Thursday evenings. On those nights the\nfilm and the conversation around it may run in the living room until\nmidnight, and any member who wishes to take part is welcome to stay up that\nlate. Members who would rather have quiet on a Thursday should plan around\nthe movie night."
+    }
+  ],
+  "candidates": [
+    {
+      "text": "Members may host overnight guests in their own private rooms.",
+      "quote": "Members may host overnight guests in their own private rooms.",
+      "chunk": 0,
+      "source": "maple-house.md:3-8",
+      "kind": "rule"
+    },
+    {
+      "text": "Any single guest may stay no more than two consecutive nights within any seven-day period.",
+      "quote": "Any single\nguest may stay no more than two consecutive nights within any seven-day\nperiod, so that no guest gradually becomes an unofficial resident of the\nhouse.",
+      "chunk": 0,
+      "source": "maple-house.md:3-8",
+      "kind": "rule",
+      "because": "so that no guest gradually becomes an unofficial resident of the house"
+    },
+    {
+      "text": "Whenever a guest is in the shared common areas, the hosting member must accompany them.",
+      "quote": "Whenever a guest is in the shared common areas, the hosting member\nmust accompany them.",
+      "chunk": 0,
+      "source": "maple-house.md:3-8",
+      "kind": "rule"
+    },
+    {
+      "text": "Each member is fully responsible for the conduct of their guests for the entire duration of the visit.",
+      "quote": "Each member is fully responsible for the conduct of\ntheir guests for the entire duration of the visit.",
+      "chunk": 0,
+      "source": "maple-house.md:3-8",
+      "kind": "rule"
+    },
+    {
+      "text": "Quiet hours are observed every night from 11:00 PM until 7:00 AM the following morning.",
+      "quote": "Quiet hours are observed every night, running from 11:00 PM until 7:00 AM\nthe following morning.",
+      "chunk": 1,
+      "source": "maple-house.md:12-17",
+      "kind": "rule"
+    },
+    {
+      "text": "During quiet hours, conversation in common areas must be kept low and music, television, or video games must be played through headphones.",
+      "quote": "During quiet hours, conversation in the common areas\nmust be kept low, and any music, television, or video games must be played\nthrough headphones.",
+      "chunk": 1,
+      "source": "maple-house.md:12-17",
+      "kind": "rule"
+    },
+    {
+      "text": "A member who anticipates unavoidable late-night noise is required to give the rest of the house advance notice.",
+      "quote": "A member who anticipates unavoidable late-night noise\nis required to give the rest of the house advance notice so that everyone\ncan reliably sleep.",
+      "chunk": 1,
+      "source": "maple-house.md:12-17",
+      "kind": "rule",
+      "because": "so that everyone can reliably sleep"
+    },
+    {
+      "text": "The kitchen must be cleaned by whoever used it immediately after finishing cooking or eating, which includes washing every dish used, wiping down the counters and stovetop, and taking out the trash when the bin is full.",
+      "quote": "The kitchen must be cleaned by whoever used it, immediately after that\nperson finishes cooking or eating. Cleaning means washing every dish you\nused, wiping down the counters and the stovetop, and taking out the trash\nwhen the bin is full.",
+      "chunk": 2,
+      "source": "maple-house.md:21-25",
+      "kind": "rule"
+    },
+    {
+      "text": "Leaving dirty dishes in the sink overnight is never permitted.",
+      "quote": "Leaving dirty dishes in the sink overnight is never\npermitted, no matter how late the hour or how tired the cook.",
+      "chunk": 2,
+      "source": "maple-house.md:21-25",
+      "kind": "rule"
+    },
+    {
+      "text": "The living room, the dining room, and the back porch are common areas that belong equally to every member of the house.",
+      "quote": "The living room, the dining room, and the back porch are common areas that\nbelong equally to every member of the house. No member may reserve a common\narea for their own exclusive use, even temporarily, and no member may treat\na common area as a personal extension of their bedroom. These shared spaces\nmust remain open and available to all members at all times.",
+      "chunk": 3,
+      "source": "maple-house.md:29-33",
+      "kind": "rule"
+    },
+    {
+      "text": "No member may reserve a common area for their own exclusive use or treat it as a personal extension of their bedroom.",
+      "quote": "No member may reserve a common\narea for their own exclusive use, even temporarily, and no member may treat\na common area as a personal extension of their bedroom.",
+      "chunk": 3,
+      "source": "maple-house.md:29-33",
+      "kind": "rule"
+    },
+    {
+      "text": "All members share household chores equally according to the rotating weekly schedule posted in the kitchen, with every member assigned the same number of chore slots each month and no exemptions from the rotation.",
+      "quote": "All members share the household chores equally, following the rotating\nweekly schedule posted in the kitchen. Every member is assigned the same\nnumber of chore slots each month, and no member is exempt from the rotation\nfor any reason whatsoever.",
+      "chunk": 4,
+      "source": "maple-house.md:37-41",
+      "kind": "rule"
+    },
+    {
+      "text": "A member who cannot complete an assigned chore must arrange a direct swap with another member ahead of time.",
+      "quote": "A member who cannot complete an assigned chore is\nrequired to arrange a direct swap with another member ahead of time.",
+      "chunk": 4,
+      "source": "maple-house.md:37-41",
+      "kind": "rule"
+    },
+    {
+      "text": "No member may keep a pet of any kind in the house, except for fish kept in a tank no larger than twenty gallons.",
+      "quote": "No member may keep a pet of any kind in the house, with the single exception\nof fish kept in a tank no larger than twenty gallons.",
+      "chunk": 5,
+      "source": "maple-house.md:45-49",
+      "kind": "rule"
+    },
+    {
+      "text": "A member must obtain unanimous consent from all other members before pet-sitting an animal for someone outside the house.",
+      "quote": "A member who wishes to pet-sit an animal for someone\noutside the house must obtain unanimous consent from all members first.",
+      "chunk": 5,
+      "source": "maple-house.md:45-49",
+      "kind": "rule"
+    },
+    {
+      "text": "Smoking of any kind is forbidden everywhere inside the house, including private bedrooms.",
+      "quote": "Smoking of any kind is forbidden everywhere inside the house, including\ninside a member's own private bedroom. The prohibition covers cigarettes,\ncigars, pipes, and vaporizers alike.",
+      "chunk": 6,
+      "source": "maple-house.md:53-57",
+      "kind": "rule"
+    },
+    {
+      "text": "Each member must ensure that their visitors refrain from smoking indoors during visits.",
+      "quote": "Each member is responsible for ensuring that\ntheir visitors also refrain from smoking indoors during any visit.",
+      "chunk": 6,
+      "source": "maple-house.md:53-57",
+      "kind": "rule"
+    },
+    {
+      "text": "Each member must pay their share of the rent and monthly house dues for shared cleaning supplies and paper goods on or before the first day of every month by transferring them to the house account.",
+      "quote": "Each member must pay their share of the rent on or before the first day of\nevery month by transferring it to the house account. The monthly house dues\nthat cover shared cleaning supplies and paper goods are due on that same day.",
+      "chunk": 7,
+      "source": "maple-house.md:61-65",
+      "kind": "rule"
+    },
+    {
+      "text": "A member who anticipates any difficulty paying on time is required to notify the house treasurer before the first of the month.",
+      "quote": "A member who anticipates any difficulty paying on time is required to notify\nthe house treasurer before the first of the month.",
+      "chunk": 7,
+      "source": "maple-house.md:61-65",
+      "kind": "rule"
+    },
+    {
+      "text": "Members must keep their personal belongings in their own bedrooms or in their assigned storage space.",
+      "quote": "Members must keep their personal belongings in their own bedrooms or in\ntheir assigned storage space.",
+      "chunk": 8,
+      "source": "maple-house.md:69-73",
+      "kind": "rule"
+    },
+    {
+      "text": "A personal item left in a common area for more than one full day may be moved by any other member to the owner's bedroom door.",
+      "quote": "A personal item left in a common area for more\nthan one full day may be moved by any other member to the owner's bedroom\ndoor.",
+      "chunk": 8,
+      "source": "maple-house.md:69-73",
+      "kind": "rule"
+    },
+    {
+      "text": "Perishable personal food left out in a common area may be thrown away after a day.",
+      "quote": "Perishable personal food left out in a common area may be thrown away\nafter a day.",
+      "chunk": 8,
+      "source": "maple-house.md:69-73",
+      "kind": "rule"
+    },
+    {
+      "text": "The house meets on the first Sunday of every month to make decisions together.",
+      "quote": "The house meets on the first Sunday of every month to make decisions\ntogether.",
+      "chunk": 9,
+      "source": "maple-house.md:77-81",
+      "kind": "rule"
+    },
+    {
+      "text": "A decision passes by a simple majority of the members present, and a recorded decision amends or extends this Charter from the date it is made.",
+      "quote": "A decision passes by a simple majority of the members present, and\na recorded decision amends or extends this Charter from the date it is made.",
+      "chunk": 9,
+      "source": "maple-house.md:77-81",
+      "kind": "rule"
+    },
+    {
+      "text": "Any member may place an item on the meeting agenda by posting it on the kitchen board at least two days before the meeting.",
+      "quote": "Any member may place an item on the meeting agenda by posting it on the\nkitchen board at least two days before the meeting.",
+      "chunk": 9,
+      "source": "maple-house.md:77-81",
+      "kind": "rule"
+    },
+    {
+      "text": "Every overnight guest must be signed into the guest logbook kept by the front door with their name and stay dates before their first night.",
+      "quote": "To keep track of who is in the house at any time, the members resolved that\nevery overnight guest must be signed into the guest logbook kept by the\nfront door, recording the guest's name and the dates of their stay. The\nhosting member is responsible for making the entry before the guest's first\nnight.",
+      "chunk": 10,
+      "source": "maple-house.md:85-89",
+      "kind": "rule"
+    },
+    {
+      "text": "Quiet hours begin at 10:00 PM on Sunday through Thursday nights and end at 7:00 AM.",
+      "quote": "Effective\nimmediately, quiet hours now begin at 10:00 PM on Sunday through Thursday\nnights, a full hour earlier than the Charter originally set. The 7:00 AM end\ntime and the Friday and Saturday start times are left unchanged.",
+      "chunk": 11,
+      "source": "maple-house.md:93-97",
+      "kind": "rule"
+    },
+    {
+      "text": "The quiet-hours rule applies to the backyard and the back porch in addition to indoor common areas.",
+      "quote": "Following complaints about late gatherings outdoors, the house resolved that\nthe quiet-hours rule also applies to the backyard and the back porch, not\nonly to the indoor common areas. During quiet hours, members and any guests\nmust keep outdoor conversation low and must not run outdoor speakers. This\ndecision extends the existing quiet hours rather than changing their times.",
+      "chunk": 12,
+      "source": "maple-house.md:101-105",
+      "kind": "rule"
+    },
+    {
+      "text": "During quiet hours, members and guests must keep outdoor conversation low and must not run outdoor speakers.",
+      "quote": "During quiet hours, members and any guests\nmust keep outdoor conversation low and must not run outdoor speakers.",
+      "chunk": 12,
+      "source": "maple-house.md:101-105",
+      "kind": "rule"
+    },
+    {
+      "text": "Overnight guests are not permitted in the house at any time for any number of nights or in any bedroom; daytime visitors must leave by 10:00 PM.",
+      "quote": "Effective this month, overnight guests are no longer permitted in the house\nat any time, for any number of nights, in any bedroom. Members may still\nhost visitors during the daytime, but every visitor must leave by 10:00 PM.",
+      "chunk": 13,
+      "source": "maple-house.md:109-113",
+      "kind": "rule"
+    },
+    {
+      "text": "The two marked spaces at the far end of the driveway are reserved for visitor and guest parking, which may be used overnight without a permit.",
+      "quote": "To settle ongoing confusion about where visitors should leave their cars,\nthe house resolved to set aside the two marked spaces at the far end of the\ndriveway specifically for visitor and guest parking. Guests are welcome to\nleave a vehicle parked in those two spaces overnight without needing any\npermit.",
+      "chunk": 14,
+      "source": "maple-house.md:117-122",
+      "kind": "rule"
+    },
+    {
+      "text": "The member who cooks the shared house dinner is excused from cleaning the kitchen on that night.",
+      "quote": "Recognizing that whichever member cooks dinner for the whole house already\ncontributes a great deal of effort, the house resolved that whoever cooks\nthe shared house dinner is excused from cleaning the kitchen on that night.\nOn those evenings, the work of washing the dishes, wiping the counters, and\ntaking out the trash falls instead to the members who sat down and ate.",
+      "chunk": 15,
+      "source": "maple-house.md:126-130",
+      "kind": "rule"
+    },
+    {
+      "text": "On evenings when a member cooks the shared house dinner, the members who ate are responsible for washing dishes, wiping counters, and taking out the trash.",
+      "quote": "On those evenings, the work of washing the dishes, wiping the counters, and\ntaking out the trash falls instead to the members who sat down and ate.",
+      "chunk": 15,
+      "source": "maple-house.md:126-130",
+      "kind": "rule"
+    },
+    {
+      "text": "Members must label their personal food in the shared refrigerator with their name and the date it was placed there; any unlabeled food may be treated as communal and eaten by anyone.",
+      "quote": "To cut down on food going to waste and on disputes over groceries, the house\nresolved that members must label their personal food in the shared\nrefrigerator with their name and the date it was placed there. Any unlabeled\nfood in the fridge may be treated as communal and eaten by anyone in the\nhouse.",
+      "chunk": 16,
+      "source": "maple-house.md:134-138",
+      "kind": "rule",
+      "because": "To cut down on food going to waste and on disputes over groceries"
+    },
+    {
+      "text": "A member may reserve the dining room for a private event up to twice a month by signing the shared calendar at least three days ahead.",
+      "quote": "To make room for the occasional birthday or study group, the house resolved\nthat a member may reserve the dining room for their own private event up to\ntwice a month by signing the shared calendar at least three days ahead.",
+      "chunk": 17,
+      "source": "maple-house.md:142-146",
+      "kind": "rule"
+    },
+    {
+      "text": "The dining room is closed to other members during the booked hours of a reserved event so that the host can use the space.",
+      "quote": "For\nthe booked hours of a reserved event, the dining room is closed to the other\nmembers so that the host can use the space.",
+      "chunk": 17,
+      "source": "maple-house.md:142-146",
+      "kind": "rule"
+    },
+    {
+      "text": "Any member away from the house for more than two consecutive weeks is fully exempt from the chore rotation for that period, with no make-up chores owed on return.",
+      "quote": "Recognizing that several members travel frequently for work, the house\nresolved that any member who is away from the house for more than two\nconsecutive weeks is fully exempt from the chore rotation for the entire\nperiod they are gone. The remaining members will quietly cover the absent\nmember's chore slots, and the absent member owes no make-up chores on return.",
+      "chunk": 18,
+      "source": "maple-house.md:150-154",
+      "kind": "rule"
+    },
+    {
+      "text": "The house allows one cat to be adopted and cared for collectively by the members.",
+      "quote": "After a heartfelt request and a long debate, the house resolved by majority\nvote to allow one house cat, to be adopted and cared for collectively by the\nmembers. The cat is permitted only if every current member gives written\napproval beforehand, and it must be kept out of the bedroom of any member who\nobjects on the grounds of allergies.",
+      "chunk": 19,
+      "source": "maple-house.md:158-162",
+      "kind": "rule"
+    },
+    {
+      "text": "A cat is permitted only if every current member gives written approval beforehand.",
+      "quote": "The cat is permitted only if every current member gives written\napproval beforehand, and it must be kept out of the bedroom of any member who\nobjects on the grounds of allergies.",
+      "chunk": 19,
+      "source": "maple-house.md:158-162",
+      "kind": "rule"
+    },
+    {
+      "text": "The cat must be kept out of the bedroom of any member who objects on the grounds of allergies.",
+      "quote": "The cat is permitted only if every current member gives written\napproval beforehand, and it must be kept out of the bedroom of any member who\nobjects on the grounds of allergies.",
+      "chunk": 19,
+      "source": "maple-house.md:158-162",
+      "kind": "rule"
+    },
+    {
+      "text": "Smoking is permitted outdoors on the back porch only if the smoker uses the sand bucket and sits at least ten feet away from any open window.",
+      "quote": "In response to requests from members who smoke, the house resolved that\nsmoking is now permitted outdoors on the back porch only, provided that the\nsmoker uses the sand bucket and sits at least ten feet away from any open\nwindow.",
+      "chunk": 20,
+      "source": "maple-house.md:166-170",
+      "kind": "rule"
+    },
+    {
+      "text": "Smoking of every kind remains completely forbidden everywhere inside the house.",
+      "quote": "Smoking of every kind remains completely forbidden everywhere inside\nthe house, exactly as before.",
+      "chunk": 20,
+      "source": "maple-house.md:166-170",
+      "kind": "rule"
+    },
+    {
+      "text": "A member whose rent share has not arrived in the house account by the fifth day of the month owes an additional late fee of twenty-five dollars.",
+      "quote": "To encourage everyone to pay on time, the house resolved that a member whose\nrent share has not arrived in the house account by the fifth day of the\nmonth owes an additional late fee of twenty-five dollars on top of the rent.",
+      "chunk": 21,
+      "source": "maple-house.md:174-178",
+      "kind": "rule",
+      "because": "To encourage everyone to pay on time"
+    },
+    {
+      "text": "The treasurer sends a reminder to all members two days before the monthly deadline.",
+      "quote": "The treasurer will send a reminder to all members two days before the\nmonthly deadline.",
+      "chunk": 21,
+      "source": "maple-house.md:174-178",
+      "kind": "rule"
+    },
+    {
+      "text": "The dining room is a silent study space every weeknight from 7:00 PM until 9:00 PM and may not be used for meals, conversation, or gatherings during those hours.",
+      "quote": "The dining room is set aside as a silent study space every weeknight from\n7:00 PM until 9:00 PM. During those hours the dining room is reserved for\nquiet individual work and may not be used for meals, conversation, or\ngatherings.",
+      "chunk": 22,
+      "source": "maple-house.md:182-187",
+      "kind": "rule"
+    },
+    {
+      "text": "Movie nights are held in the living room on Thursday evenings and may run until midnight.",
+      "quote": "To give the house a shared social evening, the members resolved to hold a\nmovie night in the living room on Thursday evenings. On those nights the\nfilm and the conversation around it may run in the living room until\nmidnight, and any member who wishes to take part is welcome to stay up that\nlate.",
+      "chunk": 23,
+      "source": "maple-house.md:191-196",
+      "kind": "rule"
+    },
+    {
+      "text": "Members who prefer quiet on Thursdays must plan around the movie night.",
+      "quote": "Members who would rather have quiet on a Thursday should plan around\nthe movie night.",
+      "chunk": 23,
+      "source": "maple-house.md:191-196",
+      "kind": "rule"
+    },
+    {
+      "text": "The rule against keeping pets exists to protect members with allergies and to prevent noise, odor, and damage to shared furnishings.",
+      "quote": "This rule exists to\nprotect members who have allergies and to avoid noise, odor, and damage to\nthe shared furnishings.",
+      "chunk": 5,
+      "source": "maple-house.md:45-49",
+      "kind": "record",
+      "because": "to protect members who have allergies and to avoid noise, odor, and damage to the shared furnishings"
+    },
+    {
+      "text": "The record is meant to help with safety and accountability.",
+      "quote": "This record is meant to help with safety and accountability.",
+      "chunk": 10,
+      "source": "maple-house.md:85-89",
+      "kind": "record",
+      "because": "safety and accountability"
+    }
+  ],
+  "dropped": [
+    {
+      "text": "Guest lodging duration is not addressed by this decision.",
+      "quote": "This decision is strictly about parking and changes nothing about\nwhether or how long guests may stay in the house.",
+      "chunk": 14,
+      "reason": "a silence with no stated reason is indistinguishable from a gap"
+    },
+    {
+      "text": "Members must use the kitchen or their own rooms to eat between 7:00 PM and 9:00 PM on weeknights.",
+      "quote": "Members who need to eat during that window should use the\nkitchen or their own rooms so that the study hours stay undisturbed for\nthose who are working.",
+      "chunk": 22,
+      "reason": "states `7:00 PM`, which its citation does not"
+    }
+  ],
+  "unread": [],
+  "duplicates": [
+    [
+      15,
+      41
+    ]
+  ],
+  "kept": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48
+  ],
+  "tensions": [
+    {
+      "a": 1,
+      "b": 3,
+      "reason": "A guest stays for two consecutive nights (honoring the limit in 'Any single guest may stay no more than two consecutive nights'), but on the second night they commit a serious violation such as damaging property or causing a disturbance. The host is held 'fully responsible... for the entire duration of the visit' by one rule, yet cannot extend the stay to manage the aftermath without violating the strict time limit imposed by the other."
+    },
+    {
+      "a": 2,
+      "b": 4,
+      "reason": "During quiet hours ('11:00 PM until 7:00 AM'), a member needs to use the bathroom located in a common area (or must pass through one). They are required to be accompanied by their guest if the guest is present ('hosting member must accompany them'), but keeping conversation low and avoiding noise during this transit while actively supervising another person creates an impossible conflict between mandatory supervision and mandatory silence/quiet behavior standards that cannot both be fully honored without risk of violation or neglect."
+    },
+    {
+      "a": 7,
+      "b": 8,
+      "reason": "A member finishes cooking at 10:55 PM. Rule 'The kitchen must be cleaned... immediately after finishing' requires immediate action, but rule 'Leaving dirty dishes in the sink overnight is never permitted' sets a hard deadline for removal. If the cleaning process takes longer than expected (e.g., due to a large amount of dishes), adhering strictly to 'immediately' might not prevent leaving them until past midnight if one interprets 'overnight' as starting at 12 AM, creating ambiguity and tension between the immediacy requirement and the absolute prohibition on overnight residue."
+    },
+    {
+      "a": 0,
+      "b": 29,
+      "reason": "Commitment 1 allows members to host overnight guests in their private rooms, while Commitment 8 explicitly states that 'Overnight guests are not permitted in the house at any time for any number of nights or in any bedroom.' A member attempting to honor the right to have an overnight guest would directly violate the absolute prohibition on such stays."
+    },
+    {
+      "a": 1,
+      "b": 30,
+      "reason": "Commitment 2 limits a single guest's stay to no more than two consecutive nights within any seven-day period, whereas Commitment 9 permits visitor and guest parking spaces to be used 'overnight without a permit' with no stated duration limit. If a guest parks their car in these reserved spots for three consecutive nights (which is allowed by the parking rule but violates the lodging cap), honoring the parking commitment requires allowing a situation that breaks the lodging restriction."
+    },
+    {
+      "a": 4,
+      "b": 26,
+      "reason": "On a Tuesday night at 10:30 PM, the general rule requires quiet hours to begin only at 11:00 PM, while the specific weekday rule mandates they have already begun at 10:00 PM; adhering to one time threshold directly violates the other."
+    },
+    {
+      "a": 7,
+      "b": 31,
+      "reason": "When a member cooks the shared house dinner and finishes eating in the kitchen, the immediate cleaning requirement conflicts with their explicit exemption from that duty on that specific night, making it impossible to fully honor both obligations simultaneously."
+    },
+    {
+      "a": 25,
+      "b": 29,
+      "reason": "Commitment 12 requires every overnight guest to be signed into the logbook before their first night, but Commitment 16 explicitly forbids any member from having an overnight guest in the house at any time. A situation where a member attempts to host an overnight visitor creates a direct conflict: complying with the logging requirement implies permission for the stay, which violates the absolute ban on overnight guests."
+    },
+    {
+      "a": 30,
+      "b": 29,
+      "reason": "Commitment 17 reserves driveway spaces for 'visitor and guest parking' that may be used 'overnight,' implying the presence of guests staying or visiting late into the night, while Commitment 16 states that daytime visitors must leave by 10:00 PM and no overnight guests are permitted. A situation where a visitor parks in these reserved spots after 10:00 PM to wait for someone or because they cannot find other parking conflicts with the strict departure time mandated for all non-members."
+    },
+    {
+      "a": 13,
+      "b": 37,
+      "reason": "The commitment forbidding any pet except fish directly conflicts with the allowance for one cat to be adopted and cared for collectively. A situation where members wish to adopt a cat forces a choice between honoring the general ban on pets or the specific exception permitting felines."
+    },
+    {
+      "a": 15,
+      "b": 40,
+      "reason": "One rule states smoking is forbidden everywhere inside the house including private bedrooms, while another explicitly permits it outdoors on the back porch under certain conditions. If the back porch is considered part of the 'house' structure (as implied by its inclusion in common areas), these rules contradict each other regarding whether smoking is allowed there at all."
+    },
+    {
+      "a": 16,
+      "b": 40,
+      "reason": "A member smokes on the back porch in compliance with 'Smoking is permitted outdoors... if the smoker uses the sand bucket and sits at least ten feet away from any open window,' but a visitor present during this time refrains from smoking indoors only because they are outside; however, if the visitor enters to use the restroom or retrieve an item while the host is still smoking nearby, the requirement that visitors 'refrain from smoking indoors' conflicts with the practical reality of being in a shared house where outdoor smoking is explicitly regulated as part of indoor living norms. More directly: The rule allows outdoor smoking under specific conditions, implying it is acceptable behavior for members/visitors when those conditions are met. However, Rule 1 requires ensuring visitors refrain from smoking *indoors*. If a visitor smokes on the porch (outdoors) and then immediately re-enters without washing hands/changing clothes, they may bring smoke residue inside, but this is weak. Let's look closer at Rule 1 vs Rule 11. Actually, there is no direct tension between 'no indoor smoking' and 'permitted outdoor smoking'. They govern different spaces.\n\nLet's re-evaluate potential tensions.\n\nRule 2: Pay rent by day 1.\nRule 3: Notify treasurer before day 1 if difficulty paying.\nRule 12: Late fee if not arrived by day 5.\nIs there a tension? If I notify on Dec 30 (before Jan 1) that I will pay late, do I still owe the fee if it arrives Jan 4? The rule says 'owes an additional late fee... [if] has not arrived... by the fifth day'. It doesn't say notification waives the fee. So no direct contradiction in outcome, just procedural steps.\n\nRule 7: Meet first Sunday of every month.\nRule 8: Decision passes by simple majority present.\nNo obvious tension.\n\nRule 9: Cat permitted only with written approval from *every* current member beforehand.\nRule 10: Cat must be kept out of bedroom of any member who objects on grounds of allergies.\nTension? If a member approves the cat (satisfying Rule 9) but later develops an allergy or always had one and objected to it being in their room (satisfying Rule 10), is there a conflict? No, these are compatible. One allows entry into house, other restricts access to specific rooms.\n\nWait, look at Rule 9 vs Rule 8/7?\nIf a new member moves in after the cat was approved by 'every current member' at that time, does the new member need to approve? The rule says 'beforehand'. It implies prior consent of existing members. It doesn't explicitly require future members to consent before they move in, only that *current* members gave approval when the decision was made. This seems like an ambiguity rather than a hard tension between two commitments governing the same situation with different thresholds/dates.\n\nLet's look at Rule 14 and Rule 15.\nRule 14: Dining room is silent study space every weeknight (Mon-Fri) from 7-9 PM. No meals/conversation/gatherings.\nRule 15: Movie nights are held in the living room on Thursday evenings until midnight.\nThursday is a weeknight. The movie night is in the *living room*. Rule 14 restricts the *dining room*. These are different spaces. So no tension there, unless 'gatherings' implies using common areas generally? But it specifies 'The dining room'.\n\nLet's look at Rule 1 and Rule 11 again.\nRule 1: Visitors refrain from smoking indoors.\nRule 11: Smoking permitted outdoors... if smoker uses sand bucket...\nIs there a situation where these conflict?\nIf a visitor smokes on the porch (outdoors), they are not violating Rule 1 because they are not indoors. They are complying with Rule 11. No tension.\n\nWhat about Rule 5 and Rule 6?\nRule 5: Personal item left in common area > 1 day may be moved to owner's bedroom door.\nRule 6: Perishable personal food left out in common area may be thrown away after a day.\nThese govern different types of items (general vs perishable) or actions (move vs throw). If I leave an apple, it can be thrown away. If I leave a book, it gets moved. No conflict.\n\nLet's look at Rule 2 and Rule 3 again carefully.\nCommitment A: 'Each member must pay their share... on or before the first day...' (Rule 2)\nCommitment B: 'A member who anticipates any difficulty paying on time is required to notify the house treasurer before the first of the month.' (Rule 3)\nSituation: A member knows they will not have funds by Day 1 but expects to get them by Day 4. They notify the treasurer on Dec 30 (before Jan 1). This satisfies Rule 3. However, because they did not pay *on* Jan 1, they violate Rule 2 ('must pay... on or before the first day'). The notification does not exempt them from the payment deadline in Rule 2; it only mandates communication. Is this a tension? One commitment requires action X (pay) by Date D. Another requires action Y (notify) if you can't do X by Date D. Honoring Y (notifying) doesn't break X unless you fail to do X. But the prompt asks for pairs that cannot *both be fully honoured*. If I notify and then pay late, I have honoured 'Notify' but violated 'Pay'. Can I honour both? Yes, by paying on time AND notifying (if I anticipated difficulty but ultimately paid). Or by paying on time and not needing to notify. The conflict arises when I *cannot* pay on time. In that case, I must violate Rule 2 regardless of whether I follow Rule 3. This is a situation where the obligations are mutually exclusive in outcome: You either pay on time (honouring 2) or you don't (violating 2), while potentially honouring 3. But usually, tensions involve two rules pointing in opposite directions for the same action.\n\nLet's look at Rule 9 and Rule 10 again.\nRule 9: Cat permitted only if every current member gives written approval beforehand.\nRule 10: Cat must be kept out of bedroom of any member who objects... allergies.\nSituation: A member has an allergy but *approves* the cat anyway (perhaps they have medication). They satisfy Rule 9 by approving. Then they object to it being in their room based on allergies. This is consistent with Rule 10. No tension.\nWhat if a member does NOT approve? Then no cat can come in (Rule 9 fails). So Rule 10 never triggers because there is no cat. Consistent.\n\nLet's look at Rule 7 and Rule 8?\nNo obvious conflict.\n\nIs there a tension between Rule 2 and Rule 13?\nRule 2: Pay by Day 1.\nRule 13: Treasurer sends reminder two days before deadline (Day -1, i.e., last day of previous month).\nThis supports compliance, doesn't conflict.\n\nHow about Rule 5 vs Rule 4?\nRule 4: Keep belongings in bedroom/storage.\nRule 5: If left out > 1 day, may be moved to door.\nIf I leave it out for 2 hours, I violate Rule 4? 'Must keep... in'. Yes. But Rule 5 only triggers after a full day. So there is a gap where you are violating Rule 4 but not yet subject to the penalty/action of Rule 5. This isn't a tension between two rules forcing different actions; it's just that one rule has an immediate obligation and another has a delayed consequence.\n\nLet's reconsider Rule 9 vs Rule 8/7 regarding *new* members.\nThe Charter says decisions amend from date made (Rule 8). If a cat was approved by all current members on Jan 1st, and a new member moves in Feb 1st without being asked for approval, does the 'every current member' requirement apply retroactively or prospectively? The commitment is 'A cat is permitted only if every current member gives written approval beforehand.'\nIf I interpret 'current member' as 'members at the time of admission', then when the new person arrives, they are now a current member. Did they give approval *beforehand*? No. So strictly speaking, the condition 'every current member... gave approval beforehand' is no longer true because there is a current member who did not give approval before their arrival (or before the cat's continued presence?). This creates a tension between maintaining the status quo (cat stays) and the strict reading that *all* current members must have pre-approved.\nTo honour Rule 9 fully in February, you would need to get written approval from the new member. If they refuse, the cat can no longer be permitted. But if we assume the decision was valid when made, does it persist?\nThis feels like an interpretive ambiguity rather than a hard logical contradiction with different dates/counts.\n\nLet's look at Rule 14 vs Rule 15 again.\nRule 14: Dining room silent study space weeknights 7-9 PM. No meals/conversation/gatherings.\nRule 15: Movie nights in living room Thursday evenings until midnight.\nThursday is a weeknight. The movie night involves conversation and gathering (implied by 'movie night'). It happens in the *living room*. Rule 14 restricts the *dining room*. Unless the house layout implies that using the living room for a loud gathering violates the spirit of 'silent study' if they are adjacent? But the rules specify specific rooms. Precision over recall suggests I should not infer spatial adjacency conflicts unless stated.\n\nWait, look at Rule 16: 'Members who prefer quiet on Thursdays must plan around the movie night.'\nThis acknowledges the noise from Rule 15. No tension with Rule 14 because different rooms.\n\nIs there any pair involving dates?\nRule 2: Pay by Day 1.\nRule 3: Notify before Day 1.\nRule 12: Late fee if not paid by Day 5.\nSituation: Member pays on Day 3.\nThey violated Rule 2 (must pay by Day 1).\nDid they violate Rule 3? Only if they *anticipated* difficulty and failed to notify. If they didn't anticipate it, no violation of 3.\nIf they did anticipate it and notified, they honoured 3 but still violated 2.\nThe tension is that the system requires payment by Day 1, but provides a mechanism for late notification without waiving the deadline or penalty structure explicitly linked to the notification. However, usually 'tension' implies two rules say opposite things about what you should do in situation S.\nHere: Situation = You will be late.\nRule 2 says: Pay on time (impossible).\nRule 3 says: Notify before due date.\nYou can honour Rule 3 while violating Rule 2. Can you honour both? Only if you pay on time AND notify (which is redundant/odd). The conflict is between the *ideal* of paying on time and the *reality* of being late where only notification is mandated. This isn't a pair of commitments that cannot both be honoured; it's one commitment (pay) that becomes impossible, making the other (notify) the fallback. It doesn't force a choice between two valid actions; it forces a violation of one to satisfy procedural requirements for the other context.\n\nLet's look at Rule 9 again. 'Every current member'.\nIf I have 3 members. All approve cat. Cat enters.\nMember A moves out. Member B moves in.\nNow there are 3 members: Old B, Old C, New D.\nDid *every* current member give written approval beforehand? No, New D did not.\nSo strictly, the condition is no longer met. The cat should be removed or re-approved?\nThe commitment 'A cat is permitted only if...' sets a continuous condition. If the set of 'current members' changes such that one hasn't approved, the permission lapses.\nIs this a tension with Rule 8 (decisions amend charter)?\nRule 8 says a recorded decision amends/extends the Charter from date made. This implies decisions have lasting power unless changed. But Rule 9 defines the *condition* for permission based on membership status at any given time ('every current member').\nSituation: A new member joins after initial approval.\nCommitment A (via Rule 8 implication): The previous vote stands as a valid amendment allowing the cat.\nCommitment B (Rule 9 literal text): Permission requires every *current* member to have approved beforehand. Since the new member is now 'current' and didn't approve, the condition fails.\nThis creates a tension between the permanence of past votes (implied by general charter mechanics) and the dynamic requirement of unanimous consent from all *present* members in Rule 9. Honouring the standing decision keeps the cat; honouring the strict wording of Rule 9 removes it or demands re-vote. This fits the definition: two commitments governing the same situation (presence of cat with changing membership) that name different thresholds/conditions for validity."
+    }
+  ],
+  "tension_passes": 12,
+  "tension_schedule": {
+    "passes": 12,
+    "batch": 24,
+    "looks": 2
+  },
+  "tape": [
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-14088760\",\"object\":\"chat.completion\",\"created\":1788150218,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"Members may host overnight guests in their own private rooms.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"so that no guest gradually becomes an unofficial resident of the house\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Any single guest may stay no more than two consecutive nights within any seven-day period.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Whenever a guest is in the shared common areas, the hosting member must accompany them.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 4,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 4,\\n      \\\"text\\\": \\\"Each member is fully responsible for the conduct of their guests for the entire duration of the visit.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":833,\"completion_tokens\":259,\"total_tokens\":1092}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-5241174\",\"object\":\"chat.completion\",\"created\":1788150223,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"Quiet hours are observed every night from 11:00 PM until 7:00 AM the following morning.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"During quiet hours, conversation in common areas must be kept low and music, television, or video games must be played through headphones.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"so that everyone can reliably sleep\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"A member who anticipates unavoidable late-night noise is required to give the rest of the house advance notice.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":835,\"completion_tokens\":219,\"total_tokens\":1054}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3447329\",\"object\":\"chat.completion\",\"created\":1788150227,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The kitchen must be cleaned by whoever used it immediately after finishing cooking or eating, which includes washing every dish used, wiping down the counters and stovetop, and taking out the trash when the bin is full.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Leaving dirty dishes in the sink overnight is never permitted.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":824,\"completion_tokens\":154,\"total_tokens\":978}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3230930\",\"object\":\"chat.completion\",\"created\":1788150230,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"The living room, the dining room, and the back porch are common areas that belong equally to every member of the house.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"No member may reserve a common area for their own exclusive use or treat it as a personal extension of their bedroom.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":824,\"completion_tokens\":146,\"total_tokens\":970}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3413341\",\"object\":\"chat.completion\",\"created\":1788150234,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"All members share household chores equally according to the rotating weekly schedule posted in the kitchen, with every member assigned the same number of chore slots each month and no exemptions from the rotation.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"A member who cannot complete an assigned chore must arrange a direct swap with another member ahead of time.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":819,\"completion_tokens\":154,\"total_tokens\":973}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-5090310\",\"object\":\"chat.completion\",\"created\":1788150239,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"No member may keep a pet of any kind in the house, except for fish kept in a tank no larger than twenty gallons.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"to protect members who have allergies and to avoid noise, odor, and damage to the shared furnishings\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"record\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The rule against keeping pets exists to protect members with allergies and to prevent noise, odor, and damage to shared furnishings.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"A member must obtain unanimous consent from all other members before pet-sitting an animal for someone outside the house.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":827,\"completion_tokens\":232,\"total_tokens\":1059}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-2857441\",\"object\":\"chat.completion\",\"created\":1788150242,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Smoking of any kind is forbidden everywhere inside the house, including private bedrooms.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 4,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 4,\\n      \\\"text\\\": \\\"Each member must ensure that their visitors refrain from smoking indoors during visits.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":823,\"completion_tokens\":128,\"total_tokens\":951}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3572575\",\"object\":\"chat.completion\",\"created\":1788150245,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Each member must pay their share of the rent and monthly house dues for shared cleaning supplies and paper goods on or before the first day of every month by transferring them to the house account.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"A member who anticipates any difficulty paying on time is required to notify the house treasurer before the first of the month.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":823,\"completion_tokens\":159,\"total_tokens\":982}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-4277972\",\"object\":\"chat.completion\",\"created\":1788150250,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"Members must keep their personal belongings in their own bedrooms or in their assigned storage space.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"A personal item left in a common area for more than one full day may be moved by any other member to the owner's bedroom door.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Perishable personal food left out in a common area may be thrown away after a day.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":831,\"completion_tokens\":204,\"total_tokens\":1035}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-4408055\",\"object\":\"chat.completion\",\"created\":1788150254,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"The house meets on the first Sunday of every month to make decisions together.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"A decision passes by a simple majority of the members present, and a recorded decision amends or extends this Charter from the date it is made.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Any member may place an item on the meeting agenda by posting it on the kitchen board at least two days before the meeting.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":822,\"completion_tokens\":209,\"total_tokens\":1031}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3927932\",\"object\":\"chat.completion\",\"created\":1788150258,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Every overnight guest must be signed into the guest logbook kept by the front door with their name and stay dates before their first night.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"safety and accountability\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"record\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"The record is meant to help with safety and accountability.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":832,\"completion_tokens\":141,\"total_tokens\":973}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-2014745\",\"object\":\"chat.completion\",\"created\":1788150260,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Quiet hours begin at 10:00 PM on Sunday through Thursday nights and end at 7:00 AM.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":837,\"completion_tokens\":82,\"total_tokens\":919}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3061217\",\"object\":\"chat.completion\",\"created\":1788150264,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"The quiet-hours rule applies to the backyard and the back porch in addition to indoor common areas.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"During quiet hours, members and guests must keep outdoor conversation low and must not run outdoor speakers.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":825,\"completion_tokens\":136,\"total_tokens\":961}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-2334941\",\"object\":\"chat.completion\",\"created\":1788150266,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Overnight guests are not permitted in the house at any time for any number of nights or in any bedroom; daytime visitors must leave by 10:00 PM.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":837,\"completion_tokens\":91,\"total_tokens\":928}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3195782\",\"object\":\"chat.completion\",\"created\":1788150269,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The two marked spaces at the far end of the driveway are reserved for visitor and guest parking, which may be used overnight without a permit.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"silence\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Guest lodging duration is not addressed by this decision.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":833,\"completion_tokens\":136,\"total_tokens\":969}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3396917\",\"object\":\"chat.completion\",\"created\":1788150273,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The member who cooks the shared house dinner is excused from cleaning the kitchen on that night.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"On evenings when a member cooks the shared house dinner, the members who ate are responsible for washing dishes, wiping counters, and taking out the trash.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":826,\"completion_tokens\":147,\"total_tokens\":973}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-2479164\",\"object\":\"chat.completion\",\"created\":1788150275,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"To cut down on food going to waste and on disputes over groceries\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Members must label their personal food in the shared refrigerator with their name and the date it was placed there; any unlabeled food may be treated as communal and eaten by anyone.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":831,\"completion_tokens\":105,\"total_tokens\":936}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3420015\",\"object\":\"chat.completion\",\"created\":1788150279,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"A member may reserve the dining room for a private event up to twice a month by signing the shared calendar at least three days ahead.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The dining room is closed to other members during the booked hours of a reserved event so that the host can use the space.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":826,\"completion_tokens\":150,\"total_tokens\":976}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-2408176\",\"object\":\"chat.completion\",\"created\":1788150282,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Any member away from the house for more than two consecutive weeks is fully exempt from the chore rotation for that period, with no make-up chores owed on return.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":824,\"completion_tokens\":88,\"total_tokens\":912}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-4285482\",\"object\":\"chat.completion\",\"created\":1788150286,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The house allows one cat to be adopted and cared for collectively by the members.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"A cat is permitted only if every current member gives written approval beforehand.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The cat must be kept out of the bedroom of any member who objects on the grounds of allergies.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":820,\"completion_tokens\":190,\"total_tokens\":1010}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3088919\",\"object\":\"chat.completion\",\"created\":1788150289,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"Smoking is permitted outdoors on the back porch only if the smoker uses the sand bucket and sits at least ten feet away from any open window.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Smoking of every kind remains completely forbidden everywhere inside the house.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":815,\"completion_tokens\":140,\"total_tokens\":955}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-3305723\",\"object\":\"chat.completion\",\"created\":1788150293,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"To encourage everyone to pay on time\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 1,\\n      \\\"text\\\": \\\"A member whose rent share has not arrived in the house account by the fifth day of the month owes an additional late fee of twenty-five dollars.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 2,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The treasurer sends a reminder to all members two days before the monthly deadline.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":817,\"completion_tokens\":150,\"total_tokens\":967}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-4126032\",\"object\":\"chat.completion\",\"created\":1788150297,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"The dining room is a silent study space every weeknight from 7:00 PM until 9:00 PM and may not be used for meals, conversation, or gatherings during those hours.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"so that the study hours stay undisturbed for those who are working\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Members must use the kitchen or their own rooms to eat between 7:00 PM and 9:00 PM on weeknights.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":838,\"completion_tokens\":184,\"total_tokens\":1022}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "commitments",
+      "raw": "{\"id\":\"chatcmpl-2905242\",\"object\":\"chat.completion\",\"created\":1788150300,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"commitments\\\": [\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 1,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 2,\\n      \\\"text\\\": \\\"Movie nights are held in the living room on Thursday evenings and may run until midnight.\\\"\\n    },\\n    {\\n      \\\"because\\\": \\\"\\\",\\n      \\\"first\\\": 3,\\n      \\\"kind\\\": \\\"rule\\\",\\n      \\\"last\\\": 3,\\n      \\\"text\\\": \\\"Members who prefer quiet on Thursdays must plan around the movie night.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":835,\"completion_tokens\":129,\"total_tokens\":964}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-7618665\",\"object\":\"chat.completion\",\"created\":1788150308,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"guest stay duration\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"two consecutive nights\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"guest stay duration\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"two consecutive nights\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 7,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 8,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 9,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"quiet hours start\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"11:00 PM\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 10,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"quiet hours start\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"11:00 PM\\\"\\n        }\\n      ]\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":493,\"completion_tokens\":370,\"total_tokens\":863}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-979017\",\"object\":\"chat.completion\",\"created\":1788150309,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"rules\\\": []}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":635,\"completion_tokens\":7,\"total_tokens\":642}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-6277047\",\"object\":\"chat.completion\",\"created\":1788150315,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 7,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"tank size\\\",\\n          \\\"unit\\\": \\\"gallons\\\",\\n          \\\"value\\\": \\\"twenty\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 8,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"tank size\\\",\\n          \\\"unit\\\": \\\"gallons\\\",\\n          \\\"value\\\": \\\"twenty\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 9,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 10,\\n      \\\"quantities\\\": []\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":580,\"completion_tokens\":296,\"total_tokens\":876}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-5357591\",\"object\":\"chat.completion\",\"created\":1788150320,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"rules\\\": [{\\\"n\\\": 1, \\\"quantities\\\": []}, {\\\"n\\\": 2, \\\"quantities\\\": []}, {\\\"n\\\": 3, \\\"quantities\\\": []}, {\\\"n\\\": 4, \\\"quantities\\\": []}, {\\\"n\\\": 5, \\\"quantities\\\": [{\\\"of\\\": \\\"payment deadline\\\", \\\"unit\\\": \\\"\\\", \\\"value\\\": \\\"first day of every month\\\"}]}, {\\\"n\\\": 6, \\\"quantities\\\": [{\\\"of\\\": \\\"rent payment deadline\\\", \\\"unit\\\": \\\"\\\", \\\"value\\\": \\\"first day of every month\\\"}, {\\\"of\\\": \\\"dues payment deadline\\\", \\\"unit\\\": \\\"\\\", \\\"value\\\": \\\"that same day\\\"}]}, {\\\"n\\\": 7, \\\"quantities\\\": [{\\\"of\\\": \\\"notification deadline\\\", \\\"unit\\\": \\\"\\\", \\\"value\\\": \\\"before the first of the month\\\"}]}, {\\\"n\\\": 8, \\\"quantities\\\": [{\\\"of\\\": \\\"notification deadline\\\", \\\"unit\\\": \\\"\\\", \\\"value\\\": \\\"before the first of the month\\\"}]}, {\\\"n\\\": 9, \\\"quantities\\\": []}, {\\\"n\\\": 10, \\\"quantities\\\": []}]}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":548,\"completion_tokens\":231,\"total_tokens\":779}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-8719636\",\"object\":\"chat.completion\",\"created\":1788150329,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"time left out\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"one full day\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"time left out\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"one full day\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"time before disposal\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"a day\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"time before disposal\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"a day\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 7,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 8,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 9,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"time before meeting\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"two days\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 10,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"time before meeting\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"two days\\\"\\n        }\\n      ]\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":534,\"completion_tokens\":430,\"total_tokens\":964}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-9847480\",\"object\":\"chat.completion\",\"created\":1788150339,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"quiet hours start\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"10:00 PM\\\"\\n        },\\n        {\\n          \\\"of\\\": \\\"quiet hours end\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"7:00 AM\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"quiet hours start\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"10:00 PM\\\"\\n        },\\n        {\\n          \\\"of\\\": \\\"time difference\\\",\\n          \\\"unit\\\": \\\"hour\\\",\\n          \\\"value\\\": \\\"a full hour\\\"\\n        },\\n        {\\n          \\\"of\\\": \\\"quiet hours end\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"7:00 AM\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 7,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 8,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 9,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"visitor departure\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"10:00 PM\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 10,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"visitor departure\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"10:00 PM\\\"\\n        }\\n      ]\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":685,\"completion_tokens\":476,\"total_tokens\":1161}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-6611798\",\"object\":\"chat.completion\",\"created\":1788150346,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 7,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 8,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 9,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"reservations per month\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"twice a month\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 10,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"reservations per month\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"twice a month\\\"\\n        }\\n      ]\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":712,\"completion_tokens\":298,\"total_tokens\":1010}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-7428583\",\"object\":\"chat.completion\",\"created\":1788150353,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"absence duration\\\",\\n          \\\"unit\\\": \\\"weeks\\\",\\n          \\\"value\\\": \\\"two\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"absence duration\\\",\\n          \\\"unit\\\": \\\"weeks\\\",\\n          \\\"value\\\": \\\"two\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"cat count\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"one\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"cat count\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"one\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 7,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 8,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 9,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 10,\\n      \\\"quantities\\\": []\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":645,\"completion_tokens\":355,\"total_tokens\":1000}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-10274429\",\"object\":\"chat.completion\",\"created\":1788150364,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"distance from window\\\",\\n          \\\"unit\\\": \\\"feet\\\",\\n          \\\"value\\\": \\\"ten\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"distance from window\\\",\\n          \\\"unit\\\": \\\"feet\\\",\\n          \\\"value\\\": \\\"ten\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"late fee amount\\\",\\n          \\\"unit\\\": \\\"dollars\\\",\\n          \\\"value\\\": \\\"twenty-five\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"late fee amount\\\",\\n          \\\"unit\\\": \\\"dollars\\\",\\n          \\\"value\\\": \\\"twenty-five\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 7,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 8,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 9,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"start time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"7:00 PM\\\"\\n        },\\n        {\\n          \\\"of\\\": \\\"end time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"9:00 PM\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 10,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"start time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"7:00 PM\\\"\\n        },\\n        {\\n          \\\"of\\\": \\\"end time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"9:00 PM\\\"\\n        }\\n      ]\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":607,\"completion_tokens\":508,\"total_tokens\":1115}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "quantities",
+      "raw": "{\"id\":\"chatcmpl-6012105\",\"object\":\"chat.completion\",\"created\":1788150370,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"n\\\": 1,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"meal start time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"7:00 PM\\\"\\n        },\\n        {\\n          \\\"of\\\": \\\"meal end time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"9:00 PM\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 2,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 3,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"movie night end time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"midnight\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 4,\\n      \\\"quantities\\\": [\\n        {\\n          \\\"of\\\": \\\"movie night end time\\\",\\n          \\\"unit\\\": \\\"\\\",\\n          \\\"value\\\": \\\"midnight\\\"\\n        }\\n      ]\\n    },\\n    {\\n      \\\"n\\\": 5,\\n      \\\"quantities\\\": []\\n    },\\n    {\\n      \\\"n\\\": 6,\\n      \\\"quantities\\\": []\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":458,\"completion_tokens\":281,\"total_tokens\":739}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "groups",
+      "raw": "{\"id\":\"chatcmpl-3612281\",\"object\":\"chat.completion\",\"created\":1788150374,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"groups\\\": [\\n    [16, 42]\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":1472,\"completion_tokens\":23,\"total_tokens\":1495}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "same",
+      "raw": "{\"id\":\"chatcmpl-1070802\",\"object\":\"chat.completion\",\"created\":1788150375,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"rules\\\": [{\\\"n\\\": 1, \\\"same_as\\\": 1}, {\\\"n\\\": 2, \\\"same_as\\\": 1}]}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":182,\"completion_tokens\":32,\"total_tokens\":214}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-12555109\",\"object\":\"chat.completion\",\"created\":1788150388,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 2,\\n      \\\"b\\\": 4,\\n      \\\"reason\\\": \\\"A guest stays for two consecutive nights (honoring the limit in 'Any single guest may stay no more than two consecutive nights'), but on the second night they commit a serious violation such as damaging property or causing a disturbance. The host is held 'fully responsible... for the entire duration of the visit' by one rule, yet cannot extend the stay to manage the aftermath without violating the strict time limit imposed by the other.\\\"\\n    },\\n    {\\n      \\\"a\\\": 3,\\n      \\\"b\\\": 5,\\n      \\\"reason\\\": \\\"During quiet hours ('11:00 PM until 7:00 AM'), a member needs to use the bathroom located in a common area (or must pass through one). They are required to be accompanied by their guest if the guest is present ('hosting member must accompany them'), but keeping conversation low and avoiding noise during this transit while actively supervising another person creates an impossible conflict between mandatory supervision and mandatory silence/quiet behavior standards that cannot both be fully honored without risk of violation or neglect.\\\"\\n    },\\n    {\\n      \\\"a\\\": 8,\\n      \\\"b\\\": 9,\\n      \\\"reason\\\": \\\"A member finishes cooking at 10:55 PM. Rule 'The kitchen must be cleaned... immediately after finishing' requires immediate action, but rule 'Leaving dirty dishes in the sink overnight is never permitted' sets a hard deadline for removal. If the cleaning process takes longer than expected (e.g., due to a large amount of dishes), adhering strictly to 'immediately' might not prevent leaving them until past midnight if one interprets 'overnight' as starting at 12 AM, creating ambiguity and tension between the immediacy requirement and the absolute prohibition on overnight residue.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":844,\"completion_tokens\":405,\"total_tokens\":1249}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-12604423\",\"object\":\"chat.completion\",\"created\":1788150400,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 2,\\n      \\\"b\\\": 4,\\n      \\\"reason\\\": \\\"A guest stays for two consecutive nights (honoring the limit in 'Any single guest may stay no more than two consecutive nights'), but on the second night they commit a serious violation such as damaging property or causing a disturbance. The host is held 'fully responsible... for the entire duration of the visit' by one rule, yet cannot extend the stay to manage the aftermath without violating the strict time limit imposed by the other.\\\"\\n    },\\n    {\\n      \\\"a\\\": 3,\\n      \\\"b\\\": 5,\\n      \\\"reason\\\": \\\"During quiet hours ('11:00 PM until 7:00 AM'), a member needs to use the bathroom located in a common area (or must pass through one). They are required to be accompanied by their guest if the guest is present ('hosting member must accompany them'), but keeping conversation low and avoiding noise during this transit while actively supervising another person creates an impossible conflict between mandatory supervision and mandatory silence/quiet behavior standards that cannot both be fully honored without risk of violation or neglect.\\\"\\n    },\\n    {\\n      \\\"a\\\": 8,\\n      \\\"b\\\": 9,\\n      \\\"reason\\\": \\\"A member finishes cooking at 10:55 PM. Rule 'The kitchen must be cleaned... immediately after finishing' requires immediate action, but rule 'Leaving dirty dishes in the sink overnight is never permitted' sets a hard deadline for removal. If the cleaning process takes longer than expected (e.g., due to a large amount of dishes), adhering strictly to 'immediately' might not prevent leaving them until past midnight if one interprets 'overnight' as starting at 12 AM, creating ambiguity and tension between the immediacy requirement and the absolute prohibition on overnight residue.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":844,\"completion_tokens\":405,\"total_tokens\":1249}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-6685139\",\"object\":\"chat.completion\",\"created\":1788150407,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 1,\\n      \\\"b\\\": 8,\\n      \\\"reason\\\": \\\"Commitment 1 allows members to host overnight guests in their private rooms, while Commitment 8 explicitly states that 'Overnight guests are not permitted in the house at any time for any number of nights or in any bedroom.' A member attempting to honor the right to have an overnight guest would directly violate the absolute prohibition on such stays.\\\"\\n    },\\n    {\\n      \\\"a\\\": 2,\\n      \\\"b\\\": 9,\\n      \\\"reason\\\": \\\"Commitment 2 limits a single guest's stay to no more than two consecutive nights within any seven-day period, whereas Commitment 9 permits visitor and guest parking spaces to be used 'overnight without a permit' with no stated duration limit. If a guest parks their car in these reserved spots for three consecutive nights (which is allowed by the parking rule but violates the lodging cap), honoring the parking commitment requires allowing a situation that breaks the lodging restriction.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":871,\"completion_tokens\":230,\"total_tokens\":1101}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-6700455\",\"object\":\"chat.completion\",\"created\":1788150414,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 1,\\n      \\\"b\\\": 8,\\n      \\\"reason\\\": \\\"Commitment 1 allows members to host overnight guests in their private rooms, while Commitment 8 explicitly states that 'Overnight guests are not permitted in the house at any time for any number of nights or in any bedroom.' A member attempting to honor the right to have an overnight guest would directly violate the absolute prohibition on such stays.\\\"\\n    },\\n    {\\n      \\\"a\\\": 2,\\n      \\\"b\\\": 9,\\n      \\\"reason\\\": \\\"Commitment 2 limits a single guest's stay to no more than two consecutive nights within any seven-day period, whereas Commitment 9 permits visitor and guest parking spaces to be used 'overnight without a permit' with no stated duration limit. If a guest parks their car in these reserved spots for three consecutive nights (which is allowed by the parking rule but violates the lodging cap), honoring the parking commitment requires allowing a situation that breaks the lodging restriction.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":871,\"completion_tokens\":230,\"total_tokens\":1101}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-5487184\",\"object\":\"chat.completion\",\"created\":1788150420,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 3,\\n      \\\"b\\\": 15,\\n      \\\"reason\\\": \\\"On a Tuesday night at 10:30 PM, the general rule requires quiet hours to begin only at 11:00 PM, while the specific weekday rule mandates they have already begun at 10:00 PM; adhering to one time threshold directly violates the other.\\\"\\n    },\\n    {\\n      \\\"a\\\": 6,\\n      \\\"b\\\": 20,\\n      \\\"reason\\\": \\\"When a member cooks the shared house dinner and finishes eating in the kitchen, the immediate cleaning requirement conflicts with their explicit exemption from that duty on that specific night, making it impossible to fully honor both obligations simultaneously.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":910,\"completion_tokens\":175,\"total_tokens\":1085}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-5478925\",\"object\":\"chat.completion\",\"created\":1788150425,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 3,\\n      \\\"b\\\": 15,\\n      \\\"reason\\\": \\\"On a Tuesday night at 10:30 PM, the general rule requires quiet hours to begin only at 11:00 PM, while the specific weekday rule mandates they have already begun at 10:00 PM; adhering to one time threshold directly violates the other.\\\"\\n    },\\n    {\\n      \\\"a\\\": 6,\\n      \\\"b\\\": 20,\\n      \\\"reason\\\": \\\"When a member cooks the shared house dinner and finishes eating in the kitchen, the immediate cleaning requirement conflicts with their explicit exemption from that duty on that specific night, making it impossible to fully honor both obligations simultaneously.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":910,\"completion_tokens\":175,\"total_tokens\":1085}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-7482373\",\"object\":\"chat.completion\",\"created\":1788150433,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 12,\\n      \\\"b\\\": 16,\\n      \\\"reason\\\": \\\"Commitment 12 requires every overnight guest to be signed into the logbook before their first night, but Commitment 16 explicitly forbids any member from having an overnight guest in the house at any time. A situation where a member attempts to host an overnight visitor creates a direct conflict: complying with the logging requirement implies permission for the stay, which violates the absolute ban on overnight guests.\\\"\\n    },\\n    {\\n      \\\"a\\\": 17,\\n      \\\"b\\\": 16,\\n      \\\"reason\\\": \\\"Commitment 17 reserves driveway spaces for 'visitor and guest parking' that may be used 'overnight,' implying the presence of guests staying or visiting late into the night, while Commitment 16 states that daytime visitors must leave by 10:00 PM and no overnight guests are permitted. A situation where a visitor parks in these reserved spots after 10:00 PM to wait for someone or because they cannot find other parking conflicts with the strict departure time mandated for all non-members.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":885,\"completion_tokens\":258,\"total_tokens\":1143}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-7523057\",\"object\":\"chat.completion\",\"created\":1788150441,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 12,\\n      \\\"b\\\": 16,\\n      \\\"reason\\\": \\\"Commitment 12 requires every overnight guest to be signed into the logbook before their first night, but Commitment 16 explicitly forbids any member from having an overnight guest in the house at any time. A situation where a member attempts to host an overnight visitor creates a direct conflict: complying with the logging requirement implies permission for the stay, which violates the absolute ban on overnight guests.\\\"\\n    },\\n    {\\n      \\\"a\\\": 17,\\n      \\\"b\\\": 16,\\n      \\\"reason\\\": \\\"Commitment 17 reserves driveway spaces for 'visitor and guest parking' that may be used 'overnight,' implying the presence of guests staying or visiting late into the night, while Commitment 16 states that daytime visitors must leave by 10:00 PM and no overnight guests are permitted. A situation where a visitor parks in these reserved spots after 10:00 PM to wait for someone or because they cannot find other parking conflicts with the strict departure time mandated for all non-members.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":885,\"completion_tokens\":258,\"total_tokens\":1143}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-6032236\",\"object\":\"chat.completion\",\"created\":1788150447,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 12,\\n      \\\"b\\\": 16,\\n      \\\"reason\\\": \\\"The commitment forbidding any pet except fish directly conflicts with the allowance for one cat to be adopted and cared for collectively. A situation where members wish to adopt a cat forces a choice between honoring the general ban on pets or the specific exception permitting felines.\\\"\\n    },\\n    {\\n      \\\"a\\\": 14,\\n      \\\"b\\\": 19,\\n      \\\"reason\\\": \\\"One rule states smoking is forbidden everywhere inside the house including private bedrooms, while another explicitly permits it outdoors on the back porch under certain conditions. If the back porch is considered part of the 'house' structure (as implied by its inclusion in common areas), these rules contradict each other regarding whether smoking is allowed there at all.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":859,\"completion_tokens\":190,\"total_tokens\":1049}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-6054439\",\"object\":\"chat.completion\",\"created\":1788150453,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 12,\\n      \\\"b\\\": 16,\\n      \\\"reason\\\": \\\"The commitment forbidding any pet except fish directly conflicts with the allowance for one cat to be adopted and cared for collectively. A situation where members wish to adopt a cat forces a choice between honoring the general ban on pets or the specific exception permitting felines.\\\"\\n    },\\n    {\\n      \\\"a\\\": 14,\\n      \\\"b\\\": 19,\\n      \\\"reason\\\": \\\"One rule states smoking is forbidden everywhere inside the house including private bedrooms, while another explicitly permits it outdoors on the back porch under certain conditions. If the back porch is considered part of the 'house' structure (as implied by its inclusion in common areas), these rules contradict each other regarding whether smoking is allowed there at all.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":859,\"completion_tokens\":190,\"total_tokens\":1049}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-85733551\",\"object\":\"chat.completion\",\"created\":1788150539,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 1,\\n      \\\"b\\\": 11,\\n      \\\"reason\\\": \\\"A member smokes on the back porch in compliance with 'Smoking is permitted outdoors... if the smoker uses the sand bucket and sits at least ten feet away from any open window,' but a visitor present during this time refrains from smoking indoors only because they are outside; however, if the visitor enters to use the restroom or retrieve an item while the host is still smoking nearby, the requirement that visitors 'refrain from smoking indoors' conflicts with the practical reality of being in a shared house where outdoor smoking is explicitly regulated as part of indoor living norms. More directly: The rule allows outdoor smoking under specific conditions, implying it is acceptable behavior for members/visitors when those conditions are met. However, Rule 1 requires ensuring visitors refrain from smoking *indoors*. If a visitor smokes on the porch (outdoors) and then immediately re-enters without washing hands/changing clothes, they may bring smoke residue inside, but this is weak. Let's look closer at Rule 1 vs Rule 11. Actually, there is no direct tension between 'no indoor smoking' and 'permitted outdoor smoking'. They govern different spaces.\\\\n\\\\nLet's re-evaluate potential tensions.\\\\n\\\\nRule 2: Pay rent by day 1.\\\\nRule 3: Notify treasurer before day 1 if difficulty paying.\\\\nRule 12: Late fee if not arrived by day 5.\\\\nIs there a tension? If I notify on Dec 30 (before Jan 1) that I will pay late, do I still owe the fee if it arrives Jan 4? The rule says 'owes an additional late fee... [if] has not arrived... by the fifth day'. It doesn't say notification waives the fee. So no direct contradiction in outcome, just procedural steps.\\\\n\\\\nRule 7: Meet first Sunday of every month.\\\\nRule 8: Decision passes by simple majority present.\\\\nNo obvious tension.\\\\n\\\\nRule 9: Cat permitted only with written approval from *every* current member beforehand.\\\\nRule 10: Cat must be kept out of bedroom of any member who objects on grounds of allergies.\\\\nTension? If a member approves the cat (satisfying Rule 9) but later develops an allergy or always had one and objected to it being in their room (satisfying Rule 10), is there a conflict? No, these are compatible. One allows entry into house, other restricts access to specific rooms.\\\\n\\\\nWait, look at Rule 9 vs Rule 8/7?\\\\nIf a new member moves in after the cat was approved by 'every current member' at that time, does the new member need to approve? The rule says 'beforehand'. It implies prior consent of existing members. It doesn't explicitly require future members to consent before they move in, only that *current* members gave approval when the decision was made. This seems like an ambiguity rather than a hard tension between two commitments governing the same situation with different thresholds/dates.\\\\n\\\\nLet's look at Rule 14 and Rule 15.\\\\nRule 14: Dining room is silent study space every weeknight (Mon-Fri) from 7-9 PM. No meals/conversation/gatherings.\\\\nRule 15: Movie nights are held in the living room on Thursday evenings until midnight.\\\\nThursday is a weeknight. The movie night is in the *living room*. Rule 14 restricts the *dining room*. These are different spaces. So no tension there, unless 'gatherings' implies using common areas generally? But it specifies 'The dining room'.\\\\n\\\\nLet's look at Rule 1 and Rule 11 again.\\\\nRule 1: Visitors refrain from smoking indoors.\\\\nRule 11: Smoking permitted outdoors... if smoker uses sand bucket...\\\\nIs there a situation where these conflict?\\\\nIf a visitor smokes on the porch (outdoors), they are not violating Rule 1 because they are not indoors. They are complying with Rule 11. No tension.\\\\n\\\\nWhat about Rule 5 and Rule 6?\\\\nRule 5: Personal item left in common area > 1 day may be moved to owner's bedroom door.\\\\nRule 6: Perishable personal food left out in common area may be thrown away after a day.\\\\nThese govern different types of items (general vs perishable) or actions (move vs throw). If I leave an apple, it can be thrown away. If I leave a book, it gets moved. No conflict.\\\\n\\\\nLet's look at Rule 2 and Rule 3 again carefully.\\\\nCommitment A: 'Each member must pay their share... on or before the first day...' (Rule 2)\\\\nCommitment B: 'A member who anticipates any difficulty paying on time is required to notify the house treasurer before the first of the month.' (Rule 3)\\\\nSituation: A member knows they will not have funds by Day 1 but expects to get them by Day 4. They notify the treasurer on Dec 30 (before Jan 1). This satisfies Rule 3. However, because they did not pay *on* Jan 1, they violate Rule 2 ('must pay... on or before the first day'). The notification does not exempt them from the payment deadline in Rule 2; it only mandates communication. Is this a tension? One commitment requires action X (pay) by Date D. Another requires action Y (notify) if you can't do X by Date D. Honoring Y (notifying) doesn't break X unless you fail to do X. But the prompt asks for pairs that cannot *both be fully honoured*. If I notify and then pay late, I have honoured 'Notify' but violated 'Pay'. Can I honour both? Yes, by paying on time AND notifying (if I anticipated difficulty but ultimately paid). Or by paying on time and not needing to notify. The conflict arises when I *cannot* pay on time. In that case, I must violate Rule 2 regardless of whether I follow Rule 3. This is a situation where the obligations are mutually exclusive in outcome: You either pay on time (honouring 2) or you don't (violating 2), while potentially honouring 3. But usually, tensions involve two rules pointing in opposite directions for the same action.\\\\n\\\\nLet's look at Rule 9 and Rule 10 again.\\\\nRule 9: Cat permitted only if every current member gives written approval beforehand.\\\\nRule 10: Cat must be kept out of bedroom of any member who objects... allergies.\\\\nSituation: A member has an allergy but *approves* the cat anyway (perhaps they have medication). They satisfy Rule 9 by approving. Then they object to it being in their room based on allergies. This is consistent with Rule 10. No tension.\\\\nWhat if a member does NOT approve? Then no cat can come in (Rule 9 fails). So Rule 10 never triggers because there is no cat. Consistent.\\\\n\\\\nLet's look at Rule 7 and Rule 8?\\\\nNo obvious conflict.\\\\n\\\\nIs there a tension between Rule 2 and Rule 13?\\\\nRule 2: Pay by Day 1.\\\\nRule 13: Treasurer sends reminder two days before deadline (Day -1, i.e., last day of previous month).\\\\nThis supports compliance, doesn't conflict.\\\\n\\\\nHow about Rule 5 vs Rule 4?\\\\nRule 4: Keep belongings in bedroom/storage.\\\\nRule 5: If left out > 1 day, may be moved to door.\\\\nIf I leave it out for 2 hours, I violate Rule 4? 'Must keep... in'. Yes. But Rule 5 only triggers after a full day. So there is a gap where you are violating Rule 4 but not yet subject to the penalty/action of Rule 5. This isn't a tension between two rules forcing different actions; it's just that one rule has an immediate obligation and another has a delayed consequence.\\\\n\\\\nLet's reconsider Rule 9 vs Rule 8/7 regarding *new* members.\\\\nThe Charter says decisions amend from date made (Rule 8). If a cat was approved by all current members on Jan 1st, and a new member moves in Feb 1st without being asked for approval, does the 'every current member' requirement apply retroactively or prospectively? The commitment is 'A cat is permitted only if every current member gives written approval beforehand.'\\\\nIf I interpret 'current member' as 'members at the time of admission', then when the new person arrives, they are now a current member. Did they give approval *beforehand*? No. So strictly speaking, the condition 'every current member... gave approval beforehand' is no longer true because there is a current member who did not give approval before their arrival (or before the cat's continued presence?). This creates a tension between maintaining the status quo (cat stays) and the strict reading that *all* current members must have pre-approved.\\\\nTo honour Rule 9 fully in February, you would need to get written approval from the new member. If they refuse, the cat can no longer be permitted. But if we assume the decision was valid when made, does it persist?\\\\nThis feels like an interpretive ambiguity rather than a hard logical contradiction with different dates/counts.\\\\n\\\\nLet's look at Rule 14 vs Rule 15 again.\\\\nRule 14: Dining room silent study space weeknights 7-9 PM. No meals/conversation/gatherings.\\\\nRule 15: Movie nights in living room Thursday evenings until midnight.\\\\nThursday is a weeknight. The movie night involves conversation and gathering (implied by 'movie night'). It happens in the *living room*. Rule 14 restricts the *dining room*. Unless the house layout implies that using the living room for a loud gathering violates the spirit of 'silent study' if they are adjacent? But the rules specify specific rooms. Precision over recall suggests I should not infer spatial adjacency conflicts unless stated.\\\\n\\\\nWait, look at Rule 16: 'Members who prefer quiet on Thursdays must plan around the movie night.'\\\\nThis acknowledges the noise from Rule 15. No tension with Rule 14 because different rooms.\\\\n\\\\nIs there any pair involving dates?\\\\nRule 2: Pay by Day 1.\\\\nRule 3: Notify before Day 1.\\\\nRule 12: Late fee if not paid by Day 5.\\\\nSituation: Member pays on Day 3.\\\\nThey violated Rule 2 (must pay by Day 1).\\\\nDid they violate Rule 3? Only if they *anticipated* difficulty and failed to notify. If they didn't anticipate it, no violation of 3.\\\\nIf they did anticipate it and notified, they honoured 3 but still violated 2.\\\\nThe tension is that the system requires payment by Day 1, but provides a mechanism for late notification without waiving the deadline or penalty structure explicitly linked to the notification. However, usually 'tension' implies two rules say opposite things about what you should do in situation S.\\\\nHere: Situation = You will be late.\\\\nRule 2 says: Pay on time (impossible).\\\\nRule 3 says: Notify before due date.\\\\nYou can honour Rule 3 while violating Rule 2. Can you honour both? Only if you pay on time AND notify (which is redundant/odd). The conflict is between the *ideal* of paying on time and the *reality* of being late where only notification is mandated. This isn't a pair of commitments that cannot both be honoured; it's one commitment (pay) that becomes impossible, making the other (notify) the fallback. It doesn't force a choice between two valid actions; it forces a violation of one to satisfy procedural requirements for the other context.\\\\n\\\\nLet's look at Rule 9 again. 'Every current member'.\\\\nIf I have 3 members. All approve cat. Cat enters.\\\\nMember A moves out. Member B moves in.\\\\nNow there are 3 members: Old B, Old C, New D.\\\\nDid *every* current member give written approval beforehand? No, New D did not.\\\\nSo strictly, the condition is no longer met. The cat should be removed or re-approved?\\\\nThe commitment 'A cat is permitted only if...' sets a continuous condition. If the set of 'current members' changes such that one hasn't approved, the permission lapses.\\\\nIs this a tension with Rule 8 (decisions amend charter)?\\\\nRule 8 says a recorded decision amends/extends the Charter from date made. This implies decisions have lasting power unless changed. But Rule 9 defines the *condition* for permission based on membership status at any given time ('every current member').\\\\nSituation: A new member joins after initial approval.\\\\nCommitment A (via Rule 8 implication): The previous vote stands as a valid amendment allowing the cat.\\\\nCommitment B (Rule 9 literal text): Permission requires every *current* member to have approved beforehand. Since the new member is now 'current' and didn't approve, the condition fails.\\\\nThis creates a tension between the permanence of past votes (implied by general charter mechanics) and the dynamic requirement of unanimous consent from all *present* members in Rule 9. Honouring the standing decision keeps the cat; honouring the strict wording of Rule 9 removes it or demands re-vote. This fits the definition: two commitments governing the same situation (presence of cat with changing membership) that name different thresholds/conditions for validity.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":632,\"completion_tokens\":2912,\"total_tokens\":3544}}"
+    },
+    {
+      "path": "chat/completions",
+      "stage": "tensions",
+      "raw": "{\"id\":\"chatcmpl-86016729\",\"object\":\"chat.completion\",\"created\":1788150625,\"model\":\"Qwen3.8-27B-UD-Q6_K_XL\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\n  \\\"tensions\\\": [\\n    {\\n      \\\"a\\\": 1,\\n      \\\"b\\\": 11,\\n      \\\"reason\\\": \\\"A member smokes on the back porch in compliance with 'Smoking is permitted outdoors... if the smoker uses the sand bucket and sits at least ten feet away from any open window,' but a visitor present during this time refrains from smoking indoors only because they are outside; however, if the visitor enters to use the restroom or retrieve an item while the host is still smoking nearby, the requirement that visitors 'refrain from smoking indoors' conflicts with the practical reality of being in a shared house where outdoor smoking is explicitly regulated as part of indoor living norms. More directly: The rule allows outdoor smoking under specific conditions, implying it is acceptable behavior for members/visitors when those conditions are met. However, Rule 1 requires ensuring visitors refrain from smoking *indoors*. If a visitor smokes on the porch (outdoors) and then immediately re-enters without washing hands/changing clothes, they may bring smoke residue inside, but this is weak. Let's look closer at Rule 1 vs Rule 11. Actually, there is no direct tension between 'no indoor smoking' and 'permitted outdoor smoking'. They govern different spaces.\\\\n\\\\nLet's re-evaluate potential tensions.\\\\n\\\\nRule 2: Pay rent by day 1.\\\\nRule 3: Notify treasurer before day 1 if difficulty paying.\\\\nRule 12: Late fee if not arrived by day 5.\\\\nIs there a tension? If I notify on Dec 30 (before Jan 1) that I will pay late, do I still owe the fee if it arrives Jan 4? The rule says 'owes an additional late fee... [if] has not arrived... by the fifth day'. It doesn't say notification waives the fee. So no direct contradiction in outcome, just procedural steps.\\\\n\\\\nRule 7: Meet first Sunday of every month.\\\\nRule 8: Decision passes by simple majority present.\\\\nNo obvious tension.\\\\n\\\\nRule 9: Cat permitted only with written approval from *every* current member beforehand.\\\\nRule 10: Cat must be kept out of bedroom of any member who objects on grounds of allergies.\\\\nTension? If a member approves the cat (satisfying Rule 9) but later develops an allergy or always had one and objected to it being in their room (satisfying Rule 10), is there a conflict? No, these are compatible. One allows entry into house, other restricts access to specific rooms.\\\\n\\\\nWait, look at Rule 9 vs Rule 8/7?\\\\nIf a new member moves in after the cat was approved by 'every current member' at that time, does the new member need to approve? The rule says 'beforehand'. It implies prior consent of existing members. It doesn't explicitly require future members to consent before they move in, only that *current* members gave approval when the decision was made. This seems like an ambiguity rather than a hard tension between two commitments governing the same situation with different thresholds/dates.\\\\n\\\\nLet's look at Rule 14 and Rule 15.\\\\nRule 14: Dining room is silent study space every weeknight (Mon-Fri) from 7-9 PM. No meals/conversation/gatherings.\\\\nRule 15: Movie nights are held in the living room on Thursday evenings until midnight.\\\\nThursday is a weeknight. The movie night is in the *living room*. Rule 14 restricts the *dining room*. These are different spaces. So no tension there, unless 'gatherings' implies using common areas generally? But it specifies 'The dining room'.\\\\n\\\\nLet's look at Rule 1 and Rule 11 again.\\\\nRule 1: Visitors refrain from smoking indoors.\\\\nRule 11: Smoking permitted outdoors... if smoker uses sand bucket...\\\\nIs there a situation where these conflict?\\\\nIf a visitor smokes on the porch (outdoors), they are not violating Rule 1 because they are not indoors. They are complying with Rule 11. No tension.\\\\n\\\\nWhat about Rule 5 and Rule 6?\\\\nRule 5: Personal item left in common area > 1 day may be moved to owner's bedroom door.\\\\nRule 6: Perishable personal food left out in common area may be thrown away after a day.\\\\nThese govern different types of items (general vs perishable) or actions (move vs throw). If I leave an apple, it can be thrown away. If I leave a book, it gets moved. No conflict.\\\\n\\\\nLet's look at Rule 2 and Rule 3 again carefully.\\\\nCommitment A: 'Each member must pay their share... on or before the first day...' (Rule 2)\\\\nCommitment B: 'A member who anticipates any difficulty paying on time is required to notify the house treasurer before the first of the month.' (Rule 3)\\\\nSituation: A member knows they will not have funds by Day 1 but expects to get them by Day 4. They notify the treasurer on Dec 30 (before Jan 1). This satisfies Rule 3. However, because they did not pay *on* Jan 1, they violate Rule 2 ('must pay... on or before the first day'). The notification does not exempt them from the payment deadline in Rule 2; it only mandates communication. Is this a tension? One commitment requires action X (pay) by Date D. Another requires action Y (notify) if you can't do X by Date D. Honoring Y (notifying) doesn't break X unless you fail to do X. But the prompt asks for pairs that cannot *both be fully honoured*. If I notify and then pay late, I have honoured 'Notify' but violated 'Pay'. Can I honour both? Yes, by paying on time AND notifying (if I anticipated difficulty but ultimately paid). Or by paying on time and not needing to notify. The conflict arises when I *cannot* pay on time. In that case, I must violate Rule 2 regardless of whether I follow Rule 3. This is a situation where the obligations are mutually exclusive in outcome: You either pay on time (honouring 2) or you don't (violating 2), while potentially honouring 3. But usually, tensions involve two rules pointing in opposite directions for the same action.\\\\n\\\\nLet's look at Rule 9 and Rule 10 again.\\\\nRule 9: Cat permitted only if every current member gives written approval beforehand.\\\\nRule 10: Cat must be kept out of bedroom of any member who objects... allergies.\\\\nSituation: A member has an allergy but *approves* the cat anyway (perhaps they have medication). They satisfy Rule 9 by approving. Then they object to it being in their room based on allergies. This is consistent with Rule 10. No tension.\\\\nWhat if a member does NOT approve? Then no cat can come in (Rule 9 fails). So Rule 10 never triggers because there is no cat. Consistent.\\\\n\\\\nLet's look at Rule 7 and Rule 8?\\\\nNo obvious conflict.\\\\n\\\\nIs there a tension between Rule 2 and Rule 13?\\\\nRule 2: Pay by Day 1.\\\\nRule 13: Treasurer sends reminder two days before deadline (Day -1, i.e., last day of previous month).\\\\nThis supports compliance, doesn't conflict.\\\\n\\\\nHow about Rule 5 vs Rule 4?\\\\nRule 4: Keep belongings in bedroom/storage.\\\\nRule 5: If left out > 1 day, may be moved to door.\\\\nIf I leave it out for 2 hours, I violate Rule 4? 'Must keep... in'. Yes. But Rule 5 only triggers after a full day. So there is a gap where you are violating Rule 4 but not yet subject to the penalty/action of Rule 5. This isn't a tension between two rules forcing different actions; it's just that one rule has an immediate obligation and another has a delayed consequence.\\\\n\\\\nLet's reconsider Rule 9 vs Rule 8/7 regarding *new* members.\\\\nThe Charter says decisions amend from date made (Rule 8). If a cat was approved by all current members on Jan 1st, and a new member moves in Feb 1st without being asked for approval, does the 'every current member' requirement apply retroactively or prospectively? The commitment is 'A cat is permitted only if every current member gives written approval beforehand.'\\\\nIf I interpret 'current member' as 'members at the time of admission', then when the new person arrives, they are now a current member. Did they give approval *beforehand*? No. So strictly speaking, the condition 'every current member... gave approval beforehand' is no longer true because there is a current member who did not give approval before their arrival (or before the cat's continued presence?). This creates a tension between maintaining the status quo (cat stays) and the strict reading that *all* current members must have pre-approved.\\\\nTo honour Rule 9 fully in February, you would need to get written approval from the new member. If they refuse, the cat can no longer be permitted. But if we assume the decision was valid when made, does it persist?\\\\nThis feels like an interpretive ambiguity rather than a hard logical contradiction with different dates/counts.\\\\n\\\\nLet's look at Rule 14 vs Rule 15 again.\\\\nRule 14: Dining room silent study space weeknights 7-9 PM. No meals/conversation/gatherings.\\\\nRule 15: Movie nights in living room Thursday evenings until midnight.\\\\nThursday is a weeknight. The movie night involves conversation and gathering (implied by 'movie night'). It happens in the *living room*. Rule 14 restricts the *dining room*. Unless the house layout implies that using the living room for a loud gathering violates the spirit of 'silent study' if they are adjacent? But the rules specify specific rooms. Precision over recall suggests I should not infer spatial adjacency conflicts unless stated.\\\\n\\\\nWait, look at Rule 16: 'Members who prefer quiet on Thursdays must plan around the movie night.'\\\\nThis acknowledges the noise from Rule 15. No tension with Rule 14 because different rooms.\\\\n\\\\nIs there any pair involving dates?\\\\nRule 2: Pay by Day 1.\\\\nRule 3: Notify before Day 1.\\\\nRule 12: Late fee if not paid by Day 5.\\\\nSituation: Member pays on Day 3.\\\\nThey violated Rule 2 (must pay by Day 1).\\\\nDid they violate Rule 3? Only if they *anticipated* difficulty and failed to notify. If they didn't anticipate it, no violation of 3.\\\\nIf they did anticipate it and notified, they honoured 3 but still violated 2.\\\\nThe tension is that the system requires payment by Day 1, but provides a mechanism for late notification without waiving the deadline or penalty structure explicitly linked to the notification. However, usually 'tension' implies two rules say opposite things about what you should do in situation S.\\\\nHere: Situation = You will be late.\\\\nRule 2 says: Pay on time (impossible).\\\\nRule 3 says: Notify before due date.\\\\nYou can honour Rule 3 while violating Rule 2. Can you honour both? Only if you pay on time AND notify (which is redundant/odd). The conflict is between the *ideal* of paying on time and the *reality* of being late where only notification is mandated. This isn't a pair of commitments that cannot both be honoured; it's one commitment (pay) that becomes impossible, making the other (notify) the fallback. It doesn't force a choice between two valid actions; it forces a violation of one to satisfy procedural requirements for the other context.\\\\n\\\\nLet's look at Rule 9 again. 'Every current member'.\\\\nIf I have 3 members. All approve cat. Cat enters.\\\\nMember A moves out. Member B moves in.\\\\nNow there are 3 members: Old B, Old C, New D.\\\\nDid *every* current member give written approval beforehand? No, New D did not.\\\\nSo strictly, the condition is no longer met. The cat should be removed or re-approved?\\\\nThe commitment 'A cat is permitted only if...' sets a continuous condition. If the set of 'current members' changes such that one hasn't approved, the permission lapses.\\\\nIs this a tension with Rule 8 (decisions amend charter)?\\\\nRule 8 says a recorded decision amends/extends the Charter from date made. This implies decisions have lasting power unless changed. But Rule 9 defines the *condition* for permission based on membership status at any given time ('every current member').\\\\nSituation: A new member joins after initial approval.\\\\nCommitment A (via Rule 8 implication): The previous vote stands as a valid amendment allowing the cat.\\\\nCommitment B (Rule 9 literal text): Permission requires every *current* member to have approved beforehand. Since the new member is now 'current' and didn't approve, the condition fails.\\\\nThis creates a tension between the permanence of past votes (implied by general charter mechanics) and the dynamic requirement of unanimous consent from all *present* members in Rule 9. Honouring the standing decision keeps the cat; honouring the strict wording of Rule 9 removes it or demands re-vote. This fits the definition: two commitments governing the same situation (presence of cat with changing membership) that name different thresholds/conditions for validity.\\\"\\n    }\\n  ]\\n}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":632,\"completion_tokens\":2912,\"total_tokens\":3544}}"
+    }
+  ]
+}

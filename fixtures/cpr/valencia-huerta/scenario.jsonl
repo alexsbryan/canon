@@ -1,0 +1,76 @@
+// Huerta canal community — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"canal.headgate"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"canal.headgate","actor":"human:amparo","about":"who works the headgate","proposal":"let a farm open its own headgate when the rider is at the far end","positions":[{"citing":"@gate-by-rider","pull":"toward","because":"a turn lost waiting for the rider is water down the tail of the canal"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"canal.headgate","actor":"human:carme","about":"who works the headgate","proposal":"let a farm open its own headgate when the rider is at the far end","positions":[{"citing":"@gate-by-rider","pull":"toward","because":"a turn lost waiting for the rider is water down the tail of the canal"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"wellfield","actor":"human:amparo","about":"the wellfield","proposal":"sink two more wells to carry the canal through August","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-06-13","by":"human:amparo","op":"policy","scope":"canal.headgate","text":"Two of us have to object before a headgate decision stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"canal.headgate","actor":"human:carme","about":"who works the headgate","proposal":"let a farm open its own headgate when the rider is at the far end","positions":[{"actor":"human:amparo","pull":"against","because":"the rider at the gate is the whole reason nobody argues about how long a turn ran"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-06-22","by":"agent:gatewatch","op":"position","about":"a gate open out of turn at first light","citing":"@turn-order","pull":"against","because":"the gate was opened before the turn above it had closed"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-06-23","by":"agent:gatewatch","as":"monitor-dismiss","op":"dismiss","a":"@no-storage","b":"@night-turns-stored","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-08-18"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:gatewatch"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"canal.turn","about":"taking water out of turn","proposal":"take an hour ahead of turn while the tail is still running","positions":[{"citing":"@turn-order","pull":"against","because":"an hour taken early is an hour the farm below waited for and did not get"}]}
+{"step":"act","at":"2025-08-19","by":"human:vicent","op":"decided","about":"taking water out of turn","outcome":"conflicts","authority":"ask-one","rationale":"the seedbed was going and we let it stand"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"canal.turn","about":"taking water out of turn","proposal":"take another hour ahead of turn for the same field","positions":[{"citing":"@turn-order","pull":"against","because":"an hour taken early is an hour the farm below waited for and did not get"}]}
+{"step":"act","at":"2025-08-20","by":"human:vicent","op":"decided","about":"taking water out of turn","outcome":"conflicts","authority":"ask-panel","rationale":"the assembly agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"canal.turn","about":"taking water out of turn","proposal":"take the whole turn a day early through the dry week","positions":[{"citing":"@turn-order","pull":"against","because":"an hour taken early is an hour the farm below waited for and did not get"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"canal.turn","about":"widening a field ditch","proposal":"widen the field ditch so the turn runs off faster","positions":[{"citing":"@turn-order","pull":"against","because":"an hour taken early is an hour the farm below waited for and did not get"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"holding a night turn until morning","proposal":"let the three tail farms hold a night turn in the old pond and run it at first light","positions":[{"citing":"@no-storage","pull":"against","because":"water held in a private pond is water the canal cannot see and cannot count"},{"citing":"@night-turns-stored","pull":"toward","because":"a night turn run onto a dark field is a turn spent on the road and the ditch bank"}]}
+{"step":"act","at":"2025-08-21","by":"human:amparo","op":"accept","a":"@no-storage","b":"@night-turns-stored","rationale":"the pond is on the tail where nothing runs below it, and the alternative is three farms taking their turns twice; revisit when the night gate is automated","revisit":"2026-02-08"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-08-22","by":"human:vicent","op":"adopt","lineage":"huerta-ordinances","generation":"g5","source":"https://example.org/huerta-ordinances"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"canal"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"canal.headgate"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"gate marks","proposal":"number the gates instead of marking them with the farm","amends":"@gate-marks","positions":[{"actor":"human:carme","pull":"toward","because":"farms change hands and the marks have not been repainted in years"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"storing water","proposal":"allow a pond on any farm below the last gate","amends":"@no-storage","positions":[{"actor":"human:carme","pull":"toward","because":"nothing runs below the last gate, so nothing there can be taken from anybody"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the old brick channel","proposal":"break out the old brick channel and line the whole run in concrete","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the old brick channel","proposal":"break out the old brick channel and line the whole run in concrete","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"who clears the grating after a storm","proposal":"set a rota for clearing the grating","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-10-03","by":"human:vicent","as":"panel","op":"draw_commit","scope":"canal","count":3,"after_ts":1760227200,"rationale":"three of us to look at the night-turn rule for a month"}
+{"step":"act","at":"2025-10-04","by":"human:vicent","op":"draw_secret","commit":"@panel","digest":"4b18dc1d1e070568c216feac200cacdb394afea99a0508e0ce8a1532ff1f5eac"}
+{"step":"act","at":"2025-10-04","by":"human:amparo","op":"draw_secret","commit":"@panel","digest":"66d93eacbacc685b754f21659176c20dd509de3157ccbb73083f0f373148b02f"}
+{"step":"act","at":"2025-10-04","by":"human:bernat","op":"draw_secret","commit":"@panel","digest":"d907dd95f1a4280c43ce072d3740399a1f2cd9d6818427b05724088be5684e95"}
+{"step":"act","at":"2025-10-04","by":"human:carme","op":"draw_secret","commit":"@panel","digest":"0a4c555bc667f921b11890c26b5c56be53e86ce3dfbb839d86b2e1f42a846f77"}
+{"step":"act","at":"2025-10-04","by":"human:dolors","op":"draw_secret","commit":"@panel","digest":"0eb7fec62015a6a0eb0d803d274dc5e4cbe794a1aa44a9e2c3cc59364ee3157e"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-10-14"}
+{"step":"act","at":"2025-10-14","by":"human:vicent","op":"draw_reveal","commit":"@panel","secret":"valencia-huerta-vicent-panel"}
+{"step":"act","at":"2025-10-14","by":"human:amparo","op":"draw_reveal","commit":"@panel","secret":"valencia-huerta-amparo-panel"}
+{"step":"act","at":"2025-10-14","by":"human:bernat","op":"draw_reveal","commit":"@panel","secret":"valencia-huerta-bernat-panel"}
+{"step":"act","at":"2025-10-14","by":"human:carme","op":"draw_reveal","commit":"@panel","secret":"valencia-huerta-carme-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

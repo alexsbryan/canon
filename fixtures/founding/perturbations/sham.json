@@ -1,0 +1,24 @@
+{
+  "arm": "sham",
+  "note": "The control for the control. Each entry changes a word of COMPARABLE SIZE on one side that the conflict does not turn on. Ground truth for this arm: all nine are still tensions. If the neutralised arm stops flagging pairs and this arm does too, then editing the text is what moved the verdict and the neutralised arm says nothing about reading. Written 2026-08-30, same sitting, same rule: not editable after data lands.",
+  "perturbations": {
+    "S1": { "side": "b", "edits": [["Subjects of any Foreign State", "Subjects of any Foreign Power"]],
+      "why": "The conflict is about citizens of another STATE; the foreign clause is not load-bearing." },
+    "S3": { "side": "a", "edits": [["who escapes into another", "who flees into another"]],
+      "why": "Wording of the escape, not the duty or the abolition." },
+    "S4": { "side": "a", "edits": [["bound to Service for a Term of Years", "bound to Service for a Period of Years"]],
+      "why": "An incidental clause; the three-fifths count is untouched." },
+    "S5": { "side": "a", "edits": [["No capitation or other direct tax", "No poll tax or other direct tax"]],
+      "why": "A capitation IS a poll tax. Same rule, different word." },
+    "S6": { "side": "a", "edits": [["The Senate of the United States is composed of", "The Senate of the United States consists of"]],
+      "why": "Who chooses Senators is untouched." },
+    "S7": { "side": "a", "edits": [["appoint a different Day by Law", "appoint a different Day by Statute"]],
+      "why": "The escape hatch is reworded; the named day is untouched." },
+    "S8": { "side": "a", "edits": [["the Vice-President shall act as President", "the Vice-President shall serve as President"]],
+      "why": "The deadline, which is what the pair turns on, is untouched." },
+    "S10": { "side": "a", "edits": [["participation in rebellion or other crime", "participation in insurrection or other crime"]],
+      "why": "The exception clause; the age and the sex qualifier are untouched." },
+    "S11": { "side": "a", "edits": [["for beverage purposes is prohibited", "for beverage purposes is forbidden"]],
+      "why": "The prohibition stands; only the verb changes." }
+  }
+}

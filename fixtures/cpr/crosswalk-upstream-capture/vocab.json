@@ -1,0 +1,8 @@
+{
+  "extends": "crosswalk-coliving",
+  "institution": "Crosswalk Coliving, with upstream holding a seat",
+  "one_line": "The same building, plus an upstream actor granted standing over it who then retracts three of the five commitments this building wrote. One line of vocabulary; nothing else differs.",
+  "ablate": { "upstream_retracts_local": true },
+  "predicted_to_fail": [7],
+  "analogue": "Local fishers' own rules not recognised by the state that could override them — Ostrom 1990, ch. 5, on external authority undermining the right to organise."
+}

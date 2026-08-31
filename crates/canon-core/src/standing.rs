@@ -111,6 +111,23 @@ pub enum Outcome {
     Unaddressed,
 }
 
+impl Outcome {
+    /// How this reads to a person.
+    ///
+    /// Was a private free function in `policy.rs` with one caller. It is here
+    /// and public because more than one surface now has to say what an
+    /// outcome IS — `check`, and the counterfactual `replay` prints — and two
+    /// copies of three clauses is how the same verdict ends up worded two
+    /// ways in one tool.
+    pub fn describe(self) -> &'static str {
+        match self {
+            Self::Supported => "commitments bear on it and none pull against",
+            Self::Conflicts => "at least one commitment pulls against",
+            Self::Unaddressed => "nothing bears on it",
+        }
+    }
+}
+
 /// How a proposal stands.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Standing {

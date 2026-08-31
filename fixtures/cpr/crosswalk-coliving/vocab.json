@@ -1,0 +1,144 @@
+{
+  "institution": "Crosswalk Coliving",
+  "kind": "a coliving building",
+  "one_line": "Thirty-one people, four floors, one boiler and a roof everybody wants in July.",
+  "start": "2025-04-07",
+  "lineage": "coliving-commons",
+  "generation": "g6",
+  "generation_next": "g7",
+  "source": "https://example.org/coliving-commons",
+  "outer": "building",
+  "middle_leaf": "commons",
+  "inner_leaf": "roof",
+  "ladder_leaf": "boiler",
+  "unheld": "basement",
+  "steward": "human:tomas",
+  "members": [
+    "human:tomas",
+    "human:yara",
+    "human:isla",
+    "human:petra",
+    "human:noel",
+    "human:andre",
+    "human:beatriz",
+    "human:cai",
+    "human:dilan",
+    "human:eira",
+    "human:fen"
+  ],
+  "insiders": [
+    "human:yara",
+    "human:isla",
+    "human:noel"
+  ],
+  "mid_holders": [
+    "human:andre",
+    "human:beatriz"
+  ],
+  "outsider": "human:petra",
+  "monitor": "agent:meterwatch",
+  "ladder_decider": "human:tomas",
+  "upstream_actor": "human:network-steward",
+  "insider_rationale": "keeps the roof garden alive",
+  "mid_rationale": "looks after the shared floors",
+  "monitor_rationale": "reads the boiler meter nightly; four months, then we look again",
+  "c": {
+    "ladder": {
+      "label": "boiler-hours",
+      "text": "The boiler is not run between midnight and six."
+    },
+    "shared": {
+      "label": "big-buys",
+      "text": "Anything bought for the whole building is agreed before it is bought."
+    },
+    "access": {
+      "label": "everyone-enters",
+      "text": "Everyone who lives here can open every shared door."
+    },
+    "inner_a": {
+      "label": "roof-two-up",
+      "text": "Nobody goes onto the roof alone after dark."
+    },
+    "inner_b": {
+      "label": "roof-watered",
+      "text": "Whoever is last on the roof waters the beds."
+    },
+    "clash_a": {
+      "label": "quiet-roof",
+      "text": "The roof is quiet after ten, because it is over somebody's bedroom."
+    },
+    "clash_b": {
+      "label": "summer-roof",
+      "text": "In July the roof is where the building eats together."
+    },
+    "extra": {
+      "label": "chairs-stacked",
+      "text": "Roof chairs are stacked against the wall when you leave."
+    }
+  },
+  "policy": {
+    "root": "We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the building, and anything we cannot undo is not decided by silence.",
+    "inner": "Whoever keeps the roof decides the roof.",
+    "unheld": "The basement is decided by whoever holds it.",
+    "ladder": "The first time we ask. The second time the building asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a roof thing stops.",
+    "middle": "Whoever looks after the shared floors decides the shared floors."
+  },
+  "inner_proposal": {
+    "about": "roof access after dark",
+    "text": "put a light on the roof stair and drop the two-up rule after dark",
+    "because": "the two-up rule exists because the stair is unlit, and a light removes the reason"
+  },
+  "inner_objection": "the stair is not the only dark thing up there and the rule has never cost anybody an evening",
+  "unheld_proposal": {
+    "about": "the basement",
+    "text": "clear the basement and put bike racks down there"
+  },
+  "monitor_watch": {
+    "about": "the boiler ran at two in the morning",
+    "because": "the meter shows a burn between midnight and six and the rule names those hours",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "running the boiler overnight",
+    "first": "run the boiler overnight while the second floor has no radiators",
+    "second": "run the boiler overnight for the guests on the third floor",
+    "third": "run the boiler overnight through the cold snap",
+    "because": "an overnight burn is heard in every flat on the stack and the rule names those hours",
+    "ruling_1": "we let it stand for the week the radiators were out",
+    "ruling_2": "the building agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "leaving the stair light on all night",
+    "text": "leave the stair light on all night through the winter"
+  },
+  "clash": {
+    "about": "eating on the roof in July",
+    "text": "hold the Friday building dinner on the roof through July, finishing at eleven",
+    "because_a": "eleven on the roof is eleven in the bedroom below it",
+    "because_b": "the roof in July is the only time the whole building is in one place",
+    "carried": "the flat below is Yara's and Yara cooks the dinner; it stops being carried the day somebody else lives there, which is why it has a date on it"
+  },
+  "amend_convention": {
+    "about": "roof chairs",
+    "text": "leave the roof chairs out through the summer instead of stacking them",
+    "because": "stacking them every night in July is work nobody has ever finished"
+  },
+  "amend_principle": {
+    "about": "quiet on the roof",
+    "text": "move roof quiet from ten to eleven between June and August",
+    "because": "the summer is the only time the roof is worth having"
+  },
+  "irreversible": {
+    "about": "the old boiler",
+    "text": "scrap the old boiler for the metal price once the new one is in"
+  },
+  "silence": {
+    "about": "who takes a parcel in for somebody out at work",
+    "rationale": "everyone already does it, and the first person to write it down would make it a shift rather than a favour",
+    "proposal": "put a parcel duty on the floor rota"
+  },
+  "panel": {
+    "rationale": "three people to look at the roof rule for a month"
+  }
+}

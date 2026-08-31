@@ -1,0 +1,41 @@
+{
+  "arm": "neutralised",
+  "note": "Each entry removes THE FACT THE SUPERSESSION TURNS ON from one side, so the pair no longer conflicts. Ground truth for this arm: none of these nine is a tension. A stage reading the two passages should stop flagging them; a stage recalling what it knows about the United States should go on flagging them. Written 2026-08-30 before the harness existed and before any perturbed run. NOT EDITABLE after data lands — the whole value of this arm is that the table was fixed first.",
+  "excluded": {
+    "S2": "not flagged at baseline (0/3); a pair that is not seen cannot become less seen",
+    "S9": "not flagged at baseline (1/3, minority); same reason"
+  },
+  "caveat": {
+    "S10": "PARTIAL, declared in advance. The pair differs on age AND on the sex qualifier. Both are matched below, but XIV.2 is a representation penalty and XXVI.1 a voting guarantee, so a residual difference of KIND remains that no substitution removes. If S10 alone flags in this arm it is as likely to be that residual as recall, and it is counted normally regardless."
+  },
+  "perturbations": {
+    "S1": { "side": "b",
+      "edits": [["shall not be construed to extend", "shall be construed to extend"]],
+      "why": "With the negation gone, both passages extend the judicial power to suits against a State by citizens of another State. They agree." },
+    "S3": { "side": "b",
+      "edits": [["within the United States or any place subject to its jurisdiction", "within the District of Columbia"]],
+      "why": "Side a governs a person escaping from one State into another. Side b, so scoped, governs only the District. Different subjects; nothing to conflict." },
+    "S4": { "side": "a",
+      "edits": [["three fifths of all other Persons", "the whole number of all other Persons"]],
+      "why": "Both then count every person for apportionment. The two bases agree." },
+    "S5": { "side": "b",
+      "edits": [["without apportionment among the several States and without regard to any census or enumeration", "in proportion to the census or enumeration"]],
+      "why": "Both then require the tax to be apportioned to the census. The rule and the power agree." },
+    "S6": { "side": "b",
+      "edits": [["are elected by the people of their respective States", "are chosen by the Legislature of their respective States"]],
+      "why": "Both then name the State legislature as the chooser of Senators." },
+    "S7": { "side": "b",
+      "edits": [["noon on the 3d day of January", "noon on the first Monday in December"]],
+      "why": "Both then name the same day for Congress to assemble." },
+    "S8": { "side": "b",
+      "edits": [["before the time fixed for the beginning of his term", "before the fourth day of March next following"]],
+      "why": "Both then name the same deadline before the Vice-President acts." },
+    "S10": { "side": "b",
+      "edits": [["eighteen years of age or older", "twenty-one years of age or older"],
+                ["The right of citizens of the United States", "The right of male citizens of the United States"]],
+      "why": "Age and sex qualifier matched to side a. See the declared caveat above." },
+    "S11": { "side": "b",
+      "edits": [["eighteenth article of amendment", "seventeenth article of amendment"]],
+      "why": "Side b then repeals a different amendment and no longer bears on the prohibition in side a." }
+  }
+}

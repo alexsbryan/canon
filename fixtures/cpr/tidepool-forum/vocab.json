@@ -1,0 +1,143 @@
+{
+  "institution": "Tidepool forum",
+  "kind": "a moderated community forum",
+  "one_line": "Four thousand readers, eleven people with the delete button, and an attention budget that is the actual scarce thing.",
+  "start": "2025-07-21",
+  "lineage": "small-forum-canon",
+  "generation": "g8",
+  "generation_next": "g9",
+  "source": "https://example.org/small-forum-canon",
+  "outer": "forum",
+  "middle_leaf": "public",
+  "inner_leaf": "frontpage",
+  "ladder_leaf": "threads",
+  "unheld": "archive",
+  "steward": "human:orla",
+  "members": [
+    "human:orla",
+    "human:jonas",
+    "human:priti",
+    "human:mei",
+    "human:abel",
+    "human:cato",
+    "human:dara",
+    "human:effie",
+    "human:gwyn",
+    "human:hue",
+    "human:idris"
+  ],
+  "insiders": [
+    "human:jonas",
+    "human:priti"
+  ],
+  "mid_holders": [
+    "human:dara",
+    "human:effie"
+  ],
+  "outsider": "human:mei",
+  "monitor": "human:gwyn",
+  "ladder_decider": "human:orla",
+  "upstream_actor": "human:network-admin",
+  "insider_rationale": "curate the front page this quarter",
+  "mid_rationale": "look after everything a reader sees",
+  "monitor_rationale": "takes the flag queue this quarter; four months, then somebody else does",
+  "c": {
+    "ladder": {
+      "label": "no-pile-on",
+      "text": "A thread about a named person is closed once it is about the person and not the thing they did."
+    },
+    "shared": {
+      "label": "spend-together",
+      "text": "Anything the forum pays for is agreed before it is paid for."
+    },
+    "access": {
+      "label": "read-without-account",
+      "text": "Anyone can read the forum without an account, and always will be able to."
+    },
+    "inner_a": {
+      "label": "front-by-hand",
+      "text": "The front page is chosen by a person, and the person who chose it is named on it."
+    },
+    "inner_b": {
+      "label": "front-slots",
+      "text": "No more than five things are on the front page at once."
+    },
+    "clash_a": {
+      "label": "nothing-vanishes",
+      "text": "A removed post leaves a visible stub saying it was removed and by whom."
+    },
+    "clash_b": {
+      "label": "no-second-audience",
+      "text": "Abuse aimed at one person is not given a second audience by being memorialised."
+    },
+    "extra": {
+      "label": "flair-plain",
+      "text": "A member's flair says what they work on, not what they have earned here."
+    }
+  },
+  "policy": {
+    "root": "We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the moderators together, and anything we cannot undo is not decided by silence.",
+    "inner": "Whoever is curating this quarter decides the front page.",
+    "unheld": "The archive is decided by whoever holds it.",
+    "ladder": "The first time we ask. The second time the moderators ask together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a front page decision stops.",
+    "middle": "Whoever looks after the public side decides the public side."
+  },
+  "inner_proposal": {
+    "about": "how the front page is chosen",
+    "text": "let the ranking algorithm fill the two slots the curator leaves empty",
+    "because": "a curator who cannot fill five slots leaves the front page half dead for a day"
+  },
+  "inner_objection": "the named curator is the whole reason anyone can argue with the front page, and two algorithmic slots is two slots nobody can argue with",
+  "unheld_proposal": {
+    "about": "the archive",
+    "text": "put the pre-2020 archive behind a search index and drop the old threads from the site"
+  },
+  "monitor_watch": {
+    "about": "a thread that turned onto the person",
+    "because": "the last forty replies name the person and not the thing they did",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "leaving a pile-on thread open",
+    "first": "leave the thread open because the technical argument in it is still going",
+    "second": "leave the follow-up thread open for the same reason",
+    "third": "leave the third thread on the same person open",
+    "because": "a thread that has turned onto the person is a thread that is now about hurting them",
+    "ruling_1": "the technical argument was real and we let it run one more day",
+    "ruling_2": "the moderators agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "pinning a thread for longer than a week",
+    "text": "keep the fundraiser thread pinned until the fundraiser closes"
+  },
+  "clash": {
+    "about": "what a removal leaves behind",
+    "text": "remove the harassment thread outright, with no stub and no record on the page",
+    "because_a": "a removal with no trace is a removal nobody can question, and that is how moderation goes bad",
+    "because_b": "a stub saying who was attacked and by whom hands the attack the audience it wanted",
+    "carried": "the stub is kept in the moderation log where the forum can audit it and the page carries nothing; that splits the two goods at the cost of the log being the only place to look, which is the part to revisit"
+  },
+  "amend_convention": {
+    "about": "flair",
+    "text": "let long-standing members carry a flair that says how long they have been here",
+    "because": "newcomers cannot tell who has been answering the same question for nine years"
+  },
+  "amend_principle": {
+    "about": "removal stubs",
+    "text": "drop the stub when the thread was aimed at one named person",
+    "because": "the stub is a second audience and the log already keeps the record"
+  },
+  "irreversible": {
+    "about": "the old archive",
+    "text": "delete the pre-2020 archive to get under the storage limit"
+  },
+  "silence": {
+    "about": "how fast a moderator should answer a flag",
+    "rationale": "a target would be met by the moderators with the least going on in their lives and missed by everyone else, and the queue has never been long enough to need one",
+    "proposal": "set a response time target for flagged posts"
+  },
+  "panel": {
+    "rationale": "three of us to look at the removal rule for a month"
+  }
+}

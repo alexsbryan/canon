@@ -1,0 +1,77 @@
+// Crosswalk Coliving — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"building.commons.roof"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"building.commons.roof","actor":"human:yara","about":"roof access after dark","proposal":"put a light on the roof stair and drop the two-up rule after dark","positions":[{"citing":"@roof-two-up","pull":"toward","because":"the two-up rule exists because the stair is unlit, and a light removes the reason"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"building.commons.roof","actor":"human:petra","about":"roof access after dark","proposal":"put a light on the roof stair and drop the two-up rule after dark","positions":[{"citing":"@roof-two-up","pull":"toward","because":"the two-up rule exists because the stair is unlit, and a light removes the reason"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"basement","actor":"human:yara","about":"the basement","proposal":"clear the basement and put bike racks down there","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-06-06","by":"human:yara","op":"policy","scope":"building.commons.roof","text":"Two of us have to object before a roof thing stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"building.commons.roof","actor":"human:petra","about":"roof access after dark","proposal":"put a light on the roof stair and drop the two-up rule after dark","positions":[{"actor":"human:yara","pull":"against","because":"the stair is not the only dark thing up there and the rule has never cost anybody an evening"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-06-15","by":"agent:meterwatch","op":"position","about":"the boiler ran at two in the morning","citing":"@boiler-hours","pull":"against","because":"the meter shows a burn between midnight and six and the rule names those hours"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-06-16","by":"agent:meterwatch","as":"monitor-dismiss","op":"dismiss","a":"@quiet-roof","b":"@summer-roof","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-08-11"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:meterwatch"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"building.boiler","about":"running the boiler overnight","proposal":"run the boiler overnight while the second floor has no radiators","positions":[{"citing":"@boiler-hours","pull":"against","because":"an overnight burn is heard in every flat on the stack and the rule names those hours"}]}
+{"step":"act","at":"2025-08-12","by":"human:tomas","op":"decided","about":"running the boiler overnight","outcome":"conflicts","authority":"ask-one","rationale":"we let it stand for the week the radiators were out"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"building.boiler","about":"running the boiler overnight","proposal":"run the boiler overnight for the guests on the third floor","positions":[{"citing":"@boiler-hours","pull":"against","because":"an overnight burn is heard in every flat on the stack and the rule names those hours"}]}
+{"step":"act","at":"2025-08-13","by":"human:tomas","op":"decided","about":"running the boiler overnight","outcome":"conflicts","authority":"ask-panel","rationale":"the building agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"building.boiler","about":"running the boiler overnight","proposal":"run the boiler overnight through the cold snap","positions":[{"citing":"@boiler-hours","pull":"against","because":"an overnight burn is heard in every flat on the stack and the rule names those hours"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"building.boiler","about":"leaving the stair light on all night","proposal":"leave the stair light on all night through the winter","positions":[{"citing":"@boiler-hours","pull":"against","because":"an overnight burn is heard in every flat on the stack and the rule names those hours"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"eating on the roof in July","proposal":"hold the Friday building dinner on the roof through July, finishing at eleven","positions":[{"citing":"@quiet-roof","pull":"against","because":"eleven on the roof is eleven in the bedroom below it"},{"citing":"@summer-roof","pull":"toward","because":"the roof in July is the only time the whole building is in one place"}]}
+{"step":"act","at":"2025-08-14","by":"human:yara","op":"accept","a":"@quiet-roof","b":"@summer-roof","rationale":"the flat below is Yara's and Yara cooks the dinner; it stops being carried the day somebody else lives there, which is why it has a date on it","revisit":"2026-02-01"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-08-15","by":"human:tomas","op":"adopt","lineage":"coliving-commons","generation":"g7","source":"https://example.org/coliving-commons"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"building"}
+{"step":"who","name":"nesting-the-middle","principle":8,"strength":"mechanism","scope":"building.commons"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"building.commons.roof"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"roof chairs","proposal":"leave the roof chairs out through the summer instead of stacking them","amends":"@chairs-stacked","positions":[{"actor":"human:petra","pull":"toward","because":"stacking them every night in July is work nobody has ever finished"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"quiet on the roof","proposal":"move roof quiet from ten to eleven between June and August","amends":"@quiet-roof","positions":[{"actor":"human:petra","pull":"toward","because":"the summer is the only time the roof is worth having"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the old boiler","proposal":"scrap the old boiler for the metal price once the new one is in","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the old boiler","proposal":"scrap the old boiler for the metal price once the new one is in","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"who takes a parcel in for somebody out at work","proposal":"put a parcel duty on the floor rota","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-09-26","by":"human:tomas","as":"panel","op":"draw_commit","scope":"building","count":3,"after_ts":1759622400,"rationale":"three people to look at the roof rule for a month"}
+{"step":"act","at":"2025-09-27","by":"human:tomas","op":"draw_secret","commit":"@panel","digest":"e44de142f859567c2690569553d7c687472017d849ac2168bd9167c43e7ee9f7"}
+{"step":"act","at":"2025-09-27","by":"human:yara","op":"draw_secret","commit":"@panel","digest":"6d1d4f580985f9e294657f3dfafaafb33f163baa2452b13aa7ac5b2b08a5146b"}
+{"step":"act","at":"2025-09-27","by":"human:isla","op":"draw_secret","commit":"@panel","digest":"59091c8fa1379a70968ed55ec87e9cd543ebf435b322ead7afe51fb8f95f1339"}
+{"step":"act","at":"2025-09-27","by":"human:petra","op":"draw_secret","commit":"@panel","digest":"8b4ca88f8eee0b8ab5ec623739269fb9dd60f2dac7e3cfc05a7b2bff8848a5e7"}
+{"step":"act","at":"2025-09-27","by":"human:noel","op":"draw_secret","commit":"@panel","digest":"d2d72c171f15fb6e2ede08786055ce384356b8587567fb38720e603a1d667149"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-10-07"}
+{"step":"act","at":"2025-10-07","by":"human:tomas","op":"draw_reveal","commit":"@panel","secret":"crosswalk-coliving-tomas-panel"}
+{"step":"act","at":"2025-10-07","by":"human:yara","op":"draw_reveal","commit":"@panel","secret":"crosswalk-coliving-yara-panel"}
+{"step":"act","at":"2025-10-07","by":"human:isla","op":"draw_reveal","commit":"@panel","secret":"crosswalk-coliving-isla-panel"}
+{"step":"act","at":"2025-10-07","by":"human:petra","op":"draw_reveal","commit":"@panel","secret":"crosswalk-coliving-petra-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

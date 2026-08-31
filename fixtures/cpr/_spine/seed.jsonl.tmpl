@@ -1,0 +1,91 @@
+// {{institution}} — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+
+{{#if forked}}
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"{{d.adopt}}","by":"{{steward}}","op":"adopt","lineage":"{{lineage}}","generation":"{{generation}}","source":"{{source}}"}
+
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"{{d.inherit}}","by":"{{steward}}","as":"{{c.ladder.label}}","op":"assert","text":"{{c.ladder.text}}","from":"{{up.1}}"}
+{"at":"{{d.inherit}}","by":"{{steward}}","as":"{{c.shared.label}}","op":"assert","text":"{{c.shared.text}}","from":"{{up.2}}"}
+{"at":"{{d.inherit}}","by":"{{steward}}","as":"{{c.access.label}}","op":"assert","text":"{{c.access.text}}","from":"{{up.3}}"}
+{{/if}}
+{{#unless forked}}
+// ── FOUNDED, not forked. There is no upstream and no `adopt`, so these
+// three are this community's own like every other. Ostrom 2 and 7 are
+// about divergence from somewhere else, and there is no somewhere else —
+// which is why this vocabulary declares them not applicable and the bar
+// makes it prove they do not hold rather than quietly skipping them. ──
+{"at":"{{d.inherit}}","by":"{{steward}}","as":"{{c.ladder.label}}","op":"assert","text":"{{c.ladder.text}}"}
+{"at":"{{d.inherit}}","by":"{{steward}}","as":"{{c.shared.label}}","op":"assert","text":"{{c.shared.text}}"}
+{"at":"{{d.inherit}}","by":"{{steward}}","as":"{{c.access.label}}","op":"assert","text":"{{c.access.text}}"}
+{{/unless}}
+
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"{{d.local}}","by":"{{insider.0}}","as":"{{c.inner_a.label}}","op":"assert","text":"{{c.inner_a.text}}"}
+{"at":"{{d.local}}","by":"{{insider.1}}","as":"{{c.inner_b.label}}","op":"assert","text":"{{c.inner_b.text}}"}
+{"at":"{{d.local}}","by":"{{outsider}}","as":"{{c.clash_a.label}}","op":"assert","text":"{{c.clash_a.text}}"}
+{"at":"{{d.local}}","by":"{{outsider}}","as":"{{c.clash_b.label}}","op":"assert","text":"{{c.clash_b.text}}"}
+{"at":"{{d.local}}","by":"{{steward}}","as":"{{c.extra.label}}","op":"assert","text":"{{c.extra.text}}"}
+
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"{{d.scope}}","by":"{{steward}}","op":"scoped","commitment":"@{{c.inner_a.label}}","scope":"{{inner}}"}
+{"at":"{{d.scope}}","by":"{{steward}}","op":"scoped","commitment":"@{{c.inner_b.label}}","scope":"{{inner}}"}
+{"at":"{{d.scope}}","by":"{{steward}}","op":"scoped","commitment":"@{{c.ladder.label}}","scope":"{{ladder}}"}
+
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"{{d.rank}}","by":"{{steward}}","op":"rank","commitment":"@{{c.clash_a.label}}","rank":"principle"}
+{"at":"{{d.rank}}","by":"{{steward}}","op":"rank","commitment":"@{{c.ladder.label}}","rank":"principle"}
+{"at":"{{d.rank}}","by":"{{steward}}","op":"rank","commitment":"@{{c.extra.label}}","rank":"convention"}
+
+// ── standing: who holds what (Ostrom 1) ──
+{{#each members as m}}
+{"at":"{{d.grant}}","by":"{{steward}}","op":"grant","holder":"{{m}}","scope":"{{outer}}"}
+{{/each}}
+
+{{#if middle}}
+// A THIRD level, where the commons has one. Same op, one dot deeper.
+{{#each mid_holders as h}}
+{"at":"{{d.inner_grant}}","by":"{{steward}}","op":"grant","holder":"{{h}}","scope":"{{middle}}","rationale":"{{mid_rationale}}"}
+{{/each}}
+{{/if}}
+
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{{#unless ablate.no_inner_grants}}
+{{#each insiders as i}}
+{"at":"{{d.inner_grant}}","by":"{{steward}}","op":"grant","holder":"{{i}}","scope":"{{inner}}","rationale":"{{insider_rationale}}"}
+{{/each}}
+{{/unless}}
+
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{{#unless ablate.no_monitor_horizon}}
+{"at":"{{d.monitor_grant}}","by":"{{steward}}","as":"monitor-grant","op":"grant","holder":"{{monitor}}","scope":"{{inner}}","horizon":{{d.monitor_horizon_ts}},"rationale":"{{monitor_rationale}}"}
+{{/unless}}
+{{#if ablate.no_monitor_horizon}}
+// ABLATION `no-monitor-horizon`: the same grant, with no end date on it.
+{"at":"{{d.monitor_grant}}","by":"{{steward}}","as":"monitor-grant","op":"grant","holder":"{{monitor}}","scope":"{{inner}}","rationale":"{{monitor_rationale}}"}
+{{/if}}
+
+// ── how this community decides (Ostrom 3) ──
+{"at":"{{d.policy}}","by":"{{steward}}","as":"root-policy","op":"policy","text":"{{policy.root}}","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{{#if middle}}
+{"at":"{{d.policy}}","by":"{{steward}}","as":"middle-policy","op":"policy","scope":"{{middle}}","text":"{{policy.middle}}","rule":{"rule":"subsidiarity"}}
+{{/if}}
+{"at":"{{d.policy}}","by":"{{steward}}","as":"inner-policy","op":"policy","scope":"{{inner}}","text":"{{policy.inner}}","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"{{d.policy}}","by":"{{steward}}","as":"unheld-policy","op":"policy","scope":"{{unheld}}","text":"{{policy.unheld}}","rule":{"rule":"subsidiarity"}}
+{"at":"{{d.policy}}","by":"{{steward}}","as":"ladder-policy","op":"policy","scope":"{{ladder}}","text":"{{policy.ladder}}","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"{{d.silence}}","by":"{{steward}}","op":"silence","about":"{{silence.about}}","rationale":"{{silence.rationale}}"}

@@ -1,0 +1,76 @@
+// Alanya inshore fishery — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"fishery.sites"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"fishery.sites","actor":"human:ayla","about":"the spacing of the sites","proposal":"add four sites between the existing ones for the short-net boats","positions":[{"citing":"@sites-named","pull":"toward","because":"a short net does not reach the next site, so the spacing that protects the long nets is spare capacity"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"fishery.sites","actor":"human:cemre","about":"the spacing of the sites","proposal":"add four sites between the existing ones for the short-net boats","positions":[{"citing":"@sites-named","pull":"toward","because":"a short net does not reach the next site, so the spacing that protects the long nets is spare capacity"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"harbour","actor":"human:ayla","about":"the harbour","proposal":"dredge the harbour mouth and lengthen the eastern mole","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-11-07","by":"human:ayla","op":"policy","scope":"fishery.sites","text":"Two of us have to object before a change to the sites stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"fishery.sites","actor":"human:cemre","about":"the spacing of the sites","proposal":"add four sites between the existing ones for the short-net boats","positions":[{"actor":"human:ayla","pull":"against","because":"the spacing is measured off the longest net in the fleet, and the fleet's nets change faster than the list does"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-11-16","by":"agent:logwatch","op":"position","about":"a landing logged from a site that was not drawn","citing":"@one-site-one-day","pull":"against","because":"the boat's log names a site assigned to another boat that day"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-11-17","by":"agent:logwatch","as":"monitor-dismiss","op":"dismiss","a":"@no-swapping","b":"@engine-trouble","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2026-01-12"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:logwatch"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"fishery.season","about":"fishing a site you did not draw","proposal":"work the neighbouring site because the drawn one was fouled","positions":[{"citing":"@one-site-one-day","pull":"against","because":"a site fished by two boats is a site that produces for neither, which is what the list exists to prevent"}]}
+{"step":"act","at":"2026-01-13","by":"human:kemal","op":"decided","about":"fishing a site you did not draw","outcome":"conflicts","authority":"ask-one","rationale":"the drawn site had a net down in it and we let it stand"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"fishery.season","about":"fishing a site you did not draw","proposal":"work the neighbouring site again on the following day","positions":[{"citing":"@one-site-one-day","pull":"against","because":"a site fished by two boats is a site that produces for neither, which is what the list exists to prevent"}]}
+{"step":"act","at":"2026-01-14","by":"human:kemal","op":"decided","about":"fishing a site you did not draw","outcome":"conflicts","authority":"ask-panel","rationale":"the cooperative agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"fishery.season","about":"fishing a site you did not draw","proposal":"work the good eastern sites for the rest of the week","positions":[{"citing":"@one-site-one-day","pull":"against","because":"a site fished by two boats is a site that produces for neither, which is what the list exists to prevent"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"fishery.season","about":"landing outside the cooperative","proposal":"land the catch at the next harbour when the price is better there","positions":[{"citing":"@one-site-one-day","pull":"against","because":"a site fished by two boats is a site that produces for neither, which is what the list exists to prevent"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"a boat that cannot reach its site","proposal":"let a boat with a failed engine take the nearest free site for the day","positions":[{"citing":"@no-swapping","pull":"against","because":"a site taken outside the draw is a site somebody chose, and choosing is what the draw removes"},{"citing":"@engine-trouble","pull":"toward","because":"a boat that loses the day for a failed engine loses the week, and the fleet is small enough to feel it"}]}
+{"step":"act","at":"2026-01-15","by":"human:ayla","op":"accept","a":"@no-swapping","b":"@engine-trouble","rationale":"the free site is only ever the one nobody drew, and the engine is checked by two others before the day is given; revisit at the next September draw","revisit":"2026-07-05"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2026-01-16","by":"human:kemal","op":"adopt","lineage":"coastal-cooperative-canon","generation":"g4","source":"https://example.org/coastal-cooperative-canon"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"fishery"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"fishery.sites"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"posting the list","proposal":"post the day's assignments to the cooperative's phone group instead of the coffeehouse","amends":"@list-posted","positions":[{"actor":"human:cemre","pull":"toward","because":"half the fleet is at sea when the list goes up on the wall"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"trading sites","proposal":"allow two boats to swap sites if both tell the keeper first","amends":"@no-swapping","positions":[{"actor":"human:cemre","pull":"toward","because":"a declared swap is visible, and the thing the rule fears is the undeclared one"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the western sites","proposal":"strike the four western sites off the list for good and let the ground rest","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the western sites","proposal":"strike the four western sites off the list for good and let the ground rest","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"who tows a boat in when one goes down","proposal":"set a towing rota for the season","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2026-02-27","by":"human:kemal","as":"panel","op":"draw_commit","scope":"fishery","count":3,"after_ts":1772928000,"rationale":"three of us to look at the swapping rule for a month"}
+{"step":"act","at":"2026-02-28","by":"human:kemal","op":"draw_secret","commit":"@panel","digest":"bcf66ef574744573d2baeefe02a4c7c2bf30d02cfdea2f9c1438bac420c4e4f4"}
+{"step":"act","at":"2026-02-28","by":"human:ayla","op":"draw_secret","commit":"@panel","digest":"83be6d41a09adeab37c9554074769981fee32ad6156719155abd92557776a3e8"}
+{"step":"act","at":"2026-02-28","by":"human:bora","op":"draw_secret","commit":"@panel","digest":"f2cb952064c3714a9eae57ec49f7af6cde89ae5fcd4f93c3441279e090559aa1"}
+{"step":"act","at":"2026-02-28","by":"human:cemre","op":"draw_secret","commit":"@panel","digest":"2338e84b5b0bbcce91cba8ad79820413ef58fc02e3be10974904e1d7654cbc21"}
+{"step":"act","at":"2026-02-28","by":"human:deniz","op":"draw_secret","commit":"@panel","digest":"49e11f28ec390ce14a448502883e458e5ed55d2cf9e572c56c2914835b61c434"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2026-03-10"}
+{"step":"act","at":"2026-03-10","by":"human:kemal","op":"draw_reveal","commit":"@panel","secret":"alanya-fishery-kemal-panel"}
+{"step":"act","at":"2026-03-10","by":"human:ayla","op":"draw_reveal","commit":"@panel","secret":"alanya-fishery-ayla-panel"}
+{"step":"act","at":"2026-03-10","by":"human:bora","op":"draw_reveal","commit":"@panel","secret":"alanya-fishery-bora-panel"}
+{"step":"act","at":"2026-03-10","by":"human:cemre","op":"draw_reveal","commit":"@panel","secret":"alanya-fishery-cemre-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

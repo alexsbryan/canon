@@ -1,0 +1,8 @@
+{
+  "extends": "northgate-buildfarm",
+  "institution": "Northgate build farm, with a monitor nobody has to renew",
+  "one_line": "The same farm, minus the end date on the monitor's grant. One line of vocabulary; nothing else differs.",
+  "ablate": { "no_monitor_horizon": true },
+  "predicted_to_fail": [4],
+  "analogue": "A fishery whose guards answer to nobody who fishes — Ostrom 1990, ch. 5, on monitoring that is not accountable to appropriators."
+}

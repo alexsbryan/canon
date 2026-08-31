@@ -1,0 +1,8 @@
+{
+  "extends": "harbourside-makerspace",
+  "institution": "Harbourside Makerspace, with the laser held by nobody",
+  "one_line": "The same makerspace, minus the two grants that say who runs the laser. One line of vocabulary; nothing else differs.",
+  "ablate": { "no_inner_grants": true },
+  "predicted_to_fail": [1, 8],
+  "analogue": "An inshore fishery where anyone may fish anywhere — Ostrom 1990, ch. 5, on the failure of open-access coastal grounds."
+}

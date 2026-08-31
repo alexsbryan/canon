@@ -1,0 +1,137 @@
+{
+  "institution": "Parkside allotments",
+  "kind": "a community garden",
+  "one_line": "Sixty plots, one standpipe, and a hosepipe argument every July.",
+  "start": "2025-03-24",
+  "lineage": "growing-commons",
+  "generation": "g3",
+  "generation_next": "g4",
+  "source": "https://example.org/growing-commons",
+  "outer": "site",
+  "inner_leaf": "polytunnel",
+  "ladder_leaf": "water",
+  "unheld": "carpark",
+  "steward": "human:winnie",
+  "members": [
+    "human:winnie",
+    "human:gopal",
+    "human:marta",
+    "human:elias",
+    "human:bridie",
+    "human:seyi",
+    "human:tam",
+    "human:una",
+    "human:vic",
+    "human:yannick",
+    "human:zofia"
+  ],
+  "insiders": [
+    "human:gopal",
+    "human:marta",
+    "human:seyi"
+  ],
+  "outsider": "human:elias",
+  "monitor": "human:tam",
+  "ladder_decider": "human:winnie",
+  "upstream_actor": "human:council-officer",
+  "insider_rationale": "runs the propagation benches",
+  "monitor_rationale": "reads the standpipe meter this season; four months, then somebody else does",
+  "c": {
+    "ladder": {
+      "label": "hose-hours",
+      "text": "The hose is off between ten in the morning and six in the evening."
+    },
+    "shared": {
+      "label": "site-buys",
+      "text": "Anything bought out of the plot fees is agreed before it is bought."
+    },
+    "access": {
+      "label": "one-key",
+      "text": "Every plotholder holds a gate key."
+    },
+    "inner_a": {
+      "label": "tunnel-vented",
+      "text": "The polytunnel is vented before nine on any day forecast over twenty-five."
+    },
+    "inner_b": {
+      "label": "tunnel-trays",
+      "text": "Seed trays in the tunnel carry a plot number and a sowing date."
+    },
+    "clash_a": {
+      "label": "no-bare-soil",
+      "text": "A bed is not left bare over winter."
+    },
+    "clash_b": {
+      "label": "dig-in-autumn",
+      "text": "Heavy clay beds are turned in autumn and left to the frost."
+    },
+    "extra": {
+      "label": "paths-cut",
+      "text": "The grass path beside your plot is yours to cut."
+    }
+  },
+  "policy": {
+    "root": "We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the site, and anything we cannot undo is not decided by silence.",
+    "inner": "Whoever runs the propagation benches decides the polytunnel.",
+    "unheld": "The car park is decided by whoever holds it.",
+    "ladder": "The first time we ask. The second time the site asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a polytunnel thing stops."
+  },
+  "inner_proposal": {
+    "about": "polytunnel venting",
+    "text": "fit an automatic vent opener and drop the before-nine rule",
+    "because": "an opener vents on temperature, which is what the rule was reaching for"
+  },
+  "inner_objection": "the openers stick in the first hot week every year and nobody notices until the seedlings have gone",
+  "unheld_proposal": {
+    "about": "the car park",
+    "text": "mark out bays and put a barrier on the car park"
+  },
+  "monitor_watch": {
+    "about": "the standpipe ran at two in the afternoon",
+    "because": "the meter shows a draw between ten and six and the rule names those hours",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "watering in the middle of the day",
+    "first": "water the new fruit trees at midday through the dry spell",
+    "second": "water the squash bed at midday because it wilted",
+    "third": "water the whole top row at midday every day this week",
+    "because": "midday water is mostly lost to the air and the standpipe pressure is shared with everyone above the bend",
+    "ruling_1": "the trees were newly in and we left it there",
+    "ruling_2": "the site agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "burning green waste on the site",
+    "text": "burn the green waste heap at the bottom of the site"
+  },
+  "clash": {
+    "about": "bare beds over winter",
+    "text": "leave the two clay beds turned and bare from October so the frost can work on them",
+    "because_a": "bare soil over winter is soil off the site by March",
+    "because_b": "clay that is not frosted is clay nobody can work in spring",
+    "carried": "the two beds are the only heavy clay on the site and they are at the bottom where the run-off is caught; revisit when the swale is dug"
+  },
+  "amend_convention": {
+    "about": "path cutting",
+    "text": "cut every path with the site mower on one Saturday a month",
+    "because": "half the paths are never cut and the mower is already here"
+  },
+  "amend_principle": {
+    "about": "winter cover",
+    "text": "allow a bed to be left bare if it is sheeted",
+    "because": "a sheet holds the soil, which is the thing the rule is actually about"
+  },
+  "irreversible": {
+    "about": "the old orchard",
+    "text": "take out the three dead apples and put plots on that corner"
+  },
+  "silence": {
+    "about": "who opens the gate on a Sunday morning",
+    "rationale": "somebody is always there by eight and writing a rota would make the first person late instead of early",
+    "proposal": "put a Sunday gate rota on the noticeboard"
+  },
+  "panel": {
+    "rationale": "three people to look at the winter cover rule for a month"
+  }
+}
