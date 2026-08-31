@@ -1,0 +1,213 @@
+{
+  "arm": "sham",
+  "artifact": "/Users/alexsbryan/dev/canon/fixtures/founding/runs/qwen-27b/run-1787735501.json",
+  "at": 1788133484,
+  "bound": "upper — each pair shown alone, not in a 24-wide window",
+  "decoys_flagged": {
+    "flagged": 0,
+    "of": 6
+  },
+  "endpoint": "http://localhost:9741/v1",
+  "floor": 6,
+  "instrument": "two-up",
+  "model": "primary",
+  "pairs_that_flipped": 0,
+  "perturbations": "/Users/alexsbryan/dev/canon/fixtures/founding/perturbations/sham.json",
+  "principles": {
+    "of": 6,
+    "seen": 0
+  },
+  "refused": 0,
+  "runs_per_pair": 3,
+  "served_model": "Qwen3.6-35B-A3B-UD-MTP-IQ4_NL",
+  "supersessions": {
+    "of": 11,
+    "seen": 9
+  },
+  "tensions": [
+    {
+      "a": {
+        "candidate": 197,
+        "resolved_by": "own words",
+        "text": "The judicial Power shall extend to cases between a State and Citizens of another State."
+      },
+      "b": {
+        "candidate": 258,
+        "resolved_by": "own words",
+        "text": "The Judicial power of the United States shall not be construed to extend to any suit in law or equity commenced or prosecuted against one of the United States by Citizens of another State, or by Citizens or Subjects of any Foreign Power."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S1",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 284,
+        "resolved_by": "citation",
+        "text": "When the right to vote is denied or abridged for male inhabitants twenty-one years of age and citizens of the United States (except for participation in insurrection or other crime), the basis of representation in that State shall be reduced in proportion to the number of such disenfranchised citizens relative to all male citizens twenty-one years of age in the State."
+      },
+      "b": {
+        "candidate": 330,
+        "resolved_by": "own words",
+        "text": "The right of citizens of the United States who are eighteen years of age or older to vote shall not be denied or abridged by the United States or any State on account of age."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S10",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 297,
+        "resolved_by": "own words",
+        "text": "One year after ratification of this article, the manufacture, sale, or transportation of intoxicating liquors within, the importation thereof into, or the exportation thereof from the United States and all territory subject to its jurisdiction for beverage purposes is forbidden."
+      },
+      "b": {
+        "candidate": 312,
+        "resolved_by": "citation",
+        "text": "The eighteenth article of amendment to the Constitution of the United States is repealed."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S11",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 212,
+        "resolved_by": "own words",
+        "text": "No Person held to Service or Labour in one State under its Laws who flees into another shall be discharged from such Service or Labour due to any Law or Regulation therein, but shall be delivered up on Claim of the Party to whom such Service or Labour may be due."
+      },
+      "b": {
+        "candidate": 276,
+        "resolved_by": "own words",
+        "text": "Slavery and involuntary servitude shall not exist within the United States or any place subject to its jurisdiction."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S3",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 87,
+        "resolved_by": "own words",
+        "text": "The Number for apportionment is determined by adding to the whole Number of free Persons, including those bound to Service for a Period of Years, and excluding Indians not taxed, three fifths of all other Persons."
+      },
+      "b": {
+        "candidate": 283,
+        "resolved_by": "own words",
+        "text": "Representatives shall be apportioned among the several States according to their respective numbers, counting the whole number of persons in each State, excluding Indians not taxed."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S4",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 136,
+        "resolved_by": "own words",
+        "text": "No poll tax or other direct tax shall be laid unless in proportion to the census or enumeration directed to be taken."
+      },
+      "b": {
+        "candidate": 291,
+        "resolved_by": "own words",
+        "text": "The Congress shall have power to lay and collect taxes on incomes from whatever source derived without apportionment among the several States and without regard to any census or enumeration."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S5",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 92,
+        "resolved_by": "own words",
+        "text": "The Senate of the United States consists of two Senators from each State, chosen by the Legislature thereof for six years, and each Senator has one vote."
+      },
+      "b": {
+        "candidate": 292,
+        "resolved_by": "own words",
+        "text": "Senators are elected by the people of their respective States for six years."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S6",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 104,
+        "resolved_by": "own words",
+        "text": "The Congress shall assemble at least once in every Year on the first Monday in December unless they appoint a different Day by Statute."
+      },
+      "b": {
+        "candidate": 305,
+        "resolved_by": "own words",
+        "text": "Such meeting shall begin at noon on the 3d day of January, unless they shall by law appoint a different day."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S7",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "a": {
+        "candidate": 270,
+        "resolved_by": "own words",
+        "text": "If the House does not choose a President before the fourth day of March next following, the Vice-President shall serve as President."
+      },
+      "b": {
+        "candidate": 307,
+        "resolved_by": "own words",
+        "text": "If a President has not been chosen before the time fixed for the beginning of his term or if the President elect fails to qualify, the Vice President elect acts as President until a President qualifies."
+      },
+      "error": null,
+      "flipped": false,
+      "id": "S8",
+      "type": "unmarked_supersession",
+      "verdict": "seen",
+      "votes_cast": 3,
+      "votes_seen": 3
+    },
+    {
+      "error": "constitution:amend.XIV.5: no candidate came from that section; constitution:amend.XXVI.2: no candidate came from that section",
+      "id": "N3",
+      "type": "decoy",
+      "verdict": "unresolved"
+    },
+    {
+      "error": "constitution:I.8: 7 candidate(s), none carrying [Array [String(\"coin Money\")]]",
+      "id": "N6",
+      "type": "decoy",
+      "verdict": "unresolved"
+    }
+  ],
+  "unresolved": 2
+}

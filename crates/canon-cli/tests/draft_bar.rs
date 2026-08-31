@@ -1426,7 +1426,15 @@ fn side_to_candidate(
 /// could not judge. The third is never folded into the second: a refused call
 /// counted as "not seen" would quietly deflate the number this exists to
 /// produce (§18.3).
-fn two_up_once(bin: &Path, scratch: &Path, a: &str, b: &str) -> Result<bool, String> {
+/// One pair, shown alone. Returns whether the stage called it a tension, and
+/// what the endpoint said actually answered — an alias is not provenance.
+fn two_up_once(
+    bin: &Path,
+    scratch: &Path,
+    a: &str,
+    b: &str,
+    distractors: &[String],
+) -> Result<(bool, Option<String>), String> {
     let (endpoint, model) = two_up_endpoint();
     let dir = scratch.join(".canon");
     let _ = std::fs::remove_dir_all(scratch);
@@ -1454,8 +1462,23 @@ fn two_up_once(bin: &Path, scratch: &Path, a: &str, b: &str) -> Result<bool, Str
         ))
     };
     must(&["init", "--profile", "house"])?;
-    must(&["add", a])?;
-    must(&["add", b])?;
+    // `add` prints `<id>  <text>`. With a window we have to know WHICH pair
+    // came back, not merely that something did.
+    let added = |text: &str| -> Result<String, String> {
+        let out = run(&["add", text])?;
+        if !out.status.success() {
+            return Err(format!("add: {}", String::from_utf8_lossy(&out.stderr).trim()));
+        }
+        String::from_utf8_lossy(&out.stdout)
+            .split_whitespace()
+            .next()
+            .map(str::to_string)
+            .ok_or_else(|| format!("add printed no id for {text:?}"))
+    };
+    let (id_a, id_b) = (added(a)?, added(b)?);
+    for d in distractors {
+        added(d)?;
+    }
 
     let out = run(&["tensions", "--json"])?;
     if !out.status.success() {
@@ -1465,14 +1488,27 @@ fn two_up_once(bin: &Path, scratch: &Path, a: &str, b: &str) -> Result<bool, Str
             String::from_utf8_lossy(&out.stderr).trim()
         ));
     }
+    let served = String::from_utf8_lossy(&out.stderr)
+        .lines()
+        .find_map(|l| l.rsplit_once(" answered by ").map(|(_, m)| m.trim().to_string()));
     let body = String::from_utf8_lossy(&out.stdout);
     let found: Value = serde_json::from_str(body.trim())
         .map_err(|e| format!("tensions --json: {e} in {body:?}"))?;
     let pairs = found.as_array().ok_or("tensions --json is not an array")?;
-    // Two commitments admit exactly one unordered pair, so any entry at all
-    // is that pair. Nothing to match on, and matching on ids would assert
-    // against `add`'s hashing rather than against the stage.
-    Ok(!pairs.is_empty())
+    if distractors.is_empty() {
+        // Two commitments admit exactly one unordered pair, so any entry at
+        // all is that pair. Nothing to match on, and matching on ids would
+        // assert against `add`'s hashing rather than against the stage.
+        return Ok((!pairs.is_empty(), served));
+    }
+    // In a window the stage may report several pairs and most of them are
+    // not the one being asked about. A conflict is symmetric, so match the
+    // unordered pair.
+    let hit = pairs.iter().any(|c| {
+        let (x, y) = (c["a"].as_str().unwrap_or(""), c["b"].as_str().unwrap_or(""));
+        (x == id_a && y == id_b) || (x == id_b && y == id_a)
+    });
+    Ok((hit, served))
 }
 
 #[test]
@@ -1596,6 +1632,23 @@ fn two_up_upper_bound() {
     // on disk.
     let dry = std::env::var("CANON_BAR_TWO_UP_DRY").is_ok();
 
+    // What actually answered, from the first call that said so. `model` is
+    // the alias we asked for, and on a mesh the two are routinely different:
+    // `primary` named the 27B when this loop was first run and names a 35B
+    // MoE now. An artifact that records only the alias cannot be attributed
+    // to a model afterwards, and three in this repository already cannot.
+    let mut served: Option<String> = None;
+
+    // Phase 1c. A table of edits to the resolved sides, keyed by pair id.
+    // When set, ONLY the pairs it names are asked — the arm is about those
+    // nine and asking the rest would spend calls on nothing.
+    let perturb: Option<Value> = std::env::var("CANON_BAR_PERTURB").ok().map(|p| {
+        serde_json::from_str(&std::fs::read_to_string(&p).unwrap_or_else(|e| {
+            panic!("CANON_BAR_PERTURB {p}: {e}")
+        }))
+        .unwrap_or_else(|e| panic!("CANON_BAR_PERTURB {p}: {e}"))
+    });
+
     // How many times each pair is asked. ONE IS AN ANECDOTE HERE TOO, and
     // this instrument was believed silent until it was checked: temperature is
     // 0.0 and two runs agreed on 12 of 12 pairs, which read as determinism.
@@ -1611,6 +1664,53 @@ fn two_up_upper_bound() {
         .unwrap_or(1);
 
     let candidates = run["candidates"].as_array().unwrap();
+
+    // ── the window, and how its distractors are chosen ──
+    //
+    // `CANON_BAR_WINDOW=24` asks each pair inside a canon of that many
+    // commitments instead of a canon of two. 24 is `BATCH`, so the whole
+    // window still fits one comparison call and the ONLY thing that changed
+    // between this and the two-up number is the company the pair keeps.
+    //
+    // Three exclusions, fixed here before the arm was run, because each one
+    // can move the number:
+    //   1. a candidate sharing a citation with either side — a near-duplicate
+    //      of a side makes "did it find THE pair" unanswerable;
+    //   2. a candidate that is a resolved side of any OTHER planted pair —
+    //      otherwise the window carries a second planted tension and one call
+    //      is doing two jobs;
+    //   3. the two sides themselves.
+    // What is left is sorted by index and sampled at an even stride, so the
+    // distractors are spread across the corpus rather than drawn from
+    // whichever document happens to sit at the front, and two runs of this
+    // harness build the same window.
+    let window: usize = std::env::var("CANON_BAR_WINDOW")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(0);
+    let sides: BTreeSet<usize> = resolved
+        .iter()
+        .flat_map(|p| [p.a.0, p.b.0])
+        .collect();
+    let distractors_for = |a: usize, b: usize| -> Vec<String> {
+        if window < 3 {
+            return Vec::new();
+        }
+        let cite = |i: usize| candidates[i]["source"].as_str().unwrap_or("").to_string();
+        let (ca, cb) = (cite(a), cite(b));
+        let eligible: Vec<usize> = (0..candidates.len())
+            .filter(|i| !sides.contains(i))
+            .filter(|i| cite(*i) != ca && cite(*i) != cb)
+            .collect();
+        let want = window - 2;
+        if eligible.len() < want {
+            return Vec::new();
+        }
+        let stride = eligible.len() / want;
+        (0..want)
+            .map(|k| candidates[eligible[k * stride]]["text"].as_str().unwrap_or("").to_string())
+            .collect()
+    };
     let scratch = std::env::var("CANON_BAR_TWO_UP_OUT")
         .map(PathBuf::from)
         .unwrap_or_else(|_| dir.join("two-up"));
@@ -1619,6 +1719,9 @@ fn two_up_upper_bound() {
     let mut refused: Vec<(String, String)> = Vec::new();
     let mut rows: Vec<Value> = Vec::new();
     let mut flips = 0usize;
+    // A pair whose window could not be built is REFUSED, never scored as a
+    // miss: too few eligible distractors is a fact about the corpus.
+    let mut failed_window: Vec<String> = Vec::new();
 
     for Pairing {
         id: tid,
@@ -1627,10 +1730,38 @@ fn two_up_upper_bound() {
         b: (b, gb),
     } in &resolved
     {
-        let ta = candidates[*a]["text"].as_str().unwrap_or("");
-        let tb = candidates[*b]["text"].as_str().unwrap_or("");
+        let mut ta = candidates[*a]["text"].as_str().unwrap_or("").to_string();
+        let mut tb = candidates[*b]["text"].as_str().unwrap_or("").to_string();
+        if let Some(table) = &perturb {
+            let Some(entry) = table["perturbations"].get(tid) else {
+                continue;
+            };
+            let side = entry["side"].as_str().unwrap_or("b");
+            let target = if side == "a" { &mut ta } else { &mut tb };
+            for e in entry["edits"].as_array().expect("edits is a list") {
+                let (find, rep) = (e[0].as_str().unwrap(), e[1].as_str().unwrap());
+                // The one way this experiment could lie in its own favour: a
+                // `find` that is not there leaves the pair intact, the stage
+                // rightly still calls it a tension, and a no-op scores as
+                // evidence of reading. Refuse instead.
+                assert!(
+                    target.contains(find),
+                    "{tid}: side {side} does not contain {find:?} — the edit would be a no-op \
+                     and a no-op scores as reading. Fix the table, not the result."
+                );
+                *target = target.replace(find, rep);
+            }
+        }
+        let (ta, tb) = (ta.as_str(), tb.as_str());
         let how = format!("c{a} [{ga}] x c{b} [{gb}]");
+        // Built before the dry-run guard on purpose: a window that cannot be
+        // built is a fact about the corpus and is worth learning for free.
+        let company = distractors_for(*a, *b);
+        if window >= 3 && company.is_empty() {
+            failed_window.push(tid.clone());
+        }
         if dry {
+            println!("  window      {} commitment(s)", company.len() + 2);
             println!("  would ask   {tid} [{kind}]  {how}");
             println!("      a: {ta}");
             println!("      b: {tb}");
@@ -1642,12 +1773,17 @@ fn two_up_upper_bound() {
         let mut votes: Vec<bool> = Vec::new();
         let mut failed: Option<String> = None;
         for _ in 0..runs {
-            let mut verdict = two_up_once(bin, &scratch.join(tid), ta, tb);
+            let mut verdict = two_up_once(bin, &scratch.join(tid), ta, tb, &company);
             if verdict.is_err() {
-                verdict = two_up_once(bin, &scratch.join(tid), ta, tb);
+                verdict = two_up_once(bin, &scratch.join(tid), ta, tb, &company);
             }
             match verdict {
-                Ok(v) => votes.push(v),
+                Ok((v, who)) => {
+                    votes.push(v);
+                    if let Some(m) = who {
+                        served.get_or_insert(m);
+                    }
+                }
                 Err(e) => {
                     failed = Some(e);
                     break;
@@ -1743,10 +1879,19 @@ fn two_up_upper_bound() {
             .map(|d| d.as_secs())
             .unwrap_or(0),
         "instrument": "two-up",
-        "bound": "upper — each pair shown alone, not in a 24-wide window",
+        "bound": if window >= 3 {
+            "in a window — each pair among distractors, as the sweep will show it"
+        } else {
+            "upper — each pair shown alone, not in a 24-wide window"
+        },
+        "window": window,
+        "windows_not_built": failed_window,
         "artifact": path.display().to_string(),
         "endpoint": endpoint,
         "model": model,
+        "served_model": served,
+        "arm": perturb.as_ref().and_then(|p| p["arm"].as_str()),
+        "perturbations": std::env::var("CANON_BAR_PERTURB").ok(),
         "floor": TWO_UP_FLOOR,
         "runs_per_pair": runs,
         "pairs_that_flipped": flips,

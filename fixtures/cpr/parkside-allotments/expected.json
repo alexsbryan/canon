@@ -1,0 +1,216 @@
+{
+  "boundary-who-holds-the-inner": {
+    "policy": "subsidiarity",
+    "deciders": [
+      "human:gopal",
+      "human:marta",
+      "human:seyi",
+      "human:tam",
+      "human:bridie",
+      "human:elias",
+      "human:una",
+      "human:vic",
+      "human:winnie",
+      "human:yannick",
+      "human:zofia"
+    ],
+    "holders": [
+      "human:gopal",
+      "human:marta",
+      "human:seyi",
+      "human:tam"
+    ]
+  },
+  "boundary-an-insider-decides": {
+    "outcome": "supported",
+    "rule": "subsidiarity",
+    "authority": "act",
+    "because": "including you",
+    "cites": [
+      "@tunnel-vented"
+    ]
+  },
+  "boundary-an-outsider-does-not": {
+    "outcome": "supported",
+    "authority": "ask-one",
+    "because": "not you"
+  },
+  "boundary-nobody-holds-this": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "nobody holds standing over `carpark`"
+  },
+  "congruence-forked-and-diverged": {
+    "lineage": "growing-commons",
+    "generation": "g3",
+    "inherited": 3,
+    "local": 5
+  },
+  "collective-choice-under-the-new-rule": {
+    "outcome": "supported",
+    "authority": "act",
+    "rule": "threshold",
+    "because": "1 against, 2 needed",
+    "voices": [
+      "human:gopal"
+    ]
+  },
+  "monitors-adjudication-is-surfaced": {
+    "unattended": []
+  },
+  "monitors-standing-lapsed": {
+    "count": 1,
+    "targets": [
+      "@monitor-grant"
+    ]
+  },
+  "monitors-record-is-queryable": {
+    "positions": 1,
+    "decided": 0
+  },
+  "graduated-first": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "rule": "graduated/default",
+    "because": "0 prior decision(s)",
+    "cites": [
+      "@hose-hours"
+    ]
+  },
+  "graduated-second": {
+    "outcome": "conflicts",
+    "authority": "ask-panel",
+    "rule": "graduated/default",
+    "because": "1 prior decision(s)",
+    "cites": [
+      "@hose-hours"
+    ]
+  },
+  "graduated-third": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "rule": "graduated/default",
+    "because": "2 prior decision(s)",
+    "cites": [
+      "@hose-hours"
+    ]
+  },
+  "graduated-a-different-subject-restarts": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "because": "0 prior decision(s) about `burning green waste on the site`"
+  },
+  "conflict-before": {
+    "acts": 40,
+    "tolerated": 0,
+    "live": 8
+  },
+  "conflict-surfaced": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "because": "one is enough",
+    "cites": [
+      "@no-bare-soil",
+      "@dig-in-autumn"
+    ]
+  },
+  "conflict-after": {
+    "acts": 41,
+    "tolerated": 1,
+    "live": 8
+  },
+  "organize-the-fork-keeps-what-it-wrote": {
+    "generation": "g4",
+    "inherited": 3,
+    "local": 5
+  },
+  "nesting-the-outer": {
+    "policy": "cautious/entrenched/consent",
+    "deciders": [
+      "human:bridie",
+      "human:elias",
+      "human:gopal",
+      "human:marta",
+      "human:seyi",
+      "human:tam",
+      "human:una",
+      "human:vic",
+      "human:winnie",
+      "human:yannick",
+      "human:zofia"
+    ],
+    "holders": [
+      "human:bridie",
+      "human:elias",
+      "human:gopal",
+      "human:marta",
+      "human:seyi",
+      "human:tam",
+      "human:una",
+      "human:vic",
+      "human:winnie",
+      "human:yannick",
+      "human:zofia"
+    ]
+  },
+  "nesting-the-inner": {
+    "policy": "threshold",
+    "deciders": [
+      "human:gopal",
+      "human:marta",
+      "human:seyi",
+      "human:bridie",
+      "human:elias",
+      "human:tam",
+      "human:una",
+      "human:vic",
+      "human:winnie",
+      "human:yannick",
+      "human:zofia"
+    ],
+    "holders": [
+      "human:gopal",
+      "human:marta",
+      "human:seyi"
+    ]
+  },
+  "entrenchment-amending-a-convention": {
+    "outcome": "supported",
+    "authority": "act",
+    "because": "no objection"
+  },
+  "entrenchment-amending-a-principle": {
+    "outcome": "supported",
+    "authority": "ask-panel",
+    "because": "entrenched: amends a `principle`"
+  },
+  "reversible-irreversible-and-unsupported": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "cautious: irreversible",
+    "cites": []
+  },
+  "reversible-the-same-behind-a-flag": {
+    "outcome": "unaddressed",
+    "authority": "act-and-notify"
+  },
+  "silence-is-not-a-gap": {
+    "outcome": "unaddressed",
+    "silence": true
+  },
+  "draw-before-anyone-opened-refuses": {
+    "error": "nobody opened a secret, so there is no seed \u2014 and there is no default seed"
+  },
+  "draw-the-panel": {
+    "pool": 10,
+    "withheld": [
+      "human:bridie"
+    ],
+    "seats": [
+      "human:tam",
+      "human:winnie",
+      "human:seyi"
+    ],
+    "seed": "abb1e4af7c481d33e3c00af2818e982473e9562b81493535db9293a942c93fdb"
+  }
+}

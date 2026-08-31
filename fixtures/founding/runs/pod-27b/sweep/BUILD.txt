@@ -1,0 +1,7 @@
+commit    0587228
+dirty     23 uncommitted file(s)
+document  /Users/alexsbryan/dev/canon/fixtures/founding/founding.md
+profile   house
+model     primary
+endpoint  http://localhost:9841/v1
+binary    /Users/alexsbryan/dev/canon/target/debug/canon

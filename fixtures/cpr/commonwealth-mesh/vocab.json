@@ -1,0 +1,137 @@
+{
+  "institution": "Southside compute mesh",
+  "kind": "pooled machines running a model none of them could hold",
+  "one_line": "Eight households pool GPUs and RAM; the model spans the mesh, and so does the cost of somebody closing a laptop.",
+  "start": "2025-05-12",
+  "lineage": "commonwealth-mesh-canon",
+  "generation": "g2",
+  "generation_next": "g3",
+  "source": "https://example.org/commonwealth-mesh-canon",
+  "outer": "mesh",
+  "inner_leaf": "weights",
+  "ladder_leaf": "residency",
+  "unheld": "billing",
+  "steward": "human:oyelaran",
+  "members": [
+    "human:oyelaran",
+    "human:huang",
+    "human:brannon",
+    "human:ferrante",
+    "human:okonkwo",
+    "human:salgado",
+    "human:novak",
+    "human:aritz",
+    "human:demir",
+    "human:laurin"
+  ],
+  "insiders": [
+    "human:huang",
+    "human:brannon",
+    "human:okonkwo",
+    "human:salgado"
+  ],
+  "outsider": "human:ferrante",
+  "monitor": "agent:shardwatch",
+  "ladder_decider": "human:oyelaran",
+  "upstream_actor": "human:upstream-mesh",
+  "insider_rationale": "holds the two machines the layers actually sit on",
+  "monitor_rationale": "reports layer placement and eviction; four months, then we look again",
+  "c": {
+    "ladder": {
+      "label": "residency-notice",
+      "text": "A machine leaving the mesh gives an hour's notice before its layers go."
+    },
+    "shared": {
+      "label": "pooled-buys",
+      "text": "Hardware bought out of the pot is agreed before it is bought."
+    },
+    "access": {
+      "label": "invited-in",
+      "text": "You join because somebody already here vouched for you, and that is the whole of the trust model."
+    },
+    "inner_a": {
+      "label": "weights-pinned",
+      "text": "A model's weights are pinned to a digest, and the digest is what people talk about."
+    },
+    "inner_b": {
+      "label": "weights-two-copies",
+      "text": "Every layer lives on at least two machines before it is served."
+    },
+    "clash_a": {
+      "label": "nobody-idles",
+      "text": "A machine in the mesh is available to the mesh, not held back for its owner."
+    },
+    "clash_b": {
+      "label": "own-machine-first",
+      "text": "Your own work on your own machine comes before the mesh's."
+    },
+    "extra": {
+      "label": "node-names",
+      "text": "A node is named for its household, not for its hardware."
+    }
+  },
+  "policy": {
+    "root": "We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the mesh, and anything we cannot undo is not decided by silence.",
+    "inner": "Whoever holds the machines the layers sit on decides the weights.",
+    "unheld": "Billing is decided by whoever holds it.",
+    "ladder": "The first time we ask. The second time the mesh asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a weights change stops."
+  },
+  "inner_proposal": {
+    "about": "which model the mesh serves",
+    "text": "pin the mesh to the new 70B digest and drop the old one",
+    "because": "two pinned digests is two answers to what `primary` means"
+  },
+  "inner_objection": "the old digest is what every household's scripts name, and dropping it breaks them the same evening",
+  "unheld_proposal": {
+    "about": "electricity",
+    "text": "split the electricity cost by measured GPU-hours"
+  },
+  "monitor_watch": {
+    "about": "a node dropped mid-generation",
+    "because": "the node held four layers with no second copy and left without notice",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "leaving the mesh without notice",
+    "first": "shut the laptop at the end of the day without an hour's notice",
+    "second": "take the desktop off for a reinstall without an hour's notice",
+    "third": "pull the big machine off during a run without an hour's notice",
+    "because": "layers on a machine that vanishes are layers the mesh has to re-place mid-request",
+    "ruling_1": "it was a battery going flat and we left it there",
+    "ruling_2": "the mesh agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "serving a second model at once",
+    "text": "hold a second model resident alongside the primary one"
+  },
+  "clash": {
+    "about": "a household's own long job",
+    "text": "let a household take its machine's whole GPU for a two-day fine-tune",
+    "because_a": "a machine held back for its owner is a machine the mesh planned around and does not have",
+    "because_b": "a mesh you cannot use your own hardware in is a mesh people leave",
+    "carried": "the mesh is small enough to reroute two days of layers and large enough that nobody would stay if it could not; revisit when a fourth household joins"
+  },
+  "amend_convention": {
+    "about": "node naming",
+    "text": "name nodes for their GPU so placement decisions read at a glance",
+    "because": "the household name says nothing about what will fit on it"
+  },
+  "amend_principle": {
+    "about": "idle machines",
+    "text": "let a household mark its machine reserved for a stated window",
+    "because": "a stated window is something the placement can plan around, which an unannounced withdrawal is not"
+  },
+  "irreversible": {
+    "about": "the old weights",
+    "text": "delete the old digest from every machine to free the disk"
+  },
+  "silence": {
+    "about": "how much of your machine you owe the mesh",
+    "rationale": "every share anybody proposed was either unenforceable or the reason somebody would leave, and the informal answer has held for a year",
+    "proposal": "set a minimum share of each machine that the mesh may always use"
+  },
+  "panel": {
+    "rationale": "three people to look at the residency rule for a month"
+  }
+}

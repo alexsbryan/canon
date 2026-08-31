@@ -258,6 +258,14 @@ pub struct Client {
     /// behaving, and a leg with its own counter would never reach the
     /// give-up threshold no matter how long the endpoint stayed down.
     busy_streak: std::rc::Rc<std::cell::Cell<usize>>,
+    /// What the server said answered, from the first reply that named it.
+    ///
+    /// `model` is what we ASKED for, and on a mesh that is usually an alias.
+    /// An alias moves. A run artifact recording only `primary` cannot be
+    /// attributed to a model afterwards, and a number nobody can attribute to
+    /// a model is a number about nothing — this repository has three such
+    /// artifacts, which is why the field exists.
+    served: std::rc::Rc<std::cell::RefCell<Option<String>>>,
 }
 
 // ── backpressure ────────────────────────────────────────────
@@ -342,6 +350,7 @@ impl Client {
         Ok(Self {
             agent,
             busy_streak: Default::default(),
+            served: Default::default(),
             endpoint,
             // Most local servers serve one model and ignore this field, but
             // the OpenAI schema requires it, so something must be sent.
@@ -357,6 +366,12 @@ impl Client {
     /// number always says which server produced it.
     pub fn endpoint(&self) -> &str {
         &self.endpoint
+    }
+
+    /// What the endpoint reported as answering, once anything has. `None`
+    /// before the first call, and on a server that does not name a model.
+    pub fn served_model(&self) -> Option<String> {
+        self.served.borrow().clone()
     }
 
     /// The model name sent with each request. Recorded alongside the
@@ -380,6 +395,7 @@ impl Client {
             // One tape per RUN, shared by every leg's client.
             tape: self.tape.clone(),
             busy_streak: self.busy_streak.clone(),
+            served: self.served.clone(),
         }
     }
 
@@ -533,6 +549,7 @@ impl Client {
             model: model.to_string(),
             tape: Some(std::rc::Rc::new(Tape::play(entries, None))),
             busy_streak: Default::default(),
+            served: Default::default(),
         }
     }
 
@@ -729,6 +746,21 @@ impl Client {
     /// POST once; return the assistant's content string.
     fn post(&self, stage: &str, body: &Value) -> Result<String, ModelError> {
         let (parsed, raw) = self.post_json("chat/completions", stage, body)?;
+        // First reply that names a model wins. Later calls cannot change it:
+        // a run whose model changed underneath it is one instrument in the
+        // artifact and two in fact, and the honest record is the first.
+        if self.served.borrow().is_none() {
+            if let Some(m) = parsed.get("model").and_then(Value::as_str) {
+                // Say so when what answered is not what was asked for. On a
+                // mesh you ask for an alias, and an alias moves: this line is
+                // the difference between a number you can attribute to a
+                // model later and one you cannot.
+                if m != self.model {
+                    eprintln!("note: `{}` answered by {m}", self.model);
+                }
+                *self.served.borrow_mut() = Some(m.to_string());
+            }
+        }
         let message = parsed
             .get("choices")
             .and_then(|c| c.get(0))

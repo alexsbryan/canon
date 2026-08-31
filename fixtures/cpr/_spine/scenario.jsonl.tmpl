@@ -1,0 +1,101 @@
+// {{institution}} — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"{{inner}}"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"{{inner}}","actor":"{{insider.0}}","about":"{{inner_proposal.about}}","proposal":"{{inner_proposal.text}}","positions":[{"citing":"@{{c.inner_a.label}}","pull":"toward","because":"{{inner_proposal.because}}"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"{{inner}}","actor":"{{outsider}}","about":"{{inner_proposal.about}}","proposal":"{{inner_proposal.text}}","positions":[{"citing":"@{{c.inner_a.label}}","pull":"toward","because":"{{inner_proposal.because}}"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"{{unheld}}","actor":"{{insider.0}}","about":"{{unheld_proposal.about}}","proposal":"{{unheld_proposal.text}}","positions":[]}
+
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{{#unless ablate.no_local_policy}}
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"{{d.p3_policy}}","by":"{{insider.0}}","op":"policy","scope":"{{inner}}","text":"{{policy.inner_amended}}","rule":{"rule":"threshold","against":2}}
+{{/unless}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"{{inner}}","actor":"{{outsider}}","about":"{{inner_proposal.about}}","proposal":"{{inner_proposal.text}}","positions":[{"actor":"{{insider.0}}","pull":"against","because":"{{inner_objection}}"}]}
+
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"{{d.monitor_pos}}","by":"{{monitor}}","op":"position","about":"{{monitor_watch.about}}","citing":"@{{c.ladder.label}}","pull":"against","because":"{{monitor_watch.because}}"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"{{d.monitor_dismiss}}","by":"{{monitor}}","as":"monitor-dismiss","op":"dismiss","a":"@{{c.clash_a.label}}","b":"@{{c.clash_b.label}}","rationale":"{{monitor_watch.dismissal}}"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"{{d.clock_after_horizon}}"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"{{monitor}}"}
+
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"{{ladder}}","about":"{{ladder_subject.about}}","proposal":"{{ladder_subject.first}}","positions":[{"citing":"@{{c.ladder.label}}","pull":"against","because":"{{ladder_subject.because}}"}]}
+{"step":"act","at":"{{d.decided_1}}","by":"{{ladder_decider}}","op":"decided","about":"{{ladder_subject.about}}","outcome":"conflicts","authority":"ask-one","rationale":"{{ladder_subject.ruling_1}}"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"{{ladder}}","about":"{{ladder_subject.about}}","proposal":"{{ladder_subject.second}}","positions":[{"citing":"@{{c.ladder.label}}","pull":"against","because":"{{ladder_subject.because}}"}]}
+{"step":"act","at":"{{d.decided_2}}","by":"{{ladder_decider}}","op":"decided","about":"{{ladder_subject.about}}","outcome":"conflicts","authority":"ask-panel","rationale":"{{ladder_subject.ruling_2}}"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"{{ladder}}","about":"{{ladder_subject.about}}","proposal":"{{ladder_subject.third}}","positions":[{"citing":"@{{c.ladder.label}}","pull":"against","because":"{{ladder_subject.because}}"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"{{ladder}}","about":"{{other_subject.about}}","proposal":"{{other_subject.text}}","positions":[{"citing":"@{{c.ladder.label}}","pull":"against","because":"{{ladder_subject.because}}"}]}
+
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"{{clash.about}}","proposal":"{{clash.text}}","positions":[{"citing":"@{{c.clash_a.label}}","pull":"against","because":"{{clash.because_a}}"},{"citing":"@{{c.clash_b.label}}","pull":"toward","because":"{{clash.because_b}}"}]}
+{"step":"act","at":"{{d.accept}}","by":"{{insider.0}}","op":"accept","a":"@{{c.clash_a.label}}","b":"@{{c.clash_b.label}}","rationale":"{{clash.carried}}","revisit":"{{d.revisit}}"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{{#if forked}}
+{"step":"act","at":"{{d.upgrade}}","by":"{{steward}}","op":"adopt","lineage":"{{lineage}}","generation":"{{generation_next}}","source":"{{source}}"}
+{{/if}}
+{{#if ablate.upstream_retracts_local}}
+// ABLATION `upstream-retracts-local`: an upstream actor holds standing here,
+// and uses it. The format does not stop this — which is exactly why
+// principle 7 is marked an affordance and not a mechanism.
+{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"grant","holder":"{{upstream_actor}}","scope":"{{outer}}","rationale":"upstream takes a seat"}
+{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.inner_a.label}}","rationale":"not in the upstream canon"}
+{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.clash_a.label}}","rationale":"not in the upstream canon"}
+{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.extra.label}}","rationale":"not in the upstream canon"}
+{{/if}}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"{{outer}}"}
+{{#if middle}}
+{"step":"who","name":"nesting-the-middle","principle":8,"strength":"mechanism","scope":"{{middle}}"}
+{{/if}}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"{{inner}}"}
+
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"{{amend_convention.about}}","proposal":"{{amend_convention.text}}","amends":"@{{c.extra.label}}","positions":[{"actor":"{{outsider}}","pull":"toward","because":"{{amend_convention.because}}"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"{{amend_principle.about}}","proposal":"{{amend_principle.text}}","amends":"@{{c.clash_a.label}}","positions":[{"actor":"{{outsider}}","pull":"toward","because":"{{amend_principle.because}}"}]}
+
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"{{irreversible.about}}","proposal":"{{irreversible.text}}","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"{{irreversible.about}}","proposal":"{{irreversible.text}}","reversible":true,"positions":[]}
+
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"{{silence.about}}","proposal":"{{silence.proposal}}","positions":[]}
+
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"{{d.panel_commit}}","by":"{{steward}}","as":"panel","op":"draw_commit","scope":"{{outer}}","count":3,"after_ts":{{d.panel_after_ts}},"rationale":"{{panel.rationale}}"}
+{{#each sealers as s}}
+{"step":"act","at":"{{d.seal}}","by":"{{s.who}}","op":"draw_secret","commit":"@panel","digest":"{{s.digest}}"}
+{{/each}}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"{{d.clock_past_boundary}}"}
+{{#each revealers as r}}
+{"step":"act","at":"{{d.reveal}}","by":"{{r.who}}","op":"draw_reveal","commit":"@panel","secret":"{{r.secret}}"}
+{{/each}}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

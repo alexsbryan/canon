@@ -62,7 +62,9 @@ Everything that exists is upstream of the measurement.
 | Ground truth | built | 17 planted, 11 Archives-derived, 6 decoys |
 | Extraction | works | 342 candidates from 104 chunks |
 | Reachability | 17/17 ceiling | 9/17 in the candidate's own words |
-| Comparison | **never completed** | best attempt: 15% coverage, refused |
+| Two-up ceiling | 9/11, all stable | Phase 1b, on the MoE the endpoint now serves |
+| Comparison, in a window | **never run** | the harness does not exist |
+| Comparison, full sweep | **never completed** | best attempt: 15% coverage, refused |
 | Recall / precision | **no number** | — |
 
 Two sweeps have been attempted. The first was destroyed by a `/tmp` purge on
@@ -330,6 +332,415 @@ and it is not discharged by anything above.
 *Gate.* >= 4 of 11 visible. If two-up passed and this fails, `BATCH` is the
 lever — measure 24 against 12 before choosing, since halving it roughly doubles
 passes and cost.
+
+---
+
+# Phase 1b — the instrument moved · 2026-08-30
+
+**Every number above this line was measured on `Qwen3.8-27B-UD-Q6_K_XL`. The
+endpoint no longer serves it.** `primary` is an alias, and on 2026-08-30 it
+resolved to `Qwen3.6-35B-A3B-UD-MTP-IQ4_NL` — a 35B mixture-of-experts with
+about 3B active. Nothing announced the change and nothing would have.
+
+**Decision: take the MoE.** Speed matters more than continuity at this phase.
+The cost is stated plainly rather than absorbed: the Arm A / Arm B comparison
+is a 27B result and stays one. The dates-and-counts rule promoted in Phase 1a
+is still shipped code, but its `+2 supersessions` was measured on a model this
+project no longer runs, and nothing below re-establishes that delta.
+
+**The defect that let this happen, and its fix.** Three run artifacts in this
+repository — both `des-moines-noise` runs and the founding run itself — record
+`"model": "primary"`. An alias is not provenance, and after it moves those
+numbers cannot be attributed to any model. Only `maple-house` recorded a
+resolved id, and only because it was written down by hand. `canon` now
+captures the `model` field the server returns on the first reply and records
+it as `served_model` on every draft artifact and every two-up sidecar; when it
+differs from what was asked for, it says so on stderr as it happens:
+
+```
+note: `primary` answered by Qwen3.6-35B-A3B-UD-MTP-IQ4_NL
+```
+
+## The re-baseline
+
+**Design: hold extraction constant, change only the judge.** The loop reuses
+the candidate set from the 27B founding run rather than re-extracting, so the
+sides shown are byte-identical to what both 27B arms saw. The one variable is
+which model reads them. A fresh extraction would have moved two things at once
+and made the comparison unreadable.
+
+n=3, majority decides each pair, per the Phase 1a amendment. Evidence at
+`fixtures/founding/runs/moe-35b-a3b/two-up/`, and it is the first artifact here
+that names the model that produced it.
+
+| | 27B, arm A | 27B, arm B | **MoE, shipped prompt** |
+|---|---|---|---|
+| supersessions | 7/11 | 9/11 | **9/11** |
+| — all stable at 3/3? | yes | no, S10 at 2/3 | **yes, all nine** |
+| principles | 4/6 | 4/6 | **5/6** |
+| decoys flagged | 0/4 | 0/4 | **0/4** |
+| pairs that flipped | 1 | 3 | **2** |
+
+*Gate PASSED* — 9 against a floor of 6.
+
+Same count as arm B, **and not the same nine.** Everything that moved:
+
+| pair | 27B arm B | MoE | |
+|---|---|---|---|
+| S7 | 0/3 stable | **3/3 stable** | gained, and see below |
+| S10 | 2/3 unstable | **3/3 stable** | the arm-B win, now solid |
+| P5 | 1/3 flipped | **3/3 stable** | gained |
+| S9 | 3/3 stable | 1/3 flipped | **lost** |
+| S2 | 1/3 flipped | 0/3 stable | still not seen |
+| P2 | 0/3 stable | 1/3 flipped | still not seen |
+
+## S7, and why the plan was right not to touch it
+
+Phase 1a ended with S7 — *"the first Monday in December"* against *"noon on the
+3d day of January"* — at 0/3 in both arms, the purest date case of the four it
+predicted. It offered a reading: that S7 is a weak planted tension rather than
+a stage failure, since both passages carry the same escape hatch. And it
+refused to act on it, in capitals: *"Re-labelling ground truth after seeing
+which pair resisted is the one move that would invalidate every number above
+it."*
+
+**The MoE sees S7 at 3/3, both sides in the candidates' own words.** The
+pair was always a real tension; the 27B could not see it. Had the ground truth
+been relabelled on a plausible reading of a resisting pair, this corpus would
+now carry a permanent error introduced to explain a model limitation that
+turned out to be one model's.
+
+That is the whole argument for pre-registration, and it cost nothing to
+observe because the discipline was already in place.
+
+## What this does and does not license
+
+- **Does:** the sweep is worth paying for on this instrument. The two-up
+  ceiling is 9/11, the publish bar needs a mean of 5.5, and the window gate of
+  4/11 has three tensions of headroom against a batch penalty.
+- **Does not:** carry over any 27B figure. The reachability numbers (17/17
+  ceiling, 9/17 own words) are properties of the candidate set and still hold,
+  because the candidate set did not change. Everything downstream of a model
+  call is now a 35B-A3B number or it is nothing.
+- **Still open, unchanged by any of this:** the window test harness does not
+  exist; the timing gate has not run; and the maple-house regression check for
+  the shipped prompt change remains undischarged — now harder, because its
+  baseline is three 27B runs and the 27B is gone.
+
+---
+
+# Phase 1c — is it reading, or is it remembering? · PRE-REGISTERED 2026-08-30
+
+Written BEFORE the harness exists and before either arm has been run. Nothing
+below may be edited after data lands, and that rule has already paid once in
+this file — see S7 in Phase 1b.
+
+**The objection this exists to answer.** Every model has read the Constitution
+many times. "It found that the Seventeenth Amendment superseded senators chosen
+by state legislatures" is not, on its own, evidence that this pipeline works —
+it is compatible with a model that took civics and never read the two passages
+it was handed. Until that is ruled out, the founding numbers cannot be
+published as a capability claim, and **no part of this plan has previously
+addressed it.** Not the bars, not the provenance, not the README.
+
+At six hours a sweep, this is also the cheapest possible thing to learn first.
+If the founding verdicts are recall, the sweep is measuring the wrong thing.
+
+**Hypothesis.** The comparison stage's verdict tracks the two passages in front
+of it. Remove the fact a supersession turns on and the verdict should follow.
+
+**Arm P — neutralised.** `fixtures/founding/perturbations/neutralised.json`.
+One side of each pair is edited so the pair no longer conflicts. Ground truth
+for this arm: **none of the nine is a tension.**
+
+**Arm S — sham.** `fixtures/founding/perturbations/sham.json`. A word of
+comparable size is changed on one side that the conflict does not turn on.
+Ground truth: **all nine are still tensions.** This is the control for the
+control: if arm P stops flagging and arm S stops flagging too, then editing the
+text is what moved the verdict, and arm P says nothing about reading.
+
+**Nine, not eleven.** S2 and S9 were not flagged at baseline, and a pair that
+is not seen cannot become less seen. Both exclusions are recorded in the table
+with their reason.
+
+**The bars.** n=3, majority decides each pair, as amended in Phase 1a. `P` and
+`S` are the counts of the nine still flagged in each arm.
+
+| verdict | condition | consequence |
+|---|---|---|
+| **READING** | P <= 2 **and** S >= 7 | the verdicts track the text; the 9/11 stands and the sweep is worth paying for |
+| **CONTAMINATED** | P >= 6 | verdicts survive the removal of the thing they turn on; the founding numbers are recall and may not be published as a capability claim |
+| **CONFOUNDED** | S <= 4, whatever P does | editing the text alone moves the verdict; arm P is uninterpretable and the design must change before anything is read from it |
+| **AMBIGUOUS** | anything else | report as partial recall; the 9/11 may not be quoted without this result beside it |
+
+**Integrity conditions, also pre-registered.**
+
+- The harness REFUSES if any `find` string is absent from the resolved
+  candidate text. A silent no-op edit would leave the pair intact and score as
+  "reading", which is the one way this experiment could lie in the direction
+  it wants.
+- The perturbation tables and their stated rationales were written before the
+  harness and are fixed. Rewriting an edit after seeing which pair flags is the
+  S7 move and is forbidden.
+- S10's neutralisation is declared PARTIAL in the table, in advance, and is
+  counted normally anyway.
+- Both arms reuse the 27B candidate set and the same resolver as Phase 1b, so
+  the sides are the same sentences; only the edits and the judge differ.
+
+**What a CONTAMINATED verdict would NOT mean.** That canon is broken. Extraction,
+citation-cutting, the ledger and the whole decision layer are untouched by this
+— they never call a model. It would mean the founding corpus cannot carry a
+claim about the comparison stage, and that a corpus the model has not memorised
+has to. `maple-house` and `des-moines-noise` are that corpus, and they are
+already vendored.
+
+---
+
+## Phase 1c RESULT — AMBIGUOUS. P = 4 of 9, S = 9 of 9.
+
+Run 2026-08-30 on `Qwen3.6-35B-A3B-UD-MTP-IQ4_NL`, n=3, majority per pair.
+Evidence at `fixtures/founding/runs/moe-35b-a3b/perturb-neutralised/` and
+`…/perturb-sham/`. The pre-registered table is above this line and is unchanged.
+
+| pair | baseline | P — conflict removed | S — irrelevant edit |
+|---|---|---|---|
+| S1 | 3/3 seen | **0/3 dropped** | 3/3 seen |
+| S3 | 3/3 seen | 3/3 STILL FLAGGED | 3/3 seen |
+| S4 | 3/3 seen | 3/3 STILL FLAGGED | 3/3 seen |
+| S5 | 3/3 seen | 3/3 STILL FLAGGED | 3/3 seen |
+| S6 | 3/3 seen | **0/3 dropped** | 3/3 seen |
+| S7 | 3/3 seen | **0/3 dropped** | 3/3 seen |
+| S8 | 3/3 seen | 3/3 STILL FLAGGED | 3/3 seen |
+| S10 | 3/3 seen | **1/3 dropped** | 3/3 seen |
+| S11 | 3/3 seen | **1/3 dropped** | 3/3 seen |
+
+**The verdict is AMBIGUOUS and its consequence binds: the 9/11 may not be
+quoted without this result beside it.** Not in the README, not in a talk, not
+in an artifact. Half the verdicts followed the text and half survived the
+removal of the thing they turn on.
+
+**The sham arm is clean, and that is what makes P readable.** 9 of 9 still
+flagged after an edit of comparable size that the conflict does not turn on.
+Editing the text does not by itself move the verdict, so the CONFOUNDED branch
+is ruled out and the neutralised arm means what it says.
+
+**P is an UPPER bound on contamination.** This is a property of the design and
+not a reading of the data: an incomplete neutralisation leaves a real residual
+difference, which can only ADD a flag, never remove one. So contamination is at
+most 4 of 9 and possibly less. It is not at least 4.
+
+**The four that resisted, and the honest uncertainty about them.** S3, S4 and
+S8 each retain a textual difference the edit did not remove — S3 still has both
+sides speaking about the same institution, S4 still keeps the free/other person
+categories apart, S8 still says "Vice-President" against "Vice President elect
+… until a President qualifies". S5 is the cleanest neutralisation of the four
+and the strongest single signal of recall.
+
+**That reading is NOT acted on here.** Adjusting the count after seeing which
+pairs resisted is the S7 move, and the table above stands at 4. Testing it
+needs its own pre-registration, written before the arm, and the obvious design
+has a trap in it: neutralising the residual differences too makes the two sides
+near-duplicates, and a stage's behaviour on duplicates is a different question
+from its behaviour on compatible pairs.
+
+**What this changes.**
+
+- The sweep is NOT killed. The kill condition was P >= 6 and P is 4.
+- The founding corpus moves from evidence to demonstration. It shows the
+  pipeline carries a real, large, adversarial document end to end without
+  inventing a citation. It cannot, on this result, carry a claim about the
+  comparison stage's judgement.
+- The evidential load moves to corpora no model has memorised —
+  `maple-house` and `des-moines-noise`, both already vendored with anchors —
+  and to the decision layer, which never calls a model at all.
+- Every future founding figure carries this number with it.
+
+**What it does not change.** Extraction, citation-cutting, the ledger, the fold
+and the whole decision layer are untouched by this result. They do not call a
+model. `canon replay` is unaffected, and so is every governance verb.
+
+---
+
+# Phase 1d — the window gate, on rented hardware · 2026-08-31
+
+**GATE PASSED: 11 of 11 supersessions in a 24-wide window, against a floor of
+4.** Evidence at `fixtures/founding/runs/pod-27b/window-24/`, served_model
+`Qwen3.8-27B-UD-Q6_K_XL`, n=3, majority per pair.
+
+Run on a rented Vast A6000 (`dev-pod.sh`, solo mode) carrying the ORIGINAL
+27B loadout, which is why this is comparable to Phase 1a arm B at all: same
+model id, same shipped prompt, same candidate set. The local endpoint's
+`primary` alias had moved to a 35B MoE (Phase 1b), so the pod is what made a
+matched comparison possible.
+
+| | two-up, 27B (arm B) | **window 24, 27B** |
+|---|---|---|
+| supersessions | 9/11 | **11/11** |
+| principles | 4/6 | 3/6 |
+| decoys flagged | 0/4 | 0/4 |
+| pairs that flipped | 1 | **6** |
+
+## The "upper bound" was not an upper bound
+
+Phase 1a called two-up an UPPER bound and set the window gate at 4/11 on the
+reasoning that a batch penalty could only subtract. **On supersessions the
+penalty is negative**: the window gained S2 and S7 and lost none. Principles
+lost P1 and P6 and gained P5.
+
+That assumption is now falsified and should not be relied on again. The
+plausible reading — untested — is that twenty-two distractors give the stage
+something to contrast against, and a pair shown alone has no context to be
+distinguished FROM. It is also possible the window simply makes the stage more
+willing to call a tension; the decoys argue against that, because a more
+willing stage should have flagged some, and 0 of 4 still stand.
+
+## The cost of the gain, which no bar covered
+
+**Instrument noise went from 1 flipped pair to 6.** A third of the resolved
+pairs did not answer the same way three times. The aggregate is higher and the
+individual verdicts are less reliable — the same trade Phase 1a arm B made at
+smaller scale, at a larger size. Any future comparison at this window size
+needs n greater than 3, and a stability bar belongs in the next
+pre-registration rather than being added now, after seeing this.
+
+## The timing gate, finally measured
+
+63 window calls in 818.7s = **13.0s per 24-commitment pass**, which is one
+`BATCH` and therefore one sweep pass. The 6h15m estimate assumed 26s.
+
+At 13.0s, 690 passes is **about 2.5 hours** — on rented hardware at $0.44/hr,
+roughly **$1.10**. The host-quietness timing gate in Phase 1 was written for a
+laptop that also runs builds and tests; renting removes the variable it was
+guarding against.
+
+---
+
+# Phase 2 — THE SWEEP COMPLETED · 2026-08-31
+
+**676 of 676 comparison passes. No refusals, no shed, no hole in the tape.**
+`fixtures/founding/runs/pod-27b/sweep/run-1788143950.json`, served_model
+`Qwen3.8-27B-UD-Q6_K_XL`, 5,849s (1h37m) on a rented Vast A6000.
+
+This is the run that had never finished. Two earlier attempts died — one to a
+`/tmp` purge on reboot, one to the daemon shed at pass 93 of 690. Renting
+removed both causes: the scratch was durable, and a dedicated host has no
+build, no test run and no peer sweep competing for the endpoint.
+
+| stage | |
+|---|---|
+| chunks | 104, none unread |
+| candidates | 336, 334 kept |
+| dropped | 3 — 1 bad citation, 2 stating a number their citation does not |
+| duplicates folded | 2 groups |
+| commitments compared | 324, in blocks of 24, every pair weighed twice |
+| passes | **676 / 676** |
+| pairs proposed | 283 |
+| failed / checkpoint | none / none |
+
+## The number
+
+**Recall 0.59 — 10 of the 17 planted tensions. Precision 0.26. 1 decoy of 6.**
+
+Scored by the repository's own scorer against `truth.json` and
+`extraction-anchors.json`, no reimplementation.
+
+| bar, pre-registered | value | this run | |
+|---|---|---|---|
+| Kill — recall on the planted set | < 0.30 | **0.59** | clear |
+| Publish — mean recall | >= 0.50 | **0.59** | clears it |
+| Decoy ceiling — compatible pairs flagged | >= 5 of 6 | **1 of 6** | well clear |
+| Comparison coverage before scoring | >= 95% | 676/676 | clear |
+
+**This is ONE run.** `MIN_RUNS` is 3 and the scorer enforces it; the figure
+above was obtained by scoring the single artifact three times, so the
+"0.59–0.59 noise floor" it printed is an artifact of that and not a spread.
+The publish bar is on the mean of three INDEPENDENT runs and is not yet met —
+what is met is the bar's value on the one run that exists.
+
+Phase 1d measured 6 of 21 pairs flipping across three asks at this window
+size, so the real spread is unlikely to be small.
+
+**Never found: S1, S9, S11, P2, P3, P4, P6.** S1, S9 and S11 were seen 3/3 in
+BOTH the two-up and the 24-wide window arms, and are missed here. Same model,
+same prompt, same block size — the difference is the company: a block of 24
+drawn from 324 commitments is not a block of 24 drawn from a 21-pair fixture.
+That is the batch penalty appearing where the earlier arms could not see it,
+and it is the first evidence that the window gate's 11/11 does not transfer.
+
+Precision 0.26 is over the labelled region only — 35 sections, every pair of
+them labelled. 567 proposed pairs reached outside it and are not scored, and
+102 intra-section pairs are excluded.
+
+## What it costs to turn this into a number
+
+Two more runs on the same instrument. At 1h37m each that is **~3.2 hours and
+about $1.50** of rented A6000, and it produces the triple the scorer needs.
+
+The pod is destroyed and nothing is billing. Total for this session, including
+the window gate and the boot, was about **$0.90**.
+
+## What is settled, and what is not
+
+- **Settled:** the pipeline carries the founding corpus end to end at full
+  width without a hole. That was genuinely in doubt.
+- **Settled:** cost. 13.0s a pass, 676 passes, under two hours, about a
+  dollar. The 6h15m figure that shaped this whole plan was a laptop artifact.
+- **Measured once:** recall 0.59, precision 0.26, decoys 1 of 6. Clears every
+  pre-registered bar including publish, on n=1. Two more runs make it a mean.
+- **Carries forward regardless:** the Phase 1c contamination bound. Whatever
+  the eventual number is, it travels with "up to four of nine verdicts on this
+  corpus survive removing the thing they turn on".
+
+---
+
+# Picking this up · paused 2026-08-30
+
+The daemon was released mid-run at the operator's request. Nothing here is
+blocked on anything except the endpoint.
+
+**The window gate was killed at S10 of 11 and produced nothing.** The sidecar
+is written only after every pair completes, so ~35 minutes and 19 of 21 pairs
+were lost. It starts over:
+
+```sh
+CANON_BAR_TWO_UP_RUNS=3 CANON_BAR_WINDOW=24 \
+CANON_BAR_TWO_UP_OUT=$PWD/fixtures/founding/runs/moe-35b-a3b/window-24 \
+CANON_BAR_RUNS=$PWD/fixtures/founding/runs/qwen-27b \
+CANON_BAR_TRUTH=$PWD/fixtures/founding/truth.json \
+CANON_BAR_ANCHORS=$PWD/fixtures/founding/extraction-anchors.json \
+cargo test --test draft_bar -- --ignored two_up --nocapture
+```
+
+The gate is >= 4 of 11, pre-registered in Phase 1, with the two-up ceiling at
+9/11 — three tensions of headroom against a batch penalty.
+
+**A preliminary timing read, from the partial run.** A 24-commitment window is
+one `BATCH`, which is the shape of one sweep pass. Those pairs ran at roughly
+1.7 minutes for three calls — about 35s a pass, against the 26s the 6h15m
+estimate assumed. On that pace the sweep is nearer seven hours. **This is a
+partial-run impression, not the timing gate**, which still has to be run
+properly on a quiet host.
+
+## In order, when the endpoint is free again
+
+1. **Re-run the window gate.** ~35 min. It is the last thing between here and
+   a defensible reason to spend six or seven hours on the sweep.
+2. **Cut the demo tape.** `./scripts/record-demo-tape.sh` — one maple-house
+   draft run, so act 1 of the demo is real output with no live risk.
+3. **Look at `check` and `tensions` on stage.** They work; nobody has checked
+   whether they read well at projector size.
+4. **The maple-house regression check** for the Phase 1a prompt change. Still
+   the plan's own undischarged risk, and now harder: its baseline is three 27B
+   runs and the 27B is gone. Re-baselining on the MoE is the honest option.
+5. **The sweep**, only if 1 clears.
+
+## What needs no endpoint at all
+
+```sh
+cargo test                        # 363 pass
+./scripts/cpr-sweep.sh            # the whole transfer study, ~3 seconds
+./scripts/demo.sh --offline       # acts 4-9 of the run of show
+```
 
 ---
 

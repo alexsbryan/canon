@@ -1,0 +1,8 @@
+{
+  "extends": "meridian-monorepo",
+  "institution": "Meridian monorepo, with the scheduler's rule set elsewhere",
+  "one_line": "The same repository, minus the act in which the people who carry the pager change their own rule. One line of vocabulary; nothing else differs.",
+  "ablate": { "no_local_policy": true },
+  "predicted_to_fail": [3],
+  "analogue": "An irrigation system whose operating rules are set by a central agency and cannot be changed by the farmers on the ditch — Ostrom 1990, ch. 5."
+}

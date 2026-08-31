@@ -98,6 +98,22 @@ impl Authority {
             Self::Refuse => "refuse",
         }
     }
+
+    /// What this rung means, in the words a person already sees.
+    ///
+    /// These five phrasings shipped in `canon check` and are what a house has
+    /// read on screen since the verb existed. They are here rather than there
+    /// because the counterfactual has to say the same five things, and a
+    /// second table would be a sixth vocabulary for five values.
+    pub fn prose(self) -> &'static str {
+        match self {
+            Self::Act => "act",
+            Self::ActAndNotify => "act, and say that you did",
+            Self::AskOne => "ask one person with standing",
+            Self::AskPanel => "ask the group",
+            Self::Refuse => "not under this policy",
+        }
+    }
 }
 
 impl std::fmt::Display for Authority {
@@ -369,7 +385,7 @@ impl Policy for Rule {
                         Outcome::Supported => Authority::Act,
                         Outcome::Conflicts | Outcome::Unaddressed => Authority::AskOne,
                     },
-                    because: format!("default: {}", describe(outcome)),
+                    because: format!("default: {}", outcome.describe()),
                 }
             }
             Self::Consent => {
@@ -547,13 +563,6 @@ impl Policy for Rule {
     }
 }
 
-fn describe(outcome: Outcome) -> &'static str {
-    match outcome {
-        Outcome::Supported => "commitments bear on it and none pull against",
-        Outcome::Conflicts => "at least one commitment pulls against",
-        Outcome::Unaddressed => "nothing bears on it",
-    }
-}
 
 #[cfg(test)]
 mod tests;

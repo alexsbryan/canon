@@ -1,0 +1,269 @@
+{
+  "boundary-who-holds-the-inner": {
+    "policy": "subsidiarity",
+    "deciders": [
+      "agent:queuewatch",
+      "human:ilya",
+      "human:zuri",
+      "human:agnes",
+      "human:bo",
+      "human:cheng",
+      "human:dmitri",
+      "human:elif",
+      "human:fumiko",
+      "human:gitte",
+      "human:hanna",
+      "human:hoa",
+      "human:ida",
+      "human:jarek",
+      "human:kira",
+      "human:lore",
+      "human:mairead",
+      "human:mihai",
+      "human:nadja",
+      "human:paolo",
+      "human:ravi",
+      "human:sena",
+      "human:tomi",
+      "human:vive",
+      "human:wilkes"
+    ],
+    "holders": [
+      "agent:queuewatch",
+      "human:ilya",
+      "human:zuri"
+    ]
+  },
+  "boundary-an-insider-decides": {
+    "outcome": "supported",
+    "rule": "subsidiarity",
+    "authority": "act",
+    "because": "including you",
+    "cites": [
+      "@runner-images-pinned"
+    ]
+  },
+  "boundary-an-outsider-does-not": {
+    "outcome": "supported",
+    "authority": "ask-one",
+    "because": "not you"
+  },
+  "boundary-nobody-holds-this": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "nobody holds standing over `storage`"
+  },
+  "congruence-forked-and-diverged": {
+    "lineage": "shared-infra-canon",
+    "generation": "g5",
+    "inherited": 3,
+    "local": 5
+  },
+  "collective-choice-under-the-new-rule": {
+    "outcome": "supported",
+    "authority": "act",
+    "rule": "threshold",
+    "because": "1 against, 2 needed",
+    "voices": [
+      "human:ilya"
+    ]
+  },
+  "monitors-adjudication-is-surfaced": {
+    "unattended": [
+      "@monitor-dismiss"
+    ]
+  },
+  "monitors-standing-lapsed": {
+    "count": 0,
+    "targets": []
+  },
+  "monitors-record-is-queryable": {
+    "positions": 1,
+    "decided": 0
+  },
+  "graduated-first": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "rule": "graduated/default",
+    "because": "0 prior decision(s)",
+    "cites": [
+      "@queue-share"
+    ]
+  },
+  "graduated-second": {
+    "outcome": "conflicts",
+    "authority": "ask-panel",
+    "rule": "graduated/default",
+    "because": "1 prior decision(s)",
+    "cites": [
+      "@queue-share"
+    ]
+  },
+  "graduated-third": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "rule": "graduated/default",
+    "because": "2 prior decision(s)",
+    "cites": [
+      "@queue-share"
+    ]
+  },
+  "graduated-a-different-subject-restarts": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "because": "0 prior decision(s) about `submitting jobs with no timeout`"
+  },
+  "conflict-before": {
+    "acts": 52,
+    "tolerated": 0,
+    "live": 8
+  },
+  "conflict-surfaced": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "because": "one is enough",
+    "cites": [
+      "@fair-queue",
+      "@release-first"
+    ]
+  },
+  "conflict-after": {
+    "acts": 53,
+    "tolerated": 1,
+    "live": 8
+  },
+  "organize-the-fork-keeps-what-it-wrote": {
+    "generation": "g6",
+    "inherited": 3,
+    "local": 5
+  },
+  "nesting-the-outer": {
+    "policy": "cautious/entrenched/consent",
+    "deciders": [
+      "human:agnes",
+      "human:bo",
+      "human:cheng",
+      "human:dmitri",
+      "human:elif",
+      "human:fumiko",
+      "human:gitte",
+      "human:hanna",
+      "human:hoa",
+      "human:ida",
+      "human:ilya",
+      "human:jarek",
+      "human:kira",
+      "human:lore",
+      "human:mairead",
+      "human:mihai",
+      "human:nadja",
+      "human:paolo",
+      "human:ravi",
+      "human:sena",
+      "human:tomi",
+      "human:vive",
+      "human:wilkes",
+      "human:zuri"
+    ],
+    "holders": [
+      "human:agnes",
+      "human:bo",
+      "human:cheng",
+      "human:dmitri",
+      "human:elif",
+      "human:fumiko",
+      "human:gitte",
+      "human:hanna",
+      "human:hoa",
+      "human:ida",
+      "human:ilya",
+      "human:jarek",
+      "human:kira",
+      "human:lore",
+      "human:mairead",
+      "human:mihai",
+      "human:nadja",
+      "human:paolo",
+      "human:ravi",
+      "human:sena",
+      "human:tomi",
+      "human:vive",
+      "human:wilkes",
+      "human:zuri"
+    ]
+  },
+  "nesting-the-inner": {
+    "policy": "threshold",
+    "deciders": [
+      "agent:queuewatch",
+      "human:ilya",
+      "human:zuri",
+      "human:agnes",
+      "human:bo",
+      "human:cheng",
+      "human:dmitri",
+      "human:elif",
+      "human:fumiko",
+      "human:gitte",
+      "human:hanna",
+      "human:hoa",
+      "human:ida",
+      "human:jarek",
+      "human:kira",
+      "human:lore",
+      "human:mairead",
+      "human:mihai",
+      "human:nadja",
+      "human:paolo",
+      "human:ravi",
+      "human:sena",
+      "human:tomi",
+      "human:vive",
+      "human:wilkes"
+    ],
+    "holders": [
+      "agent:queuewatch",
+      "human:ilya",
+      "human:zuri"
+    ]
+  },
+  "entrenchment-amending-a-convention": {
+    "outcome": "supported",
+    "authority": "act",
+    "because": "no objection"
+  },
+  "entrenchment-amending-a-principle": {
+    "outcome": "supported",
+    "authority": "ask-panel",
+    "because": "entrenched: amends a `principle`"
+  },
+  "reversible-irreversible-and-unsupported": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "cautious: irreversible",
+    "cites": []
+  },
+  "reversible-the-same-behind-a-flag": {
+    "outcome": "unaddressed",
+    "authority": "act-and-notify"
+  },
+  "silence-is-not-a-gap": {
+    "outcome": "unaddressed",
+    "silence": true
+  },
+  "draw-before-anyone-opened-refuses": {
+    "error": "nobody opened a secret, so there is no seed \u2014 and there is no default seed"
+  },
+  "draw-the-panel": {
+    "pool": 23,
+    "withheld": [
+      "human:hanna"
+    ],
+    "seats": [
+      "human:sena",
+      "human:ravi",
+      "human:agnes"
+    ],
+    "seed": "19d6e646ebc971d5bd9ff3987075261d5eab689fa1fa6aa197268d665ff6e01c"
+  }
+}

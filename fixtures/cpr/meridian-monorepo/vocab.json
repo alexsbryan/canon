@@ -1,0 +1,141 @@
+{
+  "institution": "Meridian monorepo",
+  "kind": "a codebase with several teams in it",
+  "one_line": "Nine engineers, one repository, and a scheduler nobody wants to own.",
+  "start": "2025-02-10",
+  "lineage": "platform-engineering-canon",
+  "generation": "g11",
+  "generation_next": "g12",
+  "source": "https://example.org/platform-engineering-canon",
+  "outer": "repo",
+  "middle_leaf": "engine",
+  "inner_leaf": "scheduler",
+  "ladder_leaf": "api",
+  "unheld": "infra",
+  "steward": "human:rhea",
+  "members": [
+    "human:rhea",
+    "human:kofi",
+    "human:mina",
+    "human:sol",
+    "human:tariq",
+    "human:ada",
+    "human:bram",
+    "human:col",
+    "human:devi"
+  ],
+  "insiders": [
+    "human:kofi",
+    "human:mina"
+  ],
+  "mid_holders": [
+    "human:tariq",
+    "human:ada"
+  ],
+  "outsider": "human:sol",
+  "monitor": "agent:ciwatch",
+  "ladder_decider": "human:rhea",
+  "upstream_actor": "human:platform-council",
+  "insider_rationale": "wrote it, carries the pager for it",
+  "mid_rationale": "maintains the engine crate",
+  "monitor_rationale": "opens issues off failing runs; four months, then we look again",
+  "c": {
+    "ladder": {
+      "label": "api-compat",
+      "text": "A published endpoint keeps its shape until every caller has moved."
+    },
+    "shared": {
+      "label": "second-eyes",
+      "text": "Nothing lands on main without a second pair of eyes."
+    },
+    "access": {
+      "label": "read-everything",
+      "text": "Every engineer can read and build every part of this repository."
+    },
+    "inner_a": {
+      "label": "sched-deterministic",
+      "text": "The scheduler's ordering is deterministic given the same queue."
+    },
+    "inner_b": {
+      "label": "sched-no-clock",
+      "text": "The scheduler never reads the wall clock outside one injected source."
+    },
+    "clash_a": {
+      "label": "no-flaky-skips",
+      "text": "A failing test is fixed or deleted, never skipped."
+    },
+    "clash_b": {
+      "label": "green-main",
+      "text": "Main is green, so that a red build always means the change under it."
+    },
+    "extra": {
+      "label": "commit-subject",
+      "text": "A commit subject says what changed, not which ticket asked for it."
+    }
+  },
+  "policy": {
+    "root": "One reasoned objection stops a change. Amending something ranked a principle takes the group. Anything we cannot roll back is not decided by silence.",
+    "inner": "Whoever carries the pager for the scheduler decides the scheduler.",
+    "unheld": "Infrastructure is decided by whoever holds it.",
+    "ladder": "Break a published endpoint once and a reviewer signs it off. Twice and the group does. Three times and the answer is no.",
+    "inner_amended": "Two of us have to object before a scheduler change stops.",
+    "middle": "Whoever maintains the engine decides the engine."
+  },
+  "inner_proposal": {
+    "about": "scheduler ordering",
+    "text": "sort the ready queue by deadline instead of by arrival",
+    "because": "arrival order is deterministic but it is not the order anybody wants"
+  },
+  "inner_objection": "deadline order is deterministic only while every task has a deadline, and half of them do not",
+  "unheld_proposal": {
+    "about": "build infrastructure",
+    "text": "move the build cache onto the new object store"
+  },
+  "monitor_watch": {
+    "about": "the v2 rollout renamed a response field",
+    "because": "two callers in this repository still read the old field name",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "changing a published endpoint",
+    "first": "rename the `owner` field on the task body",
+    "second": "drop the `retries` field from the run body",
+    "third": "change `status` from a string to an enum on the queue body",
+    "because": "a caller that has not moved yet reads the old shape and gets nothing",
+    "ruling_1": "shipped behind a reader shim and we left it there",
+    "ruling_2": "the group agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "adding a required config key",
+    "text": "make the queue name a required key with no default"
+  },
+  "clash": {
+    "about": "a test that fails once a fortnight",
+    "text": "skip the timing-sensitive scheduler test until the clock injection lands",
+    "because_a": "a skipped test is a test that will never be fixed and everybody knows it",
+    "because_b": "a fortnightly red main teaches everyone to ignore a red main, which costs more",
+    "carried": "the clock injection is written and behind review; carrying this is cheaper than either horn for exactly as long as that review takes"
+  },
+  "amend_convention": {
+    "about": "commit subjects",
+    "text": "allow a bare ticket reference as a commit subject",
+    "because": "the ticket says more than any one line could and it is one click away"
+  },
+  "amend_principle": {
+    "about": "skipping tests",
+    "text": "allow a skip when it carries a dated comment and an owner",
+    "because": "a dated skip with a name on it is checkable, and a deleted test is not"
+  },
+  "irreversible": {
+    "about": "the v1 scheduler",
+    "text": "delete the v1 scheduler and the migration path with it"
+  },
+  "silence": {
+    "about": "how much comment is enough",
+    "rationale": "every rule anyone proposed would have been worse than the judgement people already exercise, and a line count would be gamed the week it landed",
+    "proposal": "require a doc comment on every public item"
+  },
+  "panel": {
+    "rationale": "three people to look at the skip rule for a month"
+  }
+}

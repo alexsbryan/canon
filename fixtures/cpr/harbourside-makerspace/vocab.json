@@ -1,0 +1,135 @@
+{
+  "institution": "Harbourside Makerspace",
+  "kind": "shared tools and consumables",
+  "one_line": "Forty members, one laser cutter, and a stock of plywood nobody owns.",
+  "start": "2025-03-03",
+  "lineage": "makerspace-commons",
+  "generation": "g4",
+  "generation_next": "g5",
+  "source": "https://example.org/makerspace-commons",
+  "outer": "space",
+  "inner_leaf": "laser",
+  "ladder_leaf": "stock",
+  "unheld": "yard",
+  "steward": "human:nadia",
+  "members": [
+    "human:nadia",
+    "human:felix",
+    "human:imogen",
+    "human:wren",
+    "human:bo",
+    "human:cass",
+    "human:dov",
+    "human:esme",
+    "human:hal",
+    "human:jun"
+  ],
+  "insiders": [
+    "human:felix",
+    "human:imogen"
+  ],
+  "outsider": "human:wren",
+  "monitor": "agent:stockbot",
+  "ladder_decider": "human:nadia",
+  "upstream_actor": "human:upstream-trustee",
+  "insider_rationale": "runs the laser inductions",
+  "monitor_rationale": "watches the consumables shelf; four months, then we look again",
+  "c": {
+    "ladder": {
+      "label": "stock-logged",
+      "text": "Plywood taken off the rack is logged the same day it is taken."
+    },
+    "shared": {
+      "label": "bought-together",
+      "text": "Anything bought out of subs is agreed before it is bought."
+    },
+    "access": {
+      "label": "keyholders",
+      "text": "Every member in good standing holds a key."
+    },
+    "inner_a": {
+      "label": "laser-supervised",
+      "text": "Nobody runs the laser cutter alone until they have been signed off."
+    },
+    "inner_b": {
+      "label": "laser-extraction",
+      "text": "The extraction fan runs for the whole cut and five minutes after."
+    },
+    "clash_a": {
+      "label": "bench-clear",
+      "text": "A bench is left clear at the end of a session."
+    },
+    "clash_b": {
+      "label": "long-jobs",
+      "text": "A job that runs overnight can stay set up on the far bench."
+    },
+    "extra": {
+      "label": "labels",
+      "text": "Personal material is labelled with a name and a date."
+    }
+  },
+  "policy": {
+    "root": "We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the group, and anything we cannot undo is not decided by silence.",
+    "inner": "Whoever runs the laser inductions decides the laser.",
+    "unheld": "The yard is decided by whoever holds it.",
+    "ladder": "The first time we ask. The second time the group asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before a laser thing stops."
+  },
+  "inner_proposal": {
+    "about": "laser sign-off",
+    "text": "add a written sign-off sheet by the laser cutter",
+    "because": "a sign-off nobody can point at is not a sign-off"
+  },
+  "inner_objection": "a sheet turns an induction into paperwork and people will sign for each other",
+  "unheld_proposal": {
+    "about": "the yard",
+    "text": "put a container in the yard for offcuts"
+  },
+  "monitor_watch": {
+    "about": "a sheet of ply gone from the rack",
+    "because": "the rack is a sheet short and nothing was logged today",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "taking stock without logging it",
+    "first": "take the last two sheets for a workshop and square it up later",
+    "second": "take a sheet for a demo and square it up later",
+    "third": "take the new sheets for a class and square it up later",
+    "because": "stock that leaves unlogged is stock the next person plans around and does not find",
+    "ruling_1": "logged it afterwards and we left it there",
+    "ruling_2": "the group agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "leaving a machine on overnight",
+    "text": "leave the dust extractor running overnight to clear the shop"
+  },
+  "clash": {
+    "about": "the far bench overnight",
+    "text": "leave a jig clamped to the far bench for a three-day glue-up",
+    "because_a": "a bench left set up is a bench the next member cannot use",
+    "because_b": "a glue-up that has to be struck every night is a glue-up nobody attempts",
+    "carried": "the far bench is the one nobody queues for, and the alternative is that long work stops happening here; revisit when the second bench lands"
+  },
+  "amend_convention": {
+    "about": "labelling",
+    "text": "drop the date from material labels and keep just the name",
+    "because": "nobody writes the date and the ones who do write it wrong"
+  },
+  "amend_principle": {
+    "about": "bench discipline",
+    "text": "allow a bench to stay set up if a note is left on it",
+    "because": "a note is enough for anyone who wants the bench to find you"
+  },
+  "irreversible": {
+    "about": "the tube",
+    "text": "sell the old laser tube to the shop down the road"
+  },
+  "silence": {
+    "about": "who sweeps at the end of the night",
+    "rationale": "it has sorted itself out every week for two years, and a rota would turn a kindness into a duty",
+    "proposal": "put a sweeping rota on the door"
+  },
+  "panel": {
+    "rationale": "three people to look at the bench rule for a month"
+  }
+}

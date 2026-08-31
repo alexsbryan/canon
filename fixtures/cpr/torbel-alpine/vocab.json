@@ -1,0 +1,136 @@
+{
+  "institution": "Törbel alpine commons",
+  "kind": "a Swiss village's summer pasture, forest and irrigation",
+  "one_line": "A village above the Visp valley whose written articles of association are dated 1483 and whose cattle still go up in June.",
+  "start": "2025-06-02",
+  "lineage": "valais-village-articles",
+  "generation": "g2",
+  "generation_next": "g3",
+  "source": "https://example.org/valais-village-articles",
+  "forked": false,
+  "outer": "village",
+  "inner_leaf": "alp",
+  "ladder_leaf": "forest",
+  "unheld": "quarry",
+  "steward": "human:aloys",
+  "members": [
+    "human:aloys",
+    "human:brigitta",
+    "human:cristen",
+    "human:dorli",
+    "human:emmerich",
+    "human:fridolin"
+  ],
+  "insiders": [
+    "human:brigitta",
+    "human:cristen"
+  ],
+  "outsider": "human:dorli",
+  "monitor": "human:fridolin",
+  "ladder_decider": "human:aloys",
+  "upstream_actor": "human:canton-officer",
+  "insider_rationale": "elected to run the alp this season",
+  "monitor_rationale": "counts the herd onto the alp this season; four months, then somebody else does",
+  "c": {
+    "ladder": {
+      "label": "marked-trees",
+      "text": "Timber is cut only from trees the village has marked, and only in the season the village opens."
+    },
+    "shared": {
+      "label": "village-purchase",
+      "text": "Anything bought for the village is agreed before it is bought."
+    },
+    "access": {
+      "label": "citizens-only",
+      "text": "Only a citizen of the village may hold a share in the alp, the forest or the waste."
+    },
+    "inner_a": {
+      "label": "wintered-cattle",
+      "text": "Nobody sends more cows to the alp than the same household wintered on its own hay."
+    },
+    "inner_b": {
+      "label": "cheese-by-share",
+      "text": "Cheese from the alp is divided by the cows each household sent."
+    },
+    "clash_a": {
+      "label": "one-herd",
+      "text": "The village goes up as one herd, on the day the village names."
+    },
+    "clash_b": {
+      "label": "high-snow-waits",
+      "text": "A household whose meadow is still under snow does not lose its turn."
+    },
+    "extra": {
+      "label": "bell-order",
+      "text": "The lead cow is the one the herders agree on at the gathering."
+    }
+  },
+  "policy": {
+    "root": "The village decides by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing an article takes the assembly, and anything that cannot be undone is not decided by silence.",
+    "inner": "Whoever is elected to run the alp decides the alp.",
+    "unheld": "The quarry is decided by whoever holds it.",
+    "ladder": "The first time the village asks. The second time the assembly asks together. The third time the answer is no.",
+    "inner_amended": "Two of us have to object before an alp decision stops."
+  },
+  "inner_proposal": {
+    "about": "counting cattle onto the alp",
+    "text": "count the herd at the gate on the day rather than off the winter hay",
+    "because": "the count at the gate is the number the alp actually carries"
+  },
+  "inner_objection": "the winter hay is the whole point: it ties what you may graze in summer to what you can feed in winter, and a gate count cuts that tie",
+  "unheld_proposal": {
+    "about": "the quarry",
+    "text": "open the old quarry for building stone again"
+  },
+  "monitor_watch": {
+    "about": "a load of timber from an unmarked stand",
+    "because": "the stand was not marked and the season is not open",
+    "dismissal": "these two do not really conflict"
+  },
+  "ladder_subject": {
+    "about": "cutting timber outside the marked stand",
+    "first": "take a load from the unmarked stand to re-roof a barn",
+    "second": "take a second load from the unmarked stand for the same barn",
+    "third": "take the winter's firewood from the unmarked stand",
+    "because": "the marking is how the village keeps a forest that will still hold the slope above the houses",
+    "ruling_1": "the barn roof was open to the weather and we let it stand",
+    "ruling_2": "the assembly agreed one more, then no more"
+  },
+  "other_subject": {
+    "about": "grazing the waste before the alp opens",
+    "text": "graze the waste land in May before the alp opens"
+  },
+  "clash": {
+    "about": "going up on the named day",
+    "text": "let the two highest households follow a week after the herd when their meadows are still under snow",
+    "because_a": "a herd that goes up in pieces is a herd nobody can count and a pasture eaten unevenly",
+    "because_b": "a household that must go up on the named day with no hay left is a household that sells its cows",
+    "carried": "two households are above the treeline and the snow line moves; carrying it costs one uneven week and the alternative costs the village two herds, which is why it has a date on it"
+  },
+  "amend_convention": {
+    "about": "the lead cow",
+    "text": "let the household with the most cows name the lead cow",
+    "because": "the gathering argument takes longer than the walk up does"
+  },
+  "amend_principle": {
+    "about": "going up as one herd",
+    "text": "let any household follow within a week of the named day",
+    "because": "the count can be taken on the alp as easily as at the gate"
+  },
+  "irreversible": {
+    "about": "the old high hut",
+    "text": "pull down the high hut and use the timber on the lower one"
+  },
+  "silence": {
+    "about": "who takes the first watch on the alp",
+    "rationale": "it has fallen to whoever is already up there for two generations, and naming it would make it a duty somebody could be short of",
+    "proposal": "set a watch rota for the alp season"
+  },
+  "panel": {
+    "rationale": "three of us to look at the going-up rule for a month"
+  },
+  "not_applicable": {
+    "2": "There is no upstream. The articles were written here in 1483 and this canon was founded rather than forked, so there is no divergence from anywhere to make visible — the congruence is total and unmeasurable by this criterion.",
+    "7": "Nothing upstream can undermine a commons that has no upstream. The criterion asks whether local commitments survive an upstream release; there is no upstream to release anything."
+  }
+}

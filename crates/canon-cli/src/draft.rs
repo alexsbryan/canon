@@ -283,6 +283,10 @@ pub struct DraftRun {
     pub at: i64,
     pub endpoint: String,
     pub model: String,
+    /// What the endpoint reported as answering, when it named one. `model` is
+    /// what was asked for and is often an alias; this is what replied.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub served_model: Option<String>,
     /// Which voice the extraction asked for. A run scored against another
     /// must have used the same one.
     #[serde(default)]
@@ -1986,6 +1990,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         at: store::now(),
         endpoint: client.endpoint().to_string(),
         model: client.model().to_string(),
+        served_model: client.served_model(),
         profile: profile.as_str().to_string(),
         sources: sources.clone(),
         // Recorded so a re-score can tell "the extractor found nothing there"

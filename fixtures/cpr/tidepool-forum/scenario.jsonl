@@ -1,0 +1,77 @@
+// Tidepool forum — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"forum.public.frontpage"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"forum.public.frontpage","actor":"human:jonas","about":"how the front page is chosen","proposal":"let the ranking algorithm fill the two slots the curator leaves empty","positions":[{"citing":"@front-by-hand","pull":"toward","because":"a curator who cannot fill five slots leaves the front page half dead for a day"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"forum.public.frontpage","actor":"human:mei","about":"how the front page is chosen","proposal":"let the ranking algorithm fill the two slots the curator leaves empty","positions":[{"citing":"@front-by-hand","pull":"toward","because":"a curator who cannot fill five slots leaves the front page half dead for a day"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"archive","actor":"human:jonas","about":"the archive","proposal":"put the pre-2020 archive behind a search index and drop the old threads from the site","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-09-19","by":"human:jonas","op":"policy","scope":"forum.public.frontpage","text":"Two of us have to object before a front page decision stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"forum.public.frontpage","actor":"human:mei","about":"how the front page is chosen","proposal":"let the ranking algorithm fill the two slots the curator leaves empty","positions":[{"actor":"human:jonas","pull":"against","because":"the named curator is the whole reason anyone can argue with the front page, and two algorithmic slots is two slots nobody can argue with"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-09-28","by":"human:gwyn","op":"position","about":"a thread that turned onto the person","citing":"@no-pile-on","pull":"against","because":"the last forty replies name the person and not the thing they did"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-09-29","by":"human:gwyn","as":"monitor-dismiss","op":"dismiss","a":"@nothing-vanishes","b":"@no-second-audience","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-11-24"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"human:gwyn"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"forum.threads","about":"leaving a pile-on thread open","proposal":"leave the thread open because the technical argument in it is still going","positions":[{"citing":"@no-pile-on","pull":"against","because":"a thread that has turned onto the person is a thread that is now about hurting them"}]}
+{"step":"act","at":"2025-11-25","by":"human:orla","op":"decided","about":"leaving a pile-on thread open","outcome":"conflicts","authority":"ask-one","rationale":"the technical argument was real and we let it run one more day"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"forum.threads","about":"leaving a pile-on thread open","proposal":"leave the follow-up thread open for the same reason","positions":[{"citing":"@no-pile-on","pull":"against","because":"a thread that has turned onto the person is a thread that is now about hurting them"}]}
+{"step":"act","at":"2025-11-26","by":"human:orla","op":"decided","about":"leaving a pile-on thread open","outcome":"conflicts","authority":"ask-panel","rationale":"the moderators agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"forum.threads","about":"leaving a pile-on thread open","proposal":"leave the third thread on the same person open","positions":[{"citing":"@no-pile-on","pull":"against","because":"a thread that has turned onto the person is a thread that is now about hurting them"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"forum.threads","about":"pinning a thread for longer than a week","proposal":"keep the fundraiser thread pinned until the fundraiser closes","positions":[{"citing":"@no-pile-on","pull":"against","because":"a thread that has turned onto the person is a thread that is now about hurting them"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"what a removal leaves behind","proposal":"remove the harassment thread outright, with no stub and no record on the page","positions":[{"citing":"@nothing-vanishes","pull":"against","because":"a removal with no trace is a removal nobody can question, and that is how moderation goes bad"},{"citing":"@no-second-audience","pull":"toward","because":"a stub saying who was attacked and by whom hands the attack the audience it wanted"}]}
+{"step":"act","at":"2025-11-27","by":"human:jonas","op":"accept","a":"@nothing-vanishes","b":"@no-second-audience","rationale":"the stub is kept in the moderation log where the forum can audit it and the page carries nothing; that splits the two goods at the cost of the log being the only place to look, which is the part to revisit","revisit":"2026-05-17"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-11-28","by":"human:orla","op":"adopt","lineage":"small-forum-canon","generation":"g9","source":"https://example.org/small-forum-canon"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"forum"}
+{"step":"who","name":"nesting-the-middle","principle":8,"strength":"mechanism","scope":"forum.public"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"forum.public.frontpage"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"flair","proposal":"let long-standing members carry a flair that says how long they have been here","amends":"@flair-plain","positions":[{"actor":"human:mei","pull":"toward","because":"newcomers cannot tell who has been answering the same question for nine years"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"removal stubs","proposal":"drop the stub when the thread was aimed at one named person","amends":"@nothing-vanishes","positions":[{"actor":"human:mei","pull":"toward","because":"the stub is a second audience and the log already keeps the record"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the old archive","proposal":"delete the pre-2020 archive to get under the storage limit","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the old archive","proposal":"delete the pre-2020 archive to get under the storage limit","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"how fast a moderator should answer a flag","proposal":"set a response time target for flagged posts","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2026-01-09","by":"human:orla","as":"panel","op":"draw_commit","scope":"forum","count":3,"after_ts":1768694400,"rationale":"three of us to look at the removal rule for a month"}
+{"step":"act","at":"2026-01-10","by":"human:orla","op":"draw_secret","commit":"@panel","digest":"be764a39fceb0b95c64c75a2ed403b2452ca1be3bcf776b8632c3ef66c5a87c9"}
+{"step":"act","at":"2026-01-10","by":"human:jonas","op":"draw_secret","commit":"@panel","digest":"2551179871339f3b6630729e69f32c943408a1095fc42e0fda0c12994b9c6050"}
+{"step":"act","at":"2026-01-10","by":"human:priti","op":"draw_secret","commit":"@panel","digest":"a0da37c9bfb8f6ed37d90d40aad21d0c1dc49893ecd743726e7a50852bb651fb"}
+{"step":"act","at":"2026-01-10","by":"human:mei","op":"draw_secret","commit":"@panel","digest":"7295278ef1f770228bcdcf1c6137dadb048321133ddab25aa667ae643cdd7aff"}
+{"step":"act","at":"2026-01-10","by":"human:abel","op":"draw_secret","commit":"@panel","digest":"bc911034744b3a269ed871064ea661ea000531adfbda7c47f88403e59964536f"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2026-01-20"}
+{"step":"act","at":"2026-01-20","by":"human:orla","op":"draw_reveal","commit":"@panel","secret":"tidepool-forum-orla-panel"}
+{"step":"act","at":"2026-01-20","by":"human:jonas","op":"draw_reveal","commit":"@panel","secret":"tidepool-forum-jonas-panel"}
+{"step":"act","at":"2026-01-20","by":"human:priti","op":"draw_reveal","commit":"@panel","secret":"tidepool-forum-priti-panel"}
+{"step":"act","at":"2026-01-20","by":"human:mei","op":"draw_reveal","commit":"@panel","secret":"tidepool-forum-mei-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

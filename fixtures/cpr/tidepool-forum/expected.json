@@ -1,0 +1,234 @@
+{
+  "boundary-who-holds-the-inner": {
+    "policy": "subsidiarity",
+    "deciders": [
+      "human:gwyn",
+      "human:jonas",
+      "human:priti",
+      "human:dara",
+      "human:effie",
+      "human:abel",
+      "human:cato",
+      "human:hue",
+      "human:idris",
+      "human:mei",
+      "human:orla"
+    ],
+    "holders": [
+      "human:gwyn",
+      "human:jonas",
+      "human:priti"
+    ]
+  },
+  "boundary-an-insider-decides": {
+    "outcome": "supported",
+    "rule": "subsidiarity",
+    "authority": "act",
+    "because": "including you",
+    "cites": [
+      "@front-by-hand"
+    ]
+  },
+  "boundary-an-outsider-does-not": {
+    "outcome": "supported",
+    "authority": "ask-one",
+    "because": "not you"
+  },
+  "boundary-nobody-holds-this": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "nobody holds standing over `archive`"
+  },
+  "congruence-forked-and-diverged": {
+    "lineage": "small-forum-canon",
+    "generation": "g8",
+    "inherited": 3,
+    "local": 5
+  },
+  "collective-choice-under-the-new-rule": {
+    "outcome": "supported",
+    "authority": "act",
+    "rule": "threshold",
+    "because": "1 against, 2 needed",
+    "voices": [
+      "human:jonas"
+    ]
+  },
+  "monitors-adjudication-is-surfaced": {
+    "unattended": []
+  },
+  "monitors-standing-lapsed": {
+    "count": 1,
+    "targets": [
+      "@monitor-grant"
+    ]
+  },
+  "monitors-record-is-queryable": {
+    "positions": 1,
+    "decided": 0
+  },
+  "graduated-first": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "rule": "graduated/default",
+    "because": "0 prior decision(s)",
+    "cites": [
+      "@no-pile-on"
+    ]
+  },
+  "graduated-second": {
+    "outcome": "conflicts",
+    "authority": "ask-panel",
+    "rule": "graduated/default",
+    "because": "1 prior decision(s)",
+    "cites": [
+      "@no-pile-on"
+    ]
+  },
+  "graduated-third": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "rule": "graduated/default",
+    "because": "2 prior decision(s)",
+    "cites": [
+      "@no-pile-on"
+    ]
+  },
+  "graduated-a-different-subject-restarts": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "because": "0 prior decision(s) about `pinning a thread for longer than a week`"
+  },
+  "conflict-before": {
+    "acts": 42,
+    "tolerated": 0,
+    "live": 8
+  },
+  "conflict-surfaced": {
+    "outcome": "conflicts",
+    "authority": "refuse",
+    "because": "one is enough",
+    "cites": [
+      "@nothing-vanishes",
+      "@no-second-audience"
+    ]
+  },
+  "conflict-after": {
+    "acts": 43,
+    "tolerated": 1,
+    "live": 8
+  },
+  "organize-the-fork-keeps-what-it-wrote": {
+    "generation": "g9",
+    "inherited": 3,
+    "local": 5
+  },
+  "nesting-the-outer": {
+    "policy": "cautious/entrenched/consent",
+    "deciders": [
+      "human:abel",
+      "human:cato",
+      "human:dara",
+      "human:effie",
+      "human:gwyn",
+      "human:hue",
+      "human:idris",
+      "human:jonas",
+      "human:mei",
+      "human:orla",
+      "human:priti"
+    ],
+    "holders": [
+      "human:abel",
+      "human:cato",
+      "human:dara",
+      "human:effie",
+      "human:gwyn",
+      "human:hue",
+      "human:idris",
+      "human:jonas",
+      "human:mei",
+      "human:orla",
+      "human:priti"
+    ]
+  },
+  "nesting-the-middle": {
+    "policy": "subsidiarity",
+    "deciders": [
+      "human:dara",
+      "human:effie",
+      "human:abel",
+      "human:cato",
+      "human:gwyn",
+      "human:hue",
+      "human:idris",
+      "human:jonas",
+      "human:mei",
+      "human:orla",
+      "human:priti"
+    ],
+    "holders": [
+      "human:dara",
+      "human:effie"
+    ]
+  },
+  "nesting-the-inner": {
+    "policy": "threshold",
+    "deciders": [
+      "human:jonas",
+      "human:priti",
+      "human:dara",
+      "human:effie",
+      "human:abel",
+      "human:cato",
+      "human:gwyn",
+      "human:hue",
+      "human:idris",
+      "human:mei",
+      "human:orla"
+    ],
+    "holders": [
+      "human:jonas",
+      "human:priti"
+    ]
+  },
+  "entrenchment-amending-a-convention": {
+    "outcome": "supported",
+    "authority": "act",
+    "because": "no objection"
+  },
+  "entrenchment-amending-a-principle": {
+    "outcome": "supported",
+    "authority": "ask-panel",
+    "because": "entrenched: amends a `principle`"
+  },
+  "reversible-irreversible-and-unsupported": {
+    "outcome": "unaddressed",
+    "authority": "refuse",
+    "because": "cautious: irreversible",
+    "cites": []
+  },
+  "reversible-the-same-behind-a-flag": {
+    "outcome": "unaddressed",
+    "authority": "act-and-notify"
+  },
+  "silence-is-not-a-gap": {
+    "outcome": "unaddressed",
+    "silence": true
+  },
+  "draw-before-anyone-opened-refuses": {
+    "error": "nobody opened a secret, so there is no seed \u2014 and there is no default seed"
+  },
+  "draw-the-panel": {
+    "pool": 10,
+    "withheld": [
+      "human:abel"
+    ],
+    "seats": [
+      "human:priti",
+      "human:jonas",
+      "human:cato"
+    ],
+    "seed": "da18b39fd6c55dd0d4e6a5e858d8095beb399ec1c48663a1605c746684480b10"
+  }
+}

@@ -1,0 +1,76 @@
+// Northgate build farm — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"farm.runners"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"farm.runners","actor":"human:ilya","about":"runner images","proposal":"add a warm cache layer to the runner image","positions":[{"citing":"@runner-images-pinned","pull":"toward","because":"a cache baked into the digest is still pinned and still reproducible"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"farm.runners","actor":"human:paolo","about":"runner images","proposal":"add a warm cache layer to the runner image","positions":[{"citing":"@runner-images-pinned","pull":"toward","because":"a cache baked into the digest is still pinned and still reproducible"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"storage","actor":"human:ilya","about":"artifact storage","proposal":"move build artifacts to the cheaper cold bucket after a week","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-03-21","by":"human:ilya","op":"policy","scope":"farm.runners","text":"Two of us have to object before a runner change stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"farm.runners","actor":"human:paolo","about":"runner images","proposal":"add a warm cache layer to the runner image","positions":[{"actor":"human:ilya","pull":"against","because":"a cache in the image means two runs on the same digest can differ, which is the thing the pin was for"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-03-30","by":"agent:queuewatch","op":"position","about":"one team held thirty runners for three hours","citing":"@queue-share","pull":"against","because":"the hold ran past an hour and past a third of the farm"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-03-31","by":"agent:queuewatch","as":"monitor-dismiss","op":"dismiss","a":"@fair-queue","b":"@release-first","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-05-26"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:queuewatch"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"farm.queue","about":"holding more than a third of the farm","proposal":"run the full matrix on every push for the migration week","positions":[{"citing":"@queue-share","pull":"against","because":"a third of the farm held for hours is every other team's build waiting behind it"}]}
+{"step":"act","at":"2025-05-27","by":"human:mairead","op":"decided","about":"holding more than a third of the farm","outcome":"conflicts","authority":"ask-one","rationale":"we let the migration week stand"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"farm.queue","about":"holding more than a third of the farm","proposal":"run the full matrix again for the follow-up migration","positions":[{"citing":"@queue-share","pull":"against","because":"a third of the farm held for hours is every other team's build waiting behind it"}]}
+{"step":"act","at":"2025-05-28","by":"human:mairead","op":"decided","about":"holding more than a third of the farm","outcome":"conflicts","authority":"ask-panel","rationale":"the group agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"farm.queue","about":"holding more than a third of the farm","proposal":"run the full matrix nightly from now on","positions":[{"citing":"@queue-share","pull":"against","because":"a third of the farm held for hours is every other team's build waiting behind it"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"farm.queue","about":"submitting jobs with no timeout","proposal":"submit the soak tests with no timeout set","positions":[{"citing":"@queue-share","pull":"against","because":"a third of the farm held for hours is every other team's build waiting behind it"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"a release jumping the queue","proposal":"let the release pipeline preempt running jobs, not just queued ones","positions":[{"citing":"@fair-queue","pull":"against","because":"a queue that can be jumped is not a queue, and every team will find a reason to be a release"},{"citing":"@release-first","pull":"toward","because":"a release that waits behind a soak test is an outage that waits behind a soak test"}]}
+{"step":"act","at":"2025-05-29","by":"human:ilya","op":"accept","a":"@fair-queue","b":"@release-first","rationale":"preemption is bounded to the release branch and the branch is protected, so the escape hatch has a lock on it; revisit when a second branch needs it","revisit":"2025-11-16"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-05-30","by":"human:mairead","op":"adopt","lineage":"shared-infra-canon","generation":"g6","source":"https://example.org/shared-infra-canon"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"farm"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"farm.runners"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"job labels","proposal":"drop the team label and read the team off the branch prefix","amends":"@job-labels","positions":[{"actor":"human:paolo","pull":"toward","because":"the prefix is already there and the label is forgotten half the time"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"queue order","proposal":"serve short jobs ahead of long ones when the queue is deep","amends":"@fair-queue","positions":[{"actor":"human:paolo","pull":"toward","because":"shortest-first clears a deep queue faster for everybody, including the long jobs"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the old runner fleet","proposal":"decommission the old runner fleet and return the hardware","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the old runner fleet","proposal":"decommission the old runner fleet and return the hardware","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"how long a build is allowed to take","proposal":"set a maximum build time for every pipeline","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-07-11","by":"human:mairead","as":"panel","op":"draw_commit","scope":"farm","count":3,"after_ts":1752969600,"rationale":"three people to look at the preemption rule for a month"}
+{"step":"act","at":"2025-07-12","by":"human:mairead","op":"draw_secret","commit":"@panel","digest":"220f31e4fde7b604d194bc1de21e79c062b53b5d80422ff4bda50a15c80ce352"}
+{"step":"act","at":"2025-07-12","by":"human:ilya","op":"draw_secret","commit":"@panel","digest":"28907f1b3341a9498105f5541abbd005c1f7b740b6aaa4c02a49336184d38d69"}
+{"step":"act","at":"2025-07-12","by":"human:zuri","op":"draw_secret","commit":"@panel","digest":"d445320883c6e50fb349aa5a47cd271617fe936e2596d20ae6fe548f83929216"}
+{"step":"act","at":"2025-07-12","by":"human:paolo","op":"draw_secret","commit":"@panel","digest":"440a944b9306eee1b437e98f28b3dd909a75cc2c868369dd86d641c0fc5b2746"}
+{"step":"act","at":"2025-07-12","by":"human:hanna","op":"draw_secret","commit":"@panel","digest":"ba2e83ef9e577fe11da689dc0a85e3dae1320a39ec4636b2617bf389076e8634"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-07-22"}
+{"step":"act","at":"2025-07-22","by":"human:mairead","op":"draw_reveal","commit":"@panel","secret":"northgate-buildfarm-mairead-panel"}
+{"step":"act","at":"2025-07-22","by":"human:ilya","op":"draw_reveal","commit":"@panel","secret":"northgate-buildfarm-ilya-panel"}
+{"step":"act","at":"2025-07-22","by":"human:zuri","op":"draw_reveal","commit":"@panel","secret":"northgate-buildfarm-zuri-panel"}
+{"step":"act","at":"2025-07-22","by":"human:paolo","op":"draw_reveal","commit":"@panel","secret":"northgate-buildfarm-paolo-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

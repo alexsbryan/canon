@@ -1,0 +1,62 @@
+// Tidepool forum — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-07-21","by":"human:orla","op":"adopt","lineage":"small-forum-canon","generation":"g8","source":"https://example.org/small-forum-canon"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-07-22","by":"human:orla","as":"no-pile-on","op":"assert","text":"A thread about a named person is closed once it is about the person and not the thing they did.","from":"can-5ff3d35f53"}
+{"at":"2025-07-22","by":"human:orla","as":"spend-together","op":"assert","text":"Anything the forum pays for is agreed before it is paid for.","from":"can-e4005f1e4b"}
+{"at":"2025-07-22","by":"human:orla","as":"read-without-account","op":"assert","text":"Anyone can read the forum without an account, and always will be able to.","from":"can-9c8b43c237"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-08-03","by":"human:jonas","as":"front-by-hand","op":"assert","text":"The front page is chosen by a person, and the person who chose it is named on it."}
+{"at":"2025-08-03","by":"human:priti","as":"front-slots","op":"assert","text":"No more than five things are on the front page at once."}
+{"at":"2025-08-03","by":"human:mei","as":"nothing-vanishes","op":"assert","text":"A removed post leaves a visible stub saying it was removed and by whom."}
+{"at":"2025-08-03","by":"human:mei","as":"no-second-audience","op":"assert","text":"Abuse aimed at one person is not given a second audience by being memorialised."}
+{"at":"2025-08-03","by":"human:orla","as":"flair-plain","op":"assert","text":"A member's flair says what they work on, not what they have earned here."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-08-06","by":"human:orla","op":"scoped","commitment":"@front-by-hand","scope":"forum.public.frontpage"}
+{"at":"2025-08-06","by":"human:orla","op":"scoped","commitment":"@front-slots","scope":"forum.public.frontpage"}
+{"at":"2025-08-06","by":"human:orla","op":"scoped","commitment":"@no-pile-on","scope":"forum.threads"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-08-07","by":"human:orla","op":"rank","commitment":"@nothing-vanishes","rank":"principle"}
+{"at":"2025-08-07","by":"human:orla","op":"rank","commitment":"@no-pile-on","rank":"principle"}
+{"at":"2025-08-07","by":"human:orla","op":"rank","commitment":"@flair-plain","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:orla","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:jonas","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:priti","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:mei","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:abel","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:cato","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:dara","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:effie","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:gwyn","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:hue","scope":"forum"}
+{"at":"2025-07-23","by":"human:orla","op":"grant","holder":"human:idris","scope":"forum"}
+// A THIRD level, where the commons has one. Same op, one dot deeper.
+{"at":"2025-07-24","by":"human:orla","op":"grant","holder":"human:dara","scope":"forum.public","rationale":"look after everything a reader sees"}
+{"at":"2025-07-24","by":"human:orla","op":"grant","holder":"human:effie","scope":"forum.public","rationale":"look after everything a reader sees"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-07-24","by":"human:orla","op":"grant","holder":"human:jonas","scope":"forum.public.frontpage","rationale":"curate the front page this quarter"}
+{"at":"2025-07-24","by":"human:orla","op":"grant","holder":"human:priti","scope":"forum.public.frontpage","rationale":"curate the front page this quarter"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-07-25","by":"human:orla","as":"monitor-grant","op":"grant","holder":"human:gwyn","scope":"forum.public.frontpage","horizon":1763424000,"rationale":"takes the flag queue this quarter; four months, then somebody else does"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-07-26","by":"human:orla","as":"root-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing something we have called a principle takes the moderators together, and anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-07-26","by":"human:orla","as":"middle-policy","op":"policy","scope":"forum.public","text":"Whoever looks after the public side decides the public side.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-07-26","by":"human:orla","as":"inner-policy","op":"policy","scope":"forum.public.frontpage","text":"Whoever is curating this quarter decides the front page.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-07-26","by":"human:orla","as":"unheld-policy","op":"policy","scope":"archive","text":"The archive is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-07-26","by":"human:orla","as":"ladder-policy","op":"policy","scope":"forum.threads","text":"The first time we ask. The second time the moderators ask together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-08-09","by":"human:orla","op":"silence","about":"how fast a moderator should answer a flag","rationale":"a target would be met by the moderators with the least going on in their lives and missed by everyone else, and the queue has never been long enough to need one"}

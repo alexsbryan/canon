@@ -1,0 +1,77 @@
+{
+  "corpus_id": "maple-house",
+  "schema_version": 1,
+  "note": "Which of Ostrom's eight design principles this corpus carries MATERIAL for, and the smallest phrase each turns on. Written from the corpus by hand, before any run was scored against it and without looking at any candidate set — the same rule `extraction-anchors.json` states for itself. An anchor asks whether extraction reached that PASSAGE, never whether it used a particular word: each `must` entry is a list of alternatives satisfied by any one of them. A principle marked `absent` is a claim about the DOCUMENT, not about canon: it says a community reading only this text has nothing to build that principle from, and finding it anyway would be the extractor inventing.",
+  "kind": "self-governed",
+  "kind_note": "A house's own charter and its own recorded decisions. The people bound by these rules wrote them and can change them, which is the condition Ostrom's principles 3 and 7 describe.",
+  "principles": {
+    "1": {
+      "name": "clearly defined boundaries",
+      "status": "present",
+      "why": "Membership is the boundary, and the charter draws it twice: who may be in the house at night, and what belongs to everybody rather than to one member.",
+      "anchors": [
+        { "heading": "Article IV", "must": [["common area", "common areas", "belong equally"]] },
+        { "heading": "Article I", "must": [["private room", "private rooms", "consecutive nights"]] }
+      ]
+    },
+    "2": {
+      "name": "congruence with local conditions",
+      "status": "present",
+      "why": "The house holds a general quiet-hours rule and then bends it twice to conditions the charter did not anticipate — work nights, and the backyard.",
+      "anchors": [
+        { "heading": "Weeknight Quiet Hours", "must": [["10:00 PM", "10 PM", "earlier"]] },
+        { "heading": "Backyard Quiet", "must": [["backyard", "back porch"]] }
+      ]
+    },
+    "3": {
+      "name": "collective-choice arrangements",
+      "status": "present",
+      "why": "Article X is the collective-choice arrangement stated outright: who meets, how a decision passes, and how any member puts something on the agenda.",
+      "anchors": [
+        { "heading": "Article X", "must": [["simple majority", "majority of the members", "first Sunday", "agenda"]] }
+      ]
+    },
+    "4": {
+      "name": "monitors accountable to appropriators",
+      "status": "present",
+      "why": "The guest logbook is monitoring by the appropriators themselves — the hosting member makes the entry, and the record is open to the house. The treasurer's reminder is the other half.",
+      "anchors": [
+        { "heading": "Guest Logbook", "must": [["logbook", "log book", "signed into", "signed in"]] },
+        { "heading": "Late Rent Fee", "must": [["treasurer", "reminder"]] }
+      ]
+    },
+    "5": {
+      "name": "graduated sanctions",
+      "status": "partial",
+      "why": "The corpus has exactly one sanction — a flat twenty-five dollar late fee — and NOTHING in it escalates on a second or third occurrence. The material for a sanction is here; the material for a graduated one is not. A house that adopted only what this document says would have a ladder with one rung.",
+      "anchors": [
+        { "heading": "Late Rent Fee", "must": [["late fee", "twenty-five dollars", "$25"]] }
+      ]
+    },
+    "6": {
+      "name": "rapid, low-cost conflict resolution",
+      "status": "present",
+      "why": "Conflicts are resolved in the monthly meeting and recorded as decisions; the guest policy is the clearest case, where a charter article is reversed outright rather than argued about again.",
+      "anchors": [
+        { "heading": "Guest Policy Revisited", "must": [["no longer permitted", "stop allowing", "not permitted"]] }
+      ]
+    },
+    "7": {
+      "name": "rights to organize not undermined",
+      "status": "present",
+      "why": "Article X says a recorded decision amends the charter. The house's authority over its own rules is written into the rules, and no outside body appears anywhere in the corpus.",
+      "anchors": [
+        { "heading": "Article X", "must": [["amends", "amend", "extends this Charter", "extend this Charter"]] }
+      ]
+    },
+    "8": {
+      "name": "nested enterprises",
+      "status": "present",
+      "why": "Three levels appear: the house, the common areas, and a member's own room — with the study-hours decision carving a fourth out of one room for two hours a night.",
+      "anchors": [
+        { "heading": "Article IX", "must": [["own bedroom", "own bedrooms", "assigned storage"]] },
+        { "heading": "Article XI", "must": [["dining room", "study"]] }
+      ]
+    }
+  }
+}

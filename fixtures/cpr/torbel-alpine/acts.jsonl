@@ -1,0 +1,55 @@
+// T\u00f6rbel alpine commons — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── FOUNDED, not forked. There is no upstream and no `adopt`, so these
+// three are this community's own like every other. Ostrom 2 and 7 are
+// about divergence from somewhere else, and there is no somewhere else —
+// which is why this vocabulary declares them not applicable and the bar
+// makes it prove they do not hold rather than quietly skipping them. ──
+{"at":"2025-06-03","by":"human:aloys","as":"marked-trees","op":"assert","text":"Timber is cut only from trees the village has marked, and only in the season the village opens."}
+{"at":"2025-06-03","by":"human:aloys","as":"village-purchase","op":"assert","text":"Anything bought for the village is agreed before it is bought."}
+{"at":"2025-06-03","by":"human:aloys","as":"citizens-only","op":"assert","text":"Only a citizen of the village may hold a share in the alp, the forest or the waste."}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-06-15","by":"human:brigitta","as":"wintered-cattle","op":"assert","text":"Nobody sends more cows to the alp than the same household wintered on its own hay."}
+{"at":"2025-06-15","by":"human:cristen","as":"cheese-by-share","op":"assert","text":"Cheese from the alp is divided by the cows each household sent."}
+{"at":"2025-06-15","by":"human:dorli","as":"one-herd","op":"assert","text":"The village goes up as one herd, on the day the village names."}
+{"at":"2025-06-15","by":"human:dorli","as":"high-snow-waits","op":"assert","text":"A household whose meadow is still under snow does not lose its turn."}
+{"at":"2025-06-15","by":"human:aloys","as":"bell-order","op":"assert","text":"The lead cow is the one the herders agree on at the gathering."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-06-18","by":"human:aloys","op":"scoped","commitment":"@wintered-cattle","scope":"village.alp"}
+{"at":"2025-06-18","by":"human:aloys","op":"scoped","commitment":"@cheese-by-share","scope":"village.alp"}
+{"at":"2025-06-18","by":"human:aloys","op":"scoped","commitment":"@marked-trees","scope":"village.forest"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-06-19","by":"human:aloys","op":"rank","commitment":"@one-herd","rank":"principle"}
+{"at":"2025-06-19","by":"human:aloys","op":"rank","commitment":"@marked-trees","rank":"principle"}
+{"at":"2025-06-19","by":"human:aloys","op":"rank","commitment":"@bell-order","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-06-04","by":"human:aloys","op":"grant","holder":"human:aloys","scope":"village"}
+{"at":"2025-06-04","by":"human:aloys","op":"grant","holder":"human:brigitta","scope":"village"}
+{"at":"2025-06-04","by":"human:aloys","op":"grant","holder":"human:cristen","scope":"village"}
+{"at":"2025-06-04","by":"human:aloys","op":"grant","holder":"human:dorli","scope":"village"}
+{"at":"2025-06-04","by":"human:aloys","op":"grant","holder":"human:emmerich","scope":"village"}
+{"at":"2025-06-04","by":"human:aloys","op":"grant","holder":"human:fridolin","scope":"village"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-06-05","by":"human:aloys","op":"grant","holder":"human:brigitta","scope":"village.alp","rationale":"elected to run the alp this season"}
+{"at":"2025-06-05","by":"human:aloys","op":"grant","holder":"human:cristen","scope":"village.alp","rationale":"elected to run the alp this season"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-06-06","by":"human:aloys","as":"monitor-grant","op":"grant","holder":"human:fridolin","scope":"village.alp","horizon":1759190400,"rationale":"counts the herd onto the alp this season; four months, then somebody else does"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-06-07","by":"human:aloys","as":"root-policy","op":"policy","text":"The village decides by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Changing an article takes the assembly, and anything that cannot be undone is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-06-07","by":"human:aloys","as":"inner-policy","op":"policy","scope":"village.alp","text":"Whoever is elected to run the alp decides the alp.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-06-07","by":"human:aloys","as":"unheld-policy","op":"policy","scope":"quarry","text":"The quarry is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-06-07","by":"human:aloys","as":"ladder-policy","op":"policy","scope":"village.forest","text":"The first time the village asks. The second time the assembly asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-06-21","by":"human:aloys","op":"silence","about":"who takes the first watch on the alp","rationale":"it has fallen to whoever is already up there for two generations, and naming it would make it a duty somebody could be short of"}

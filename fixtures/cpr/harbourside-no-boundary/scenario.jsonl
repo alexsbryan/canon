@@ -1,0 +1,76 @@
+// Harbourside Makerspace, with the laser held by nobody — generated from `_spine/scenario.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// THIS FILE IS THE CLAIM. One spine, every institution in the study. The
+// eight design principles, the three safety cases and a sortition panel, in
+// the same order with the same steps, decided by code. What changes per CPR
+// is the nouns; what changes per CPR in the mechanism is nothing.
+// ── 1. Clearly defined boundaries ────────────────────────────
+{"step":"who","name":"boundary-who-holds-the-inner","principle":1,"strength":"mechanism","scope":"space.laser"}
+{"step":"check","name":"boundary-an-insider-decides","principle":1,"strength":"mechanism","scope":"space.laser","actor":"human:felix","about":"laser sign-off","proposal":"add a written sign-off sheet by the laser cutter","positions":[{"citing":"@laser-supervised","pull":"toward","because":"a sign-off nobody can point at is not a sign-off"}]}
+{"step":"check","name":"boundary-an-outsider-does-not","principle":1,"strength":"mechanism","scope":"space.laser","actor":"human:wren","about":"laser sign-off","proposal":"add a written sign-off sheet by the laser cutter","positions":[{"citing":"@laser-supervised","pull":"toward","because":"a sign-off nobody can point at is not a sign-off"}]}
+{"step":"check","name":"boundary-nobody-holds-this","principle":1,"strength":"mechanism","scope":"yard","actor":"human:felix","about":"the yard","proposal":"put a container in the yard for offcuts","positions":[]}
+// ── 2. Congruence with local conditions ──────────────────────
+{"step":"lineage","name":"congruence-forked-and-diverged","principle":2,"strength":"affordance"}
+// ── 3. Collective-choice arrangements ────────────────────────
+// The people governed by the inner rule change the inner rule.
+{"step":"act","name":"collective-choice-they-change-their-own-rule","at":"2025-05-02","by":"human:felix","op":"policy","scope":"space.laser","text":"Two of us have to object before a laser thing stops.","rule":{"rule":"threshold","against":2}}
+{"step":"check","name":"collective-choice-under-the-new-rule","principle":3,"strength":"mechanism","scope":"space.laser","actor":"human:wren","about":"laser sign-off","proposal":"add a written sign-off sheet by the laser cutter","positions":[{"actor":"human:felix","pull":"against","because":"a sheet turns an induction into paperwork and people will sign for each other"}]}
+// ── 4. Monitors accountable to appropriators ─────────────────
+// A monitor may CITE — that is a reading, and reading is what it is for.
+{"step":"act","at":"2025-05-11","by":"agent:stockbot","op":"position","about":"a sheet of ply gone from the rack","citing":"@stock-logged","pull":"against","because":"the rack is a sheet short and nothing was logged today"}
+// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the community is told, by name.
+{"step":"act","name":"the-monitor-tries-to-adjudicate","at":"2025-05-12","by":"agent:stockbot","as":"monitor-dismiss","op":"dismiss","a":"@bench-clear","b":"@long-jobs","rationale":"these two do not really conflict"}
+{"step":"unattended","name":"monitors-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
+{"step":"clock","name":"after-the-monitors-horizon","at":"2025-07-07"}
+{"step":"overdue","name":"monitors-standing-lapsed","principle":4,"strength":"mechanism"}
+{"step":"voice","name":"monitors-record-is-queryable","principle":4,"strength":"mechanism","actor":"agent:stockbot"}
+// ── 5. Graduated sanctions ───────────────────────────────────
+// Counted from DECISIONS, never from observations about a person.
+{"step":"check","name":"graduated-first","principle":5,"strength":"mechanism","scope":"space.stock","about":"taking stock without logging it","proposal":"take the last two sheets for a workshop and square it up later","positions":[{"citing":"@stock-logged","pull":"against","because":"stock that leaves unlogged is stock the next person plans around and does not find"}]}
+{"step":"act","at":"2025-07-08","by":"human:nadia","op":"decided","about":"taking stock without logging it","outcome":"conflicts","authority":"ask-one","rationale":"logged it afterwards and we left it there"}
+{"step":"check","name":"graduated-second","principle":5,"strength":"mechanism","scope":"space.stock","about":"taking stock without logging it","proposal":"take a sheet for a demo and square it up later","positions":[{"citing":"@stock-logged","pull":"against","because":"stock that leaves unlogged is stock the next person plans around and does not find"}]}
+{"step":"act","at":"2025-07-09","by":"human:nadia","op":"decided","about":"taking stock without logging it","outcome":"conflicts","authority":"ask-panel","rationale":"the group agreed one more, then no more"}
+{"step":"check","name":"graduated-third","principle":5,"strength":"mechanism","scope":"space.stock","about":"taking stock without logging it","proposal":"take the new sheets for a class and square it up later","positions":[{"citing":"@stock-logged","pull":"against","because":"stock that leaves unlogged is stock the next person plans around and does not find"}]}
+{"step":"check","name":"graduated-a-different-subject-restarts","principle":5,"strength":"mechanism","scope":"space.stock","about":"leaving a machine on overnight","proposal":"leave the dust extractor running overnight to clear the shop","positions":[{"citing":"@stock-logged","pull":"against","because":"stock that leaves unlogged is stock the next person plans around and does not find"}]}
+// ── 6. Rapid, low-cost conflict resolution ───────────────────
+{"step":"state","name":"conflict-before","principle":6,"strength":"mechanism"}
+{"step":"check","name":"conflict-surfaced","principle":6,"strength":"mechanism","about":"the far bench overnight","proposal":"leave a jig clamped to the far bench for a three-day glue-up","positions":[{"citing":"@bench-clear","pull":"against","because":"a bench left set up is a bench the next member cannot use"},{"citing":"@long-jobs","pull":"toward","because":"a glue-up that has to be struck every night is a glue-up nobody attempts"}]}
+{"step":"act","at":"2025-07-10","by":"human:felix","op":"accept","a":"@bench-clear","b":"@long-jobs","rationale":"the far bench is the one nobody queues for, and the alternative is that long work stops happening here; revisit when the second bench lands","revisit":"2025-12-28"}
+{"step":"state","name":"conflict-after","principle":6,"strength":"mechanism"}
+// ── 7. Rights to organize not undermined ─────────────────────
+// Upstream ships a newer generation. Adopting it is the community's move,
+// and what this community wrote for itself is not upstream's to take. A
+// commons that was founded rather than forked has no upstream to ship, so
+// this step is not there and principles 2 and 7 have nothing to measure.
+{"step":"act","at":"2025-07-11","by":"human:nadia","op":"adopt","lineage":"makerspace-commons","generation":"g5","source":"https://example.org/makerspace-commons"}
+{"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
+// ── 8. Nested enterprises ────────────────────────────────────
+{"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"space"}
+{"step":"who","name":"nesting-the-inner","principle":8,"strength":"mechanism","scope":"space.laser"}
+// ── entrenchment: a principle costs more than a convention ───
+{"step":"check","name":"entrenchment-amending-a-convention","about":"labelling","proposal":"drop the date from material labels and keep just the name","amends":"@labels","positions":[{"actor":"human:wren","pull":"toward","because":"nobody writes the date and the ones who do write it wrong"}]}
+{"step":"check","name":"entrenchment-amending-a-principle","about":"bench discipline","proposal":"allow a bench to stay set up if a note is left on it","amends":"@bench-clear","positions":[{"actor":"human:wren","pull":"toward","because":"a note is enough for anyone who wants the bench to find you"}]}
+// ── the reversible attribute ─────────────────────────────────
+// Nothing bears on this proposal. Irreversible, that refuses; behind a flag,
+// it does not. The refusal comes from the attribute, not from the wording —
+// which is why both spellings of the same sentence are here.
+{"step":"check","name":"reversible-irreversible-and-unsupported","about":"the tube","proposal":"sell the old laser tube to the shop down the road","reversible":false,"positions":[]}
+{"step":"check","name":"reversible-the-same-behind-a-flag","about":"the tube","proposal":"sell the old laser tube to the shop down the road","reversible":true,"positions":[]}
+// ── a deliberate silence is not a gap ────────────────────────
+{"step":"check","name":"silence-is-not-a-gap","about":"who sweeps at the end of the night","proposal":"put a sweeping rota on the door","positions":[]}
+// ── a draw nobody can steer ──────────────────────────────────
+{"step":"act","name":"a-panel-is-announced","at":"2025-08-22","by":"human:nadia","as":"panel","op":"draw_commit","scope":"space","count":3,"after_ts":1756598400,"rationale":"three people to look at the bench rule for a month"}
+{"step":"act","at":"2025-08-23","by":"human:nadia","op":"draw_secret","commit":"@panel","digest":"922fa10efce14fc99cdc6a3244f19cf98599f21ef08f06a65cf0afcbcc117485"}
+{"step":"act","at":"2025-08-23","by":"human:felix","op":"draw_secret","commit":"@panel","digest":"6a1cb3f4e41fee69f4172554e3ebefe943e44fb507c1ca3a1e32294f026a69d5"}
+{"step":"act","at":"2025-08-23","by":"human:imogen","op":"draw_secret","commit":"@panel","digest":"d594f2bf7ebf7836f5f5b7dc055d119687eeafd54818f0b1cd025a6d81caf2ae"}
+{"step":"act","at":"2025-08-23","by":"human:wren","op":"draw_secret","commit":"@panel","digest":"63d0753f0b1d3b05dc0ef5310809617fb1555c4fa9bc5daca96ccf31ae301dae"}
+{"step":"act","at":"2025-08-23","by":"human:bo","op":"draw_secret","commit":"@panel","digest":"ffdec1da5070999052d84f4f0fed0557564ade490042845edc9efd9a61ae51e1"}
+{"step":"draw","name":"draw-before-anyone-opened-refuses","commit":"@panel"}
+{"step":"clock","name":"draw-past-the-boundary","at":"2025-09-02"}
+{"step":"act","at":"2025-09-02","by":"human:nadia","op":"draw_reveal","commit":"@panel","secret":"harbourside-no-boundary-nadia-panel"}
+{"step":"act","at":"2025-09-02","by":"human:felix","op":"draw_reveal","commit":"@panel","secret":"harbourside-no-boundary-felix-panel"}
+{"step":"act","at":"2025-09-02","by":"human:imogen","op":"draw_reveal","commit":"@panel","secret":"harbourside-no-boundary-imogen-panel"}
+{"step":"act","at":"2025-09-02","by":"human:wren","op":"draw_reveal","commit":"@panel","secret":"harbourside-no-boundary-wren-panel"}
+{"step":"draw","name":"draw-the-panel","commit":"@panel"}

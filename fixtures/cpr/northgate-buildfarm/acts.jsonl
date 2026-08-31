@@ -1,0 +1,71 @@
+// Northgate build farm — generated from `_spine/seed.jsonl.tmpl` and `vocab.json`.
+// DO NOT EDIT. Edit the vocabulary and re-run `scripts/cpr-build.py`.
+//
+// Every institution in this study is seeded from THIS file. A vocabulary
+// names nouns and the SHAPE of the commons — how many people, how many
+// levels, whether it was forked from anything, whether its monitor is a
+// machine or a person. It cannot name a rule, an authority or an outcome,
+// and `transfer_bar.rs` refuses one that tries.
+// ── ancestry (Ostrom 2, 7) ───────────────────────────────────
+{"at":"2025-01-20","by":"human:mairead","op":"adopt","lineage":"shared-infra-canon","generation":"g5","source":"https://example.org/shared-infra-canon"}
+// ── inherited from upstream; `from` names the upstream act ──
+{"at":"2025-01-21","by":"human:mairead","as":"queue-share","op":"assert","text":"No team holds more than a third of the runners for longer than an hour.","from":"can-7ed21a372d"}
+{"at":"2025-01-21","by":"human:mairead","as":"capacity-buys","op":"assert","text":"New capacity is agreed before it is bought, because everyone pays for it.","from":"can-e38a057277"}
+{"at":"2025-01-21","by":"human:mairead","as":"every-team-builds","op":"assert","text":"Every team can submit to the farm without asking anybody.","from":"can-9ef53c240f"}
+// ── written here, for here. The divergence IS the congruence. ──
+{"at":"2025-02-02","by":"human:ilya","as":"runner-images-pinned","op":"assert","text":"A runner image is pinned to a digest and rebuilt, never mutated in place."}
+{"at":"2025-02-02","by":"human:zuri","as":"runner-clean","op":"assert","text":"A runner is returned to its image between jobs."}
+{"at":"2025-02-02","by":"human:paolo","as":"fair-queue","op":"assert","text":"Jobs are served in the order they arrive."}
+{"at":"2025-02-02","by":"human:paolo","as":"release-first","op":"assert","text":"A release build jumps the queue, because a release that waits is an outage that waits."}
+{"at":"2025-02-02","by":"human:mairead","as":"job-labels","op":"assert","text":"A job carries the team that submitted it as a label."}
+// ── which commitments belong to the inner boundary (Ostrom 1, 8) ──
+{"at":"2025-02-05","by":"human:mairead","op":"scoped","commitment":"@runner-images-pinned","scope":"farm.runners"}
+{"at":"2025-02-05","by":"human:mairead","op":"scoped","commitment":"@runner-clean","scope":"farm.runners"}
+{"at":"2025-02-05","by":"human:mairead","op":"scoped","commitment":"@queue-share","scope":"farm.queue"}
+// ── rank: what is entrenched, and what is only a convention ──
+{"at":"2025-02-06","by":"human:mairead","op":"rank","commitment":"@fair-queue","rank":"principle"}
+{"at":"2025-02-06","by":"human:mairead","op":"rank","commitment":"@queue-share","rank":"principle"}
+{"at":"2025-02-06","by":"human:mairead","op":"rank","commitment":"@job-labels","rank":"convention"}
+// ── standing: who holds what (Ostrom 1) ──
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:mairead","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:ilya","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:zuri","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:paolo","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:hanna","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:ravi","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:sena","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:tomi","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:vive","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:wilkes","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:agnes","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:bo","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:cheng","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:dmitri","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:elif","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:fumiko","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:gitte","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:hoa","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:ida","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:jarek","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:kira","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:lore","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:mihai","scope":"farm"}
+{"at":"2025-01-22","by":"human:mairead","op":"grant","holder":"human:nadja","scope":"farm"}
+// The people who actually work the inner resource hold it, and it nests
+// under the level above — Ostrom's eighth principle costing nothing extra.
+{"at":"2025-01-23","by":"human:mairead","op":"grant","holder":"human:ilya","scope":"farm.runners","rationale":"maintains the runner images"}
+{"at":"2025-01-23","by":"human:mairead","op":"grant","holder":"human:zuri","scope":"farm.runners","rationale":"maintains the runner images"}
+// The monitor, and an END DATE on its standing (Ostrom 4). Nobody has to
+// remember to take it away; `canon overdue` says so. Some of these
+// institutions monitor with a machine and some with one of their own
+// people on a rotation — the vocabulary picks, and no mechanism changes.
+{"at":"2025-01-24","by":"human:mairead","as":"monitor-grant","op":"grant","holder":"agent:queuewatch","scope":"farm.runners","horizon":1747699200,"rationale":"reports queue depth and long holds; four months, then we look again"}
+// ── how this community decides (Ostrom 3) ──
+{"at":"2025-01-25","by":"human:mairead","as":"root-policy","op":"policy","text":"One reasoned objection stops a change. Amending something ranked a principle takes the group. Anything we cannot roll back is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"at":"2025-01-25","by":"human:mairead","as":"inner-policy","op":"policy","scope":"farm.runners","text":"Whoever maintains the runner images decides the runners.","rule":{"rule":"subsidiarity"}}
+// The unheld boundary is decided the same way, and nobody has ever been
+// given it. An undefined boundary is not an open one.
+{"at":"2025-01-25","by":"human:mairead","as":"unheld-policy","op":"policy","scope":"storage","text":"Storage is decided by whoever holds it.","rule":{"rule":"subsidiarity"}}
+{"at":"2025-01-25","by":"human:mairead","as":"ladder-policy","op":"policy","scope":"farm.queue","text":"The first time we ask. The second time the group asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
+// ── left unwritten on purpose (the metis floor) ──
+{"at":"2025-02-08","by":"human:mairead","op":"silence","about":"how long a build is allowed to take","rationale":"a number would be set by whoever had the slowest build that quarter, and every team already argues its own case better than a limit would"}
