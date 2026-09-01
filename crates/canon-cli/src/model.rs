@@ -756,7 +756,9 @@ impl Client {
                 // the difference between a number you can attribute to a
                 // model later and one you cannot.
                 if m != self.model {
-                    eprintln!("note: `{}` answered by {m}", self.model);
+                    // `\r\x1b[K` first: this fires under a progress line, and a note
+                    // appended to "extracting 3/24…" is a note nobody can read.
+                    eprintln!("\r\x1b[Knote: `{}` answered by {m}", self.model);
                 }
                 *self.served.borrow_mut() = Some(m.to_string());
             }

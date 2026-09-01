@@ -173,9 +173,8 @@ fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
             Pull::Toward => "supports",
         };
         return format!(
-            "{indent}{actor}  {way}\n{indent}{}because: {}\n",
-            " ".repeat(actor.len() + 2),
-            b.because,
+            "{indent}{actor}  {way}\n{}\n",
+            crate::wrap::hang(&format!("{indent}{}because: ", " ".repeat(actor.len() + 2)), &b.because),
         );
     };
     let status = match &c.status {
@@ -183,14 +182,12 @@ fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
         Status::Superseded { by } => format!("superseded by {by}"),
         Status::Retracted { at } => format!("retracted {}", store::ymd(*at)),
     };
+    let pad = " ".repeat(c.id.as_str().len() + 2);
     format!(
-        "{indent}{}  \"{}\"\n{indent}{}asserted {}, {status}\n{indent}{}because: {}\n",
-        c.id,
-        c.text,
-        " ".repeat(c.id.as_str().len() + 2),
+        "{}\n{indent}{pad}asserted {}, {status}\n{}\n",
+        crate::wrap::hang(&format!("{indent}{}  \"", c.id), &format!("{}\"", c.text)),
         store::ymd(c.asserted_at),
-        " ".repeat(c.id.as_str().len() + 2),
-        b.because,
+        crate::wrap::hang(&format!("{indent}{pad}because: "), &b.because),
     )
 }
 

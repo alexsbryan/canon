@@ -1,0 +1,3 @@
+// No scenario steps. This fixture exists to SEED a canon with the rules a
+// presenter accepted in act 1 of the demo; the governance scenarios live in
+// fixtures/fernwood-commons. `canon replay` requires both files.

@@ -1933,13 +1933,13 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         for s in 0..samples {
             if samples > 1 {
                 eprint!(
-                    "\rextracting {}/{} (reading {}/{samples})…",
+                    "\r\x1b[Kextracting {}/{} (reading {}/{samples})…",
                     chunk.id + 1,
                     chunks.len(),
                     s + 1
                 );
             } else {
-                eprint!("\rextracting {}/{}…", chunk.id + 1, chunks.len());
+                eprint!("\r\x1b[Kextracting {}/{}…", chunk.id + 1, chunks.len());
             }
             let _ = std::io::stderr().flush();
             match extract(&xclient, chunk, profile) {
@@ -1978,7 +1978,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         return 3;
     }
     eprintln!(
-        "\r{} candidate(s), {} dropped for a bad citation",
+        "\r\x1b[K{} candidate(s), {} dropped for a bad citation",
         candidates.len(),
         dropped.len()
     );
@@ -2142,9 +2142,9 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         } else {
             for i in &kept {
                 let c = &candidates[*i];
-                println!("  {:<9} {}", c.kind.label(), c.text);
+                println!("{}", crate::wrap::hang(&format!("  {:<9} ", c.kind.label()), &c.text));
                 if !c.because.is_empty() {
-                    println!("            because: {}", c.because);
+                    println!("{}", crate::wrap::hang("            because: ", &c.because));
                 }
                 println!("            {}", c.source);
             }
@@ -2239,9 +2239,12 @@ fn review(
         println!("\nCandidate {} of {}", n + 1, offered.len());
         // The kind is shown because accepting writes a different act for each
         // one, and "accept" has to mean what the person thought it meant.
-        println!("  {:<9} \"{}\"", c.kind.label(), c.text);
+        println!(
+            "{}",
+            crate::wrap::hang(&format!("  {:<9} \"", c.kind.label()), &format!("{}\"", c.text))
+        );
         if !c.because.is_empty() {
-            println!("        because: {}", c.because);
+            println!("{}", crate::wrap::hang("        because: ", &c.because));
         }
         println!();
         println!("  from {}:", c.source);

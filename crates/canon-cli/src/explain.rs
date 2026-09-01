@@ -18,11 +18,14 @@ pub struct Explanation {
 
 impl Explanation {
     pub fn render(&self, indent: &str) -> String {
-        let mut out = self.headline.clone();
+        // The headline is `<id>  <text>`; wrap the text under itself.
+        let mut out = match self.headline.split_once("  ") {
+            Some((id, text)) => crate::wrap::hang(&format!("{id}  "), text),
+            None => self.headline.clone(),
+        };
         out.push('\n');
         for l in &self.lines {
-            out.push_str(indent);
-            out.push_str(l);
+            out.push_str(&crate::wrap::hang(indent, l));
             out.push('\n');
         }
         out

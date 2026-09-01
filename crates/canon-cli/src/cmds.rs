@@ -227,7 +227,7 @@ pub fn list(args: &[String]) -> i32 {
         return 0;
     }
     for c in &live {
-        println!("{}  {}", c.id, c.text);
+        println!("{}", crate::wrap::hang(&format!("{}  ", c.id), &c.text));
     }
     println!("\n{} live", profile.count(live.len()));
     let carried = st.tolerated().count();

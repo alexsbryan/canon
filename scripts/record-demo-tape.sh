@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# Cut a tape for act 1 of the demo: every reply the endpoint gives, recorded,
+# Cut a tape for act 2 of the demo: every reply the endpoint gives, recorded,
 # so the ingest can be shown as real output with no live risk.
 #
 #   ./scripts/record-demo-tape.sh
