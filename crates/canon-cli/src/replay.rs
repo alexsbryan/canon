@@ -553,6 +553,7 @@ pub fn run(args: &[String]) -> i32 {
             other => return fail(format!("`{other}` is not a rule this verb can force")),
         },
     };
+    let started = std::time::Instant::now();
     let replay = match run_scenario(&seed, &scenario, forced.clone()) {
         Ok(r) => r,
         Err(e) => return fail(e),
@@ -616,6 +617,11 @@ pub fn run(args: &[String]) -> i32 {
         // `--brief` is the whole answer and nothing else. The step-by-step
         // listing below is what you read when you are debugging a fixture,
         // not what you read when you are deciding whether to change a rule.
+        // Without a forced rule the whole answer is the acceptance test: which
+        // of Ostrom's eight principles this history exercised, and how.
+        if has(args, "--brief") && replay.forced.is_none() {
+            print!("{}", render_principles(&replay.steps));
+        }
         for s in &replay.steps {
             if has(args, "--brief") {
                 break;
@@ -640,7 +646,17 @@ pub fn run(args: &[String]) -> i32 {
     };
     let bad = compare(&replay, &expected);
     if bad.is_empty() {
-        println!("\n{} step(s), all as expected", replay.steps.len());
+        println!(
+            "\n{} step(s), all as expected, in {}",
+            replay.steps.len(),
+            elapsed(started.elapsed())
+        );
+        return 0;
+    }
+    // A briefed counterfactual has already said what moved, decision by
+    // decision. Listing the same movements again as field-level mismatches
+    // reads as twenty failures under a line that just said nine changed.
+    if has(args, "--brief") && replay.forced.is_some() {
         return 0;
     }
     for (step, key, want, got) in &bad {
@@ -654,6 +670,59 @@ pub fn run(args: &[String]) -> i32 {
     // but exiting non-zero here would report "what if we decided differently"
     // as a broken fixture.
     i32::from(replay.forced.is_none())
+}
+
+fn elapsed(d: std::time::Duration) -> String {
+    let ms = d.as_secs_f64() * 1000.0;
+    if ms < 1000.0 {
+        format!("{ms:.0} ms")
+    } else {
+        format!("{:.1} s", ms / 1000.0)
+    }
+}
+
+/// The acceptance test, read off a replay: one row per Ostrom principle a
+/// step was tagged with, the strength the fixture claims for it, and how many
+/// steps carry it. Untagged steps are the acts between the decisions and are
+/// counted on the last line rather than listed.
+pub fn render_principles(steps: &[Step]) -> String {
+    const NAMES: [&str; 8] = [
+        "clearly defined boundaries",
+        "congruence with local conditions",
+        "collective-choice arrangements",
+        "monitors accountable to appropriators",
+        "graduated sanctions",
+        "rapid low-cost conflict resolution",
+        "rights to organize not undermined",
+        "nested enterprises",
+    ];
+    let mut rows: Vec<(usize, String)> = (0..8).map(|_| (0, String::new())).collect();
+    for s in steps {
+        let Some(n) = s.principle else { continue };
+        let Some(row) = usize::from(n).checked_sub(1).and_then(|i| rows.get_mut(i)) else {
+            continue;
+        };
+        row.0 += 1;
+        if let Some(m) = &s.strength {
+            row.1 = m.clone();
+        }
+    }
+    let mut out = String::from("Ostrom's eight design principles, over this history\n");
+    for (i, (count, strength)) in rows.iter().enumerate() {
+        let mark = if *count == 0 { "-" } else { strength.as_str() };
+        let steps = match count {
+            0 => String::new(),
+            1 => "1 step".to_string(),
+            n => format!("{n} steps"),
+        };
+        out.push_str(&format!("  {:<2} {:<38} {:<11} {steps}\n", i + 1, NAMES[i], mark));
+    }
+    let cleared = rows.iter().filter(|r| r.0 > 0).count();
+    let untagged = steps.iter().filter(|s| s.principle.is_none()).count();
+    out.push_str(&format!(
+        "\n{cleared} of 8 principles exercised; {untagged} step(s) are the acts in between\n"
+    ));
+    out
 }
 
 fn compact(v: &Value) -> String {

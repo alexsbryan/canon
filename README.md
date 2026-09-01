@@ -354,6 +354,8 @@ figure is worse than none.
 
 ## More
 
+- [One page](./ONE_PAGER.md) — why you'd use it, the ideas that carry it,
+  and exactly where a model is called.
 - [Getting started](./GETTING_STARTED.md) — a house's first hour.
 - `canon --help` is seven verbs. `canon help all` is all of them.
 - [SPEC.md](./SPEC.md) — the file format, CC0. Adopting the format isn't

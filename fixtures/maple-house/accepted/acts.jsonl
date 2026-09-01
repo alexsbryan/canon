@@ -1,0 +1,32 @@
+// Maple House — the accepts, as a seed.
+//
+// WHAT THIS IS. Act 1 of the demo replays a TAPE, and a replay is a
+// measurement: `draft --replay` sets `dry_run` and writes nothing to the
+// canon (draft.rs:1482). So the taped act 1 shows real proposals and leaves
+// acts 2 and 3 with an empty canon, where `check` says "no live rules" and
+// `tensions` says "fewer than two" and neither reaches a model at all.
+//
+// This file is what a presenter accepted when they went through those
+// proposals by hand. Every rule below is COPIED FROM THE TAPE'S OWN
+// CANDIDATE SET, with the citation the model cut for it — so what the room
+// watches act 1 propose is exactly what acts 2 and 3 then answer over.
+// Nothing here was written for the seed. Re-cut it with the tape.
+//
+// Seed dialect: `at`, `by`, an optional label `as`. `canon replay` mints
+// real content-addressed acts. See fixtures/fernwood-commons/acts.jsonl.
+
+// ── the Charter, as founded ──────────────────────────────────
+// Candidates 0, 1, 2 of the tape. Rule `guests-two-nights` is what act 2's
+// "my cousin wants to stay for two weeks" lands on.
+{"at":"2025-09-01","by":"human:maple-house","as":"guests-allowed","op":"assert","text":"Members may host overnight guests in their own private rooms.","source":"maple-house.md:3-8"}
+{"at":"2025-09-01","by":"human:maple-house","as":"guests-two-nights","op":"assert","text":"Any single guest may stay no more than two consecutive nights within any seven-day period.","source":"maple-house.md:3-8"}
+{"at":"2025-09-01","by":"human:maple-house","as":"guests-accompanied","op":"assert","text":"Whenever a guest is in the shared common areas, the hosting member must accompany them.","source":"maple-house.md:3-8"}
+{"at":"2025-09-01","by":"human:maple-house","as":"quiet-eleven","op":"assert","text":"Quiet hours are observed every night from 11:00 PM until 7:00 AM the following morning.","source":"maple-house.md:12-17"}
+
+// ── and then the house changed its mind, twice ───────────────
+// Candidates 26 and 29, cited to decisions LATE in the document. These are
+// what act 3 has to find: the house never withdrew the Charter articles
+// above, so it now holds both. Accept only the early proposals and act 3
+// comes back "no tensions found", which is a dead beat.
+{"at":"2026-02-10","by":"human:maple-house","as":"quiet-ten","op":"assert","text":"Quiet hours begin at 10:00 PM on Sunday through Thursday nights and end at 7:00 AM.","source":"maple-house.md:93-97"}
+{"at":"2026-03-14","by":"human:maple-house","as":"guests-forbidden","op":"assert","text":"Overnight guests are not permitted in the house at any time for any number of nights or in any bedroom; daytime visitors must leave by 10:00 PM.","source":"maple-house.md:109-113"}

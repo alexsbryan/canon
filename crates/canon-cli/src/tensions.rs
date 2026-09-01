@@ -267,7 +267,7 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
     let mut last_err: Option<ModelError> = None;
     for (i, idx) in sets.iter().enumerate() {
         let done = i + 1;
-        eprint!("\rcomparing {done}/{passes}…");
+        eprint!("\r\x1b[Kcomparing {done}/{passes}…");
         let _ = std::io::Write::flush(&mut std::io::stderr());
         // One pass failing is not the canon's. The map step has always
         // recorded a chunk it could not read and kept going; this step threw
@@ -311,7 +311,7 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
         return Err(e);
     }
     eprintln!(
-        "\r{}/{passes} passes done, {} pair(s) proposed",
+        "\r\x1b[K{}/{passes} passes done, {} pair(s) proposed",
         passes - unread.len(),
         out.len()
     );
@@ -469,11 +469,11 @@ pub fn render(canon: &Canon, open: &[Conflict], settled: usize) -> String {
             .unwrap_or_else(|| "(not in this canon)".into())
     };
     for c in open {
-        out.push_str(&format!("  {}  {}\n", c.a, text(&c.a)));
-        out.push_str(&format!("  {}  {}\n", c.b, text(&c.b)));
+        out.push_str(&format!("{}\n", crate::wrap::hang(&format!("  {}  ", c.a), &text(&c.a))));
+        out.push_str(&format!("{}\n", crate::wrap::hang(&format!("  {}  ", c.b), &text(&c.b))));
         if let Disposition::Open { reason } = &c.disposition {
             if !reason.is_empty() {
-                out.push_str(&format!("  why: {reason}\n"));
+                out.push_str(&format!("{}\n", crate::wrap::hang("  why: ", reason)));
             }
         }
         out.push_str(&format!(
