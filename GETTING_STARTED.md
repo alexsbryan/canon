@@ -28,9 +28,12 @@ don't have Rust, `rustup.rs` is a one-line installer.
 ### Pointing it at a model
 
 The reference setup is
-**[Commonwealth](https://github.com/alexsbryan/commonwealth-ai)** on a
-27B-class model. Every accuracy measurement in this repo was taken
-against it:
+**[Commonwealth](https://github.com/alexsbryan/commonwealth-ai)**. Every
+accuracy measurement in this repo was taken against it, and each one names
+the model that served it rather than the alias it was called with: the
+`primary` below answered as a 27B through 2026-08-30 and as a 35B
+mixture-of-experts after, so the alias on its own would not tell you what
+you were reading.
 
 ```sh
 canon config set endpoint http://localhost:9741/v1
