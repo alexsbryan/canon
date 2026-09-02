@@ -11,6 +11,7 @@
 //! Everything else is this crate.
 
 pub mod act;
+pub mod allot;
 pub mod date;
 pub mod draw;
 pub mod fold;
@@ -24,6 +25,7 @@ pub mod scope;
 pub mod standing;
 
 pub use act::{Act, ActKind, FORMAT_VERSION};
+pub use allot::{AdoptedAllocation, Allocation, Allotment, Award, Order, PoolError, Schedule};
 pub use draw::{DrawError, Drawn};
 pub use fold::{
     derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Ruling, Silence,

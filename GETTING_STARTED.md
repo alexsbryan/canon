@@ -274,27 +274,98 @@ canon tensions                                       # which of our rules confli
 
 ## Later: decide how you decide
 
-Worth doing after a few weeks, not on day one. Until you set a policy,
-canon holds no opinion about how many objections stop a thing — it names
-the rule you're up against and stops.
+Worth doing after a few weeks, not on day one. A rule about the hall is
+one thing; who may write it is another; who may change *that* is a third.
+Ostrom found those three tiers in every commons that lasted the centuries,
+and canon keeps them in the same log as the rules themselves.
+
+| tier | what it settles | the act | who may |
+|---|---|---|---|
+| **operational** | bikes against the left wall; quiet after eleven | `canon add "…" --scope house.hall` | anyone — it's a proposal until the scope ratifies it |
+| **collective-choice** | who writes hall rules, and by what count | `canon grant`, `canon ratification set` | whoever holds that scope |
+| **constitutional** | who may change *that* | the same two acts, aimed one scope up | whoever holds the scope above |
+
+Three commands, in the order a house reaches for them:
 
 ```sh
-canon policy show
+canon grant mira house.hall                                # who has a say, and where
+canon ratification set threshold:2/1 --scope house.hall    # what makes a proposal a rule
 canon policy set consent -m "One reasoned objection stops a thing."
 ```
 
-Rules available: `default`, `consent`, `threshold`,
-`supermajority --of 2/3`, `subsidiarity`. The policy is itself a recorded
-act, so you can question it, supersede it and explain it like any other.
+**Ratification** is how a written proposal becomes a rule: `standing`
+(whoever holds the scope writes directly — the default, and what every
+canon did before there was a choice), `joint:a,b` (everyone named),
+`threshold:2/1` (two approving carries, one objecting stops), or
+`consent:7d` (seven days' silence carries it). Set it per scope. The
+deepest one wins, so the kitchen can decide differently from the house
+and neither has to know about the other.
 
-`canon grant` gives someone standing over a scope. `canon who <scope>`
-answers who may decide something without asking a person.
-`canon overdue` lists what's passed a review date you set with
-`canon horizon`.
+**Policy** is the other axis — what `canon check` decides under when a
+proposal runs into a rule: `default`, `consent`, `threshold`,
+`supermajority --of 2/3`, `subsidiarity`. Both are ordinary recorded acts,
+so you can question them, supersede them and ask `canon why`.
+
+Once a ratification rule is set, a write tells you where it stands, and
+`canon approve <id>` / `canon object <id> -m "<why>"` move it:
+
+```text
+can-7e3dfab7d635  Bikes go against the left wall of the hall.
+  PROPOSED, not yet a rule — needs 1 more approval(s) from people who hold house.hall
+```
+
+Four things to know before you lean on it:
+
+- **The narrowest seat counts.** Holding `house` covers the kitchen, but
+  a kitchen rule is ratified by whoever holds `house.kitchen`. Wider
+  standing asks; it doesn't act.
+- **Nothing is judged retroactively.** A proposal is judged under the
+  ratification rule that was in force the day it was written, so
+  tightening the bar today doesn't unmake last year's rules.
+- **An agent may propose and may object; it never ratifies** — not its
+  own proposal, not even holding a seat.
+- **Out of seat is recorded, not applied.** A grant, a policy, a
+  ratification rule, a ruling or an `undo` by somebody without standing
+  over what it touches lands in the log marked `NOT APPLIED`, and
+  `canon list` says how many are sitting there.
+
+### Before you change how you decide, ask what the change would do
+
+```sh
+canon replay                                              # your own record, re-decided
+canon replay --policy consent --brief                     # what consent would have done
+canon replay --policy threshold --objections 2 --brief    # or two objections to stop a thing
+```
+
+No setup, no files. The questions come from what your canon already holds —
+every subject somebody took a position on, and everything the group
+decided — so the answer is about decisions your house really had rather
+than ones somebody invented for the exercise:
+
+```text
+Under `threshold` instead of the rules this canon adopted, 1 of 3 decisions land somewhere else.
+1 would be easier to do.
+
+  EASIER
+    Nothing in the fridge unlabelled after Sunday.
+        not under this policy → act
+```
+
+If the record has nothing in it yet, it says so and names the one act that
+fills it in. If you want to ask better questions than the record can know
+about — a proposal in your own words, who would be doing it, what can't be
+undone — `canon replay --write-scenario questions.jsonl` writes the derived
+ones out to edit, and `--scenario questions.jsonl` uses yours instead.
+
+`canon who <scope>` answers who may decide something without anyone
+having to be asked. `canon overdue` lists what's passed a review date set
+with `canon horizon` — which is also how you give a seat a term.
 
 ## If it gets something wrong
 
 Nothing is destroyed and everything is revertible, including a revert.
+Your own acts are always yours to undo; undoing somebody else's takes
+standing over it, the same as writing it would have.
 
 ```sh
 canon undo <act-id> -m "<why>"
@@ -305,6 +376,13 @@ canon log                          # the raw acts, oldest first
 The whole canon is `.canon/acts.jsonl`, one line per decision. It's
 yours, it diffs, and it greps. If canon vanished tomorrow the file would
 still say what your house decided.
+
+## Common questions
+
+[COOKBOOK.md](./COOKBOOK.md) works through the ones groups actually hit — who
+decides this, how to stop one person rewriting the rules, what to do when
+nothing you have decided covers a situation, what a different rule would have
+done to you, and how an agent fits in. Real commands, real output.
 
 ## The short version
 
@@ -319,6 +397,6 @@ still say what your house decided.
 | find out why | `canon why <id>` |
 | note an open question | `canon question "<question>"` |
 | note a deliberate gap | `canon silence "<subject>" -m "<why>"` |
-| undo anything | `canon undo <act-id> -m "<why>"` |
+| undo anything you wrote | `canon undo <act-id> -m "<why>"` |
 | share | `canon share` |
 | everything else | `canon help all` |

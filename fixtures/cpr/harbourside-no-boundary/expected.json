@@ -41,7 +41,7 @@
     "lineage": "makerspace-commons",
     "generation": "g4",
     "inherited": 3,
-    "local": 5
+    "local": 3
   },
   "collective-choice-under-the-new-rule": {
     "outcome": "supported",
@@ -102,7 +102,7 @@
   "conflict-before": {
     "acts": 36,
     "tolerated": 0,
-    "live": 8
+    "live": 6
   },
   "conflict-surfaced": {
     "outcome": "conflicts",
@@ -116,12 +116,12 @@
   "conflict-after": {
     "acts": 37,
     "tolerated": 1,
-    "live": 8
+    "live": 6
   },
   "organize-the-fork-keeps-what-it-wrote": {
     "generation": "g5",
     "inherited": 3,
-    "local": 5
+    "local": 3
   },
   "nesting-the-outer": {
     "policy": "cautious/entrenched/consent",

@@ -79,7 +79,7 @@ RECORD                                        (no model needed)
   retract <id> -m \"<reason>\"             withdraw one, no replacement
   accept <a> <b> -m \"<reason>\"           carry a contradiction knowingly
   dismiss <a> <b> [-m \"<reason>\"]        not actually a conflict
-  undo <act-id> [-m \"<reason>\"]          revert an act; itself revertible
+  undo <act-id> [-m \"<reason>\"]          revert an act — yours, or one you hold
   question \"<text>\"                      record what the canon does not cover
   open                                   the open questions
   log                                    the raw acts
@@ -93,6 +93,11 @@ GOVERN                                        (no model needed)
   policy show | set <rule> [-m \"...\"]    what this canon decides under
   ratification show | set <rule>         how a proposal becomes a rule, per scope:
                                          standing, joint:a,b, threshold:n/m, consent:Nd
+  allot <scope> --named a,b,c            what this commons has to share
+  allocation set rotation --scope s      how it goes round: --step, --per, --order
+                                         or --from-draw <id> for a lot nobody steers
+  pool <scope> [--at <date>]             whose turn it is. `who` is authority,
+                                         `pool` is appropriation
   position \"<about>\" --against|--toward  a vote, an objection, a second
   decide \"<about>\" --outcome --authority record what the group decided
   rank <id> <rank>                       a principle, not a convention
@@ -104,8 +109,11 @@ GOVERN                                        (no model needed)
   silence \"<subject>\" -m \"<why>\"         unwritten on purpose, not by neglect
   voice [<actor>]                        what someone raised, and what came of it
   leave <scope> [-m \"<question>\"]        step out, and leave the question behind
-  replay <dir> [--policy <rule>]         replay a scenario; --policy asks
-                                         what another rule would have done
+  replay [<dir>] [--policy <rule>]       re-decide this canon\'s own record;
+                                         --policy asks what another rule
+                                         would have done to it
+         [--scenario <f>]                ask your own questions instead
+         [--write-scenario <f>]          write out the derived ones to edit
 
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
@@ -187,6 +195,9 @@ fn main() {
         "scope" => govern::scoped(rest),
         "policy" => govern::policy(rest),
         "ratification" => govern::ratification(rest),
+        "allot" => govern::allot(rest),
+        "allocation" => govern::allocation(rest),
+        "pool" => govern::pool(rest),
         "position" => govern::position(rest),
         "decide" => govern::decide(rest),
         "rank" => govern::rank(rest),
@@ -291,6 +302,9 @@ mod tests {
             "scope",
             "policy",
             "ratification",
+            "allot",
+            "allocation",
+            "pool",
             "position",
             "decide",
             "rank",

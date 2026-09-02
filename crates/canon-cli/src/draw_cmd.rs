@@ -53,7 +53,7 @@ fn fresh_secret() -> Result<String, String> {
     Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
 }
 
-fn resolve_draw(canon: &canon_core::Canon, needle: &str) -> Result<ActId, String> {
+pub(crate) fn resolve_draw(canon: &canon_core::Canon, needle: &str) -> Result<ActId, String> {
     let hits: Vec<&ActId> = canon
         .draws
         .iter()

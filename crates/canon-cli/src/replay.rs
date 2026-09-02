@@ -29,7 +29,9 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use canon_core::{Act, ActId, ActKind, Attributes, Canon, Log, Policy, Position, Pull, Standing};
+use canon_core::{
+    Act, ActId, ActKind, Attributes, Canon, Log, Policy, Position, Pull, Source, Standing,
+};
 use serde_json::{json, Map, Value};
 
 use crate::cmds::{fail, flag, has, positionals};
@@ -97,6 +99,31 @@ pub fn load_seed(raw: &str) -> Result<(Vec<Act>, BTreeMap<String, ActId>), Strin
     Ok((acts, labels))
 }
 
+/// A canon's acts, from whichever dialect the file is written in.
+///
+/// **There is no flag, and that is the point.** A fixture line carries `at`
+/// and `by` because a person typed it; a canon on disk carries `id` and `v`
+/// because `Act::new` minted it. Neither has the other, so the file says
+/// which it is and nobody has to be told. Making a group convert their own
+/// record before they may ask a question of it is exactly the ceremony that
+/// gets a tool put down and not picked up again.
+pub fn load_acts(raw: &str) -> Result<(Vec<Act>, BTreeMap<String, ActId>), String> {
+    let first = raw
+        .lines()
+        .map(str::trim)
+        .find(|l| !l.is_empty() && !l.starts_with("//"));
+    let minted = first.is_some_and(|l| {
+        serde_json::from_str::<Value>(l).is_ok_and(|v| v.get("id").is_some() && v.get("at").is_none())
+    });
+    if !minted {
+        return load_seed(raw);
+    }
+    // Parsed by the one place that owns the format, so a version this build
+    // does not understand is refused here exactly as it is everywhere else.
+    let log = Log::parse(raw).map_err(|e| e.to_string())?;
+    Ok((log.acts().to_vec(), BTreeMap::new()))
+}
+
 // ── the scenario ────────────────────────────────────────────
 
 /// What a step is, and what the world looked like after it.
@@ -137,7 +164,7 @@ pub fn run_scenario(
     scenario: &str,
     override_policy: Option<canon_core::Rule>,
 ) -> Result<Replay, String> {
-    let (mut acts, mut labels) = load_seed(seed)?;
+    let (mut acts, mut labels) = load_acts(seed)?;
     let mut now = acts.iter().map(|a| a.ts_unix).max().unwrap_or(0);
     let mut steps = Vec::new();
 
@@ -619,30 +646,290 @@ fn resolve_expected(v: &Value, labels: &BTreeMap<String, ActId>) -> Value {
     out
 }
 
+// ── a scenario from the record ──────────────────────────────
+
+/// One scenario line, with the keys in reading order.
+///
+/// `serde_json`'s map sorts alphabetically, which puts `step` last and
+/// `positions` in the middle of a line somebody is meant to open and edit.
+/// The order here is the order the fixtures are written in.
+fn step_line(fields: &[(&str, Value)]) -> String {
+    let body: Vec<String> = fields
+        .iter()
+        .map(|(k, v)| format!("{}:{v}", json!(k)))
+        .collect();
+    format!("{{{}}}", body.join(","))
+}
+
+/// A short, url-safe name for a subject, so steps can be told apart.
+fn slug(s: &str) -> String {
+    let mut out = String::new();
+    for c in s.chars().take(48) {
+        if c.is_ascii_alphanumeric() {
+            out.push(c.to_ascii_lowercase());
+        } else if !out.is_empty() && !out.ends_with('-') {
+            out.push('-');
+        }
+    }
+    let t = out.trim_end_matches('-').to_string();
+    if t.is_empty() {
+        "subject".to_string()
+    } else {
+        t
+    }
+}
+
+/// The positions on record about a subject, in the scenario's own dialect.
+fn positions_on(canon: &Canon, about: &str) -> Vec<Value> {
+    canon
+        .positions
+        .iter()
+        .filter(|p| p.about == about)
+        .map(|p| {
+            let mut o = Map::new();
+            match &p.position.source {
+                Source::Commitment(id) => {
+                    o.insert("citing".into(), json!(id.to_string()));
+                }
+                Source::Actor(a) => {
+                    o.insert("actor".into(), json!(a));
+                }
+            }
+            o.insert(
+                "pull".into(),
+                json!(match p.position.pull {
+                    Pull::Toward => "toward",
+                    Pull::Against => "against",
+                }),
+            );
+            o.insert("because".into(), json!(p.position.because));
+            Value::Object(o)
+        })
+        .collect()
+}
+
+/// Which scope a subject sits in, when a position cited a scoped commitment.
+fn scope_of_subject(canon: &Canon, about: &str) -> Option<String> {
+    canon
+        .positions
+        .iter()
+        .filter(|p| p.about == about)
+        .find_map(|p| match &p.position.source {
+            Source::Commitment(id) => canon.scope_of(id).map(ToString::to_string),
+            Source::Actor(_) => None,
+        })
+}
+
+/// What a subject is, in words.
+///
+/// `approve` and `object` file their positions under the PROPOSAL'S ID,
+/// because that is the only handle a vote has. An id is the right key and the
+/// wrong thing to read, so a step keys on the id and proposes the sentence.
+fn subject_text(canon: &Canon, about: &str) -> String {
+    if about.starts_with(canon_core::ID_PREFIX) {
+        if let Some(c) = canon.get(&ActId::from_raw(about)) {
+            return c.text.clone();
+        }
+    }
+    about.to_string()
+}
+
+/// The questions to put to a canon nobody has written questions for.
+///
+/// **This is the difference between a capability and a thing anyone uses.**
+/// The counterfactual is worth having, and nobody is going to hand-write
+/// forty-five steps to get it — a tool that asks for that much setup before
+/// it answers anything is a tool that falls into disrepair. So the questions
+/// come from what the canon already holds: every subject somebody took a
+/// position on, and every adjudication the group recorded. Those are not
+/// hypotheticals. They are the decisions this house actually had, which is
+/// what makes "9 of them would have gone differently" worth reading.
+///
+/// Returns the scenario and how many of its steps are decisions, because a
+/// canon holding neither should be told so plainly rather than handed an
+/// empty table and left to wonder.
+fn derive_scenario(canon: &Canon, now: i64, last: i64) -> (String, usize) {
+    let mut lines: Vec<String> = vec![
+        "// Derived from this canon's own record — nobody wrote this file.".into(),
+        "// Every `check` below is a subject people argued about or the group".into(),
+        "// decided, carrying the positions that are actually on record.".into(),
+        "//".into(),
+        "// `canon replay --write-scenario questions.jsonl` writes it out to edit:".into(),
+        "// put the proposal in your own words, name the `actor` who would be doing".into(),
+        "// it, mark what cannot be undone with \"reversible\": false, drop what does".into(),
+        "// not matter. `canon replay --scenario questions.jsonl` then uses yours.".into(),
+    ];
+
+    // The clock, said out loud — a replay whose answer depends on when it ran
+    // is not a replay, so the day is a step like any other and moving it is
+    // an edit rather than a surprise. Emitted ONLY when today is genuinely
+    // later than the last act. A date truncates to midnight, and midnight on
+    // the day a house wrote its first grants falls BEFORE them: setting the
+    // clock there would report a canon that nobody holds.
+    if let Some(midnight) = canon_core::date::parse_ymd(&canon_core::date::ymd(now)) {
+        if midnight > last {
+            lines.push(step_line(&[
+                ("step", json!("clock")),
+                ("at", json!(canon_core::date::ymd(now))),
+            ]));
+        }
+    }
+
+    // Who holds what — one line per boundary anybody holds. It costs nothing
+    // and it is the picture a group wants beside the decisions.
+    let mut scopes: Vec<String> = canon
+        .grants
+        .iter()
+        .filter(|g| g.held_at(now))
+        .map(|g| g.scope.to_string())
+        .collect();
+    scopes.sort();
+    scopes.dedup();
+    for sc in &scopes {
+        lines.push(step_line(&[
+            ("step", json!("who")),
+            ("name", json!(format!("who-holds-{}", slug(sc)))),
+            ("scope", json!(sc)),
+        ]));
+    }
+
+    // Rulings first, because a `decided` act names who adjudicated — so the
+    // step can also ask whether that person held the thing they ruled on.
+    let subjects: Vec<(String, Option<String>)> = canon
+        .rulings
+        .iter()
+        .map(|r| (r.about.clone(), Some(r.actor.clone())))
+        .chain(canon.positions.iter().map(|p| (p.about.clone(), None)))
+        .collect();
+    let mut seen: Vec<String> = Vec::new();
+    let mut names: Vec<String> = Vec::new();
+    for (about, actor) in subjects {
+        if about.trim().is_empty() || seen.contains(&about) {
+            continue;
+        }
+        seen.push(about.clone());
+        // The record keeps what a subject was CALLED, never a sentence
+        // proposing it. A named subject is its own honest stand-in and a
+        // proposal id resolves to the rule it names; the written-out file is
+        // where better words go.
+        let text = subject_text(canon, &about);
+        let mut name = slug(&text);
+        let mut n = 2;
+        while names.contains(&name) {
+            name = format!("{}-{n}", slug(&text));
+            n += 1;
+        }
+        names.push(name.clone());
+        let mut fields = vec![
+            ("step", json!("check")),
+            ("name", json!(name)),
+            // Keyed on what the positions were filed under, which is what the
+            // graduated ladder counts prior decisions by.
+            ("about", json!(about)),
+            ("proposal", json!(text)),
+        ];
+        if let Some(sc) = scope_of_subject(canon, &about) {
+            fields.push(("scope", json!(sc)));
+        }
+        if let Some(a) = actor {
+            fields.push(("actor", json!(a)));
+        }
+        fields.push(("positions", json!(positions_on(canon, &about))));
+        lines.push(step_line(&fields));
+    }
+    let checks = seen.len();
+    lines.push(step_line(&[
+        ("step", json!("state")),
+        ("name", json!("where-this-leaves-us")),
+    ]));
+    (lines.join("\n") + "\n", checks)
+}
+
 pub fn run(args: &[String]) -> i32 {
     let pos = positionals(args);
-    let Some(dir) = pos.first() else {
-        return fail(
-            "usage: canon replay <fixture-dir> [--policy <rule>] [--brief] \
-             [--out <dir> [--profile <name>]] [--json]",
-        );
+    // **No directory means this canon, here.** The everyday form of this verb
+    // takes no arguments at all. A group that has to assemble a fixture
+    // before it may ask what a different rule would have done to it will
+    // never ask, and the answer is the most useful thing this tool computes.
+    let dir = match pos.first() {
+        Some(d) => std::path::PathBuf::from(d),
+        None => match crate::cmds::dir() {
+            Ok(d) => d,
+            Err(e) => {
+                return fail(format!(
+                    "{e}\n       usage: canon replay [<dir>] [--policy <rule>] [--brief] \
+                     [--scenario <file>] [--write-scenario <file>]\n       \
+                     with no directory it replays the canon you are standing in"
+                ))
+            }
+        },
     };
-    let dir = Path::new(dir);
+    let dir = dir.as_path();
     let read = |name: &str| {
         std::fs::read_to_string(dir.join(name))
             .map_err(|e| format!("reading {}: {e}", dir.join(name).display()))
     };
-    let (seed, scenario) = match (read("acts.jsonl"), read("scenario.jsonl")) {
-        (Ok(a), Ok(b)) => (a, b),
-        (Err(e), _) | (_, Err(e)) => return fail(e),
+    let seed = match read(crate::store::FILE) {
+        Ok(s) => s,
+        Err(e) => return fail(e),
     };
+
+    // Where the questions come from, in order: the file you named, the one
+    // sitting beside the acts, or — the case that decides whether anyone
+    // ever runs this — one derived from the record itself.
+    let (scenario, derived) = match flag(args, "--scenario") {
+        Some(p) => match std::fs::read_to_string(p) {
+            Ok(s) => (s, None),
+            Err(e) => return fail(format!("reading {p}: {e}")),
+        },
+        None => match read("scenario.jsonl") {
+            Ok(s) => (s, None),
+            Err(_) => {
+                let (acts, _) = match load_acts(&seed) {
+                    Ok(v) => v,
+                    Err(e) => return fail(e),
+                };
+                let last = acts.iter().map(|a| a.ts_unix).max().unwrap_or(0);
+                let now = crate::store::now().max(last);
+                let canon = Log::from_acts(acts).derive_at(now);
+                let (text, checks) = derive_scenario(&canon, now, last);
+                (text, Some(checks))
+            }
+        },
+    };
+
+    if let Some(out) = flag(args, "--write-scenario") {
+        if let Err(e) = std::fs::write(out, &scenario) {
+            return fail(format!("writing {out}: {e}"));
+        }
+        let steps = scenario
+            .lines()
+            .filter(|l| !l.trim().is_empty() && !l.trim_start().starts_with("//"))
+            .count();
+        println!("{steps} step(s) written to {out}");
+        println!("edit it, then:  canon replay --scenario {out} --policy consent --brief");
+        return 0;
+    }
+
+    // Absence reported as absence. A canon nobody has recorded a position or
+    // a decision in has nothing to re-decide, and saying "0 of 0 changed"
+    // would look like an answer.
+    if derived == Some(0) {
+        println!("nothing here records what anyone argued about or what the group decided,");
+        println!("so there is nothing to re-decide under another rule. Either act does it:\n");
+        println!("  canon position \"<subject>\" --against -m \"<why>\"");
+        println!("  canon decide \"<subject>\" --outcome conflicts --authority ask-panel\n");
+    }
+
+    // The whole policy vocabulary, not three of it. The rule a group is
+    // weighing is usually the one with a number in it — "what would two
+    // objections have done to us" — and a counterfactual that cannot express
+    // the rule under discussion is a demo.
     let forced = match flag(args, "--policy") {
         None => None,
-        Some(name) => match name {
-            "default" => Some(canon_core::Rule::Default),
-            "consent" => Some(canon_core::Rule::Consent),
-            "subsidiarity" => Some(canon_core::Rule::Subsidiarity),
-            other => return fail(format!("`{other}` is not a rule this verb can force")),
+        Some(name) => match crate::govern::rule_from(args, name) {
+            Ok(r) => Some(r),
+            Err(e) => return fail(e),
         },
     };
     let started = std::time::Instant::now();
@@ -660,10 +947,18 @@ pub fn run(args: &[String]) -> i32 {
             Err(e) => return fail(e),
             Ok(adopted) => {
                 let rows = diverge(&adopted, &replay);
+                // Decisions, not steps. `who` and `state` answer questions
+                // and decide nothing, so counting them would put a
+                // reassuring denominator under a real number.
+                let decisions = adopted
+                    .steps
+                    .iter()
+                    .filter(|s| s.result.get("authority").is_some())
+                    .count();
                 Some(if has(args, "--brief") {
-                    render_divergence_brief(&rows, &rule.name(), adopted.steps.len())
+                    render_divergence_brief(&rows, &rule.name(), decisions)
                 } else {
-                    render_divergence(&rows, &rule.name(), adopted.steps.len())
+                    render_divergence(&rows, &rule.name(), decisions)
                 })
             }
         },
@@ -735,6 +1030,20 @@ pub fn run(args: &[String]) -> i32 {
     // "what would consent have done to the last six months" has nothing to
     // compare against.
     let Ok(raw) = read("expected.json") else {
+        // A derived run says what it just did and what the next question is.
+        // Somebody who typed one word should not have to read the manual to
+        // find out that the interesting flag exists.
+        if let Some(n) = derived {
+            if n > 0 && forced.is_none() && !has(args, "--json") {
+                println!(
+                    "\n{n} decision(s), from what this canon already records, in {}",
+                    elapsed(started.elapsed())
+                );
+                println!("what another rule would have done:");
+                println!("  canon replay --policy consent --brief");
+                println!("  canon replay --policy threshold --objections 2 --brief");
+            }
+        }
         return 0;
     };
     let Ok(Value::Object(expected)) = serde_json::from_str::<Value>(&raw) else {
@@ -909,5 +1218,135 @@ fn compact(v: &Value) -> String {
             .collect::<Vec<_>>()
             .join("  "),
         other => other.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn house() -> (Vec<Act>, Canon, i64) {
+        let ts = 1_700_000_000;
+        let rule = Act::new(
+            ActKind::Assert {
+                text: "Bikes go against the left wall.".into(),
+                from: None,
+                source: None,
+            },
+            ts,
+            "human:sam",
+        );
+        let grant = Act::new(
+            ActKind::Grant {
+                holder: "human:sam".into(),
+                scope: canon_core::Scope::new("house").expect("scope"),
+                horizon: None,
+                rationale: String::new(),
+            },
+            ts,
+            "human:sam",
+        );
+        let against = Act::new(
+            ActKind::Position {
+                about: rule.id.to_string(),
+                citing: None,
+                pull: Pull::Against,
+                because: "the hall is too narrow for them".into(),
+            },
+            ts + 10,
+            "human:dana",
+        );
+        let acts = vec![rule, grant, against];
+        let canon = Log::from_acts(acts.clone()).derive_at(ts + 10);
+        (acts, canon, ts + 10)
+    }
+
+    #[test]
+    fn a_canon_on_disk_and_a_fixture_are_both_read_with_no_flag() {
+        // Making somebody convert their own record before they may ask a
+        // question of it is the ceremony that gets a tool put down.
+        let (acts, _, _) = house();
+        let minted = Log::from_acts(acts.clone()).render();
+        let (got, labels) = load_acts(&minted).expect("minted acts");
+        assert_eq!(got.len(), acts.len());
+        assert!(labels.is_empty(), "minted acts carry ids, never labels");
+
+        let seed = r#"{"at":"2026-01-01","by":"human:sam","as":"quiet","op":"assert","text":"Quiet after eleven."}"#;
+        let (got, labels) = load_acts(seed).expect("seed dialect");
+        assert_eq!(got.len(), 1);
+        assert_eq!(labels.len(), 1, "and the label still resolves");
+    }
+
+    #[test]
+    fn a_derived_scenario_asks_about_what_people_actually_argued_over() {
+        let (acts, canon, last) = house();
+        let (text, checks) = derive_scenario(&canon, last, last);
+        assert_eq!(checks, 1, "one subject anybody took a position on");
+        // `approve` and `object` file under the proposal's ID. The step keys
+        // on the id — the ladder counts prior decisions by it — and reads as
+        // the rule.
+        assert!(
+            text.contains(r#""proposal":"Bikes go against the left wall.""#),
+            "{text}"
+        );
+        assert!(
+            text.contains(r#""name":"bikes-go-against-the-left-wall""#),
+            "{text}"
+        );
+        assert!(text.contains(r#""step":"who""#), "standing comes for free");
+        assert!(
+            text.contains("the hall is too narrow for them"),
+            "the recorded reason travels with it"
+        );
+
+        // And it runs, which is the whole point of deriving it.
+        let run = run_scenario(&Log::from_acts(acts).render(), &text, None).expect("replays");
+        let decided = run
+            .steps
+            .iter()
+            .find(|s| s.name == "bikes-go-against-the-left-wall")
+            .expect("the derived decision");
+        assert_eq!(decided.result["outcome"], json!("conflicts"));
+    }
+
+    #[test]
+    fn the_derived_clock_never_lands_before_the_last_act() {
+        // A date truncates to midnight, and midnight on the day a house wrote
+        // its first grants falls BEFORE them. A clock set there reports a
+        // canon nobody holds, which is a lie about standing, not a rounding.
+        let (acts, canon, last) = house();
+        let (text, _) = derive_scenario(&canon, last, last);
+        assert!(!text.contains(r#""step":"clock""#), "{text}");
+
+        let run = run_scenario(&Log::from_acts(acts).render(), &text, None).expect("replays");
+        let who = run
+            .steps
+            .iter()
+            .find(|s| s.name.starts_with("who-holds"))
+            .expect("a who step");
+        assert_eq!(
+            who.result["holders"],
+            json!(["human:sam"]),
+            "standing is held at the clock the derivation chose"
+        );
+    }
+
+    #[test]
+    fn a_canon_that_records_no_argument_derives_no_decision() {
+        // Reported as absence rather than answered with `0 of 0 changed`,
+        // which would read like a finding.
+        let ts = 1_700_000_000;
+        let a = Act::new(
+            ActKind::Assert {
+                text: "Quiet after eleven.".into(),
+                from: None,
+                source: None,
+            },
+            ts,
+            "human:sam",
+        );
+        let canon = Log::from_acts(vec![a]).derive_at(ts);
+        let (_, checks) = derive_scenario(&canon, ts, ts);
+        assert_eq!(checks, 0);
     }
 }

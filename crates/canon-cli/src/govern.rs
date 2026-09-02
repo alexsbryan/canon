@@ -17,7 +17,7 @@ use crate::store;
 /// produce the same rule. Two spellings of one policy would be two policies
 /// as far as `policy_for` is concerned, and the ledger would carry whichever
 /// order somebody typed.
-fn rule_from(args: &[String], base: &str) -> Result<Rule, String> {
+pub(crate) fn rule_from(args: &[String], base: &str) -> Result<Rule, String> {
     let mut rule = match base {
         "default" => Rule::Default,
         "consent" => Rule::Consent,
@@ -292,6 +292,258 @@ pub fn ratification(args: &[String]) -> i32 {
             "unknown ratification command `{other}` — expected set or show"
         )),
     }
+}
+
+// ── canon allot / allocation / pool ─────────────────────────
+
+/// `1d`, `12h`, `90m`, `3600s` — a duration, not a calendar period.
+///
+/// A rotation counted in seconds from its own adoption needs no timezone, no
+/// leap rule and no agreement about when a week starts. Two readers on two
+/// continents compute the same turn.
+fn every(raw: &str) -> Result<i64, String> {
+    let raw = raw.trim();
+    let (n, mult) = match raw.chars().last() {
+        Some('d') => (&raw[..raw.len() - 1], 86_400),
+        Some('h') => (&raw[..raw.len() - 1], 3_600),
+        Some('m') => (&raw[..raw.len() - 1], 60),
+        Some('s') => (&raw[..raw.len() - 1], 1),
+        _ => (raw, 86_400),
+    };
+    n.parse::<i64>()
+        .map_err(|_| format!("`{raw}` is not a period — try 1d, 12h, 90m"))
+        .and_then(|v| {
+            if v > 0 {
+                Ok(v * mult)
+            } else {
+                Err("a period has to be longer than nothing".into())
+            }
+        })
+}
+
+pub fn allot(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(raw) = pos.first() else {
+        return fail(
+            "usage: canon allot <scope> --named a,b,c | --count <n> [--unit <noun>] [-m \"<what it is>\"]",
+        );
+    };
+    let Some(scope) = Scope::new(raw) else {
+        return fail(format!("`{raw}` is not a scope"));
+    };
+    let unit = flag(args, "--unit").unwrap_or("turn").to_string();
+    let units: Vec<String> = match (flag(args, "--named"), flag(args, "--count")) {
+        (Some(_), Some(_)) => {
+            return fail("--named and --count say the same thing two ways; pick one")
+        }
+        (Some(list), None) => list
+            .split(',')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string)
+            .collect(),
+        (None, Some(n)) => match n.parse::<usize>() {
+            Ok(n) if n > 0 => (1..=n).map(|i| i.to_string()).collect(),
+            _ => return fail("--count takes a number above zero"),
+        },
+        (None, None) => return fail("a pool needs --named a,b,c or --count <n>"),
+    };
+    if units.is_empty() {
+        return fail("--named needs at least one unit");
+    }
+    let (d, _, _) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let own = flag(args, "-m").filter(|m| !m.trim().is_empty());
+    let text = own.map_or_else(
+        || format!("{} {unit}(s) in {scope}.", units.len()),
+        str::to_string,
+    );
+    match write(
+        &d,
+        ActKind::Allot {
+            text: text.clone(),
+            unit: unit.clone(),
+            units: units.clone(),
+            scope: scope.clone(),
+        },
+    ) {
+        Ok(act) => {
+            println!("{}  {} {unit}(s) in {scope}", act.id, units.len());
+            println!("  {text}");
+            println!("  {}", units.join(", "));
+            let code = crate::cmds::report_governed(&d, &act.id);
+            if code == 0 {
+                println!("\n  now say how they are shared:  canon allocation set rotation --scope {scope}");
+            }
+            code
+        }
+        Err(e) => fail(e),
+    }
+}
+
+pub fn allocation(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    match pos.first().copied() {
+        Some("set") => {
+            let base = pos.get(1).copied().unwrap_or("rotation");
+            if base != "rotation" {
+                return fail(format!(
+                    "unknown allocation rule `{base}` — this build ships rotation"
+                ));
+            }
+            let scope = match scope_from(args) {
+                Ok(Some(s)) => s,
+                Ok(None) => return fail("an allocation rule needs --scope <scope>"),
+                Err(e) => return fail(e),
+            };
+            // Where the order comes from. The draw's contribution is its
+            // SEED, not its seats: ordering everyone is a different question
+            // from selecting a few, asked of the same unsteerable number.
+            let order = match (flag(args, "--order"), flag(args, "--from-draw")) {
+                (Some(_), Some(_)) => {
+                    return fail("--order and --from-draw are two answers to one question")
+                }
+                (Some(list), None) => canon_core::Order::Given {
+                    actors: list
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .map(str::to_string)
+                        .collect(),
+                },
+                // A draw's commit is not a commitment, so it resolves through
+                // the draw's own lookup rather than the commitment one.
+                (None, Some(id)) => {
+                    let (_, _, canon) = match load() {
+                        Ok(v) => v,
+                        Err(e) => return fail(e),
+                    };
+                    match crate::draw_cmd::resolve_draw(&canon, id) {
+                        Ok(commit) => canon_core::Order::FromDraw { commit },
+                        Err(e) => return fail(e),
+                    }
+                }
+                (None, None) => canon_core::Order::Holders,
+            };
+            let step = match flag(args, "--step").map(str::parse::<i64>) {
+                None => 1,
+                Some(Ok(n)) => n,
+                Some(Err(_)) => return fail("--step takes a whole number; its sign is the direction"),
+            };
+            let per = match every(flag(args, "--per").unwrap_or("1d")) {
+                Ok(p) => p,
+                Err(e) => return fail(e),
+            };
+            let rule = canon_core::Allocation::Rotation { order, step, per };
+            let (d, _, _) = match load() {
+                Ok(v) => v,
+                Err(e) => return fail(e),
+            };
+            let own = flag(args, "-m").filter(|m| !m.trim().is_empty());
+            let text = own.map_or_else(|| rule.prose(), str::to_string);
+            match write(
+                &d,
+                ActKind::Allocation {
+                    text: text.clone(),
+                    rule: rule.clone(),
+                    scope: scope.clone(),
+                },
+            ) {
+                Ok(act) => {
+                    println!("{}  {}", act.id, rule.name());
+                    println!("  {text}");
+                    println!("  shares {scope} and everything under it");
+                    let code = crate::cmds::report_governed(&d, &act.id);
+                    if code == 0 {
+                        println!("\n  whose turn is it:  canon pool {scope}");
+                    }
+                    code
+                }
+                Err(e) => fail(e),
+            }
+        }
+        Some("show") | None => {
+            let (_, _, canon) = match load() {
+                Ok(v) => v,
+                Err(e) => return fail(e),
+            };
+            if canon.allocations.is_empty() {
+                println!("no allocation rule adopted; nothing here is shared out by rule.");
+                println!("  adopt one:  canon allocation set rotation --scope <scope>");
+                return 0;
+            }
+            for a in &canon.allocations {
+                println!("{}  {}  over {}", a.act, a.rule.name(), a.scope);
+                println!("  {}", a.text);
+                println!("  adopted {} by {}", store::ymd(a.at), a.actor);
+            }
+            0
+        }
+        Some(other) => fail(format!(
+            "unknown allocation command `{other}` — expected set or show"
+        )),
+    }
+}
+
+/// Whose turn it is. The counterpart to `who`: **`who` is authority, `pool`
+/// is appropriation.**
+pub fn pool(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(raw) = pos.first() else {
+        return fail("usage: canon pool <scope> [--at YYYY-MM-DD]");
+    };
+    let Some(scope) = Scope::new(raw) else {
+        return fail(format!("`{raw}` is not a scope"));
+    };
+    let (_, _, canon) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let at = match flag(args, "--at") {
+        None => store::now(),
+        Some(d) => match canon_core::date::parse_ymd(d) {
+            Some(ts) => ts,
+            None => return fail(format!("`{d}` is not a date")),
+        },
+    };
+    let schedule = match canon.pool_at(&scope, at) {
+        Ok(s) => s,
+        Err(e) => return fail(e),
+    };
+    if has(args, "--json") {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&schedule).unwrap_or_default()
+        );
+        return 0;
+    }
+    println!("{} — turn {} under {}", scope, schedule.period, schedule.rule);
+    println!();
+    let width = schedule
+        .awards
+        .iter()
+        .map(|a| a.unit.chars().count())
+        .max()
+        .unwrap_or(0);
+    for a in &schedule.awards {
+        println!("  {:<width$}  {}", a.unit, a.actor);
+    }
+    if !schedule.free.is_empty() {
+        println!("\n  free: {}", schedule.free.join(", "));
+    }
+    // A pool too small for its community is a finding about the commons, not
+    // an empty row to leave out.
+    if !schedule.idle.is_empty() {
+        println!(
+            "\n  {} holder(s) have no {} this turn: {}",
+            schedule.idle.len(),
+            schedule.unit,
+            schedule.idle.join(", ")
+        );
+    }
+    0
 }
 
 // ── canon decide ────────────────────────────────────────────

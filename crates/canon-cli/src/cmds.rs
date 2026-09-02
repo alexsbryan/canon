@@ -51,8 +51,17 @@ const VALUED: &[&str] = &[
     "--replay",
     "--revisit",
     "--samples",
+    "--scenario",
     "--scope",
+    "--named",
+    "--unit",
+    "--order",
+    "--from-draw",
+    "--step",
+    "--per",
+    "--at",
     "--since",
+    "--write-scenario",
 ];
 
 pub fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
@@ -631,9 +640,14 @@ pub fn undo(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(_) => {
-            println!("reverted {act_id} (itself revertible)");
-            0
+        Ok(a) => {
+            // Deleting somebody else's act takes standing over it, the same
+            // as retracting one. Say which it was before claiming an effect.
+            let refused = report_governed(&d, &a.id);
+            if refused == 0 {
+                println!("reverted {act_id} (itself revertible)");
+            }
+            refused
         }
         Err(e) => fail(e),
     }
@@ -724,6 +738,12 @@ pub fn log(args: &[String]) -> i32 {
                 Some(sc) => format!("ratify     {} over {sc}", rule.name()),
                 None => format!("ratify     {}", rule.name()),
             },
+            ActKind::Allot { unit, units, scope, .. } => {
+                format!("allot      {} {unit}(s) in {scope}", units.len())
+            }
+            ActKind::Allocation { rule, scope, .. } => {
+                format!("allocation {} over {scope}", rule.name())
+            }
             ActKind::Decided {
                 about, authority, ..
             } => format!("decided    {about} -> {authority}"),
