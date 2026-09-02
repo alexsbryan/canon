@@ -193,30 +193,7 @@ on and everything the group decided. The whole policy vocabulary can be
 forced, so the rule you are actually weighing — `--policy threshold
 --objections 2` — is one you can ask about.
 
-### The generality test is fourteen commons at once
-
-Two fixtures show the principles are reachable, not that they're
-*general*, and general is the whole bet. So: [**the CPR transfer
-study**](./STUDY.md). Fourteen institutions — a makerspace's tools, a
-coliving boiler, a monorepo, shared CI, a garden standpipe, a forum's
-attention, and three of Ostrom's own cases as a control — all built from
-one 104-line spine. Four of them are ablations that remove one use of one
-primitive and name in advance which principles they expect to lose; they
-go red exactly there, which is what makes the other ten worth anything.
-
-```sh
-./scripts/cpr-sweep.sh      # the whole study, no endpoint, ~3 seconds
-```
-
-Then the harder half, which needs a model: point canon at a real house's
-real charter, cold. On a 27B-class local model it reached seven of the
-eight principles the document carries, in its own words — including
-*"Recorded decisions amend or extend the Charter"*, which is Ostrom's
-seventh, unprompted. STUDY.md is explicit about [what neither leg
-establishes](./STUDY.md#what-the-two-legs-together-do-and-do-not-say),
-starting with the fact that I chose the shapes.
-
-### The cheeky one is the United States
+### What about the USA?
 
 `fixtures/founding/` is the Declaration, the Articles of Confederation and
 the Constitution with all twenty-seven amendments — 91 sections, 12,672
