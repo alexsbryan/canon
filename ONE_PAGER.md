@@ -41,9 +41,10 @@ yours. That the record can't be rewritten and a verdict must cite something
 real: not.
 
 **4. Every model run is a tape.** Real replies, recorded, replayed through the
-same pipeline. Every number names its model. It found 9 of 11 supersessions in
-the U.S. founding documents. We removed the fact each one turns on and asked
-again. Five dropped. Four didn't. We published both.
+same pipeline. Every number names the model that produced it, never the alias
+it was called with. On `Qwen3.6-35B-A3B-UD-MTP-IQ4_NL` it found 9 of 11
+supersessions in the U.S. founding documents. We removed the fact each one
+turns on and asked again. Five dropped. Four didn't. We published both.
 
 ## Where the model is, exactly
 

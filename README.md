@@ -26,6 +26,11 @@ structures. *What would a different rule have done to us?* is a question
 with an answer. [Skip to the experiments](#can-software-hold-governance)
 if that's what you came for.
 
+This project is governed that way too. `.canon/` is committed, and the
+rules this repository runs on are held in the tool's own format — the
+argument had better survive its author using it. [How that
+works](#contributing).
+
 ## Point it at the mess
 
 Don't tidy anything first. There's no format list — anything under that
@@ -202,8 +207,11 @@ under each amendment naming what it superseded, and `build.py` parses
 those out of the same HTML the corpus is built from. Out falls eleven
 supersessions nobody planted.
 
-Shown the two commitments alone, on a 35B local model, canon finds **9 of
-the 11** and calls none of the four testable decoys a conflict. **Then we
+Shown the two commitments alone, canon finds **9 of the 11** and calls
+none of the four testable decoys a conflict — on
+`Qwen3.6-35B-A3B-UD-MTP-IQ4_NL`, served from `http://localhost:9741/v1`.
+The alias that endpoint answers to moved from a 27B on 2026-08-30, so the
+run is named by what actually served it rather than by what it was called. **Then we
 checked whether it was reading or remembering** — every model has read the
 Constitution. We took the nine, removed the fact each contradiction turns
 on, and asked again. Five dropped, as a reader should. **Four survived the
