@@ -1,0 +1,88 @@
+name: Fixture proposal (a record worth testing against)
+description: Propose a body of rules that canon should be measured against.
+labels: ["area: fixtures", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Fixtures are open for pull requests — if you can build it, send it
+        straight to a PR and skip this form. See
+        [the fastest way in](https://github.com/alexsbryan/canon/blob/main/CONTRIBUTING.md#the-fastest-way-in).
+
+
+        Use this form when you want a fixture to exist but would rather not
+        build it yourself, or when you're unsure whether the source can be
+        vendored at all.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Which kind
+      description: >
+        A worked canon replays deterministically with no endpoint and tests
+        the decision layer. A scored corpus needs an endpoint to produce a
+        run, none to score one, and tests ingest.
+      options:
+        - "A worked canon — a record and the questions to ask of it"
+        - "A scored corpus — a document with known tensions in it"
+        - "Not sure"
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: What's the source?
+      description: >
+        Name it and link it. A charter, a set of bylaws, a municipal code, a
+        constitution, a chat export, a co-op's handbook.
+      placeholder: e.g. the Articles of Confederation
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What would it catch that the current fixtures don't?
+      description: >
+        This is the most useful part of the form. `fixtures/maple-house` is a
+        hand-written charter, `fixtures/des-moines-noise` is municipal code,
+        `fixtures/founding` is the US founding documents, and
+        `fixtures/fernwood-commons` is a worked house. A fourth of the same
+        shape adds less than a first of a different one.
+    validations:
+      required: true
+  - type: textarea
+    id: truth
+    attributes:
+      label: Where would the answer key come from?
+      description: >
+        The strongest fixtures don't have a hand-written one.
+        `fixtures/founding` works because the National Archives prints a note
+        under each amendment naming what it superseded, so `build.py` parses
+        eleven supersessions that nobody planted. A key written by whoever
+        wanted the number is worth much less than one that was already there.
+    validations:
+      required: true
+  - type: dropdown
+    id: redistribution
+    attributes:
+      label: Can the source be vendored into this repository?
+      description: >
+        Best guess is fine. A standalone `git clone` has to work, so a
+        fixture is copied in rather than fetched — which means the license
+        has to permit that.
+      options:
+        - "Yes — public domain, CC0, CC-BY, or similar"
+        - "Readable but not redistributable"
+        - "No / unsure"
+    validations:
+      required: true
+  - type: input
+    id: size
+    attributes:
+      label: Rough size
+      placeholder: e.g. ~12,000 words, 91 sections
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: This is a source I have the right to point at, and I'm not asking anyone to vendor something they can't

@@ -1,0 +1,150 @@
+# CI for canon — two crates, no native dependencies, a suite that runs in
+# about six seconds.
+#
+# The gate policy here is deliberately the opposite of a large workspace's.
+# There is no ratchet, no baseline that may only shrink, and no advisory
+# tier: clippy is `-D warnings` and stays at zero, because a tree this size
+# can be held there and a warning count is a debt that only ever grows.
+#
+# What CI is NOT is the primary gate. `scripts/pre-push.sh` runs this exact
+# set locally in about ten seconds, which is cheap enough that there is no
+# reason to skip it. CI's job is to confirm it on a clean checkout and to
+# gate contributions from machines we don't control.
+#
+# One thing is deliberately not gated here: ingest accuracy. It needs an
+# endpoint and a model whose numbers move between runs, and a gate that goes
+# red for the weather teaches people to ignore gates. That is a recorded
+# silence in this project's own canon, not an oversight —
+# `canon check --about "an ingest-accuracy gate in CI"` says so.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # No-op until a merge queue is enabled in repo settings. Landing the
+  # trigger now makes enabling one a settings flip rather than a workflow PR.
+  merge_group:
+
+# Cancel superseded runs of the same ref, main included. The newest run on a
+# ref writes the cache anyway; only the already-obsolete ones get killed.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # This repository commits a great deal of narrative prose — README,
+  # PRIMITIVES, DEMO_PLAN, STUDY and COOKBOOK are edited constantly — and
+  # none of it can break `cargo test`. One ~15s job decides which gates the
+  # diff can actually fail.
+  #
+  # Deliberately NOT workflow-level `paths-ignore`: that suppresses the whole
+  # workflow including `ci-ok`, which would leave a required check
+  # permanently "expected" once branch protection is on. A skipped job behind
+  # an always-running aggregator does not have that failure mode.
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - '**/*.rs'
+              - '**/Cargo.toml'
+              - 'Cargo.lock'
+              - 'rust-toolchain.toml'
+              - 'rustfmt.toml'
+              - '.github/workflows/ci.yml'
+            docs:
+              - '**/*.md'
+              - 'scripts/docs-gate.sh'
+              - '.github/workflows/ci.yml'
+
+  fmt:
+    name: Format
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # rust-toolchain.toml pins the version and the components, so the
+      # formatter here is the same one your editor runs.
+      - run: cargo fmt --all --check
+
+  # No Rust build, so this stays a ~20-second job. It checks that every
+  # repository path the narrative documents link to still resolves — a map
+  # that is wrong about where things are is worse than no map, and this
+  # tree's documents cite each other heavily.
+  docs:
+    name: Docs (links resolve)
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: ./scripts/docs-gate.sh
+
+  test:
+    name: Build + Test
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # Only main writes the shared cache; PR runs read it. Keeps a fork's
+          # branch from evicting the entry every other push.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # Before the tests, because a warning is faster to read than a failure
+      # and this is the check most likely to be what a contributor tripped on.
+      - name: Clippy (no warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+      # The six `#[ignore]`d tests need a model endpoint and are not run here
+      # (see the header). This proves the shipped binary works on a clean
+      # checkout against a fixture that needs no endpoint at all: if this
+      # fails, the split between extraction and decision has been broken.
+      - name: Replay a worked canon with no model
+        run: |
+          cargo build --release
+          ./target/release/canon replay fixtures/fernwood-commons --brief
+
+  # The one required check. Aggregates the rest so branch protection has a
+  # single stable name to gate on, and so a SKIPPED job (the paths filter
+  # doing its job) is not mistaken for a failed one.
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [changes, fmt, docs, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify nothing failed or was cancelled
+        run: |
+          results='${{ join(needs.*.result, ' ') }}'
+          echo "job results: $results"
+          for r in $results; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "::error::a required job reported '$r'"; exit 1 ;;
+            esac
+          done
+          echo "all green"

@@ -1,0 +1,8 @@
+# Deliberately stock defaults. This file exists so formatting config has
+# exactly one home, and so a bare `rustfmt` outside cargo picks the same
+# edition `cargo fmt` infers from the manifest.
+#
+# The toolchain is pinned in rust-toolchain.toml, which is what actually
+# keeps formatting stable — a rustfmt from a different release can reflow
+# code that a pinned one leaves alone.
+edition = "2021"

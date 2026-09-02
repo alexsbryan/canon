@@ -1,0 +1,104 @@
+# CLA Assistant — gate PRs on a signed Contributor License Agreement.
+#
+# On every PR (and when someone comments the sign phrase), the action checks
+# whether each PR author has signed the agreement in `CLA.md`. If not it
+# posts a comment; the author replies with the exact phrase below and the
+# action records the signature (GitHub id + PR + timestamp) into a JSON file
+# on a dedicated `cla-signatures` branch. A signed author sails through on
+# every future PR. See CONTRIBUTING.md → Licensing.
+#
+# ─────────────────────────────────────────────────────────────────────
+# SETUP REQUIRED BEFORE THE FIRST PR — the failure mode is opaque
+# ─────────────────────────────────────────────────────────────────────
+#
+# The `cla-signatures` branch MUST ALREADY EXIST, seeded with the signatures
+# file. The action stores signatures through the GitHub Contents API, which
+# creates FILES but never BRANCHES, so a missing branch 404s and every PR
+# fails with:
+#
+#   Error occurred when creating the signed contributors file:
+#     Branch cla-signatures not found.
+#   Error: Committers of pull request N have to sign the CLA
+#
+# That second line lands even when the PR's only author is on the allowlist
+# below — the action throws it unconditionally on the create-the-file path,
+# before any signed/not-signed check runs. The file is seeded too, not just
+# the branch, because that same path would otherwise fail the FIRST run.
+#
+# Create it once, from a clean checkout:
+#
+#   git checkout --orphan cla-signatures
+#   git rm -rf . >/dev/null
+#   mkdir -p signatures/version1
+#   echo '{"signedContributors": []}' > signatures/version1/cla.json
+#   git add signatures && git commit -m "chore(cla): seed the signature store"
+#   git push -u origin cla-signatures
+#   git checkout main
+#
+# Do NOT protect that branch — the action commits to it directly. To revoke
+# every signature (e.g. the CLA text changes materially), reset the array to
+# `[]`; everyone re-signs on their next PR.
+#
+# `permissions: contents: write` below is the setting that actually matters:
+# with the store in THIS repo, every read and write goes through
+# GITHUB_TOKEN. No PAT is needed unless the store moves to another repo.
+#
+# Pinned at v2.6.1, the newest release. The "Node 20 is being deprecated"
+# line on every run comes from the action's own runner declaration; there is
+# nothing to bump to. It is a warning, not the failure — but when GitHub
+# drops node20 this action stops working and has to be replaced.
+
+name: CLA Assistant
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA Assistant
+        if: >-
+          (github.event.comment.body == 'recheck' ||
+           github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') ||
+          github.event_name == 'pull_request_target'
+        uses: contributor-assistant/github-action@v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-signatures: 'signatures/version1/cla.json'
+          path-to-document: 'https://github.com/alexsbryan/canon/blob/main/CLA.md'
+          branch: 'cla-signatures'
+          # People and bots exempt from signing: the maintainer and automation.
+          allowlist: alexsbryan,dependabot[bot],github-actions[bot]
+          # Keep this phrase in sync with the `if:` condition above and the
+          # wording in CONTRIBUTING.md.
+          custom-pr-sign-comment: 'I have read the CLA Document and I hereby sign the CLA'
+          custom-notsigned-prcomment: >-
+            Thanks for the pull request. Before it can be merged we need you to
+            sign the [Contributor License Agreement](https://github.com/alexsbryan/canon/blob/main/CLA.md).
+            You keep your copyright; the project stays open source, and the
+            record format stays CC0. It takes one reply and covers all your
+            future contributions.
+
+
+            **To sign, comment on this PR with exactly:**
+
+
+            > I have read the CLA Document and I hereby sign the CLA
+
+
+            Contributing on behalf of a company? Have it sign the Entity
+            agreement in the same document instead. Already signed and still
+            seeing this? Comment `recheck`.
+          custom-allsigned-prcomment: >-
+            All contributors have signed the CLA. Thank you.

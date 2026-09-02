@@ -1,0 +1,56 @@
+name: Feature request or idea
+description: Suggest something new, or a change to how something works.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Before you write: `canon open` prints what this project has decided
+        it does *not* yet have an answer for, and three things are recorded
+        as decided-against on purpose — a plugin system for ops, a
+        stale-issue bot, and an ingest-accuracy gate in CI. Each carries its
+        reason in `.canon/acts.jsonl`. Arguing with one of those is welcome;
+        you'd just be arguing with a written-down position instead of
+        guessing at one.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: >
+        Describe the need, not only the solution. What is hard or impossible
+        today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+      description: The change you have in mind, if any. Rough is fine.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you've tried or considered
+      description: Workarounds you're using now, or other approaches you weighed.
+  - type: dropdown
+    id: shape
+    attributes:
+      label: Does this need a model?
+      description: >
+        Most of the tool is pure — the ledger, standing, scopes, ratification
+        and replay call nothing. Something that needs inference is a
+        different kind of change, and a different kind of risk.
+      options:
+        - "No — it's the record, governance, or replay"
+        - "Yes — it needs a model to work"
+        - "Not sure"
+    validations:
+      required: true
+  - type: checkboxes
+    id: fit
+    attributes:
+      label: Fit
+      description: Optional, but it helps to know the shape.
+      options:
+        - label: This keeps working with no account, no server, and nothing leaving the machine
+        - label: This doesn't ask anyone to accept a rule they haven't read
+        - label: This is a new op in the record format (if so, see `adequacy_bar` — the census is the work)
