@@ -18,6 +18,11 @@ pub enum Status {
     Active,
     Superseded { by: ActId },
     Retracted { at: i64 },
+    /// Written, and not yet a rule: the scope's ratification rule has not
+    /// been met. See [`crate::ratify`]. `needs` says what would meet it.
+    Proposed { needs: String },
+    /// Refused by a holder of the scope. `why` quotes them.
+    Refused { at: i64, by: String, why: String },
 }
 
 /// A commitment as it stands now.
@@ -237,6 +242,15 @@ pub struct Canon {
     /// Which commitments are ranked, and as what. Last write wins.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ranks: Vec<(ActId, String)>,
+    /// How proposals become rules, by scope. See [`crate::ratify`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ratifications: Vec<crate::ratify::AdoptedRatify>,
+    /// Governance acts written by somebody without standing to write them —
+    /// a grant, a policy, a ratification rule — and therefore not applied.
+    /// Surfaced, never silently dropped: the act is in the log, the house
+    /// should see that it was tried.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ungoverned: Vec<(ActId, String)>,
     /// Annotations this build carried without interpreting, by op.
     ///
     /// The §4.3 mitigation, and it is required rather than a courtesy.
@@ -254,6 +268,13 @@ impl Canon {
         self.commitments
             .iter()
             .filter(|c| matches!(c.status, Status::Active))
+    }
+
+    /// Written and waiting on the scope's ratification rule.
+    pub fn proposed(&self) -> impl Iterator<Item = &Commitment> {
+        self.commitments
+            .iter()
+            .filter(|c| matches!(c.status, Status::Proposed { .. }))
     }
 
     pub fn get(&self, id: &ActId) -> Option<&Commitment> {
@@ -459,6 +480,30 @@ impl Voice<'_> {
 /// on parse, so the result is identical regardless of how lines interleaved
 /// during a merge.
 pub fn derive(acts: &[Act]) -> Canon {
+    derive_at(acts, acts.iter().map(|a| a.ts_unix).max().unwrap_or(0))
+}
+
+/// May this act's actor rule on this pair? Standing over either side's scope
+/// — or, for unscoped commitments, standing in the canon at all. Records the
+/// attempt in `ungoverned` when not, so the answer is also the bookkeeping.
+fn rules_over(canon: &mut Canon, act: &Act, a: &ActId, b: &ActId) -> bool {
+    let scope = canon.scope_of(a).or_else(|| canon.scope_of(b)).cloned();
+    if canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
+        return true;
+    }
+    canon.ungoverned.push((
+        act.id.clone(),
+        format!(
+            "{} ruled on {a} and {b} without standing over {}",
+            act.actor,
+            scope.map_or("them".to_string(), |s| s.to_string())
+        ),
+    ));
+    false
+}
+
+/// Derive current state as of `now`. See [`crate::Log::derive_at`].
+pub fn derive_at(acts: &[Act], now: i64) -> Canon {
     let n = acts.len();
 
     // Pass 1 — liveness.
@@ -623,16 +668,28 @@ pub fn derive(acts: &[Act]) -> Canon {
             // A question is answered by superseding it with a commitment and
             // withdrawn by retracting it: the same two acts, meaning the same
             // two things, rather than a second vocabulary for questions.
+            // A supersession retires its targets only once the NEW commitment
+            // is ratified, so its effect is applied in the ratification pass
+            // below. Here only the dangling check, which needs no verdict.
             ActKind::Supersede { old, .. } => {
                 for o in old {
-                    match (by_id.get_mut(o), questions.get_mut(o)) {
-                        (Some(c), _) => c.status = Status::Superseded { by: act.id.clone() },
-                        (None, Some(q)) => q.status = Status::Superseded { by: act.id.clone() },
-                        (None, None) => canon.dangling.push((act.id.clone(), o.clone())),
+                    if !by_id.contains_key(o) && !questions.contains_key(o) {
+                        canon.dangling.push((act.id.clone(), o.clone()));
                     }
                 }
             }
             ActKind::Retract { target, .. } => {
+                // Withdrawing your own write is yours to do. Withdrawing
+                // somebody else's takes standing over it.
+                let own = by_id.get(target).is_some_and(|c| c.actor == act.actor)
+                    || questions.get(target).is_some_and(|q| q.actor == act.actor);
+                if !own && !canon.may_govern(&act.actor, canon.scope_of(target), act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} retracted {target} without standing over it", act.actor),
+                    ));
+                    continue;
+                }
                 match (by_id.get_mut(target), questions.get_mut(target)) {
                     (Some(c), _) => c.status = Status::Retracted { at: act.ts_unix },
                     (None, Some(q)) => q.status = Status::Retracted { at: act.ts_unix },
@@ -645,6 +702,12 @@ pub fn derive(acts: &[Act]) -> Canon {
                 rationale,
                 revisit,
             } => {
+                // A ruling on a pair takes standing over the pair. An agent
+                // with a kitchen seat ruling on hall rules is outside its
+                // standing: the act is kept, flagged, and not applied.
+                if !rules_over(&mut canon, act, a, b) {
+                    continue;
+                }
                 for side in [a, b] {
                     if !by_id.contains_key(side) {
                         canon.dangling.push((act.id.clone(), side.clone()));
@@ -660,14 +723,19 @@ pub fn derive(acts: &[Act]) -> Canon {
                     at: act.ts_unix,
                 });
             }
-            ActKind::Dismiss { a, b, rationale } => canon.conflicts.push(Conflict {
-                a: a.clone(),
-                b: b.clone(),
-                disposition: Disposition::Dismissed {
-                    rationale: rationale.clone(),
-                },
-                at: act.ts_unix,
-            }),
+            ActKind::Dismiss { a, b, rationale } => {
+                if !rules_over(&mut canon, act, a, b) {
+                    continue;
+                }
+                canon.conflicts.push(Conflict {
+                    a: a.clone(),
+                    b: b.clone(),
+                    disposition: Disposition::Dismissed {
+                        rationale: rationale.clone(),
+                    },
+                    at: act.ts_unix,
+                })
+            }
             ActKind::Adopt {
                 lineage,
                 generation,
@@ -686,6 +754,16 @@ pub fn derive(acts: &[Act]) -> Canon {
                 horizon,
                 ..
             } => {
+                // Granting standing over a scope takes standing over it or
+                // over the scope above. The first grant in an ungoverned
+                // canon is the bootstrap and is open.
+                if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} granted {holder} standing over {scope} without holding it", act.actor),
+                    ));
+                    continue;
+                }
                 // Re-granting the same actor the same scope CLOSES the old
                 // one rather than stacking on it: two grants live at one
                 // instant would make "when does this lapse" have two answers.
@@ -713,6 +791,15 @@ pub fn derive(acts: &[Act]) -> Canon {
                 scope,
                 ..
             } => {
+                // Stepping back yourself is always yours to do. Standing
+                // somebody else down takes standing over the scope.
+                if *actor != act.actor && !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} stood {actor} down from {scope} without holding it", act.actor),
+                    ));
+                    continue;
+                }
                 // Removes grants AT or BELOW the named scope. Carving a hole
                 // out of a broader grant is deliberately not expressible:
                 // stepping back from `house.kitchen` while holding `house`
@@ -750,6 +837,14 @@ pub fn derive(acts: &[Act]) -> Canon {
                 });
             }
             ActKind::Policy { text, rule, scope } => {
+                if !canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} set a policy over {} without holding it", act.actor,
+                            scope.as_ref().map_or("this canon".to_string(), ToString::to_string)),
+                    ));
+                    continue;
+                }
                 // One policy per scope. Two live policies over one scope
                 // would make "what do we decide by" have two answers, which
                 // is the duplicated decider §10.6 names.
@@ -763,12 +858,45 @@ pub fn derive(acts: &[Act]) -> Canon {
                     act: act.id.clone(),
                 });
             }
+            ActKind::Ratification { text, rule, scope } => {
+                // Changing how a scope makes rules is decided one level up:
+                // by standing over the scope, which includes the scope above.
+                if !canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} set how {} makes rules without holding it", act.actor,
+                            scope.as_ref().map_or("this canon".to_string(), ToString::to_string)),
+                    ));
+                    continue;
+                }
+                // Kept, not replaced: a commitment is judged under the rule
+                // in force when it was written, so the history has to stay.
+                // `ratification_for` picks the latest per scope.
+                canon.ratifications.push(crate::ratify::AdoptedRatify {
+                    scope: scope.clone(),
+                    rule: rule.clone(),
+                    text: text.clone(),
+                    at: act.ts_unix,
+                    actor: act.actor.clone(),
+                    act: act.id.clone(),
+                });
+            }
             ActKind::Decided {
                 about,
                 outcome,
                 authority,
                 rationale,
-            } => canon.rulings.push(Ruling {
+            } => {
+                // A decision names no scope, so it takes standing in the
+                // canon at all: somebody the house has said is in.
+                if !canon.may_govern(&act.actor, None, act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} decided \"{about}\" without standing here", act.actor),
+                    ));
+                    continue;
+                }
+                canon.rulings.push(Ruling {
                 about: about.clone(),
                 outcome: *outcome,
                 authority: *authority,
@@ -776,7 +904,8 @@ pub fn derive(acts: &[Act]) -> Canon {
                 at: act.ts_unix,
                 actor: act.actor.clone(),
                 act: act.id.clone(),
-            }),
+            })
+            }
             ActKind::Silence { about, rationale } => {
                 canon.silences.retain(|s| s.about != *about);
                 canon.silences.push(Silence {
@@ -855,6 +984,49 @@ pub fn derive(acts: &[Act]) -> Canon {
                 canon.carried.push((act.id.clone(), kind.clone()));
             }
             ActKind::Assert { .. } | ActKind::Revert { .. } | ActKind::Question { .. } => {}
+        }
+    }
+
+    // Pass 4 — ratification, in time order.
+    //
+    // Every introduced commitment is a proposal until the ratification rule
+    // of its scope says otherwise. The verdict reads grants, scopes and
+    // positions, all folded above, and the clock. A supersession's effect —
+    // retiring what it replaces — lands here, only once the replacement is
+    // a rule; a proposal to replace a rule leaves the rule standing.
+    let supersedes: BTreeMap<&ActId, &Act> = acts
+        .iter()
+        .filter(|a| matches!(a.kind, ActKind::Supersede { .. }))
+        .map(|a| (&a.id, a))
+        .collect();
+    for id in &order {
+        let Some(c) = by_id.get(id) else { continue };
+        if !matches!(c.status, Status::Active) {
+            continue;
+        }
+        let verdict = canon.ratify(c, now);
+        match verdict {
+            crate::ratify::Verdict::Ratified { .. } => {
+                if let Some(ActKind::Supersede { old, .. }) = supersedes.get(id).map(|a| &a.kind) {
+                    for o in old {
+                        match (by_id.get_mut(o), questions.get_mut(o)) {
+                            (Some(prev), _) => prev.status = Status::Superseded { by: id.clone() },
+                            (None, Some(q)) => q.status = Status::Superseded { by: id.clone() },
+                            (None, None) => {}
+                        }
+                    }
+                }
+            }
+            crate::ratify::Verdict::Proposed { needs } => {
+                if let Some(c) = by_id.get_mut(id) {
+                    c.status = Status::Proposed { needs };
+                }
+            }
+            crate::ratify::Verdict::Refused { at, by, why } => {
+                if let Some(c) = by_id.get_mut(id) {
+                    c.status = Status::Refused { at, by, why };
+                }
+            }
         }
     }
 

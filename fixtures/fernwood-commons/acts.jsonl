@@ -12,7 +12,7 @@
 {"at":"2025-09-02","by":"human:mira","as":"shared-cost","op":"assert","text":"Anything bought for the whole house is agreed before it is bought.","from":"can-up0000000003"}
 
 // ── written here, for here. The divergence IS the congruence. ──
-{"at":"2025-09-14","by":"human:dana","as":"hall","op":"assert","text":"The hall stays clear enough to get a pushchair through."}
+{"at":"2025-09-14","by":"human:dana","as":"hall","op":"assert","text":"The hall stays clear enough to get a stroller through."}
 {"at":"2025-09-14","by":"human:dana","as":"bikes","op":"assert","text":"Bikes live in the hall, against the left wall."}
 {"at":"2025-09-15","by":"human:sam","as":"stovetop","op":"assert","text":"Whoever cooks wipes the stovetop before leaving the kitchen."}
 {"at":"2025-09-15","by":"human:sam","as":"kitchen-door","op":"assert","text":"The kitchen door is never locked."}
@@ -43,7 +43,7 @@
 
 // A machine with standing, and an END DATE on it (Ostrom 4). Nobody has to
 // remember to take it away; `canon overdue` says so.
-{"at":"2025-09-05","by":"human:mira","as":"agent-grant","op":"grant","holder":"agent:helper","scope":"house.kitchen","horizon":1769817600,"rationale":"drafts the rota; three months, then we look again"}
+{"at":"2025-09-05","by":"human:mira","as":"agent-grant","op":"grant","holder":"agent:helper","scope":"house.kitchen","horizon":1769817600,"rationale":"drafts the rotation; three months, then we look again"}
 
 // ── how this house decides (Ostrom 3) ──
 {"at":"2025-09-06","by":"human:mira","as":"house-policy","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"consent"}}}
@@ -56,4 +56,4 @@
 {"at":"2025-09-08","by":"human:mira","as":"laundry-policy","op":"policy","scope":"house.laundry","text":"The first time we ask. The second time the house asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}}}
 
 // ── left unwritten on purpose (the metis floor) ──
-{"at":"2025-09-20","by":"human:mira","op":"silence","about":"who cooks on a wednesday","rationale":"it has sorted itself out every week for two years, and a rota would turn a kindness into a duty"}
+{"at":"2025-09-20","by":"human:mira","op":"silence","about":"who cooks on a wednesday","rationale":"it has sorted itself out every week for two years, and a rotation would turn a kindness into a duty"}

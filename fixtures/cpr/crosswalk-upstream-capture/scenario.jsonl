@@ -45,13 +45,17 @@
 // commons that was founded rather than forked has no upstream to ship, so
 // this step is not there and principles 2 and 7 have nothing to measure.
 {"step":"act","at":"2025-08-15","by":"human:tomas","op":"adopt","lineage":"coliving-commons","generation":"g7","source":"https://example.org/coliving-commons"}
-// ABLATION `upstream-retracts-local`: an upstream actor holds standing here,
-// and uses it. The format does not stop this — which is exactly why
-// principle 7 is marked an affordance and not a mechanism.
-{"step":"act","at":"2025-08-15","by":"human:network-steward","op":"grant","holder":"human:network-steward","scope":"building","rationale":"upstream takes a seat"}
-{"step":"act","at":"2025-08-15","by":"human:network-steward","op":"retract","target":"@roof-two-up","rationale":"not in the upstream canon"}
-{"step":"act","at":"2025-08-15","by":"human:network-steward","op":"retract","target":"@quiet-roof","rationale":"not in the upstream canon"}
-{"step":"act","at":"2025-08-15","by":"human:network-steward","op":"retract","target":"@chairs-stacked","rationale":"not in the upstream canon"}
+// ABLATION `upstream-retracts-local`: the community HANDS an upstream actor a
+// seat over its own boundary, and upstream uses it. An outsider cannot take
+// that seat — a self-grant without standing is recorded and not applied — so
+// the loss only happens when a member gives it away. The format does not stop
+// a member from doing that, which is exactly why principle 7 is marked an
+// affordance and not a mechanism. The retractions come a day after the grant:
+// acts in the same second cannot govern one another.
+{"step":"act","at":"2025-08-15","by":"human:tomas","op":"grant","holder":"human:network-steward","scope":"building","rationale":"upstream asked for a seat and we gave it one"}
+{"step":"act","at":"2025-08-16","by":"human:network-steward","op":"retract","target":"@roof-two-up","rationale":"not in the upstream canon"}
+{"step":"act","at":"2025-08-16","by":"human:network-steward","op":"retract","target":"@quiet-roof","rationale":"not in the upstream canon"}
+{"step":"act","at":"2025-08-16","by":"human:network-steward","op":"retract","target":"@chairs-stacked","rationale":"not in the upstream canon"}
 {"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
 // ── 8. Nested enterprises ────────────────────────────────────
 {"step":"who","name":"nesting-the-outer","principle":8,"strength":"mechanism","scope":"building"}

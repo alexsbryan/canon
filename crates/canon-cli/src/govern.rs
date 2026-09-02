@@ -161,7 +161,7 @@ pub fn policy(args: &[String]) -> i32 {
                         Some(s) => println!("  governs {s} and everything under it"),
                         None => println!("  governs this canon"),
                     }
-                    0
+                    crate::cmds::report_governed(&d, &act.id)
                 }
                 Err(e) => fail(e),
             }
@@ -200,6 +200,96 @@ pub fn policy(args: &[String]) -> i32 {
         }
         Some(other) => fail(format!(
             "unknown policy command `{other}` — expected set or show"
+        )),
+    }
+}
+
+// ── canon ratification ──────────────────────────────────────
+
+/// How a proposal in a scope becomes a rule. See `canon_core::ratify`.
+///
+/// Setting it is gated in the fold by standing over the scope — the level
+/// above decides how a level makes rules — so a `set` by somebody without
+/// standing is written, not applied, and says so.
+pub fn ratification(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    match pos.first().copied() {
+        Some("set") => {
+            let Some(raw) = pos.get(1) else {
+                return fail(
+                    "usage: canon ratification set <standing|joint:a,b|threshold:n/m|consent:Nd> \
+                     [--scope s] [-m \"<how it reads>\"]",
+                );
+            };
+            let Some(rule) = canon_core::Ratify::parse(raw) else {
+                return fail(format!(
+                    "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
+                     threshold:2/1, or consent:7d"
+                ));
+            };
+            let scope = match scope_from(args) {
+                Ok(s) => s,
+                Err(e) => return fail(e),
+            };
+            let (d, _, _) = match load() {
+                Ok(v) => v,
+                Err(e) => return fail(e),
+            };
+            let own = flag(args, "-m").filter(|m| !m.trim().is_empty());
+            let text = own.map_or_else(|| rule.prose(), str::to_string);
+            match write(
+                &d,
+                ActKind::Ratification {
+                    text: text.clone(),
+                    rule: rule.clone(),
+                    scope: scope.clone(),
+                },
+            ) {
+                Ok(act) => {
+                    println!("{}  {}", act.id, rule.name());
+                    println!("  {text}");
+                    match &scope {
+                        Some(s) => println!("  how rules are made in {s} and everything under it"),
+                        None => println!("  how rules are made in this canon"),
+                    }
+                    crate::cmds::report_governed(&d, &act.id)
+                }
+                Err(e) => fail(e),
+            }
+        }
+        Some("show") | None => {
+            let (_, _, canon) = match load() {
+                Ok(v) => v,
+                Err(e) => return fail(e),
+            };
+            if has(args, "--json") {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&canon.ratifications).unwrap_or_default()
+                );
+                return 0;
+            }
+            if canon.ratifications.is_empty() {
+                println!("no ratification rule adopted. proposals become rules by what shipped:");
+                println!("  {}", canon_core::Ratify::Standing.name());
+                println!("  {}", canon_core::Ratify::Standing.prose());
+                println!(
+                    "\n  adopt one:  canon ratification set joint:human:a,human:b --scope house.kitchen"
+                );
+                return 0;
+            }
+            for r in &canon.ratifications {
+                match &r.scope {
+                    Some(s) => println!("{}  {}  over {s}", r.act, r.rule.name()),
+                    None => println!("{}  {}  (whole canon)", r.act, r.rule.name()),
+                }
+                println!("  {}", r.text);
+                println!("  adopted {} by {}", store::ymd(r.at), r.actor);
+            }
+            0
+        }
+        Some(other) => fail(format!(
+            "unknown ratification command `{other}` — expected set or show"
         )),
     }
 }
@@ -252,7 +342,7 @@ pub fn decide(args: &[String]) -> i32 {
             // The rung is shown because the ladder is the point: a decision
             // that silently moves the next one up is a decision nobody saw.
             println!("  this is decision {} about it", prior + 1);
-            0
+            crate::cmds::report_governed(&d, &act.id)
         }
         Err(e) => fail(e),
     }
@@ -388,7 +478,7 @@ pub fn grant(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(_) => {
+        Ok(act) => {
             match horizon {
                 Some(h) => println!("{} holds {scope} until {}", pos[0], store::ymd(h)),
                 None => println!(
@@ -396,7 +486,7 @@ pub fn grant(args: &[String]) -> i32 {
                     pos[0]
                 ),
             }
-            0
+            crate::cmds::report_governed(&d, &act.id)
         }
         Err(e) => fail(e),
     }
@@ -704,16 +794,74 @@ pub fn voice(args: &[String]) -> i32 {
         Some(a) => (*a).to_string(),
         None => store::actor(),
     };
-    let (_, _, canon) = match load() {
+    let (_, log, canon) = match load() {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
     let v = canon.voice_of(&who);
-    if v.is_empty() {
+    // Standing this actor was given, and rulings they made on pairs. Neither
+    // is something the actor "put in" — a grant is somebody else's act — but
+    // both are the answer to "what is this member's record", and for an agent
+    // that question is the whole reason to ask.
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let mut held: Vec<String> = Vec::new();
+    let mut rulings: Vec<String> = Vec::new();
+    for act in log.acts().iter() {
+        match &act.kind {
+            canon_core::ActKind::Grant { holder, scope, horizon, .. } if *holder == who => {
+                let withdrawn = log.acts().iter().any(|w| {
+                    matches!(&w.kind, canon_core::ActKind::Withdraw { holder: h, scope: s, .. }
+                        if *h == who && s == scope && w.ts_unix >= act.ts_unix)
+                });
+                let end = match (withdrawn, horizon) {
+                    (true, _) => ", since withdrawn".to_string(),
+                    (false, Some(h)) if *h < now => format!(" until {}, lapsed", store::ymd(*h)),
+                    (false, Some(h)) => format!(" until {}", store::ymd(*h)),
+                    (false, None) => ", no end date".to_string(),
+                };
+                held.push(format!(
+                    "  over {scope}, granted by {} on {}{end}",
+                    act.actor,
+                    store::ymd(act.ts_unix)
+                ));
+            }
+            canon_core::ActKind::Dismiss { a, b, rationale } if act.actor == who => {
+                let outside = canon.ungoverned.iter().any(|(x, _)| x == &act.id);
+                rulings.push(format!(
+                    "  said {a} and {b} do not conflict, {}{}{}",
+                    store::ymd(act.ts_unix),
+                    if rationale.is_empty() { String::new() } else { format!(" — {rationale}") },
+                    if outside {
+                        "\n    not applied: outside their standing".to_string()
+                    } else {
+                        overruled(&log, &canon, a, b, act.ts_unix)
+                    }
+                ));
+            }
+            canon_core::ActKind::Accept { a, b, rationale, .. } if act.actor == who => {
+                rulings.push(format!(
+                    "  carried {a} against {b}, {} — {rationale}{}",
+                    store::ymd(act.ts_unix),
+                    overruled(&log, &canon, a, b, act.ts_unix)
+                ));
+            }
+            _ => {}
+        }
+    }
+    if v.is_empty() && held.is_empty() && rulings.is_empty() {
         println!("{who} has not put anything in this canon.");
         return 0;
     }
     println!("{who}");
+    if !held.is_empty() {
+        println!("\nheld standing {} time(s):", held.len());
+        for h in &held {
+            println!("{h}");
+        }
+    }
     if !v.asked.is_empty() {
         println!(
             "\nasked {} question(s), {} answered:",
@@ -725,6 +873,9 @@ pub fn voice(args: &[String]) -> i32 {
                 canon_core::Status::Active => "still open".to_string(),
                 canon_core::Status::Superseded { by } => format!("answered by {by}"),
                 canon_core::Status::Retracted { .. } => "withdrawn".to_string(),
+                canon_core::Status::Proposed { .. } | canon_core::Status::Refused { .. } => {
+                    "still open".to_string()
+                }
             };
             println!("  {}  ? {}  ({fate})", q.id, q.text);
         }
@@ -737,6 +888,12 @@ pub fn voice(args: &[String]) -> i32 {
                 canon_core::Pull::Toward => "toward",
             };
             println!("  {way} \"{}\" — {}", p.about, p.position.because);
+        }
+    }
+    if !rulings.is_empty() {
+        println!("\nruled on {} pair(s):", rulings.len());
+        for r in &rulings {
+            println!("{r}");
         }
     }
     if !v.decided.is_empty() {
@@ -758,6 +915,40 @@ pub fn voice(args: &[String]) -> i32 {
         v.asked.len()
     );
     0
+}
+
+/// Was a ruling on this pair later replaced by somebody else's? The current
+/// disposition in the canon is the last word; if it was written after this
+/// act, name who wrote it. For an agent's record this is the line that
+/// matters: not what it said, but whether the house let it stand.
+fn overruled(log: &canon_core::Log, canon: &canon_core::Canon, a: &canon_core::ActId, b: &canon_core::ActId, at: i64) -> String {
+    // A pair can carry two dispositions in the fold — the dismissal and the
+    // later acceptance — so the current one is the latest, not the first.
+    let Some(c) = canon.conflicts.iter().filter(|c| c.is_pair(a, b)).max_by_key(|c| c.at) else {
+        return String::new();
+    };
+    if c.at <= at {
+        return String::new();
+    }
+    let later = log
+        .acts()
+        .iter()
+        .filter(|x| x.ts_unix > at)
+        .filter(|x| match &x.kind {
+            canon_core::ActKind::Accept { a: p, b: q, .. }
+            | canon_core::ActKind::Dismiss { a: p, b: q, .. } => c.is_pair(p, q),
+            _ => false,
+        })
+        .last();
+    match (later, &c.disposition) {
+        (Some(x), canon_core::Disposition::Tolerated { .. }) => {
+            format!("\n    overruled by {}, {}: carried knowingly", x.actor, store::ymd(x.ts_unix))
+        }
+        (Some(x), canon_core::Disposition::Dismissed { .. }) => {
+            format!("\n    overruled by {}, {}: not a conflict", x.actor, store::ymd(x.ts_unix))
+        }
+        _ => String::new(),
+    }
 }
 
 // ── canon leave ─────────────────────────────────────────────

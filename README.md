@@ -77,7 +77,7 @@ a group actually decided.
 
 - A **rule** is a rule.
 - *"Nobody's ever said who looks after the allotment"* is a **question**.
-- *"We decided not to make a rota — it'd turn a kindness into a duty"* is
+- *"We decided not to make a rotation — it'd turn a kindness into a duty"* is
   a **silence**: something you decided *not* to have.
 
 Silences are the ones houses lose, and losing them is why the same
@@ -104,6 +104,31 @@ Nothing is destroyed and everything is revertible, including a revert. A
 contradiction you're carrying on purpose is something you can record
 (`canon accept`), not a bug to clean up.
 
+**A rule is a proposal until the people it governs say so.** Give people
+standing over a scope, say how that scope makes rules, and a write from
+anyone else is a proposal, visible and not in force, until the rule is met:
+
+```sh
+canon grant human:dana house.kitchen
+canon grant human:sam house.kitchen
+canon ratification set joint:human:dana,human:sam --scope house.kitchen \
+  -m "Both cooks agree, or it is not a kitchen rule."
+
+canon add "Wash your own pan before you sit down." --scope house.kitchen
+#   PROPOSED, not yet a rule — needs approval from human:dana, human:sam
+canon approve can-9b31       # as dana; then as sam, and it is in force
+canon object can-9b31 -m "…" # one named holder's reason refuses it
+```
+
+Four rules ship: `standing` (holders write, others propose), `joint` (named
+people, all of them), `threshold` (so many for, so many against) and
+`consent` (a rule after N days unless a holder objects with a reason). An
+agent may propose and object under any of them. It cannot mint a rule, even
+where it holds standing. The same standing gates rulings: an accept, a
+dismiss or a retraction by somebody without a say over the rules it touches
+is kept on the record and changes nothing. A canon that has granted nobody standing is a
+notebook and stays one until the first grant.
+
 Everything lives in `.canon/acts.jsonl` — one line per decision,
 append-only. It diffs, so git gives you history for free. It greps.
 Leaving is deleting a directory. No account, no server, nothing leaves
@@ -114,10 +139,10 @@ your machine.
 **Needs one:** `draft`, `check`, `tensions`, `rebase`.
 
 **Needs nothing:** everything else. `add`, `list`, `why`, `supersede`,
-`retract`, `accept`, `question`, `open`, `silence`, `undo`, `log`,
-`share`, `adopt`, `diff`, and every governance verb — `who`, `grant`,
-`scope`, `policy`, `position`, `decide`, `rank`, `horizon`, `overdue`,
-`voice`, `draw`, `replay`. That's most of the tool and all of the daily
+`retract`, `accept`, `approve`, `object`, `question`, `open`, `silence`,
+`undo`, `log`, `share`, `adopt`, `diff`, and every governance verb — `who`,
+`grant`, `scope`, `policy`, `ratification`, `position`, `decide`, `rank`,
+`horizon`, `overdue`, `voice`, `draw`, `replay`. That's most of the tool and all of the daily
 use. In a house, one person runs the model half and everyone else needs
 nothing.
 
@@ -189,12 +214,13 @@ canon replay fixtures/fernwood-commons
 ```
 
 ```text
-42 step(s), all as expected
+56 step(s), all as expected, in 11 ms
 ```
 
-42 governance decisions in 0.036 seconds with no endpoint: standing
-granted and withdrawn, an objection blocking a thing, a scope handed
-down, a lot drawn from a sealed seed nobody could steer.
+Fifty-six governance steps in eleven milliseconds with no endpoint: standing
+granted and withdrawn, an objection blocking a thing, a scope handed down, a
+lot drawn from a sealed seed nobody could steer, and a kitchen rule that
+stayed a proposal until both cooks said yes.
 
 The counterfactual is the better trick. *What would a different rule have
 done to the last six months?* is the question a group has before changing

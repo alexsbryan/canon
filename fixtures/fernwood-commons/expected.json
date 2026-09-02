@@ -79,6 +79,27 @@
   "an-unwritten-norm-is-not-a-gap": { "outcome": "unaddressed", "silence": true },
 
   "a-draw-before-anyone-opened-refuses": { "error": "nobody opened a secret, so there is no seed — and there is no default seed" },
+  "a-non-cook-proposes-a-kitchen-rule": {
+    "status": "proposed",
+    "detail": "approval from human:dana, human:sam",
+    "rule": "joint:human:dana,human:sam",
+    "by": "human:theo"
+  },
+  "one-cook-is-not-both": { "status": "proposed", "detail": "approval from human:sam", "rule": "joint:human:dana,human:sam" },
+  "both-cooks-and-it-is-a-rule": { "status": "in-force", "rule": "joint:human:dana,human:sam", "by": "human:theo" },
+  "the-helper-proposes-and-cannot-mint": {
+    "status": "proposed",
+    "by": "agent:helper",
+    "detail": "approval from human:dana, human:sam",
+    "rule": "joint:human:dana,human:sam"
+  },
+  "a-cook-refuses-it-with-a-reason": {
+    "status": "refused",
+    "detail": "human:dana: half-loads on Sunday night, or nobody has a clean pan on Monday",
+    "rule": "joint:human:dana,human:sam"
+  },
+  "the-kitchen-at-the-end": { "live": 9, "proposed": 0, "ungoverned": 1 },
+
   "the-panel": {
     "pool": 11,
     "withheld": ["human:ola"],

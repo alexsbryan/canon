@@ -140,7 +140,7 @@ rule has no source you recognise, reject it.
 
 And it finds three kinds, not one. A rule is a rule. *"Nobody's ever said
 who looks after the allotment"* is a **question**. *"We decided not to
-make a rota — it'd turn a kindness into a duty"* is a **silence**,
+make a rotation — it'd turn a kindness into a duty"* is a **silence**,
 something you decided not to have. Silences are the ones houses lose.
 
 Skip means *not now* and records nothing. Only reject means no, and a
@@ -221,13 +221,13 @@ Record the other two shapes by hand as they come up:
 
 ```sh
 canon question "Who looks after the plants when everyone travels at once?"
-canon silence "a chore rota" -m "We decided in March not to have one — it would turn a kindness into a duty."
+canon silence "a chore rotation" -m "We decided in March not to have one — it would turn a kindness into a duty."
 ```
 
 ```text
-can-66fcda050a09  unwritten on purpose: "a chore rota"
+can-66fcda050a09  unwritten on purpose: "a chore rotation"
   We decided in March not to have one — it would turn a kindness into a duty.
-  `canon check --about "a chore rota"` will say so rather than call it a gap
+  `canon check --about "a chore rotation"` will say so rather than call it a gap
 ```
 
 **7. Share it.**

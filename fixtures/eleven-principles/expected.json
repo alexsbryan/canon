@@ -43,14 +43,14 @@
   "wire-break-second": { "outcome": "conflicts", "authority": "ask-panel", "because": "1 prior decision(s)" },
   "wire-break-third": { "outcome": "conflicts", "authority": "refuse", "because": "2 prior decision(s)" },
 
-  "before-the-conflict": { "acts": 32, "tolerated": 0 },
+  "before-the-conflict": { "acts": 33, "tolerated": 0 },
   "unwrap-against-the-parser": {
     "outcome": "conflicts",
     "authority": "refuse",
     "because": "one is enough",
     "cites": ["@no-unwrap", "@parser-alloc"]
   },
-  "after-the-conflict": { "acts": 33, "tolerated": 1, "live": 7 },
+  "after-the-conflict": { "acts": 34, "tolerated": 1, "live": 7 },
 
   "the-fork-keeps-what-it-wrote": { "generation": "g7", "local": 4, "inherited": 3 },
 

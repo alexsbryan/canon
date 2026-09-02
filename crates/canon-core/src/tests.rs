@@ -953,19 +953,22 @@ fn re_granting_closes_the_old_grant_rather_than_stacking_on_it() {
     // Two grants LIVE AT ONE INSTANT would make "when does this lapse" have
     // two answers. The old one is closed, not deleted: standing is an as-of
     // question, and a renewal today must not rewrite who held it in March.
+    // Sam founds the house first: in a governed canon, granting takes standing.
     let canon = Log::from_acts(vec![
+        grant("human:sam", "house", None, 50),
         grant("human:dana", "house.kitchen", Some(200), 100),
         grant("human:dana", "house.kitchen", Some(900), 300),
     ])
     .derive();
-    assert_eq!(canon.grants.len(), 2, "both are facts that happened");
-    let live: Vec<_> = canon.grants.iter().filter(|g| g.held_at(500)).collect();
+    let dana: Vec<_> = canon.grants.iter().filter(|g| g.actor == "human:dana").collect();
+    assert_eq!(dana.len(), 2, "both are facts that happened");
+    let live: Vec<_> = dana.iter().filter(|g| g.held_at(500)).collect();
     assert_eq!(live.len(), 1, "but only one is held at any instant");
     assert_eq!(live[0].horizon, Some(900), "the renewal wins");
     assert!(canon.standing_of("human:dana", &scope("house.kitchen"), 500));
     // And the old term is still answerable about its own window.
-    assert!(canon.grants[0].held_at(150));
-    assert!(!canon.grants[0].held_at(500));
+    assert!(dana[0].held_at(150));
+    assert!(!dana[0].held_at(500));
 }
 
 #[test]
@@ -1122,6 +1125,13 @@ fn every_kind() -> Vec<ActKind> {
             commitment: id,
             rank: "principle".into(),
         },
+        ActKind::Ratification {
+            text: "the cooks decide together".into(),
+            rule: crate::ratify::Ratify::Joint {
+                holders: vec!["human:dana".into(), "human:sam".into()],
+            },
+            scope: Some(Scope::new("house.kitchen").unwrap()),
+        },
         ActKind::Annotation {
             kind: "from-the-future".into(),
             body: serde_json::Map::new(),
@@ -1153,6 +1163,7 @@ fn op_of(kind: &ActKind) -> &'static str {
         ActKind::DrawSecret { .. } => "draw_secret",
         ActKind::DrawReveal { .. } => "draw_reveal",
         ActKind::Rank { .. } => "rank",
+        ActKind::Ratification { .. } => "ratification",
         ActKind::Annotation { kind, .. } => {
             assert_eq!(kind, "from-the-future");
             "(carried)"
@@ -1603,9 +1614,9 @@ fn holding_a_scope_and_its_parent_makes_you_one_decider_and_not_two() {
     // house and then the kitchen appeared twice, which reads as a larger
     // group than the house has — and quorum is counted off this list.
     let canon = Log::from_acts(vec![
-        grant("human:dana", "house", None, 100),
-        grant("human:dana", "house.kitchen", None, 101),
-        grant("human:sam", "house", None, 102),
+        grant("human:sam", "house", None, 100),
+        grant("human:dana", "house", None, 101),
+        grant("human:dana", "house.kitchen", None, 102),
     ])
     .derive();
     let who = canon.who_decides(&scope("house.kitchen"), 200);
@@ -1617,4 +1628,324 @@ fn holding_a_scope_and_its_parent_makes_you_one_decider_and_not_two() {
         "and at the narrowest standing they hold, which is what subsidiarity routes on"
     );
     assert!(canon.standing_of("human:sam", &scope("house.kitchen"), 200));
+}
+
+// ── ratification: how a proposal becomes a rule ─────────────
+
+fn assert_at(text: &str, ts: i64, actor: &str) -> Act {
+    Act::new(
+        ActKind::Assert {
+            text: text.into(),
+            from: None,
+            source: None,
+        },
+        ts,
+        actor,
+    )
+}
+
+fn scoped_at(commitment: &ActId, s: &str, ts: i64) -> Act {
+    Act::new(
+        ActKind::Scoped {
+            commitment: commitment.clone(),
+            scope: scope(s),
+        },
+        ts,
+        "human:sam",
+    )
+}
+
+fn ratification_at(rule: &str, s: &str, ts: i64, actor: &str) -> Act {
+    Act::new(
+        ActKind::Ratification {
+            text: String::new(),
+            rule: crate::ratify::Ratify::parse(rule).expect("a rule"),
+            scope: Some(scope(s)),
+        },
+        ts,
+        actor,
+    )
+}
+
+fn approve_at(target: &ActId, ts: i64, actor: &str) -> Act {
+    Act::new(
+        ActKind::Position {
+            about: target.to_string(),
+            citing: None,
+            pull: Pull::Toward,
+            because: "yes".into(),
+        },
+        ts,
+        actor,
+    )
+}
+
+fn object_at(target: &ActId, ts: i64, actor: &str, why: &str) -> Act {
+    Act::new(
+        ActKind::Position {
+            about: target.to_string(),
+            citing: None,
+            pull: Pull::Against,
+            because: why.into(),
+        },
+        ts,
+        actor,
+    )
+}
+
+/// Sam founds the house; Dana and Sam hold the kitchen; Theo holds the house.
+fn governed_house() -> Vec<Act> {
+    vec![
+        grant("human:sam", "house", None, 10),
+        grant("human:theo", "house", None, 20),
+        grant("human:dana", "house.kitchen", None, 20),
+        grant("human:sam", "house.kitchen", None, 20),
+    ]
+}
+
+#[test]
+fn an_ungoverned_canon_is_a_notebook_and_every_assert_is_a_rule() {
+    // No grants, no gate. This is every canon that existed before
+    // ratification, and it must keep folding the same way.
+    let canon = Log::from_acts(vec![assert_at("Quiet after eleven.", 100, "human:anyone")]).derive();
+    assert_eq!(canon.active().count(), 1);
+    assert_eq!(canon.proposed().count(), 0);
+}
+
+#[test]
+fn under_standing_a_holder_writes_and_a_non_holder_proposes() {
+    let mut acts = governed_house();
+    let by_dana = assert_at("Wipe the stovetop.", 100, "human:dana");
+    // Theo holds the house, which covers the kitchen — but the kitchen's
+    // rules are the kitchen's holders' to write. Wider standing proposes.
+    let by_theo = assert_at("Label your food.", 100, "human:theo");
+    acts.push(scoped_at(&by_dana.id, "house.kitchen", 100));
+    acts.push(scoped_at(&by_theo.id, "house.kitchen", 100));
+    acts.push(by_dana.clone());
+    acts.push(by_theo.clone());
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(matches!(canon.get(&by_dana.id).unwrap().status, Status::Active), "a cook wrote it");
+    let Status::Proposed { needs } = &canon.get(&by_theo.id).unwrap().status else {
+        panic!("theo does not hold the kitchen, so his line is a proposal")
+    };
+    assert!(needs.contains("holds house.kitchen"), "{needs}");
+
+    // One holder's approval is enough under `standing`.
+    acts.push(approve_at(&by_theo.id, 200, "human:sam"));
+    let canon = Log::from_acts(acts).derive();
+    assert!(matches!(canon.get(&by_theo.id).unwrap().status, Status::Active));
+}
+
+#[test]
+fn joint_ratification_needs_every_named_holder_and_one_objection_refuses() {
+    let mut acts = governed_house();
+    acts.push(ratification_at("joint:human:dana,human:sam", "house.kitchen", 30, "human:dana"));
+    let pan = assert_at("Wash your own pan before you sit down.", 100, "human:theo");
+    acts.push(scoped_at(&pan.id, "house.kitchen", 100));
+    acts.push(pan.clone());
+    acts.push(approve_at(&pan.id, 200, "human:dana"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("one of two is not both")
+    };
+    assert_eq!(needs, "approval from human:sam");
+
+    let mut carried = acts.clone();
+    carried.push(approve_at(&pan.id, 300, "human:sam"));
+    let canon = Log::from_acts(carried).derive();
+    assert!(matches!(canon.get(&pan.id).unwrap().status, Status::Active), "both said yes");
+
+    let mut refused = acts;
+    refused.push(object_at(&pan.id, 300, "human:sam", "the sink is too small for that at dinner"));
+    let canon = Log::from_acts(refused).derive();
+    let Status::Refused { by, why, .. } = &canon.get(&pan.id).unwrap().status else {
+        panic!("a named holder objecting refuses it")
+    };
+    assert_eq!(by, "human:sam");
+    assert!(why.contains("sink"));
+}
+
+#[test]
+fn approvals_from_people_without_standing_and_from_agents_do_not_count() {
+    let mut acts = governed_house();
+    acts.push(ratification_at("threshold:2/1", "house.kitchen", 30, "human:sam"));
+    let p = assert_at("The dishwasher runs only when full.", 100, "agent:helper");
+    acts.push(scoped_at(&p.id, "house.kitchen", 100));
+    acts.push(p.clone());
+    // The agent approving itself, a house member without kitchen standing,
+    // and a stranger: none of these are kitchen holders' word.
+    acts.push(approve_at(&p.id, 200, "agent:helper"));
+    acts.push(approve_at(&p.id, 200, "human:theo"));
+    acts.push(approve_at(&p.id, 200, "human:stranger"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    let Status::Proposed { needs } = &canon.get(&p.id).unwrap().status else {
+        panic!("nobody who counts has spoken")
+    };
+    assert!(needs.starts_with("2 more approval"), "{needs}");
+
+    acts.push(approve_at(&p.id, 300, "human:dana"));
+    acts.push(approve_at(&p.id, 300, "human:sam"));
+    let canon = Log::from_acts(acts).derive();
+    assert!(matches!(canon.get(&p.id).unwrap().status, Status::Active), "the agent proposed; people disposed");
+}
+
+#[test]
+fn an_agent_with_standing_still_cannot_mint_its_own_rule() {
+    // Ostrom's fourth principle: the monitor is answerable to the people, not
+    // the other way round. Standing lets an agent propose and object. It does
+    // not let it write a rule that nobody approved.
+    let mut acts = governed_house();
+    acts.push(grant("agent:helper", "house.kitchen", Some(10_000), 20));
+    let p = assert_at("Run the extractor fan when frying.", 100, "agent:helper");
+    acts.push(scoped_at(&p.id, "house.kitchen", 100));
+    acts.push(p.clone());
+    let canon = Log::from_acts(acts).derive();
+    let Status::Proposed { needs } = &canon.get(&p.id).unwrap().status else {
+        panic!("an agent's assert is a proposal even where it holds standing")
+    };
+    assert!(needs.contains("not a person"), "{needs}");
+}
+
+#[test]
+fn consent_ratifies_by_the_clock_and_a_reasoned_objection_stops_it() {
+    let mut acts = governed_house();
+    acts.push(ratification_at("consent:7d", "house.kitchen", 30, "human:sam"));
+    let p = assert_at("No phones at the table.", 1_000, "human:theo");
+    acts.push(scoped_at(&p.id, "house.kitchen", 1_000));
+    acts.push(p.clone());
+    let day = 86_400;
+    let early = Log::from_acts(acts.clone()).derive_at(1_000 + 3 * day);
+    assert!(matches!(early.get(&p.id).unwrap().status, Status::Proposed { .. }));
+    let late = Log::from_acts(acts.clone()).derive_at(1_000 + 8 * day);
+    assert!(matches!(late.get(&p.id).unwrap().status, Status::Active), "silence for a week is consent");
+
+    // An objection with no reason is not an objection.
+    acts.push(object_at(&p.id, 1_000 + day, "human:dana", "   "));
+    let canon = Log::from_acts(acts.clone()).derive_at(1_000 + 8 * day);
+    assert!(matches!(canon.get(&p.id).unwrap().status, Status::Active));
+    acts.push(object_at(&p.id, 1_000 + 2 * day, "human:dana", "we take calls from the night shift at dinner"));
+    let canon = Log::from_acts(acts).derive_at(1_000 + 8 * day);
+    assert!(matches!(canon.get(&p.id).unwrap().status, Status::Refused { .. }));
+}
+
+#[test]
+fn a_proposed_supersession_leaves_the_old_rule_standing() {
+    let mut acts = governed_house();
+    let old = assert_at("Quiet after eleven.", 100, "human:sam");
+    acts.push(old.clone());
+    let replacement = Act::new(
+        ActKind::Supersede {
+            text: "Quiet after ten.".into(),
+            old: vec![old.id.clone()],
+            rationale: "work nights".into(),
+        },
+        200,
+        "human:stranger",
+    );
+    acts.push(replacement.clone());
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(matches!(canon.get(&old.id).unwrap().status, Status::Active), "not replaced yet");
+    assert!(matches!(canon.get(&replacement.id).unwrap().status, Status::Proposed { .. }));
+
+    acts.push(approve_at(&replacement.id, 300, "human:theo"));
+    let canon = Log::from_acts(acts).derive();
+    assert!(matches!(canon.get(&old.id).unwrap().status, Status::Superseded { .. }));
+    assert!(matches!(canon.get(&replacement.id).unwrap().status, Status::Active));
+}
+
+#[test]
+fn governance_acts_without_standing_are_recorded_and_not_applied() {
+    let mut acts = governed_house();
+    // A stranger grants themselves the kitchen and sets its rule to suit.
+    acts.push(Act::new(
+        ActKind::Grant {
+            holder: "human:stranger".into(),
+            scope: scope("house.kitchen"),
+            horizon: None,
+            rationale: String::new(),
+        },
+        100,
+        "human:stranger",
+    ));
+    acts.push(ratification_at("standing", "house.kitchen", 110, "human:stranger"));
+    let canon = Log::from_acts(acts).derive();
+    assert!(!canon.standing_of("human:stranger", &scope("house.kitchen"), 500));
+    assert!(canon.ratifications.is_empty(), "the rule did not change");
+    assert_eq!(canon.ungoverned.len(), 2, "and both attempts are on the record: {:?}", canon.ungoverned);
+}
+
+#[test]
+fn simultaneous_founding_grants_do_not_lock_the_founder_out() {
+    // Twelve grants in one sitting share a second; the log orders them by
+    // id. Whichever sorts first must not be the only one that took.
+    let acts: Vec<Act> = ["human:a", "human:b", "human:c", "human:d"]
+        .iter()
+        .map(|who| grant(who, "house", None, 100))
+        .collect();
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(canon.who_decides(&scope("house"), 200).len(), 4);
+    assert!(canon.ungoverned.is_empty());
+}
+
+#[test]
+fn a_ruling_takes_standing_over_what_it_touches() {
+    // The helper holds the kitchen. It dismisses a pair of HALL rules — outside
+    // its seat. The act is on the record and flagged; the pair stays open;
+    // Dana, who holds the house, carries it knowingly and that applies.
+    let mut acts = governed_house();
+    acts.push(grant("agent:helper", "house.kitchen", Some(100_000), 20));
+    let hall = assert_at("The hall stays clear enough for a stroller.", 100, "human:sam");
+    let bikes = assert_at("Bikes live in the hall.", 100, "human:sam");
+    acts.push(hall.clone());
+    acts.push(bikes.clone());
+    acts.push(Act::new(
+        ActKind::Dismiss {
+            a: hall.id.clone(),
+            b: bikes.id.clone(),
+            rationale: "these do not really conflict".into(),
+        },
+        200,
+        "agent:helper",
+    ));
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(canon.conflicts.is_empty(), "the helper's ruling did not take");
+    assert_eq!(canon.ungoverned.len(), 1);
+    assert!(canon.ungoverned[0].1.contains("agent:helper ruled"));
+    assert!(canon.unattended.len() == 1, "and it is still flagged as an agent's adjudication");
+
+    acts.push(Act::new(
+        ActKind::Accept {
+            a: hall.id.clone(),
+            b: bikes.id.clone(),
+            rationale: "nowhere else for the bikes".into(),
+            revisit: None,
+        },
+        300,
+        "human:theo",
+    ));
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(canon.tolerated().count(), 1, "a house holder's ruling applies");
+}
+
+#[test]
+fn you_may_withdraw_your_own_proposal_but_not_somebody_elses_rule() {
+    let mut acts = governed_house();
+    let mine = assert_at("Shoes off at the door.", 100, "human:stranger");
+    let theirs = assert_at("Recycling out on Sunday night.", 100, "human:sam");
+    acts.push(mine.clone());
+    acts.push(theirs.clone());
+    acts.push(Act::new(
+        ActKind::Retract { target: mine.id.clone(), rationale: "never mind".into() },
+        200,
+        "human:stranger",
+    ));
+    acts.push(Act::new(
+        ActKind::Retract { target: theirs.id.clone(), rationale: "I disagree".into() },
+        200,
+        "human:stranger",
+    ));
+    let canon = Log::from_acts(acts).derive();
+    assert!(matches!(canon.get(&mine.id).unwrap().status, Status::Retracted { .. }));
+    assert!(matches!(canon.get(&theirs.id).unwrap().status, Status::Active));
+    assert_eq!(canon.ungoverned.len(), 1);
 }

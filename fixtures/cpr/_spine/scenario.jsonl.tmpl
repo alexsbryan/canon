@@ -57,13 +57,17 @@
 {"step":"act","at":"{{d.upgrade}}","by":"{{steward}}","op":"adopt","lineage":"{{lineage}}","generation":"{{generation_next}}","source":"{{source}}"}
 {{/if}}
 {{#if ablate.upstream_retracts_local}}
-// ABLATION `upstream-retracts-local`: an upstream actor holds standing here,
-// and uses it. The format does not stop this — which is exactly why
-// principle 7 is marked an affordance and not a mechanism.
-{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"grant","holder":"{{upstream_actor}}","scope":"{{outer}}","rationale":"upstream takes a seat"}
-{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.inner_a.label}}","rationale":"not in the upstream canon"}
-{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.clash_a.label}}","rationale":"not in the upstream canon"}
-{"step":"act","at":"{{d.upgrade}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.extra.label}}","rationale":"not in the upstream canon"}
+// ABLATION `upstream-retracts-local`: the community HANDS an upstream actor a
+// seat over its own boundary, and upstream uses it. An outsider cannot take
+// that seat — a self-grant without standing is recorded and not applied — so
+// the loss only happens when a member gives it away. The format does not stop
+// a member from doing that, which is exactly why principle 7 is marked an
+// affordance and not a mechanism. The retractions come a day after the grant:
+// acts in the same second cannot govern one another.
+{"step":"act","at":"{{d.upgrade}}","by":"{{steward}}","op":"grant","holder":"{{upstream_actor}}","scope":"{{outer}}","rationale":"upstream asked for a seat and we gave it one"}
+{"step":"act","at":"{{d.upstream_retract}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.inner_a.label}}","rationale":"not in the upstream canon"}
+{"step":"act","at":"{{d.upstream_retract}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.clash_a.label}}","rationale":"not in the upstream canon"}
+{"step":"act","at":"{{d.upstream_retract}}","by":"{{upstream_actor}}","op":"retract","target":"@{{c.extra.label}}","rationale":"not in the upstream canon"}
 {{/if}}
 {"step":"lineage","name":"organize-the-fork-keeps-what-it-wrote","principle":7,"strength":"affordance"}
 

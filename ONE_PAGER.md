@@ -9,9 +9,12 @@ from. Then it keeps the reason every time a rule changes.
 
 - **The reason survives.** Supersede a rule, say why. Six months later,
   `canon why` tells you.
-- **What you decided *not* to have is kept.** "No cooking rota, it would turn
+- **What you decided *not* to have is kept.** "No cooking rotation, it would turn
   a kindness into a duty" is data. Lose it and the proposal is back next
   spring.
+- **A rule is a proposal until the people it governs say so.** Name who
+  holds the kitchen and how kitchen rules get made. Anyone else's rule
+  waits, visibly, for their word. An agent can propose. It cannot mint.
 - **Contradictions are carried, not cleaned up.** Accept two rules that pull
   against each other. Date it. `canon overdue` remembers.
 - **"What would a different rule have done to us?"** Replay two years under

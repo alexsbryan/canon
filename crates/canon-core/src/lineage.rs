@@ -251,6 +251,9 @@ impl Divergence {
             let fate = match local {
                 None => Fate::Absent,
                 Some(c) => match &c.status {
+                    // A proposal or a refusal of an inherited rule leaves the
+                    // inherited rule where it was: untouched.
+                    Status::Proposed { .. } | Status::Refused { .. } => Fate::Untouched,
                     Status::Retracted { .. } => Fate::Retracted,
                     Status::Superseded { by } => Fate::Superseded {
                         by: by.clone(),

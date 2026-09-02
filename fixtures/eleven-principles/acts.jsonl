@@ -21,6 +21,10 @@
 // ── which module owns what (Ostrom 1, 8) ──
 {"at":"2025-06-12","by":"human:priya","op":"scoped","commitment":"@parser-alloc","scope":"engine.parser"}
 {"at":"2025-06-12","by":"human:priya","op":"scoped","commitment":"@wire-break","scope":"engine.wire"}
+// Omar wrote the wire rule; Noor owns the format. Scoping it under
+// `engine.wire` makes it a PROPOSAL until the format's holder approves —
+// wider standing writes into a narrower scope by asking, not by acting.
+{"at":"2025-06-12","by":"human:noor","op":"position","about":"@wire-break","pull":"toward","because":"the format owner agrees: readers first, then the writer"}
 
 // ── rank: what is a principle, and what is only a convention (entrenchment) ──
 {"at":"2025-06-13","by":"human:priya","op":"rank","commitment":"@no-unwrap","rank":"principle"}

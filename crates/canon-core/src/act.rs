@@ -42,7 +42,8 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 16] = [
+pub const KNOWN_ANNOTATIONS: [&str; 17] = [
+    "ratification",
     "accept",
     "dismiss",
     "question",
@@ -231,6 +232,16 @@ pub enum ActKind {
         text: String,
         rule: crate::policy::Rule,
         /// Which scope it governs. Absent is the whole canon.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        scope: Option<crate::scope::Scope>,
+    },
+    /// How a proposal in a scope becomes a rule — Ostrom's collective-choice
+    /// level, in the ledger like the policy it sits beside. See
+    /// [`crate::ratify`]. Setting it for a scope is gated by standing over
+    /// that scope, which is the constitutional level one step up.
+    Ratification {
+        text: String,
+        rule: crate::ratify::Ratify,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         scope: Option<crate::scope::Scope>,
     },

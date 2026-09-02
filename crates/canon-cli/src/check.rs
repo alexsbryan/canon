@@ -181,6 +181,8 @@ fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
         Status::Active => "in force, never superseded".to_string(),
         Status::Superseded { by } => format!("superseded by {by}"),
         Status::Retracted { at } => format!("retracted {}", store::ymd(*at)),
+        Status::Proposed { needs } => format!("proposed, not yet a rule — needs {needs}"),
+        Status::Refused { at, by, .. } => format!("refused by {by}, {}", store::ymd(*at)),
     };
     let pad = " ".repeat(c.id.as_str().len() + 2);
     format!(
