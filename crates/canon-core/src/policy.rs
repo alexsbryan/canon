@@ -563,6 +563,5 @@ impl Policy for Rule {
     }
 }
 
-
 #[cfg(test)]
 mod tests;

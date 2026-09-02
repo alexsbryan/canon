@@ -469,8 +469,14 @@ pub fn render(canon: &Canon, open: &[Conflict], settled: usize) -> String {
             .unwrap_or_else(|| "(not in this canon)".into())
     };
     for c in open {
-        out.push_str(&format!("{}\n", crate::wrap::hang(&format!("  {}  ", c.a), &text(&c.a))));
-        out.push_str(&format!("{}\n", crate::wrap::hang(&format!("  {}  ", c.b), &text(&c.b))));
+        out.push_str(&format!(
+            "{}\n",
+            crate::wrap::hang(&format!("  {}  ", c.a), &text(&c.a))
+        ));
+        out.push_str(&format!(
+            "{}\n",
+            crate::wrap::hang(&format!("  {}  ", c.b), &text(&c.b))
+        ));
         if let Disposition::Open { reason } = &c.disposition {
             if !reason.is_empty() {
                 out.push_str(&format!("{}\n", crate::wrap::hang("  why: ", reason)));

@@ -113,7 +113,8 @@ pub fn load_acts(raw: &str) -> Result<(Vec<Act>, BTreeMap<String, ActId>), Strin
         .map(str::trim)
         .find(|l| !l.is_empty() && !l.starts_with("//"));
     let minted = first.is_some_and(|l| {
-        serde_json::from_str::<Value>(l).is_ok_and(|v| v.get("id").is_some() && v.get("at").is_none())
+        serde_json::from_str::<Value>(l)
+            .is_ok_and(|v| v.get("id").is_some() && v.get("at").is_none())
     });
     if !minted {
         return load_seed(raw);
@@ -270,7 +271,9 @@ pub fn run_scenario(
                 let (status, detail) = match &c.status {
                     canon_core::Status::Active => ("in-force", String::new()),
                     canon_core::Status::Proposed { needs } => ("proposed", needs.clone()),
-                    canon_core::Status::Refused { by, why, .. } => ("refused", format!("{by}: {why}")),
+                    canon_core::Status::Refused { by, why, .. } => {
+                        ("refused", format!("{by}: {why}"))
+                    }
                     canon_core::Status::Superseded { by } => ("superseded", by.to_string()),
                     canon_core::Status::Retracted { .. } => ("retracted", String::new()),
                 };
@@ -475,7 +478,11 @@ pub fn diverge(adopted: &Replay, forced: &Replay) -> Vec<Divergence> {
     let mut out = Vec::new();
     for (a, f) in adopted.steps.iter().zip(&forced.steps) {
         let read = |s: &Step, k: &str| {
-            s.result.get(k).and_then(Value::as_str).unwrap_or("").to_string()
+            s.result
+                .get(k)
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string()
         };
         // Only steps that produce a ruling can diverge. `who`, `lineage` and
         // the standing queries answer the same way under any policy.
@@ -494,7 +501,10 @@ pub fn diverge(adopted: &Replay, forced: &Replay) -> Vec<Divergence> {
         };
         out.push(Divergence {
             name: a.name.clone(),
-            subject: a.subject.clone().unwrap_or_else(|| a.name.replace('-', " ")),
+            subject: a
+                .subject
+                .clone()
+                .unwrap_or_else(|| a.name.replace('-', " ")),
             was: (rung(&aa), trim(read(a, "because"))),
             would: (rung(&fa), trim(read(f, "because"))),
         });
@@ -511,7 +521,9 @@ pub fn render_divergence(rows: &[Divergence], forced: &str, total: usize) -> Str
         format!("Under `{forced}` instead of the rules this canon adopted, {what}\n")
     };
     if rows.is_empty() {
-        return head(format!("nothing changes. All {total} decision(s) land the same way."));
+        return head(format!(
+            "nothing changes. All {total} decision(s) land the same way."
+        ));
     }
     let mut out = head(format!("{} of {total} decision(s) change.", rows.len()));
     // The width of the rung column, so the reasons line up and the eye can
@@ -545,7 +557,9 @@ pub fn render_divergence_brief(rows: &[Divergence], forced: &str, total: usize) 
         format!("Under `{forced}` instead of the rules this canon adopted, {what}\n")
     };
     if rows.is_empty() {
-        return head(format!("nothing changes. All {total} decision(s) land the same way."));
+        return head(format!(
+            "nothing changes. All {total} decision(s) land the same way."
+        ));
     }
     // Mildest first, the same order `Authority` declares. A move down the
     // list is a decision that got harder to take; up, easier.
@@ -567,7 +581,10 @@ pub fn render_divergence_brief(rows: &[Divergence], forced: &str, total: usize) 
             _ => sideways.push(r),
         }
     }
-    let mut out = head(format!("{} of {total} decisions land somewhere else.", rows.len()));
+    let mut out = head(format!(
+        "{} of {total} decisions land somewhere else.",
+        rows.len()
+    ));
     let mut summary = Vec::new();
     if !easier.is_empty() {
         summary.push(format!("{} would be easier to do", easier.len()));
@@ -576,7 +593,10 @@ pub fn render_divergence_brief(rows: &[Divergence], forced: &str, total: usize) 
         summary.push(format!("{} harder", harder.len()));
     }
     if !sideways.is_empty() {
-        summary.push(format!("{} decided the same way for a different reason", sideways.len()));
+        summary.push(format!(
+            "{} decided the same way for a different reason",
+            sideways.len()
+        ));
     }
     out.push_str(&format!("{}.\n", summary.join("; ")));
     let subj = |r: &Divergence| {
@@ -590,7 +610,11 @@ pub fn render_divergence_brief(rows: &[Divergence], forced: &str, total: usize) 
     // Two lines a decision: what it was about, then the move. One line
     // would need a column wide enough for "replace the front door lock with
     // a keypad only I know the code to", and there is no such projector.
-    for (label, group) in [("EASIER", &easier), ("HARDER", &harder), ("SAME OUTCOME, DIFFERENT REASON", &sideways)] {
+    for (label, group) in [
+        ("EASIER", &easier),
+        ("HARDER", &harder),
+        ("SAME OUTCOME, DIFFERENT REASON", &sideways),
+    ] {
         if group.is_empty() {
             continue;
         }
@@ -973,7 +997,10 @@ pub fn run(args: &[String]) -> i32 {
         let profile = flag(args, "--profile").unwrap_or("house");
         if let Err(e) = std::fs::create_dir_all(out)
             .and_then(|()| {
-                std::fs::write(out.join(crate::store::FILE), Log::from_acts(replay.acts.clone()).render())
+                std::fs::write(
+                    out.join(crate::store::FILE),
+                    Log::from_acts(replay.acts.clone()).render(),
+                )
             })
             .and_then(|()| std::fs::write(out.join("profile"), format!("{profile}\n")))
         {

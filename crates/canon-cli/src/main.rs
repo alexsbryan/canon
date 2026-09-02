@@ -29,9 +29,9 @@ mod sources;
 mod store;
 mod subject;
 mod tensions;
-mod wrap;
 #[cfg(test)]
 mod testing;
+mod wrap;
 
 /// What a new person is shown.
 ///

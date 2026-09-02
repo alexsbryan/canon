@@ -53,7 +53,12 @@ const MISMATCH: &str = ": expected ";
 /// The sorted set of `(step, field)` pairs a forced rule changes.
 fn divergence(fixture: &str, rule: &str) -> Vec<String> {
     let out = Command::new(env!("CARGO_BIN_EXE_canon"))
-        .args(["replay", cpr().join(fixture).to_str().unwrap(), "--policy", rule])
+        .args([
+            "replay",
+            cpr().join(fixture).to_str().unwrap(),
+            "--policy",
+            rule,
+        ])
         .output()
         .expect("canon replay runs");
     let mut pairs: Vec<String> = String::from_utf8_lossy(&out.stderr)
@@ -65,7 +70,14 @@ fn divergence(fixture: &str, rule: &str) -> Vec<String> {
     pairs
 }
 
-const RESERVED: [&str; 6] = ["rule", "authority", "outcome", "horizon", "principle", "strength"];
+const RESERVED: [&str; 6] = [
+    "rule",
+    "authority",
+    "outcome",
+    "horizon",
+    "principle",
+    "strength",
+];
 
 fn cpr() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/cpr")
@@ -142,9 +154,18 @@ fn fixtures() -> Vec<Fixture> {
         let end = stdout.rfind('}').expect("replay printed an object") + 1;
         let run: BTreeMap<String, Value> =
             serde_json::from_str(&stdout[..end]).expect("replay --json is an object");
-        out.push(Fixture { name, vocab, steps, run });
+        out.push(Fixture {
+            name,
+            vocab,
+            steps,
+            run,
+        });
     }
-    assert!(out.len() >= 14, "the study is 14 fixtures, found {}", out.len());
+    assert!(
+        out.len() >= 14,
+        "the study is 14 fixtures, found {}",
+        out.len()
+    );
     out
 }
 
@@ -184,21 +205,35 @@ impl Fixture {
             //    with only wider standing may not, and a boundary nobody
             //    holds refuses rather than defaulting to whoever asked.
             1 => {
-                want(self.s("boundary-an-insider-decides", "authority"), "act",
-                     "a holder of the inner boundary")?;
-                want(self.s("boundary-an-outsider-does-not", "authority"), "ask-one",
-                     "someone with only wider standing")?;
-                want(self.s("boundary-nobody-holds-this", "authority"), "refuse",
-                     "a boundary nobody holds")
+                want(
+                    self.s("boundary-an-insider-decides", "authority"),
+                    "act",
+                    "a holder of the inner boundary",
+                )?;
+                want(
+                    self.s("boundary-an-outsider-does-not", "authority"),
+                    "ask-one",
+                    "someone with only wider standing",
+                )?;
+                want(
+                    self.s("boundary-nobody-holds-this", "authority"),
+                    "refuse",
+                    "a boundary nobody holds",
+                )
             }
             // 2. What came from upstream and what this community wrote for
             //    itself are both visible, and both non-empty. The divergence
             //    IS the congruence.
             2 => {
-                let (i, l) = (self.n("congruence-forked-and-diverged", "inherited"),
-                              self.n("congruence-forked-and-diverged", "local"));
-                if i > 0 && l > 0 { Ok(()) }
-                else { Err(format!("inherited {i}, local {l} — one of them is empty")) }
+                let (i, l) = (
+                    self.n("congruence-forked-and-diverged", "inherited"),
+                    self.n("congruence-forked-and-diverged", "local"),
+                );
+                if i > 0 && l > 0 {
+                    Ok(())
+                } else {
+                    Err(format!("inherited {i}, local {l} — one of them is empty"))
+                }
             }
             // 3. The people governed by a rule changed that rule, and the
             //    change is what decided the next thing.
@@ -206,11 +241,15 @@ impl Fixture {
                 let before = self.s("boundary-who-holds-the-inner", "policy");
                 let after = self.s("nesting-the-inner", "policy");
                 if before == after {
-                    return Err(format!("the inner rule is still `{before}`; nobody changed it"));
+                    return Err(format!(
+                        "the inner rule is still `{before}`; nobody changed it"
+                    ));
                 }
                 let decided = self.s("collective-choice-under-the-new-rule", "rule");
                 if decided != after {
-                    return Err(format!("changed to `{after}` but decided under `{decided}`"));
+                    return Err(format!(
+                        "changed to `{after}` but decided under `{decided}`"
+                    ));
                 }
                 Ok(())
             }
@@ -243,8 +282,10 @@ impl Fixture {
                 if self.n("monitors-standing-lapsed", "count") < 1 {
                     return Err("the monitor's standing does not lapse on its own".into());
                 }
-                let (pos, dec) = (self.n("monitors-record-is-queryable", "positions"),
-                                  self.n("monitors-record-is-queryable", "decided"));
+                let (pos, dec) = (
+                    self.n("monitors-record-is-queryable", "positions"),
+                    self.n("monitors-record-is-queryable", "decided"),
+                );
                 if pos < 1 || dec != 0 {
                     return Err(format!("record is {pos} position(s), {dec} decision(s)"));
                 }
@@ -254,8 +295,11 @@ impl Fixture {
             //    different subject starts at the bottom again.
             5 => {
                 let rung = |name: &str| RUNGS.iter().position(|r| *r == self.s(name, "authority"));
-                let (a, b, c) = (rung("graduated-first"), rung("graduated-second"),
-                                 rung("graduated-third"));
+                let (a, b, c) = (
+                    rung("graduated-first"),
+                    rung("graduated-second"),
+                    rung("graduated-third"),
+                );
                 match (a, b, c) {
                     (Some(a), Some(b), Some(c)) if a < b && b < c => {}
                     _ => return Err("the three occurrences do not escalate".into()),
@@ -268,29 +312,38 @@ impl Fixture {
             // 6. A conflict is surfaced with both sides cited and carried
             //    knowingly in ONE act — no meeting, no model call.
             6 => {
-                want(self.s("conflict-surfaced", "outcome"), "conflicts", "the clash")?;
+                want(
+                    self.s("conflict-surfaced", "outcome"),
+                    "conflicts",
+                    "the clash",
+                )?;
                 if self.list("conflict-surfaced", "cites").len() < 2 {
                     return Err("the conflict does not cite both sides".into());
                 }
-                let d_tol = self.n("conflict-after", "tolerated")
-                    - self.n("conflict-before", "tolerated");
+                let d_tol =
+                    self.n("conflict-after", "tolerated") - self.n("conflict-before", "tolerated");
                 let d_acts = self.n("conflict-after", "acts") - self.n("conflict-before", "acts");
                 if d_tol != 1 || d_acts != 1 {
                     return Err(format!(
-                        "carrying it cost {d_acts} act(s) and moved tolerated by {d_tol}"));
+                        "carrying it cost {d_acts} act(s) and moved tolerated by {d_tol}"
+                    ));
                 }
                 Ok(())
             }
             // 7. Upstream shipped a new generation. What this community wrote
             //    for itself is still here.
             7 => {
-                let (before, after) = (self.n("congruence-forked-and-diverged", "local"),
-                                       self.n("organize-the-fork-keeps-what-it-wrote", "local"));
+                let (before, after) = (
+                    self.n("congruence-forked-and-diverged", "local"),
+                    self.n("organize-the-fork-keeps-what-it-wrote", "local"),
+                );
                 if after < before {
                     return Err(format!("wrote {before} of its own, kept {after}"));
                 }
-                let (g0, g1) = (self.s("congruence-forked-and-diverged", "generation"),
-                                self.s("organize-the-fork-keeps-what-it-wrote", "generation"));
+                let (g0, g1) = (
+                    self.s("congruence-forked-and-diverged", "generation"),
+                    self.s("organize-the-fork-keeps-what-it-wrote", "generation"),
+                );
                 if g0 == g1 {
                     return Err("upstream never shipped, so nothing was tested".into());
                 }
@@ -304,8 +357,10 @@ impl Fixture {
                 // and is not the shape of the principle.
                 if self.run.contains_key("nesting-the-middle") {
                     let mid = self.list("nesting-the-middle", "holders");
-                    for (other, which) in [("nesting-the-inner", "inner"),
-                                           ("nesting-the-outer", "outer")] {
+                    for (other, which) in [
+                        ("nesting-the-inner", "inner"),
+                        ("nesting-the-outer", "outer"),
+                    ] {
                         if mid == self.list(other, "holders") {
                             return Err(format!(
                                 "the middle level is held by the same people as the {which}"
@@ -313,17 +368,22 @@ impl Fixture {
                         }
                     }
                 }
-                let (inner, outer) = (self.list("nesting-the-inner", "holders"),
-                                      self.list("nesting-the-outer", "holders"));
+                let (inner, outer) = (
+                    self.list("nesting-the-inner", "holders"),
+                    self.list("nesting-the-outer", "holders"),
+                );
                 if inner == outer {
                     return Err("the inner and outer levels are held at the same depth, \
-                                so there is only one level".into());
+                                so there is only one level"
+                        .into());
                 }
                 if inner.len() >= self.list("nesting-the-inner", "deciders").len() {
                     return Err("the inner level is not narrower than what reaches it".into());
                 }
-                let (pi, po) = (self.s("nesting-the-inner", "policy"),
-                                self.s("nesting-the-outer", "policy"));
+                let (pi, po) = (
+                    self.s("nesting-the-inner", "policy"),
+                    self.s("nesting-the-outer", "policy"),
+                );
                 if pi == po {
                     return Err(format!("both levels are decided by `{pi}`"));
                 }
@@ -336,7 +396,11 @@ impl Fixture {
     fn predicted_to_fail(&self) -> BTreeSet<u8> {
         self.vocab["predicted_to_fail"]
             .as_array()
-            .map(|a| a.iter().filter_map(|v| v.as_u64().map(|n| n as u8)).collect())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|v| v.as_u64().map(|n| n as u8))
+                    .collect()
+            })
             .unwrap_or_default()
     }
 
@@ -393,8 +457,10 @@ fn transfer_bar() {
     //    institutions are the ones a SHAPE turns on — a third level of
     //    nesting either exists or it does not. Everything else is identical,
     //    in the same order, in a makerspace and an alpine pasture.
-    let positives: Vec<&Fixture> =
-        all.iter().filter(|f| f.predicted_to_fail().is_empty()).collect();
+    let positives: Vec<&Fixture> = all
+        .iter()
+        .filter(|f| f.predicted_to_fail().is_empty())
+        .collect();
     let core = |f: &Fixture| -> Vec<String> {
         f.named_steps()
             .into_iter()
@@ -435,7 +501,9 @@ fn transfer_bar() {
                 n("members"),
                 n("insiders"),
                 f.has_middle(),
-                f.vocab["monitor"].as_str().is_some_and(|m| m.starts_with("agent:")),
+                f.vocab["monitor"]
+                    .as_str()
+                    .is_some_and(|m| m.starts_with("agent:")),
                 f.vocab["forked"].as_bool().unwrap_or(true),
             )
         })
@@ -480,8 +548,10 @@ fn transfer_bar() {
         }
         for (p, why) in &na {
             if why.trim().is_empty() {
-                failures.push(format!("{}: Ostrom {p} is declared inapplicable with no reason",
-                                      f.name));
+                failures.push(format!(
+                    "{}: Ostrom {p} is declared inapplicable with no reason",
+                    f.name
+                ));
             }
         }
         let mut failed = BTreeSet::new();
@@ -508,7 +578,8 @@ fn transfer_bar() {
                 if !predicted.contains(&p) {
                     failures.push(format!(
                         "{}: Ostrom {p} ({}) does not hold — {why}",
-                        f.name, NAMES[p as usize - 1]
+                        f.name,
+                        NAMES[p as usize - 1]
                     ));
                 }
             }
@@ -519,11 +590,17 @@ fn transfer_bar() {
                     "{}: predicted to lose Ostrom {p} ({}) and did not. The ablation removed a \
                      primitive and the principle survived it, so the criterion is not measuring \
                      what it claims to.",
-                    f.name, NAMES[*p as usize - 1]
+                    f.name,
+                    NAMES[*p as usize - 1]
                 ));
             }
         }
-        rows.push((f.name.clone(), predicted.is_empty(), failed, na.keys().copied().collect()));
+        rows.push((
+            f.name.clone(),
+            predicted.is_empty(),
+            failed,
+            na.keys().copied().collect(),
+        ));
     }
 
     // D. `not_applicable` must stay an exception. Every principle has to be
@@ -562,7 +639,10 @@ fn walk(v: &Value, f: &mut impl FnMut(&str)) {
 }
 
 fn print_table(rows: &[(String, bool, BTreeSet<u8>, BTreeSet<u8>)], shapes: usize) {
-    println!("\nOstrom's eight, over {} institutions built from one spine", rows.len());
+    println!(
+        "\nOstrom's eight, over {} institutions built from one spine",
+        rows.len()
+    );
     println!("{:<28} {:<9}  1 2 3 4 5 6 7 8", "institution", "kind");
     for (name, positive, failed, na) in rows {
         let marks: Vec<&str> = (1u8..=8)
@@ -582,7 +662,10 @@ fn print_table(rows: &[(String, bool, BTreeSet<u8>, BTreeSet<u8>)], shapes: usiz
             marks.join(" ")
         );
     }
-    let (res, abl) = (rows.iter().filter(|r| r.1).count(), rows.iter().filter(|r| !r.1).count());
+    let (res, abl) = (
+        rows.iter().filter(|r| r.1).count(),
+        rows.iter().filter(|r| !r.1).count(),
+    );
     println!("\n`.` holds   `x` does not   `n` declared inapplicable, with a reason");
     println!(
         "{res} resources in {shapes} distinct shapes; {abl} ablations, red where each predicted."
@@ -610,7 +693,9 @@ fn the_counterfactual_is_identical_across_institutions() {
     let all = fixtures();
     let sig = |f: &Fixture, rule: &str| -> Vec<String> { divergence(&f.name, rule) };
     let base = sig(
-        all.iter().find(|f| f.name == "harbourside-makerspace").expect("baseline"),
+        all.iter()
+            .find(|f| f.name == "harbourside-makerspace")
+            .expect("baseline"),
         "default",
     );
     for name in ["harbourside-no-boundary", "meridian-imposed-rules"] {
@@ -628,11 +713,16 @@ fn the_counterfactual_is_identical_across_institutions() {
         let mut seen: BTreeMap<Vec<String>, Vec<String>> = BTreeMap::new();
         for f in all.iter().filter(|f| f.predicted_to_fail().is_empty()) {
             let diverged = divergence(&f.name, rule);
-            assert!(!diverged.is_empty(), "{}: --policy {rule} changed nothing", f.name);
+            assert!(
+                !diverged.is_empty(),
+                "{}: --policy {rule} changed nothing",
+                f.name
+            );
             seen.entry(diverged).or_default().push(f.name.clone());
         }
         assert_eq!(
-            seen.len(), 1,
+            seen.len(),
+            1,
             "--policy {rule} diverges differently across institutions, so the outcomes are \
              the domain's and not the rule's: {:?}",
             seen.values().collect::<Vec<_>>()
@@ -640,7 +730,8 @@ fn the_counterfactual_is_identical_across_institutions() {
         let (pairs, who) = seen.into_iter().next().unwrap();
         println!(
             "--policy {rule:<13} {} divergences, one signature, {} institutions",
-            pairs.len(), who.len()
+            pairs.len(),
+            who.len()
         );
     }
 }

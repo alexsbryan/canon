@@ -1467,7 +1467,10 @@ fn two_up_once(
     let added = |text: &str| -> Result<String, String> {
         let out = run(&["add", text])?;
         if !out.status.success() {
-            return Err(format!("add: {}", String::from_utf8_lossy(&out.stderr).trim()));
+            return Err(format!(
+                "add: {}",
+                String::from_utf8_lossy(&out.stderr).trim()
+            ));
         }
         String::from_utf8_lossy(&out.stdout)
             .split_whitespace()
@@ -1488,9 +1491,10 @@ fn two_up_once(
             String::from_utf8_lossy(&out.stderr).trim()
         ));
     }
-    let served = String::from_utf8_lossy(&out.stderr)
-        .lines()
-        .find_map(|l| l.rsplit_once(" answered by ").map(|(_, m)| m.trim().to_string()));
+    let served = String::from_utf8_lossy(&out.stderr).lines().find_map(|l| {
+        l.rsplit_once(" answered by ")
+            .map(|(_, m)| m.trim().to_string())
+    });
     let body = String::from_utf8_lossy(&out.stdout);
     let found: Value = serde_json::from_str(body.trim())
         .map_err(|e| format!("tensions --json: {e} in {body:?}"))?;
@@ -1643,9 +1647,9 @@ fn two_up_upper_bound() {
     // When set, ONLY the pairs it names are asked — the arm is about those
     // nine and asking the rest would spend calls on nothing.
     let perturb: Option<Value> = std::env::var("CANON_BAR_PERTURB").ok().map(|p| {
-        serde_json::from_str(&std::fs::read_to_string(&p).unwrap_or_else(|e| {
-            panic!("CANON_BAR_PERTURB {p}: {e}")
-        }))
+        serde_json::from_str(
+            &std::fs::read_to_string(&p).unwrap_or_else(|e| panic!("CANON_BAR_PERTURB {p}: {e}")),
+        )
         .unwrap_or_else(|e| panic!("CANON_BAR_PERTURB {p}: {e}"))
     });
 
@@ -1688,10 +1692,7 @@ fn two_up_upper_bound() {
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(0);
-    let sides: BTreeSet<usize> = resolved
-        .iter()
-        .flat_map(|p| [p.a.0, p.b.0])
-        .collect();
+    let sides: BTreeSet<usize> = resolved.iter().flat_map(|p| [p.a.0, p.b.0]).collect();
     let distractors_for = |a: usize, b: usize| -> Vec<String> {
         if window < 3 {
             return Vec::new();
@@ -1708,7 +1709,12 @@ fn two_up_upper_bound() {
         }
         let stride = eligible.len() / want;
         (0..want)
-            .map(|k| candidates[eligible[k * stride]]["text"].as_str().unwrap_or("").to_string())
+            .map(|k| {
+                candidates[eligible[k * stride]]["text"]
+                    .as_str()
+                    .unwrap_or("")
+                    .to_string()
+            })
             .collect()
     };
     let scratch = std::env::var("CANON_BAR_TWO_UP_OUT")

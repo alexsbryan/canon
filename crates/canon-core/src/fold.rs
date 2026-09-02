@@ -16,13 +16,23 @@ use crate::id::ActId;
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum Status {
     Active,
-    Superseded { by: ActId },
-    Retracted { at: i64 },
+    Superseded {
+        by: ActId,
+    },
+    Retracted {
+        at: i64,
+    },
     /// Written, and not yet a rule: the scope's ratification rule has not
     /// been met. See [`crate::ratify`]. `needs` says what would meet it.
-    Proposed { needs: String },
+    Proposed {
+        needs: String,
+    },
     /// Refused by a holder of the scope. `why` quotes them.
-    Refused { at: i64, by: String, why: String },
+    Refused {
+        at: i64,
+        by: String,
+        why: String,
+    },
 }
 
 /// A commitment as it stands now.
@@ -972,8 +982,13 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 if !canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
                     canon.ungoverned.push((
                         act.id.clone(),
-                        format!("{} set a policy over {} without holding it", act.actor,
-                            scope.as_ref().map_or("this canon".to_string(), ToString::to_string)),
+                        format!(
+                            "{} set a policy over {} without holding it",
+                            act.actor,
+                            scope
+                                .as_ref()
+                                .map_or("this canon".to_string(), ToString::to_string)
+                        ),
                     ));
                     continue;
                 }
@@ -996,8 +1011,13 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 if !canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
                     canon.ungoverned.push((
                         act.id.clone(),
-                        format!("{} set how {} makes rules without holding it", act.actor,
-                            scope.as_ref().map_or("this canon".to_string(), ToString::to_string)),
+                        format!(
+                            "{} set how {} makes rules without holding it",
+                            act.actor,
+                            scope
+                                .as_ref()
+                                .map_or("this canon".to_string(), ToString::to_string)
+                        ),
                     ));
                     continue;
                 }
@@ -1076,14 +1096,14 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                     continue;
                 }
                 canon.rulings.push(Ruling {
-                about: about.clone(),
-                outcome: *outcome,
-                authority: *authority,
-                rationale: rationale.clone(),
-                at: act.ts_unix,
-                actor: act.actor.clone(),
-                act: act.id.clone(),
-            })
+                    about: about.clone(),
+                    outcome: *outcome,
+                    authority: *authority,
+                    rationale: rationale.clone(),
+                    at: act.ts_unix,
+                    actor: act.actor.clone(),
+                    act: act.id.clone(),
+                })
             }
             ActKind::Silence { about, rationale } => {
                 canon.silences.retain(|s| s.about != *about);

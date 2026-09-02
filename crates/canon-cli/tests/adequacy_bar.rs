@@ -25,29 +25,121 @@ use canon_core::act::{KNOWN_ANNOTATIONS, STRUCTURAL};
 /// The third column is the argument. Adding a row is cheap and writing a
 /// truthful third column is not, which is the intended ratio.
 const CENSUS: &[(&str, &str, &str)] = &[
-    ("assert", "1", "a commitment entering the record is the record"),
-    ("supersede", "1", "replacement that keeps the reason is not deletion plus insertion"),
-    ("retract", "1", "withdrawal with no replacement is a third transition, not either of the others"),
-    ("revert", "2", "tomb-stoning an act is not the same as reversing what it said"),
-    ("accept", "3", "a contradiction carried on purpose has to say what it protects"),
-    ("dismiss", "3", "detector noise and a real conflict must not derive to one thing"),
-    ("question", "3", "a gap is commitment-shaped and nothing else in the set is shaped like it"),
-    ("silence", "3", "what was left unwritten on purpose is invisible to every other op"),
-    ("adopt", "3", "ancestry has to survive a file that arrives by paste, so it cannot be metadata"),
-    ("position", "5", "evidence with a source, a direction and a reason is not a commitment"),
-    ("grant", "6", "who holds what cannot be derived from what has been written"),
-    ("withdraw", "6", "standing ending is not standing never granted"),
-    ("scoped", "6", "which boundary a commitment sits in is not in its text"),
-    ("policy", "7", "the rule a canon decides under has to be citable and supersedable"),
-    ("ratification", "7", "how a proposal becomes a rule is a level above the rule"),
-    ("decided", "7", "an adjudication is a thing the group did; no observation op exists"),
-    ("rank", "7", "principle and convention differ in how hard they are to amend"),
-    ("horizon", "8", "one date op pays for term limits, sunsets, trials, revisits and rotation"),
-    ("draw_commit", "9", "a lot nobody can steer needs its moment announced before it"),
-    ("draw_secret", "9", "a seed no participant controls needs sealed contributions"),
-    ("draw_reveal", "9", "and the opening has to be a separate act from the sealing"),
-    ("allot", "10", "no composition reaches what a scope has to share"),
-    ("allocation", "10", "policy returns an authority; nothing returned an assignment"),
+    (
+        "assert",
+        "1",
+        "a commitment entering the record is the record",
+    ),
+    (
+        "supersede",
+        "1",
+        "replacement that keeps the reason is not deletion plus insertion",
+    ),
+    (
+        "retract",
+        "1",
+        "withdrawal with no replacement is a third transition, not either of the others",
+    ),
+    (
+        "revert",
+        "2",
+        "tomb-stoning an act is not the same as reversing what it said",
+    ),
+    (
+        "accept",
+        "3",
+        "a contradiction carried on purpose has to say what it protects",
+    ),
+    (
+        "dismiss",
+        "3",
+        "detector noise and a real conflict must not derive to one thing",
+    ),
+    (
+        "question",
+        "3",
+        "a gap is commitment-shaped and nothing else in the set is shaped like it",
+    ),
+    (
+        "silence",
+        "3",
+        "what was left unwritten on purpose is invisible to every other op",
+    ),
+    (
+        "adopt",
+        "3",
+        "ancestry has to survive a file that arrives by paste, so it cannot be metadata",
+    ),
+    (
+        "position",
+        "5",
+        "evidence with a source, a direction and a reason is not a commitment",
+    ),
+    (
+        "grant",
+        "6",
+        "who holds what cannot be derived from what has been written",
+    ),
+    (
+        "withdraw",
+        "6",
+        "standing ending is not standing never granted",
+    ),
+    (
+        "scoped",
+        "6",
+        "which boundary a commitment sits in is not in its text",
+    ),
+    (
+        "policy",
+        "7",
+        "the rule a canon decides under has to be citable and supersedable",
+    ),
+    (
+        "ratification",
+        "7",
+        "how a proposal becomes a rule is a level above the rule",
+    ),
+    (
+        "decided",
+        "7",
+        "an adjudication is a thing the group did; no observation op exists",
+    ),
+    (
+        "rank",
+        "7",
+        "principle and convention differ in how hard they are to amend",
+    ),
+    (
+        "horizon",
+        "8",
+        "one date op pays for term limits, sunsets, trials, revisits and rotation",
+    ),
+    (
+        "draw_commit",
+        "9",
+        "a lot nobody can steer needs its moment announced before it",
+    ),
+    (
+        "draw_secret",
+        "9",
+        "a seed no participant controls needs sealed contributions",
+    ),
+    (
+        "draw_reveal",
+        "9",
+        "and the opening has to be a separate act from the sealing",
+    ),
+    (
+        "allot",
+        "10",
+        "no composition reaches what a scope has to share",
+    ),
+    (
+        "allocation",
+        "10",
+        "policy returns an authority; nothing returned an assignment",
+    ),
 ];
 
 const VERDICTS: [&str; 4] = ["built", "carried", "absent", "out-of-scope"];
@@ -80,7 +172,11 @@ fn table() -> Vec<(String, String, String)> {
 }
 
 fn ops() -> BTreeSet<&'static str> {
-    STRUCTURAL.iter().chain(KNOWN_ANNOTATIONS.iter()).copied().collect()
+    STRUCTURAL
+        .iter()
+        .chain(KNOWN_ANNOTATIONS.iter())
+        .copied()
+        .collect()
 }
 
 /// `op:grant` → `grant`, from any cell.
@@ -108,7 +204,10 @@ fn every_op_is_in_the_census_and_the_census_invents_none() {
          they were not reachable by, or do not add the op"
     );
     let invented: Vec<&&str> = listed.difference(&actual).collect();
-    assert!(invented.is_empty(), "census names op(s) the format does not have: {invented:?}");
+    assert!(
+        invented.is_empty(),
+        "census names op(s) the format does not have: {invented:?}"
+    );
     assert_eq!(CENSUS.len(), actual.len(), "one row per op, no duplicates");
 
     for (op, primitive, why) in CENSUS {
@@ -148,7 +247,10 @@ fn a_technology_marked_built_composes_from_ops_that_exist() {
             }
         }
     }
-    assert!(built >= 15, "only {built} technologies marked built; the table has thinned");
+    assert!(
+        built >= 15,
+        "only {built} technologies marked built; the table has thinned"
+    );
 }
 
 #[test]

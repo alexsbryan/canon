@@ -430,7 +430,9 @@ pub fn allocation(args: &[String]) -> i32 {
             let step = match flag(args, "--step").map(str::parse::<i64>) {
                 None => 1,
                 Some(Ok(n)) => n,
-                Some(Err(_)) => return fail("--step takes a whole number; its sign is the direction"),
+                Some(Err(_)) => {
+                    return fail("--step takes a whole number; its sign is the direction")
+                }
             };
             let per = match every(flag(args, "--per").unwrap_or("1d")) {
                 Ok(p) => p,
@@ -519,7 +521,10 @@ pub fn pool(args: &[String]) -> i32 {
         );
         return 0;
     }
-    println!("{} — turn {} under {}", scope, schedule.period, schedule.rule);
+    println!(
+        "{} — turn {} under {}",
+        scope, schedule.period, schedule.rule
+    );
     println!();
     let width = schedule
         .awards
@@ -1063,7 +1068,12 @@ pub fn voice(args: &[String]) -> i32 {
     let mut rulings: Vec<String> = Vec::new();
     for act in log.acts().iter() {
         match &act.kind {
-            canon_core::ActKind::Grant { holder, scope, horizon, .. } if *holder == who => {
+            canon_core::ActKind::Grant {
+                holder,
+                scope,
+                horizon,
+                ..
+            } if *holder == who => {
                 let withdrawn = log.acts().iter().any(|w| {
                     matches!(&w.kind, canon_core::ActKind::Withdraw { holder: h, scope: s, .. }
                         if *h == who && s == scope && w.ts_unix >= act.ts_unix)
@@ -1085,7 +1095,11 @@ pub fn voice(args: &[String]) -> i32 {
                 rulings.push(format!(
                     "  said {a} and {b} do not conflict, {}{}{}",
                     store::ymd(act.ts_unix),
-                    if rationale.is_empty() { String::new() } else { format!(" — {rationale}") },
+                    if rationale.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" — {rationale}")
+                    },
                     if outside {
                         "\n    not applied: outside their standing".to_string()
                     } else {
@@ -1093,7 +1107,9 @@ pub fn voice(args: &[String]) -> i32 {
                     }
                 ));
             }
-            canon_core::ActKind::Accept { a, b, rationale, .. } if act.actor == who => {
+            canon_core::ActKind::Accept {
+                a, b, rationale, ..
+            } if act.actor == who => {
                 rulings.push(format!(
                     "  carried {a} against {b}, {} — {rationale}{}",
                     store::ymd(act.ts_unix),
@@ -1173,31 +1189,48 @@ pub fn voice(args: &[String]) -> i32 {
 /// disposition in the canon is the last word; if it was written after this
 /// act, name who wrote it. For an agent's record this is the line that
 /// matters: not what it said, but whether the house let it stand.
-fn overruled(log: &canon_core::Log, canon: &canon_core::Canon, a: &canon_core::ActId, b: &canon_core::ActId, at: i64) -> String {
+fn overruled(
+    log: &canon_core::Log,
+    canon: &canon_core::Canon,
+    a: &canon_core::ActId,
+    b: &canon_core::ActId,
+    at: i64,
+) -> String {
     // A pair can carry two dispositions in the fold — the dismissal and the
     // later acceptance — so the current one is the latest, not the first.
-    let Some(c) = canon.conflicts.iter().filter(|c| c.is_pair(a, b)).max_by_key(|c| c.at) else {
+    let Some(c) = canon
+        .conflicts
+        .iter()
+        .filter(|c| c.is_pair(a, b))
+        .max_by_key(|c| c.at)
+    else {
         return String::new();
     };
     if c.at <= at {
         return String::new();
     }
-    let later = log
-        .acts()
-        .iter()
-        .filter(|x| x.ts_unix > at)
-        .filter(|x| match &x.kind {
-            canon_core::ActKind::Accept { a: p, b: q, .. }
-            | canon_core::ActKind::Dismiss { a: p, b: q, .. } => c.is_pair(p, q),
-            _ => false,
-        })
-        .last();
+    let later = log.acts().iter().rfind(|x| {
+        x.ts_unix > at
+            && match &x.kind {
+                canon_core::ActKind::Accept { a: p, b: q, .. }
+                | canon_core::ActKind::Dismiss { a: p, b: q, .. } => c.is_pair(p, q),
+                _ => false,
+            }
+    });
     match (later, &c.disposition) {
         (Some(x), canon_core::Disposition::Tolerated { .. }) => {
-            format!("\n    overruled by {}, {}: carried knowingly", x.actor, store::ymd(x.ts_unix))
+            format!(
+                "\n    overruled by {}, {}: carried knowingly",
+                x.actor,
+                store::ymd(x.ts_unix)
+            )
         }
         (Some(x), canon_core::Disposition::Dismissed { .. }) => {
-            format!("\n    overruled by {}, {}: not a conflict", x.actor, store::ymd(x.ts_unix))
+            format!(
+                "\n    overruled by {}, {}: not a conflict",
+                x.actor,
+                store::ymd(x.ts_unix)
+            )
         }
         _ => String::new(),
     }

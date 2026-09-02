@@ -2142,7 +2142,10 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         } else {
             for i in &kept {
                 let c = &candidates[*i];
-                println!("{}", crate::wrap::hang(&format!("  {:<9} ", c.kind.label()), &c.text));
+                println!(
+                    "{}",
+                    crate::wrap::hang(&format!("  {:<9} ", c.kind.label()), &c.text)
+                );
                 if !c.because.is_empty() {
                     println!("{}", crate::wrap::hang("            because: ", &c.because));
                 }
@@ -2241,7 +2244,10 @@ fn review(
         // one, and "accept" has to mean what the person thought it meant.
         println!(
             "{}",
-            crate::wrap::hang(&format!("  {:<9} \"", c.kind.label()), &format!("{}\"", c.text))
+            crate::wrap::hang(
+                &format!("  {:<9} \"", c.kind.label()),
+                &format!("{}\"", c.text)
+            )
         );
         if !c.because.is_empty() {
             println!("{}", crate::wrap::hang("        because: ", &c.because));
