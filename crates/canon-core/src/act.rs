@@ -42,8 +42,10 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 17] = [
+pub const KNOWN_ANNOTATIONS: [&str; 19] = [
     "ratification",
+    "allot",
+    "allocation",
     "accept",
     "dismiss",
     "question",
@@ -244,6 +246,26 @@ pub enum ActKind {
         rule: crate::ratify::Ratify,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         scope: Option<crate::scope::Scope>,
+    },
+    /// A pool of units belonging to a scope — the sites, the headgates, the
+    /// slots. The *what there is* of a commons, separate from how it is
+    /// shared, exactly as a commitment is separate from the policy that
+    /// judges it. See [`crate::allot`].
+    Allot {
+        text: String,
+        /// What one is called. A noun; the fold never reads it.
+        unit: String,
+        /// The units, in the order they were written. Named rather than
+        /// counted, because the order carries meaning a count cannot.
+        units: Vec<String>,
+        scope: crate::scope::Scope,
+    },
+    /// How a scope's pool is shared out. Adopted per scope like a policy, and
+    /// gated by standing over it for the same reason.
+    Allocation {
+        text: String,
+        rule: crate::allot::Allocation,
+        scope: crate::scope::Scope,
     },
     /// Somebody decided something. The rung a graduated ladder counts.
     ///

@@ -9,6 +9,23 @@ use canon_core::{ActId, ActKind, Canon, Disposition, Log, Status};
 
 use crate::store;
 
+/// What an id names — a rule, or the question a rule answered.
+///
+/// **Answering a question is superseding it**, which is the whole reason this
+/// format has no separate `answer` op. So a commitment's `replaces` can name
+/// a question as easily as a rule, and rendering the second as "(unknown)"
+/// hides exactly the link that makes the answer make sense: the gap somebody
+/// noticed, and the rule they wrote to close it.
+fn replaced_text(canon: &Canon, id: &ActId) -> String {
+    if let Some(c) = canon.get(id) {
+        return format!("\"{}\"", c.text);
+    }
+    match canon.questions.iter().find(|q| q.id == *id) {
+        Some(q) => format!("the question \"{}\"", q.text),
+        None => "(unknown)".to_string(),
+    }
+}
+
 /// One line of an explanation. The caller supplies the prefix so a CLI can
 /// indent and an MCP payload need not.
 pub struct Explanation {
@@ -113,11 +130,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     }
 
     for old in &c.replaces {
-        let prev = canon
-            .get(old)
-            .map(|p| p.text.as_str())
-            .unwrap_or("(unknown)");
-        lines.push(format!("replaced {old}: \"{prev}\""));
+        lines.push(format!("replaced {old}: {}", replaced_text(canon, old)));
     }
 
     match &c.status {
@@ -325,5 +338,44 @@ mod tests {
         let canon = Log::from_acts(vec![a, b]).derive();
         assert!(resolve(&canon, "can-").is_err());
         assert!(resolve(&canon, "can-zzzzzz").is_err());
+    }
+}
+
+#[cfg(test)]
+mod answered_question_tests {
+    use super::*;
+    use canon_core::Act;
+
+    #[test]
+    fn a_rule_that_answered_a_question_names_the_question_it_answered() {
+        // Answering a question is superseding it — there is deliberately no
+        // `answer` op — so `replaces` routinely names a question. Reporting
+        // that as "(unknown)" loses the gap somebody noticed, which is half
+        // of why the rule reads the way it does.
+        let q = Act::new(
+            ActKind::Question {
+                text: "Who waters the plants when everyone travels at once?".into(),
+                proposal: None,
+            },
+            100,
+            "human:mira",
+        );
+        let answer = Act::new(
+            ActKind::Supersede {
+                text: "Whoever is away longest waters them.".into(),
+                old: vec![q.id.clone()],
+                rationale: "three plants died in August".into(),
+            },
+            200,
+            "human:mira",
+        );
+        let log = Log::from_acts(vec![q.clone(), answer.clone()]);
+        let canon = log.derive();
+        let out = explain(&log, &canon, &answer.id).expect("an explanation").render("");
+        assert!(
+            out.contains("the question \"Who waters the plants when everyone travels at once?\""),
+            "{out}"
+        );
+        assert!(!out.contains("(unknown)"), "{out}");
     }
 }

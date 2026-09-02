@@ -5,7 +5,7 @@
 //! what is live, what replaced what and why, which contradictions are carried
 //! knowingly — comes from replaying the log.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -245,6 +245,12 @@ pub struct Canon {
     /// How proposals become rules, by scope. See [`crate::ratify`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ratifications: Vec<crate::ratify::AdoptedRatify>,
+    /// The pools this canon holds, by scope. See [`crate::allot`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub allotments: Vec<crate::allot::Allotment>,
+    /// How each pool is shared out.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub allocations: Vec<crate::allot::AdoptedAllocation>,
     /// Governance acts written by somebody without standing to write them —
     /// a grant, a policy, a ratification rule — and therefore not applied.
     /// Surfaced, never silently dropped: the act is in the log, the house
@@ -502,11 +508,187 @@ fn rules_over(canon: &mut Canon, act: &Act, a: &ActId, b: &ActId) -> bool {
     false
 }
 
+/// A `grant` act applied, or recorded in `ungoverned` when its actor could
+/// not have written it.
+///
+/// Lifted out of the fold because the revert gate needs the same answer to
+/// the same question one pass earlier, and two spellings of "who holds this"
+/// is one too many.
+fn apply_grant(
+    canon: &mut Canon,
+    act: &Act,
+    holder: &str,
+    scope: &crate::scope::Scope,
+    horizon: Option<i64>,
+) {
+    // Granting standing over a scope takes standing over it or over the
+    // scope above. The first grant in an ungoverned canon is the bootstrap
+    // and is open.
+    if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
+        canon.ungoverned.push((
+            act.id.clone(),
+            format!(
+                "{} granted {holder} standing over {scope} without holding it",
+                act.actor
+            ),
+        ));
+        return;
+    }
+    // Re-granting the same actor the same scope CLOSES the old one rather
+    // than stacking on it: two grants live at one instant would make "when
+    // does this lapse" have two answers. Closing rather than deleting is what
+    // keeps "who held this in March" answerable — and what stops a re-grant
+    // today from changing a pool that was frozen in March.
+    for g in canon
+        .grants
+        .iter_mut()
+        .filter(|g| g.actor == *holder && g.scope == *scope && g.withdrawn_at.is_none())
+    {
+        g.withdrawn_at = Some(act.ts_unix);
+    }
+    canon.grants.push(crate::scope::Grant {
+        actor: holder.to_string(),
+        scope: scope.clone(),
+        horizon,
+        granted_at: act.ts_unix,
+        withdrawn_at: None,
+        act: act.id.clone(),
+    });
+}
+
+/// A `withdraw` act applied, or recorded in `ungoverned`. See [`apply_grant`].
+fn apply_withdraw(canon: &mut Canon, act: &Act, holder: &str, scope: &crate::scope::Scope) {
+    // Stepping back yourself is always yours to do. Standing somebody else
+    // down takes standing over the scope.
+    if act.actor != *holder && !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
+        canon.ungoverned.push((
+            act.id.clone(),
+            format!(
+                "{} stood {holder} down from {scope} without holding it",
+                act.actor
+            ),
+        ));
+        return;
+    }
+    // Removes grants AT or BELOW the named scope. Carving a hole out of a
+    // broader grant is deliberately not expressible: stepping back from
+    // `house.kitchen` while holding `house` would need a negative grant, and a
+    // permission system with both grants and denials is one where nobody can
+    // answer "may they?" by looking. Re-grant narrower instead.
+    for g in canon
+        .grants
+        .iter_mut()
+        .filter(|g| g.actor == *holder && scope.covers(&g.scope) && g.withdrawn_at.is_none())
+    {
+        g.withdrawn_at = Some(act.ts_unix);
+    }
+}
+
+/// The standing established by the acts before `i`, ignoring anything an
+/// earlier in-seat revert has already tomb-stoned.
+///
+/// Refolded per revert rather than carried alongside the main fold. Reverts
+/// are rare — `undo` is a thing people do a handful of times, not a thing
+/// that accumulates — so this costs nothing in a canon that has none, and the
+/// alternative is a second running copy of the grant table that has to stay
+/// in step with the first.
+fn governance_before(acts: &[Act], i: usize, tombstoned: &BTreeSet<&str>) -> Canon {
+    let mut gov = Canon::default();
+    for act in acts[..i]
+        .iter()
+        .filter(|a| !tombstoned.contains(a.id.as_str()))
+    {
+        match &act.kind {
+            ActKind::Grant {
+                holder,
+                scope,
+                horizon,
+                ..
+            } => apply_grant(&mut gov, act, holder, scope, *horizon),
+            ActKind::Withdraw { holder, scope, .. } => apply_withdraw(&mut gov, act, holder, scope),
+            ActKind::Scoped { commitment, scope } => {
+                gov.scopes.retain(|(id, _)| id != commitment);
+                gov.scopes.push((commitment.clone(), scope.clone()));
+            }
+            _ => {}
+        }
+    }
+    gov
+}
+
+/// May this actor tomb-stone that act?
+///
+/// Reverting your own is always yours, exactly as with `retract` and
+/// `withdraw`. Reverting somebody else's takes standing over whatever it
+/// touched — the scope a governance act named, or the scope of the commitment
+/// it introduced, or the canon itself when it named neither.
+fn may_revert(gov: &Canon, acts: &[Act], act: &Act, target: &ActId) -> bool {
+    let Some(t) = acts.iter().find(|a| a.id == *target) else {
+        // A target this log does not carry is reported as dangling. Judging
+        // it at the canon level is the conservative reading: an id nobody can
+        // resolve is not a licence to delete it.
+        return gov.may_govern(&act.actor, None, act.ts_unix);
+    };
+    if t.actor == act.actor {
+        return true;
+    }
+    let scope = match &t.kind {
+        ActKind::Grant { scope, .. }
+        | ActKind::Withdraw { scope, .. }
+        | ActKind::Scoped { scope, .. }
+        | ActKind::Allot { scope, .. }
+        | ActKind::Allocation { scope, .. } => Some(scope.clone()),
+        ActKind::Policy { scope, .. } | ActKind::Ratification { scope, .. } => scope.clone(),
+        ActKind::Accept { a, b, .. } | ActKind::Dismiss { a, b, .. } => {
+            gov.scope_of(a).or_else(|| gov.scope_of(b)).cloned()
+        }
+        _ => gov.scope_of(&t.id).cloned(),
+    };
+    gov.may_govern(&act.actor, scope.as_ref(), act.ts_unix)
+}
+
 /// Derive current state as of `now`. See [`crate::Log::derive_at`].
 pub fn derive_at(acts: &[Act], now: i64) -> Canon {
     let n = acts.len();
 
-    // Pass 1 — liveness.
+    // Pass 1a — standing to revert.
+    //
+    // A tomb-stone is as much a governance move as the act it covers. Gating
+    // who may WRITE a grant while leaving who may DELETE one open is not a
+    // gate: a stranger who reverts every grant leaves a canon nobody holds,
+    // which is the bootstrap state, which is open — and the constitutional
+    // level has a back door wide enough to walk a house through. So a revert
+    // is judged like a `retract`: your own is always yours, somebody else's
+    // takes standing over what it touched.
+    //
+    // Judged against the standing that stood WHEN THE REVERT WAS WRITTEN,
+    // which is the clock rule every other gate here uses and the one
+    // `ratification_for_at` applies to rules. A canon with no earlier grant
+    // is ungoverned and open, so every log written before this rule existed
+    // folds exactly as it did.
+    let mut refused: Vec<(ActId, String)> = Vec::new();
+    let mut tombstoned: BTreeSet<&str> = BTreeSet::new();
+    let mut in_seat = vec![true; n];
+    for (i, act) in acts.iter().enumerate() {
+        let ActKind::Revert { targets, .. } = &act.kind else {
+            continue;
+        };
+        let gov = governance_before(acts, i, &tombstoned);
+        // All or nothing. Half a revert would be an act whose effect nobody
+        // could state, and the actor asked for one thing.
+        match targets.iter().find(|t| !may_revert(&gov, acts, act, t)) {
+            Some(t) => {
+                in_seat[i] = false;
+                refused.push((
+                    act.id.clone(),
+                    format!("{} reverted {t} without standing over it", act.actor),
+                ));
+            }
+            None => tombstoned.extend(targets.iter().map(ActId::as_str)),
+        }
+    }
+
+    // Pass 1b — liveness.
     //
     // An act is dead iff some LIVE `Revert` targets it; a `Revert` cancelled
     // by another live `Revert` has no effect, which is revert-of-revert
@@ -518,7 +700,7 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
     // it cancels. The recursion is well-founded because an act can only
     // reference an id that already existed when it was written.
     let mut reverters: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
-    for (j, act) in acts.iter().enumerate() {
+    for (j, act) in acts.iter().enumerate().filter(|(j, _)| in_seat[*j]) {
         if let ActKind::Revert { targets, .. } = &act.kind {
             for t in targets {
                 reverters.entry(t.as_str()).or_default().push(j);
@@ -578,7 +760,10 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
     let mut q_order: Vec<ActId> = Vec::new();
     let mut by_id: BTreeMap<ActId, Commitment> = BTreeMap::new();
     let mut questions: BTreeMap<ActId, Question> = BTreeMap::new();
-    let mut canon = Canon::default();
+    let mut canon = Canon {
+        ungoverned: refused,
+        ..Canon::default()
+    };
     let live_acts = || {
         acts.iter()
             .enumerate()
@@ -753,65 +938,12 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 scope,
                 horizon,
                 ..
-            } => {
-                // Granting standing over a scope takes standing over it or
-                // over the scope above. The first grant in an ungoverned
-                // canon is the bootstrap and is open.
-                if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!("{} granted {holder} standing over {scope} without holding it", act.actor),
-                    ));
-                    continue;
-                }
-                // Re-granting the same actor the same scope CLOSES the old
-                // one rather than stacking on it: two grants live at one
-                // instant would make "when does this lapse" have two answers.
-                // Closing rather than deleting is what keeps "who held this
-                // in March" answerable — and what stops a re-grant today
-                // from changing a pool that was frozen in March.
-                for g in canon
-                    .grants
-                    .iter_mut()
-                    .filter(|g| g.actor == *holder && g.scope == *scope && g.withdrawn_at.is_none())
-                {
-                    g.withdrawn_at = Some(act.ts_unix);
-                }
-                canon.grants.push(crate::scope::Grant {
-                    actor: holder.clone(),
-                    scope: scope.clone(),
-                    horizon: *horizon,
-                    granted_at: act.ts_unix,
-                    withdrawn_at: None,
-                    act: act.id.clone(),
-                });
-            }
+            } => apply_grant(&mut canon, act, holder, scope, *horizon),
             ActKind::Withdraw {
                 holder: actor,
                 scope,
                 ..
-            } => {
-                // Stepping back yourself is always yours to do. Standing
-                // somebody else down takes standing over the scope.
-                if *actor != act.actor && !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!("{} stood {actor} down from {scope} without holding it", act.actor),
-                    ));
-                    continue;
-                }
-                // Removes grants AT or BELOW the named scope. Carving a hole
-                // out of a broader grant is deliberately not expressible:
-                // stepping back from `house.kitchen` while holding `house`
-                // would need a negative grant, and a permission system with
-                // both grants and denials is one where nobody can answer "may
-                // they?" by looking. Re-grant narrower instead.
-                for g in canon.grants.iter_mut().filter(|g| {
-                    g.actor == *actor && scope.covers(&g.scope) && g.withdrawn_at.is_none()
-                }) {
-                    g.withdrawn_at = Some(act.ts_unix);
-                }
-            }
+            } => apply_withdraw(&mut canon, act, actor, scope),
             ActKind::Scoped { commitment, scope } => {
                 canon.scopes.retain(|(id, _)| id != commitment);
                 canon.scopes.push((commitment.clone(), scope.clone()));
@@ -873,6 +1005,53 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 // in force when it was written, so the history has to stay.
                 // `ratification_for` picks the latest per scope.
                 canon.ratifications.push(crate::ratify::AdoptedRatify {
+                    scope: scope.clone(),
+                    rule: rule.clone(),
+                    text: text.clone(),
+                    at: act.ts_unix,
+                    actor: act.actor.clone(),
+                    act: act.id.clone(),
+                });
+            }
+            ActKind::Allot {
+                text,
+                unit,
+                units,
+                scope,
+            } => {
+                // Saying what a commons HAS is a governance act: it draws the
+                // boundary Ostrom's first principle is about, one level down
+                // from who holds it.
+                if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} allotted {scope} without holding it", act.actor),
+                    ));
+                    continue;
+                }
+                canon.allotments.retain(|a| a.scope != *scope);
+                canon.allotments.push(crate::allot::Allotment {
+                    scope: scope.clone(),
+                    unit: unit.clone(),
+                    units: units.clone(),
+                    text: text.clone(),
+                    at: act.ts_unix,
+                    actor: act.actor.clone(),
+                    act: act.id.clone(),
+                });
+            }
+            ActKind::Allocation { text, rule, scope } => {
+                if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
+                    canon.ungoverned.push((
+                        act.id.clone(),
+                        format!("{} set how {scope} is shared without holding it", act.actor),
+                    ));
+                    continue;
+                }
+                // Kept rather than replaced, like a ratification rule: the
+                // period is counted from adoption, so which turn it is stays
+                // answerable for a rule that has since been superseded.
+                canon.allocations.push(crate::allot::AdoptedAllocation {
                     scope: scope.clone(),
                     rule: rule.clone(),
                     text: text.clone(),

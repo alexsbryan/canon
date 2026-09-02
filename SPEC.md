@@ -102,6 +102,8 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `draw_commit` | `scope`, `count`, `after_ts`, `rationale?` | A lot is announced |
 | `draw_secret` | `commit`, `digest` | A sealed secret, before the boundary |
 | `draw_reveal` | `commit`, `secret` | The secret, after it |
+| `allot` | `text`, `unit`, `units[]`, `scope` | What a scope has to share |
+| `allocation` | `text`, `rule`, `scope` | How that pool goes round |
 | `silence` | `about`, `rationale` | Unwritten on purpose, not by neglect |
 
 `accept.rationale` is **required**: a tolerated contradiction must say
@@ -197,11 +199,12 @@ Implementations MUST produce identical state for the same set of acts
 regardless of the order they arrive in. Three rules:
 
 **1. Liveness resolves by reference, not by position.** An act is dead
-iff some *live* `revert` targets it; a `revert` cancelled by another live
-`revert` has no effect, so reverting a revert re-applies the originals.
-Resolving this by walking a sorted list is incorrect — acts routinely
-share a second, and an id tiebreak can order a `revert` ahead of the act
-it cancels.
+iff some *live, in-seat* `revert` targets it; a `revert` cancelled by
+another live `revert` has no effect, so reverting a revert re-applies the
+originals. Resolving this by walking a sorted list is incorrect — acts
+routinely share a second, and an id tiebreak can order a `revert` ahead
+of the act it cancels. In-seat is rule 7: a `revert` of somebody else's
+act by a person without standing over it is recorded and has no effect.
 
 **2. Introduce before applying.** Collect every commitment from `assert`
 and `supersede` first; only then apply status effects. Same reason.
@@ -288,6 +291,42 @@ against: acts written in the same second cannot govern one another, so a
 founder's first twelve grants all take. A canon with no earlier grant is
 ungoverned and open; the first grant closes it. Withdrawing your own
 standing is always yours to do.
+
+**A `revert` is gated the same way, and this one is load-bearing.** A
+tomb-stone is as much a governance move as the act it covers: gating who may
+*write* a grant while leaving who may *delete* one open is not a gate,
+because a stranger who reverts every grant leaves a canon nobody holds, and
+a canon nobody holds is open. Reverting your own act is always yours.
+Reverting somebody else's takes standing over what it touched — the scope a
+governance act named, the scope of the commitment it introduced, else the
+canon — and a `revert` naming several targets applies to all of them or to
+none. It is judged against the standing that stood when the revert was
+written, so a grant deleted today does not retroactively unseat what was
+done under it.
+
+**8. A schedule is a query, not an act.** There is no op that records a turn
+taken, and there must not be one. Given a scope's `allot`, the grants held at
+a moment, the `allocation` rule and a clock, whose turn it is is a pure
+function every reader computes identically — the same rule the draw already
+follows. A community running a rotation writes **no per-turn acts at all**.
+
+`allot.units` are NAMED and ordered; a bare count is written out as `1 … n`.
+The order carries meaning a count cannot — `gate-1 … gate-11` runs down a
+canal — and a reader MUST preserve it. Re-allotting a scope replaces its pool;
+`allocation` acts are kept rather than replaced, because a rotation counts its
+periods from the moment its rule was adopted, snapped down to a whole multiple
+of the period. Both are governance acts under rule 7: an `allot` or an
+`allocation` by somebody without standing over the scope is recorded and not
+applied.
+
+Who may take a turn is **whoever holds standing covering the scope** — the
+first design principle doing a second job, since boundaries decide who may
+appropriate and not only who may decide. An `allocation` naming a written
+order restricts turns to the actors it names, and a holder the order does not
+name MUST be reported rather than dropped.
+
+Neither op changes what is live, so both are annotations: a reader that does
+not know them carries them and says so, and no version bump is required.
 
 ## Canonical ordering
 

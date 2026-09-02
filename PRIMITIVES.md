@@ -279,8 +279,8 @@ classification is the caller's job; the attribute is the interface.
 ### Ratification — the collective-choice level
 
 `BUILT` (`ratify.rs`: `Ratify`, `Verdict`, `Canon::{ratify, ratification_for,
-may_govern}`; `act.rs`: the `ratification` op; `fold.rs`: pass 4, and the
-`proposed` / `refused` statuses)
+may_govern}`; `act.rs`: the `ratification` op; `fold.rs`: pass 1a the revert
+gate, pass 4, and the `proposed` / `refused` statuses)
 
 Policy as described above judges proposals to *act*. It said nothing about
 proposals to *legislate*, and so for its first months this library had a hole
@@ -299,6 +299,7 @@ assert / supersede            a PROPOSAL, scoped
 ratification rule (per scope)  standing | joint{holders} | threshold{n/m} | consent{days}
    ratify(proposal, positions, standing, now) -> ratified | proposed | refused
 grant / policy / ratification  applied only by somebody holding the scope, or the one above
+revert of somebody else's act  the same standing it would have taken to write it
 ```
 
 The ratification function is pure and lives beside `policy`: the same
@@ -315,12 +316,21 @@ proposal even where it holds standing, and its approvals do not count. That is
 Ostrom's fourth principle stated as a type: the monitor is answerable to the
 people, never the reverse. A house can change this; the record will show it did.
 
-**The constitutional level is standing, today.** Changing how a scope makes
-rules is gated by holding that scope or the one above it. That closes the
-obvious loophole — a member lowering the bar for their own corner — and it is
-not yet Ostrom's full answer, which would make a change to the ratification
-rule itself a proposal ratified at the level above. Written down here so it is
-a known gap and not an oversight.
+**The constitutional level is standing, today, and deletion counts.**
+Changing how a scope makes rules is gated by holding that scope or the one
+above it — and so is tomb-stoning the act that set it. Gating who may *write*
+a grant while leaving who may *revert* one open is not a gate: a stranger who
+reverts every grant leaves a canon nobody holds, and a canon nobody holds is
+open, so the refused self-grant applies after all. That was live here until it
+turned up while walking the three tiers with the CLI; `revert` is now judged
+exactly like `retract`, and the acceptance test for it is
+`a_stranger_cannot_tombstone_the_grants_that_shut_them_out`.
+
+Two gaps remain, and neither is an oversight. A holder can still lower the bar
+for their own corner, because holding `house.kitchen` *is* standing over
+`house.kitchen`; a house that does not want that grants one level up and
+accepts that the corner's rules are ratified there. And the change is not
+itself a proposal ratified one level above, which is Ostrom's full answer.
 
 The default is `standing`, which is exactly what every canon did before, made
 explicit. A canon that has never granted standing to anyone is ungoverned and
@@ -431,6 +441,64 @@ legitimately joined last week would be the worse failure. It does mean the
 question "who may be drawn" is answered by grants, under whatever policy
 governs them — which is where it belongs, and where it is visible.
 
+## Primitive 10 — Appropriation: whose turn is it
+
+`PARTIAL` (`allot.rs`: `Allotment`, `Allocation`, `Order`, `Schedule`,
+`Canon::pool_at`; `act.rs`: the `allot` and `allocation` ops. Rotation is
+built; shares, booking and first-come are not.)
+
+Policy answers *may I act*, ratification answers *is this a rule yet*, and for
+its first year nothing here answered the question every commons Ostrom studied
+actually turns on: **whose turn is it.** A canon could record that a huerta
+exists and could not say who takes water on Thursday.
+
+**The classical commons did not meter, and that is the design.** Valencia takes
+what it needs while its turn lasts and never measures the water. Alanya draws
+its named sites in September and rotates one site a day. Törbel caps a
+household at the cattle it can winter on its own land. All three allocate turns
+and positions; metering is the modern shape — a laser, a build farm — and it is
+the special case. Building the metered case first would have produced the wrong
+primitive and a great deal of bookkeeping nobody wanted.
+
+That has one large consequence, and it is the one the draw already reached:
+
+**A schedule is a query, not an act.** Given the pool, the holders, the rule
+and the clock, whose turn it is is a pure function. A rotation costs **no
+per-turn acts at all** — which is what makes it something a community can adopt
+rather than something a community has to staff, and it is the difference
+between a capability and a thing anyone uses.
+
+It also all but dissolves the surveillance objection that shaped Primitive 5.
+These institutions monitor by mutual visibility — you can see whose boat is on
+your site — not by ledger. Nothing here records what anybody did.
+
+```
+allot        the units a scope has, named and ordered
+allocation   how they go round: rotation{order, step, per}
+             order: holders | given{actors} | from_draw{commit}
+   pool_at(scope, now) -> awards, idle holders, free units
+```
+
+**The draw's contribution is its seed, not its seats.** Ordering everybody is a
+different question from selecting a few; `from_draw` asks the second of the
+same unsteerable number, so Alanya's September lot composes with Primitive 9
+and needs no new randomness.
+
+**The sign of `step` is the direction.** Alanya rotates east from September and
+west from January — one rule and a sign, not two rules.
+
+**A written roster restricts turns, and the unrostered are reported.** That is
+how a community keeps its monitor out of the rotation without taking away the
+standing it watches with. They appear as `idle`, because a holder nobody
+rostered is exactly the disappearance this project exists to prevent.
+
+**What is not built, and what it waits on.** `claim` (the booked shape — a
+laser, CI capacity), `share` (Törbel's derived entitlement, which must be a
+governance act because the community verifies your winter capacity rather than
+taking your word), and `cede` (turn-swapping, ubiquitous in real irrigation).
+None is needed by the rotation cases, and each wants a fixture behind it before
+it is typed.
+
 ## Does the set actually span? An adequacy test
 
 The claim this document makes is that governance is policy over a small
@@ -446,26 +514,43 @@ sortition onto what it already does the way one adds a dependency.
 
 | Technology | Composition | Verdict |
 |---|---|---|
-| Consent, not consensus | policy over positions where `Against` requires a reason | spans |
-| Majority / supermajority / unanimity | policy counting actor-sourced positions | spans\* |
-| Quorum, thresholds | policy over position count and standing | spans |
-| Veto and minority protection | policy | spans |
-| Subsidiarity | nested scopes + policy routing to the lowest competent one | spans |
-| Delegation / liquid democracy | annotation (A delegates scope S to B, with a horizon); policy resolves the chain | spans |
-| Term limits, rotation | scope grant carrying a horizon + the staleness query | spans |
-| Sunset clauses, trial periods | annotation carrying a horizon + the staleness query | spans |
-| Recall, impeachment | retract a scope grant | spans |
-| Appeal, escalation | policy returning a higher scope in the authority ladder | spans |
-| Entrenchment (constitution harder to amend than statute) | rank as an annotation; policy reads it | spans |
-| Per-actor budgets, quadratic voting | fold over actor-sourced annotations | spans |
-| Precedent, distinguishing, overruling | the core: assert, supersede, tensions, the fold guards | spans |
-| Cohort ratification | `Adopt` + generation + scope | spans |
-| Deliberative minipublics | fair draw + scope grant with horizon + a question batch | needs Primitive 9 |
-| Sortition | a draw nobody can steer | **does not span** |
-| Graduated sanctions | authority ladder + a count of prior decisions | spans, with a caveat below |
-| Futarchy, staked prediction | positions carrying transferable stakes | out of scope — no value transfer here, and we are not adding it |
+| Consent, not consensus | `op:policy` + `policy:consent` + `op:position` | built |
+| Majority, supermajority, unanimity | `op:policy` + `policy:supermajority` + `op:position` | built |
+| Objection thresholds | `op:policy` + `policy:threshold` + `op:position` | built |
+| Veto and minority protection | `op:policy` + `policy:consent` + `op:position` | built |
+| Subsidiarity | `op:grant` + `op:scoped` + `op:policy` + `policy:subsidiarity` | built |
+| Term limits, rotation of office | `op:grant` + `op:horizon` + `query:overdue` | built |
+| Sunset clauses, trial periods | `op:horizon` + `query:overdue` | built |
+| Recall, impeachment | `op:withdraw` | built |
+| Appeal, escalation | `op:decided` + `op:policy` + `policy:graduated` | built |
+| Entrenchment | `op:rank` + `op:policy` + `policy:entrenched` | built |
+| Precedent, distinguishing, overruling | `op:assert` + `op:supersede` + `op:retract` + `op:accept` + `op:dismiss` | built |
+| Undo, rescission | `op:revert` | built |
+| Recording a gap | `op:question` | built |
+| Deliberate non-decision | `op:silence` | built |
+| Cohort ratification | `op:adopt` + `op:ratification` | built |
+| Deliberative minipublics | `op:draw_commit` + `op:grant` + `op:horizon` + `op:question` | built |
+| Sortition | `op:draw_commit` + `op:draw_secret` + `op:draw_reveal` | built |
+| Graduated sanctions | `op:decided` + `op:policy` + `policy:graduated` | built |
+| Rotating a shared resource | `op:allot` + `op:allocation` + `query:pool` | built |
+| Delegation, liquid democracy | `op:position`, and nothing types the chain | carried |
+| Quorum as a share of the eligible | nothing reads the electorate; `policy:supermajority` counts only those who spoke | absent |
+| Choice among alternatives | no ballot over more than one proposal | absent |
+| Per-actor budgets, quadratic voting | no quantity on a position | absent |
+| Metered appropriation, booking a span | `op:allot` exists; nothing books part of a period | absent |
+| Overlapping jurisdiction, polycentricity | scopes are a tree; `covers` is prefix containment | absent |
+| Futarchy, staked prediction | positions carrying transferable stakes | out-of-scope |
 
-\* Spans only once positions can be actor-sourced — see the first finding.
+**The verdicts are four words, and the distinction between the first two is
+the one this table used to lose.** `built` means it composes from typed things
+that exist and the fold computes it. `carried` means the format can *record*
+it and nothing interprets it — real, and not the same claim. `absent` means it
+needs mechanism there is none of. `out-of-scope` means refused on purpose.
+
+An earlier version of this table marked delegation and quadratic voting as
+spanning, on the grounds that a community could write them as annotations.
+That conflated representational adequacy with executable adequacy, which is
+exactly the equivocation a design document is for catching.
 
 Three findings, and they changed the primitives rather than decorating them.
 
@@ -492,6 +577,54 @@ to climb, which is the correct behaviour.
 trial periods, revisit dates and rotation are all the same shape: an annotation
 carrying a horizon, plus one query for what is overdue. That is the strongest
 evidence in this document that Primitive 8 is a primitive and not a feature.
+
+## The stopping rule
+
+A substrate whose primitive count grows with its examples is not a substrate,
+it is a catalogue. So the honest question is not *can this express X* — it is
+**does the set stop growing**, and the record says it does, for one specific
+reason worth writing down.
+
+Fourteen institutions were built on one spine and added **zero** primitives.
+Growth has never come from examples. It has come from two places: a missing
+tier (appropriation, Primitive 10) and a single failure of the adequacy test
+above (sortition, Primitive 9). One failure in eighteen technologies is what
+convergence looks like.
+
+**The danger is running the wrong generator.** There are two questions, and
+only one of them terminates:
+
+- *What does governance theory contain that this cannot represent?* — Hohfeld's
+  incidents, Searle's constitutive rules, deontic conditionals, the social
+  choice literature. This generator does not converge, because the theory is
+  unbounded, and every item it produces looks principled.
+- *Does adopting this technology require new mechanism, or is it policy over
+  what already exists?* — the table above. This one converges, and it has.
+
+The first is useful for finding blind spots and useless for deciding what to
+build. Confusing them is how a small core becomes a large one while everybody
+involved believes they are being disciplined.
+
+**So: no new op without both of these.**
+
+1. **Two institutions, in different domains, that need it.** One institution
+   needing something is a feature of that institution. Two domains needing the
+   same thing is evidence of a primitive. `allot` qualifies — a laser, a build
+   queue and a canal; `slate` and a deontic `modality` do not, because no
+   institution has asked.
+2. **A written, failed attempt to compose it from what exists.** Not a claim
+   that it cannot be composed — the attempt, in the commit message or here.
+   Törbel's per-household entitlement looked like a new `share` op until the
+   composition was tried: a grant already says *holds this scope*, so *holds
+   four units of it* is a widening of `grant`, the way `horizon` was a widening
+   that paid for five technologies at once.
+
+`crates/canon-cli/tests/adequacy_bar.rs` enforces the census: every op in the
+format is listed there with the primitive it serves and the composition it
+was not reachable by, every op is named by at least one technology above, and
+a new op fails the suite until somebody writes down why it exists. A table
+that ran once and a table that runs on every commit are different objects,
+and this document has already been wrong about which one it had.
 
 ## The motions people already make
 

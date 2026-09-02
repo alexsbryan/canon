@@ -247,6 +247,17 @@ boundaries at two depths *is*. `PRIMITIVES.md` claims dotted scopes give
 Ostrom's eighth principle for free; the ablation is what that claim looks like
 when you take the scopes away.
 
+It costs more than the routing it was written to break, and the extra cost
+only appeared once ratification existed. With no grant over the inner
+boundary, the two rules the insiders wrote **for that boundary never become
+rules**: ratification counts holders at the narrowest granted level, the only
+standing left there is the monitor's, and a machine never mints. The pair sits
+as proposals nobody present can carry, so this institution runs on six live
+commitments where its parent runs on eight. Taking the boundary away does not
+merely send a decision to the wrong people — it takes the resource's rules
+away from the people who work it, which is closer to what open access
+actually does than the version of this ablation we designed.
+
 **Principle 7 is an affordance and the ablation shows exactly why.**
 `crosswalk-upstream-capture` grants an upstream actor standing over the fork,
 and it retracts three of the five commitments the community wrote. Nothing in

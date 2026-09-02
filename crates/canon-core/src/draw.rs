@@ -273,7 +273,7 @@ impl Canon {
 /// no extra dependency, and reproducible by anyone with a hash function.
 /// Rejection sampling rather than a modulo, because a biased lottery is a
 /// steerable one and the bias would be invisible.
-fn shuffle(seed: &str, items: &mut [String]) {
+pub(crate) fn shuffle(seed: &str, items: &mut [String]) {
     let mut stream = Stream::new(seed);
     for i in (1..items.len()).rev() {
         let j = stream.below(i as u64 + 1) as usize;

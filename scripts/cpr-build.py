@@ -194,7 +194,22 @@ def predict(v: dict, ctx: dict, seed_acts: int, scenario: list[dict]) -> dict:
     inner_depth = inner.count(".") + 1
 
     n_inherited = 3 if forked else 0
-    n_local = (5 if forked else 8) - (3 if ab["upstream_retracts_local"] else 0)
+    # Under `no_inner_grants` the two rules the insiders wrote for the inner
+    # resource NEVER BECOME RULES. Ratification counts holders at the
+    # narrowest granted level, and with the insiders' grants gone the only
+    # standing left over that boundary is the monitor's — a machine, which
+    # may propose and object and never mints. So the pair sits as proposals
+    # nobody present can carry, and `live` and `local` count rules.
+    #
+    # That is a sharper statement of what the ablation destroys than the
+    # routing failure it was written for: removing the boundary does not
+    # merely send a decision to the wrong people, it takes the inner
+    # resource's rules away from the people who work it.
+    n_unratified = 2 if ab["no_inner_grants"] else 0
+    n_live = 8 - n_unratified
+    n_local = ((5 if forked else 8)
+               - (3 if ab["upstream_retracts_local"] else 0)
+               - n_unratified)
 
     def live_grants(monitor_live: bool, upstream: bool) -> list[tuple[int, str]]:
         """Every live grant, as (depth of its scope, actor)."""
@@ -261,7 +276,7 @@ def predict(v: dict, ctx: dict, seed_acts: int, scenario: list[dict]) -> dict:
     e["congruence-forked-and-diverged"] = {
         "lineage": v["lineage"] if forked else None,
         "generation": v["generation"] if forked else None,
-        "inherited": n_inherited, "local": 5 if forked else 8}
+        "inherited": n_inherited, "local": (5 if forked else 8) - n_unratified}
 
     if ab["no_local_policy"]:
         # The rule the insiders never got to change still routes to them.
@@ -295,11 +310,11 @@ def predict(v: dict, ctx: dict, seed_acts: int, scenario: list[dict]) -> dict:
         "outcome": "conflicts", "authority": "ask-one",
         "because": f"0 prior decision(s) about `{v['other_subject']['about']}`"}
 
-    e["conflict-before"] = {"acts": acts["conflict-before"], "tolerated": 0, "live": 8}
+    e["conflict-before"] = {"acts": acts["conflict-before"], "tolerated": 0, "live": n_live}
     e["conflict-surfaced"] = {
         "outcome": "conflicts", "authority": "refuse", "because": "one is enough",
         "cites": [f"@{v['c']['clash_a']['label']}", f"@{v['c']['clash_b']['label']}"]}
-    e["conflict-after"] = {"acts": acts["conflict-after"], "tolerated": 1, "live": 8}
+    e["conflict-after"] = {"acts": acts["conflict-after"], "tolerated": 1, "live": n_live}
 
     e["organize-the-fork-keeps-what-it-wrote"] = {
         "generation": v["generation_next"] if forked else None,

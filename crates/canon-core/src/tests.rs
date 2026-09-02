@@ -1125,6 +1125,23 @@ fn every_kind() -> Vec<ActKind> {
             commitment: id,
             rank: "principle".into(),
         },
+        ActKind::Allot {
+            text: "the sites".into(),
+            unit: "site".into(),
+            units: vec!["kizilburun".into(), "incekum".into()],
+            scope: crate::scope::Scope::new("fishery.sites").unwrap(),
+        },
+        ActKind::Allocation {
+            text: "one east a day".into(),
+            rule: crate::allot::Allocation::Rotation {
+                order: crate::allot::Order::FromDraw {
+                    commit: ActId::from_raw("can-000000000001"),
+                },
+                step: 1,
+                per: 86_400,
+            },
+            scope: crate::scope::Scope::new("fishery.sites").unwrap(),
+        },
         ActKind::Ratification {
             text: "the cooks decide together".into(),
             rule: crate::ratify::Ratify::Joint {
@@ -1164,6 +1181,8 @@ fn op_of(kind: &ActKind) -> &'static str {
         ActKind::DrawReveal { .. } => "draw_reveal",
         ActKind::Rank { .. } => "rank",
         ActKind::Ratification { .. } => "ratification",
+        ActKind::Allot { .. } => "allot",
+        ActKind::Allocation { .. } => "allocation",
         ActKind::Annotation { kind, .. } => {
             assert_eq!(kind, "from-the-future");
             "(carried)"
@@ -1947,5 +1966,100 @@ fn you_may_withdraw_your_own_proposal_but_not_somebody_elses_rule() {
     let canon = Log::from_acts(acts).derive();
     assert!(matches!(canon.get(&mine.id).unwrap().status, Status::Retracted { .. }));
     assert!(matches!(canon.get(&theirs.id).unwrap().status, Status::Active));
+    assert_eq!(canon.ungoverned.len(), 1);
+}
+
+#[test]
+fn a_stranger_cannot_tombstone_the_grants_that_shut_them_out() {
+    // The back door under the constitutional level, found by walking the
+    // three tiers with the CLI. Gating who may WRITE a grant while leaving
+    // who may DELETE one open is not a gate: revert every grant and the canon
+    // is ungoverned, and an ungoverned canon is open, so the refused
+    // self-grant applies after all and the house belongs to whoever asked
+    // last.
+    let mut acts = governed_house();
+    let seize = Act::new(
+        ActKind::Grant {
+            holder: "human:stranger".into(),
+            scope: scope("house"),
+            horizon: None,
+            rationale: String::new(),
+        },
+        100,
+        "human:stranger",
+    );
+    acts.push(seize.clone());
+    for g in governed_house() {
+        acts.push(Act::new(
+            ActKind::Revert {
+                targets: vec![g.id.clone()],
+                rationale: "clearing the way".into(),
+            },
+            300,
+            "human:stranger",
+        ));
+    }
+
+    let canon = Log::from_acts(acts).derive();
+    let holders = canon.who_decides(&scope("house"), 400);
+    assert_eq!(holders.len(), 2, "the house still holds itself");
+    assert!(holders.iter().all(|g| g.actor != "human:stranger"));
+    assert_eq!(
+        canon.ungoverned.len(),
+        5,
+        "the grant it could not write, and the four it could not delete"
+    );
+    assert!(canon.ungoverned.iter().any(|(_, why)| why.contains("reverted")));
+}
+
+#[test]
+fn your_own_revert_is_yours_the_house_may_undo_the_kitchen_and_not_the_reverse() {
+    let dana = ratification_at("joint:human:dana,human:sam", "house.kitchen", 100, "human:dana");
+
+    // Hers to withdraw, like any other act she wrote.
+    let mut acts = governed_house();
+    acts.push(dana.clone());
+    acts.push(Act::new(
+        ActKind::Revert {
+            targets: vec![dana.id.clone()],
+            rationale: "too soon".into(),
+        },
+        200,
+        "human:dana",
+    ));
+    let canon = Log::from_acts(acts).derive();
+    assert!(canon.ratifications.is_empty());
+    assert!(canon.ungoverned.is_empty());
+
+    // Theo holds the house, which covers the kitchen: the level above may
+    // undo how the level below decided to make rules.
+    let mut acts = governed_house();
+    acts.push(dana.clone());
+    acts.push(Act::new(
+        ActKind::Revert {
+            targets: vec![dana.id.clone()],
+            rationale: "the house takes this one back".into(),
+        },
+        200,
+        "human:theo",
+    ));
+    let canon = Log::from_acts(acts).derive();
+    assert!(canon.ratifications.is_empty());
+    assert!(canon.ungoverned.is_empty());
+
+    // And not the reverse. Dana holds only the kitchen.
+    let mut acts = governed_house();
+    let house_rule = ratification_at("threshold:2/1", "house", 100, "human:sam");
+    acts.push(house_rule.clone());
+    acts.push(Act::new(
+        ActKind::Revert {
+            targets: vec![house_rule.id.clone()],
+            rationale: "I would rather it were consent".into(),
+        },
+        200,
+        "human:dana",
+    ));
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(canon.ratifications.len(), 1, "the kitchen does not undo the house");
     assert_eq!(canon.ungoverned.len(), 1);
 }
