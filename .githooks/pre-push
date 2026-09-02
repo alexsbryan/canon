@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Thin shim. The gate lives in scripts/pre-push.sh so it is reviewable,
+# testable, and runnable by hand (`./scripts/pre-push.sh`) without a push.
+#
+# This directory is wired up by scripts/install-git-hooks.sh, which sets
+# core.hooksPath — so the hooks are version-controlled and every clone on
+# every machine gets the same gate, rather than each person hand-copying
+# something into their own .git/hooks/.
+exec "$(git rev-parse --show-toplevel)/scripts/pre-push.sh" "$@"

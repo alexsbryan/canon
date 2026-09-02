@@ -257,6 +257,9 @@ get detected, and a stale number is worse than none. Measure your own:
   primitives, the line between mechanism and policy, and eighteen
   technologies of political economy tested against them.
 - [DEMO_PLAN.md](./DEMO_PLAN.md) — the founding-documents ledger.
+- [Contributing](./CONTRIBUTING.md) — every path is open; the fastest way
+  in is a fixture. [Governance](./GOVERNANCE.md), [security](./SECURITY.md),
+  and [where to get help](./SUPPORT.md).
 - [Commonwealth](https://github.com/alexsbryan/commonwealth-ai) — pool
   your machines with people you trust and run a model none of them could
   hold alone. What canon was built and measured against.
@@ -265,7 +268,36 @@ get detected, and a stale number is worse than none. Measure your own:
 
 ```sh
 cargo build --release      # binary at target/release/canon
-cargo test
+cargo test                 # 398 tests, about six seconds
 ```
+
+Two crates, no native dependencies. `rust-toolchain.toml` pins the
+version, so `rustup` fetches the right one by itself.
+
+## Contributing
+
+Every path in this repository is open to pull requests. What gates a
+change is the suite, not a list of permitted directories, and
+`./scripts/pre-push.sh` runs the same set CI does in about ten seconds.
+
+The most useful thing you can send isn't a patch — it's a **fixture**, or
+what happened when you pointed `canon draft` at your own mess. Another
+group hasn't used this yet. [CONTRIBUTING.md](./CONTRIBUTING.md) has the
+rest.
+
+canon governs itself, in canon. `.canon/acts.jsonl` is committed and holds
+this project's own rules — three questions nobody has answered, three
+things decided against on purpose with the reason attached, and a
+fourteen-day consent rule on documentation that binds the steward rather
+than you:
+
+```sh
+canon list        # what's in force here, and what's still proposed
+canon open        # what nobody has decided
+canon why <id>    # where any one of them came from
+```
+
+[GOVERNANCE.md](./GOVERNANCE.md) says who decides today and what would
+change that.
 
 AGPL-3.0-or-later. The format specification is CC0.

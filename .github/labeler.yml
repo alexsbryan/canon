@@ -1,0 +1,43 @@
+# Path globs -> labels, so incoming PRs sort themselves by area and nobody
+# hand-labels every one. actions/labeler v5 schema; missing labels are
+# created on first use.
+
+"area: core":
+  - changed-files:
+      - any-glob-to-any-file: "crates/canon-core/**"
+
+"area: cli":
+  - changed-files:
+      - any-glob-to-any-file: "crates/canon-cli/**"
+
+# The record format. A change here is a compatibility promise to every other
+# implementation, and SPEC.md is CC0 — review with more care than the code.
+"area: format":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "SPEC.md"
+          - "crates/canon-core/src/act.rs"
+
+# Fixtures are the contribution most likely to arrive from someone who has
+# never touched this repository before (CONTRIBUTING.md → the fastest way in).
+"area: fixtures":
+  - changed-files:
+      - any-glob-to-any-file: "fixtures/**"
+
+"area: docs":
+  - changed-files:
+      - any-glob-to-any-file: "**/*.md"
+
+"area: ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - ".githooks/**"
+          - "scripts/**"
+
+# A change to the project's own canon is a governance act, not a code change.
+"area: governance":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".canon/**"
+          - "GOVERNANCE.md"

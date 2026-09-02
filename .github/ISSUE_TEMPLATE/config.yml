@@ -1,0 +1,21 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussion
+    url: https://github.com/alexsbryan/canon/discussions
+    about: >
+      How-to questions, ideas, and general discussion. Please start here
+      rather than opening an issue.
+  - name: Security or privacy report
+    url: https://github.com/alexsbryan/canon/security/advisories/new
+    about: >
+      Found a vulnerability, or a way something could leave a machine
+      unexpectedly? Report it privately here — see SECURITY.md. Do not open a
+      public issue.
+  - name: What this project has already decided
+    url: https://github.com/alexsbryan/canon/blob/main/GOVERNANCE.md
+    about: >
+      canon governs itself in a canon. Three things are recorded as decided
+      against, three questions are open, and each carries its reason.
+  - name: Documentation
+    url: https://github.com/alexsbryan/canon#readme
+    about: The README, Getting started, the Cookbook, and SPEC.md.

@@ -1,0 +1,16 @@
+# Auto-label PRs by area, per the globs in .github/labeler.yml.
+# pull_request_target so labels apply to PRs from forks too; the action only
+# reads the changed-file list, it never runs PR code.
+name: Labeler
+
+on: [pull_request_target]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v6

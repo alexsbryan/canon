@@ -1,0 +1,61 @@
+# Code owners for canon.
+#
+# Every pull request automatically requests review from the owner matched
+# here. The LAST matching pattern wins, so the catch-all sits at the top and
+# more specific areas override it below.
+#
+# Enforcement: CODEOWNERS only *requests* review by default. To make owner
+# review a merge requirement, enable "Require review from Code Owners" in the
+# branch protection rule for `main` (Settings → Branches).
+#
+# These all resolve to the same person today — GOVERNANCE.md is honest about
+# that, and this project's own canon records it as data (`canon who canon`).
+# When a second person holds standing over a scope, splitting an area off is
+# a one-line change here and a `canon grant` in `.canon/acts.jsonl`. Which
+# of those two is the real event is the open question in `canon open`.
+
+# Default owner for everything.
+*                               @alexsbryan
+
+# --- The compatibility promise ---------------------------------------------
+# The record format is CC0 and other implementations read it. A change here
+# is a promise to them, not just to this repository. `adequacy_bar` gates a
+# new op mechanically; what it cannot judge is whether the op should exist.
+/SPEC.md                        @alexsbryan
+/crates/canon-core/src/act.rs   @alexsbryan
+
+# --- The fold --------------------------------------------------------------
+# Pure by construction: no filesystem, no network, no model. The way to break
+# that is to add a dependency, so the manifest gets owner eyes too.
+/crates/canon-core/             @alexsbryan
+/crates/canon-core/Cargo.toml   @alexsbryan
+/Cargo.toml                     @alexsbryan
+/rust-toolchain.toml            @alexsbryan
+
+# --- The tool --------------------------------------------------------------
+/crates/canon-cli/              @alexsbryan
+
+# --- Evidence --------------------------------------------------------------
+# Fixtures are open to outside pull requests and review is mostly mechanical
+# — a worked canon replays or it does not. The part that is NOT mechanical is
+# provenance: where the source came from and whether it may be vendored at
+# all. That judgement is why this is still owned.
+/fixtures/                      @alexsbryan
+
+# The pre-registered bars. A bar edited after seeing the data it tests is not
+# a bar, so a diff here is read against the run that motivated it.
+/crates/canon-cli/tests/        @alexsbryan
+
+# --- Machinery -------------------------------------------------------------
+/.github/                       @alexsbryan
+/.githooks/                     @alexsbryan
+/scripts/                       @alexsbryan
+
+# --- Governance ------------------------------------------------------------
+# This project's own rules. A diff here is a governance act: the log is
+# append-only, so a change that is not a new line at the end is a rewrite of
+# the record and should be rejected on sight.
+/.canon/                        @alexsbryan
+/GOVERNANCE.md                  @alexsbryan
+/CLA.md                         @alexsbryan
+/LICENSE                        @alexsbryan

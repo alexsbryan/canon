@@ -2,8 +2,11 @@
 **/*.rs.bk
 .DS_Store
 
-# A canon the tool made while being exercised, not one anybody keeps.
-/.canon/
+# NOT ignored: /.canon/ is this project's own canon. Its rules are this
+# repository's rules and CONTRIBUTING.md links into them. What inside it
+# belongs to one machine rather than to the group is listed in
+# .canon/.gitignore. Every script that exercises the tool sets CANON_DIR to
+# a scratch directory, so running the demo or the bars cannot dirty it.
 
 # Sweep provenance for a DIRTY tree: the patch and tarball exist so a run
 # made from uncommitted work can be reconstructed. Once the work is

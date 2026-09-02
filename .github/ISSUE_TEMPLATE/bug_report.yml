@@ -1,0 +1,95 @@
+name: Bug report
+description: Something isn't working the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing this. The more of the below you can fill in, the
+        faster it gets fixed.
+
+        If this is a security or privacy issue — including any way something
+        could leave a machine unexpectedly — please **don't** file it here.
+        See [SECURITY.md](https://github.com/alexsbryan/canon/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you run, what did you expect, and what happened instead?
+      placeholder: |
+        I ran `canon draft --from ~/notes` and expected ... but got ...
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands, in order.
+      placeholder: |
+        1. canon init --profile house
+        2. canon draft --from ./notes --dry-run
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which part
+      description: >
+        Four verbs call a model — draft, check, tensions, rebase. Everything
+        else is pure, and a bug in the pure half is usually the easier one to
+        pin down, so it helps to know which side this is.
+      options:
+        - The record (add, supersede, retract, why, log)
+        - Governing (grant, scope, policy, ratification, draw, allot)
+        - Replay
+        - Lineage (share, adopt, diff, upgrade, rebase)
+        - Ingest — draft
+        - Adjudication — check or tensions
+        - The agent surface (canon mcp)
+        - Building from source
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: '`git rev-parse --short HEAD`, since this is pre-1.0 and there are no releases yet.'
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS and architecture
+      placeholder: 'e.g. "macOS 15, M2" or "Fedora 43, x86_64"'
+    validations:
+      required: true
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint and model
+      description: >
+        Only if a model was involved. canon prints the endpoint it used on
+        every call, and `canon config show` says what is configured. Model
+        size is what actually moves quality here, so a bug report about a
+        missed conflict means something different on a 7B than on a 35B.
+      placeholder: 'e.g. "http://localhost:9741/v1, qwen3-35b-a3b"'
+  - type: textarea
+    id: output
+    attributes:
+      label: What it printed
+      description: >
+        The error or the surprising output. If this is about `draft`, the run
+        artifact under `.canon/draft-runs/` is the most useful thing you can
+        attach — it is what the scoring reads, so it lets the finding be
+        re-checked without another model call.
+      render: text
+  - type: textarea
+    id: record
+    attributes:
+      label: The acts involved, if you can share them
+      description: >
+        `canon log` prints the raw acts. Only if the record isn't private —
+        a redacted excerpt or a minimal reproduction is just as good.
+      render: text

@@ -1,0 +1,17 @@
+# The canon itself is meant to be committed — `acts.jsonl` is this
+# repository's own rules and CONTRIBUTING.md links into them. These are not:
+#
+#   seen         this machine's ingest state. Committed, it conflicts on
+#                every pull and tells everyone which candidates one person
+#                personally declined.
+#   draft-runs/  the evidence from this machine's model runs.
+#   config       the endpoint and model name on ONE machine. `canon draft`
+#                on a fresh clone should say "no endpoint configured", not
+#                fail against a port on somebody else's laptop.
+#
+# `secrets/` is not listed because it writes its own `.gitignore` of `*` the
+# first time a lot is sealed — a sealed secret that travels with the
+# repository has been published to everyone who clones it.
+seen
+draft-runs/
+config

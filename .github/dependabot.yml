@@ -1,0 +1,46 @@
+# Automated dependency updates, budgeted.
+#
+# canon has three direct dependencies — serde, serde_json, sha2, plus ureq,
+# which is the only one that touches the network. That is the whole point of
+# the dependency list: canon-core's purity is enforced by what is NOT here,
+# not by discipline. So the useful signal from dependabot is small and a
+# weekly cadence would be pure noise.
+#
+# One grouped PR per ecosystem per month, majors included. A monthly batch
+# that gets read beats four weekly ones that get closed unread. If a specific
+# major needs isolating, do it by hand — the grouped PR says what moved and
+# `cargo update -p <crate>` on a branch is cheaper than a standing schedule.
+#
+# A NEW dependency is a different matter and does not come through here: it
+# is a change to the shape of the tree, and for canon-core specifically it is
+# the way to break the purity rule that `governance_bar` exists to protect.
+#
+# What this does NOT cover: security advisories. Dependabot *security*
+# updates are configured in Settings → Code security and are deliberately
+# left on their own immediate cadence — a CVE should not wait for the monthly
+# window. This file governs routine version drift only.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      cargo:
+        patterns: ["*"]
+        update-types: ["major", "minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: ["major", "minor", "patch"]
+    commit-message:
+      prefix: "chore(ci)"
