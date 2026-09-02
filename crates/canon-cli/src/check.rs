@@ -174,7 +174,10 @@ fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
         };
         return format!(
             "{indent}{actor}  {way}\n{}\n",
-            crate::wrap::hang(&format!("{indent}{}because: ", " ".repeat(actor.len() + 2)), &b.because),
+            crate::wrap::hang(
+                &format!("{indent}{}because: ", " ".repeat(actor.len() + 2)),
+                &b.because
+            ),
         );
     };
     let status = match &c.status {

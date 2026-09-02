@@ -960,7 +960,11 @@ fn re_granting_closes_the_old_grant_rather_than_stacking_on_it() {
         grant("human:dana", "house.kitchen", Some(900), 300),
     ])
     .derive();
-    let dana: Vec<_> = canon.grants.iter().filter(|g| g.actor == "human:dana").collect();
+    let dana: Vec<_> = canon
+        .grants
+        .iter()
+        .filter(|g| g.actor == "human:dana")
+        .collect();
     assert_eq!(dana.len(), 2, "both are facts that happened");
     let live: Vec<_> = dana.iter().filter(|g| g.held_at(500)).collect();
     assert_eq!(live.len(), 1, "but only one is held at any instant");
@@ -1726,7 +1730,8 @@ fn governed_house() -> Vec<Act> {
 fn an_ungoverned_canon_is_a_notebook_and_every_assert_is_a_rule() {
     // No grants, no gate. This is every canon that existed before
     // ratification, and it must keep folding the same way.
-    let canon = Log::from_acts(vec![assert_at("Quiet after eleven.", 100, "human:anyone")]).derive();
+    let canon =
+        Log::from_acts(vec![assert_at("Quiet after eleven.", 100, "human:anyone")]).derive();
     assert_eq!(canon.active().count(), 1);
     assert_eq!(canon.proposed().count(), 0);
 }
@@ -1743,7 +1748,10 @@ fn under_standing_a_holder_writes_and_a_non_holder_proposes() {
     acts.push(by_dana.clone());
     acts.push(by_theo.clone());
     let canon = Log::from_acts(acts.clone()).derive();
-    assert!(matches!(canon.get(&by_dana.id).unwrap().status, Status::Active), "a cook wrote it");
+    assert!(
+        matches!(canon.get(&by_dana.id).unwrap().status, Status::Active),
+        "a cook wrote it"
+    );
     let Status::Proposed { needs } = &canon.get(&by_theo.id).unwrap().status else {
         panic!("theo does not hold the kitchen, so his line is a proposal")
     };
@@ -1752,13 +1760,21 @@ fn under_standing_a_holder_writes_and_a_non_holder_proposes() {
     // One holder's approval is enough under `standing`.
     acts.push(approve_at(&by_theo.id, 200, "human:sam"));
     let canon = Log::from_acts(acts).derive();
-    assert!(matches!(canon.get(&by_theo.id).unwrap().status, Status::Active));
+    assert!(matches!(
+        canon.get(&by_theo.id).unwrap().status,
+        Status::Active
+    ));
 }
 
 #[test]
 fn joint_ratification_needs_every_named_holder_and_one_objection_refuses() {
     let mut acts = governed_house();
-    acts.push(ratification_at("joint:human:dana,human:sam", "house.kitchen", 30, "human:dana"));
+    acts.push(ratification_at(
+        "joint:human:dana,human:sam",
+        "house.kitchen",
+        30,
+        "human:dana",
+    ));
     let pan = assert_at("Wash your own pan before you sit down.", 100, "human:theo");
     acts.push(scoped_at(&pan.id, "house.kitchen", 100));
     acts.push(pan.clone());
@@ -1772,10 +1788,18 @@ fn joint_ratification_needs_every_named_holder_and_one_objection_refuses() {
     let mut carried = acts.clone();
     carried.push(approve_at(&pan.id, 300, "human:sam"));
     let canon = Log::from_acts(carried).derive();
-    assert!(matches!(canon.get(&pan.id).unwrap().status, Status::Active), "both said yes");
+    assert!(
+        matches!(canon.get(&pan.id).unwrap().status, Status::Active),
+        "both said yes"
+    );
 
     let mut refused = acts;
-    refused.push(object_at(&pan.id, 300, "human:sam", "the sink is too small for that at dinner"));
+    refused.push(object_at(
+        &pan.id,
+        300,
+        "human:sam",
+        "the sink is too small for that at dinner",
+    ));
     let canon = Log::from_acts(refused).derive();
     let Status::Refused { by, why, .. } = &canon.get(&pan.id).unwrap().status else {
         panic!("a named holder objecting refuses it")
@@ -1787,7 +1811,12 @@ fn joint_ratification_needs_every_named_holder_and_one_objection_refuses() {
 #[test]
 fn approvals_from_people_without_standing_and_from_agents_do_not_count() {
     let mut acts = governed_house();
-    acts.push(ratification_at("threshold:2/1", "house.kitchen", 30, "human:sam"));
+    acts.push(ratification_at(
+        "threshold:2/1",
+        "house.kitchen",
+        30,
+        "human:sam",
+    ));
     let p = assert_at("The dishwasher runs only when full.", 100, "agent:helper");
     acts.push(scoped_at(&p.id, "house.kitchen", 100));
     acts.push(p.clone());
@@ -1805,7 +1834,10 @@ fn approvals_from_people_without_standing_and_from_agents_do_not_count() {
     acts.push(approve_at(&p.id, 300, "human:dana"));
     acts.push(approve_at(&p.id, 300, "human:sam"));
     let canon = Log::from_acts(acts).derive();
-    assert!(matches!(canon.get(&p.id).unwrap().status, Status::Active), "the agent proposed; people disposed");
+    assert!(
+        matches!(canon.get(&p.id).unwrap().status, Status::Active),
+        "the agent proposed; people disposed"
+    );
 }
 
 #[test]
@@ -1828,23 +1860,42 @@ fn an_agent_with_standing_still_cannot_mint_its_own_rule() {
 #[test]
 fn consent_ratifies_by_the_clock_and_a_reasoned_objection_stops_it() {
     let mut acts = governed_house();
-    acts.push(ratification_at("consent:7d", "house.kitchen", 30, "human:sam"));
+    acts.push(ratification_at(
+        "consent:7d",
+        "house.kitchen",
+        30,
+        "human:sam",
+    ));
     let p = assert_at("No phones at the table.", 1_000, "human:theo");
     acts.push(scoped_at(&p.id, "house.kitchen", 1_000));
     acts.push(p.clone());
     let day = 86_400;
     let early = Log::from_acts(acts.clone()).derive_at(1_000 + 3 * day);
-    assert!(matches!(early.get(&p.id).unwrap().status, Status::Proposed { .. }));
+    assert!(matches!(
+        early.get(&p.id).unwrap().status,
+        Status::Proposed { .. }
+    ));
     let late = Log::from_acts(acts.clone()).derive_at(1_000 + 8 * day);
-    assert!(matches!(late.get(&p.id).unwrap().status, Status::Active), "silence for a week is consent");
+    assert!(
+        matches!(late.get(&p.id).unwrap().status, Status::Active),
+        "silence for a week is consent"
+    );
 
     // An objection with no reason is not an objection.
     acts.push(object_at(&p.id, 1_000 + day, "human:dana", "   "));
     let canon = Log::from_acts(acts.clone()).derive_at(1_000 + 8 * day);
     assert!(matches!(canon.get(&p.id).unwrap().status, Status::Active));
-    acts.push(object_at(&p.id, 1_000 + 2 * day, "human:dana", "we take calls from the night shift at dinner"));
+    acts.push(object_at(
+        &p.id,
+        1_000 + 2 * day,
+        "human:dana",
+        "we take calls from the night shift at dinner",
+    ));
     let canon = Log::from_acts(acts).derive_at(1_000 + 8 * day);
-    assert!(matches!(canon.get(&p.id).unwrap().status, Status::Refused { .. }));
+    assert!(matches!(
+        canon.get(&p.id).unwrap().status,
+        Status::Refused { .. }
+    ));
 }
 
 #[test]
@@ -1863,13 +1914,25 @@ fn a_proposed_supersession_leaves_the_old_rule_standing() {
     );
     acts.push(replacement.clone());
     let canon = Log::from_acts(acts.clone()).derive();
-    assert!(matches!(canon.get(&old.id).unwrap().status, Status::Active), "not replaced yet");
-    assert!(matches!(canon.get(&replacement.id).unwrap().status, Status::Proposed { .. }));
+    assert!(
+        matches!(canon.get(&old.id).unwrap().status, Status::Active),
+        "not replaced yet"
+    );
+    assert!(matches!(
+        canon.get(&replacement.id).unwrap().status,
+        Status::Proposed { .. }
+    ));
 
     acts.push(approve_at(&replacement.id, 300, "human:theo"));
     let canon = Log::from_acts(acts).derive();
-    assert!(matches!(canon.get(&old.id).unwrap().status, Status::Superseded { .. }));
-    assert!(matches!(canon.get(&replacement.id).unwrap().status, Status::Active));
+    assert!(matches!(
+        canon.get(&old.id).unwrap().status,
+        Status::Superseded { .. }
+    ));
+    assert!(matches!(
+        canon.get(&replacement.id).unwrap().status,
+        Status::Active
+    ));
 }
 
 #[test]
@@ -1886,11 +1949,21 @@ fn governance_acts_without_standing_are_recorded_and_not_applied() {
         100,
         "human:stranger",
     ));
-    acts.push(ratification_at("standing", "house.kitchen", 110, "human:stranger"));
+    acts.push(ratification_at(
+        "standing",
+        "house.kitchen",
+        110,
+        "human:stranger",
+    ));
     let canon = Log::from_acts(acts).derive();
     assert!(!canon.standing_of("human:stranger", &scope("house.kitchen"), 500));
     assert!(canon.ratifications.is_empty(), "the rule did not change");
-    assert_eq!(canon.ungoverned.len(), 2, "and both attempts are on the record: {:?}", canon.ungoverned);
+    assert_eq!(
+        canon.ungoverned.len(),
+        2,
+        "and both attempts are on the record: {:?}",
+        canon.ungoverned
+    );
 }
 
 #[test]
@@ -1913,7 +1986,11 @@ fn a_ruling_takes_standing_over_what_it_touches() {
     // Dana, who holds the house, carries it knowingly and that applies.
     let mut acts = governed_house();
     acts.push(grant("agent:helper", "house.kitchen", Some(100_000), 20));
-    let hall = assert_at("The hall stays clear enough for a stroller.", 100, "human:sam");
+    let hall = assert_at(
+        "The hall stays clear enough for a stroller.",
+        100,
+        "human:sam",
+    );
     let bikes = assert_at("Bikes live in the hall.", 100, "human:sam");
     acts.push(hall.clone());
     acts.push(bikes.clone());
@@ -1927,10 +2004,16 @@ fn a_ruling_takes_standing_over_what_it_touches() {
         "agent:helper",
     ));
     let canon = Log::from_acts(acts.clone()).derive();
-    assert!(canon.conflicts.is_empty(), "the helper's ruling did not take");
+    assert!(
+        canon.conflicts.is_empty(),
+        "the helper's ruling did not take"
+    );
     assert_eq!(canon.ungoverned.len(), 1);
     assert!(canon.ungoverned[0].1.contains("agent:helper ruled"));
-    assert!(canon.unattended.len() == 1, "and it is still flagged as an agent's adjudication");
+    assert!(
+        canon.unattended.len() == 1,
+        "and it is still flagged as an agent's adjudication"
+    );
 
     acts.push(Act::new(
         ActKind::Accept {
@@ -1943,7 +2026,11 @@ fn a_ruling_takes_standing_over_what_it_touches() {
         "human:theo",
     ));
     let canon = Log::from_acts(acts).derive();
-    assert_eq!(canon.tolerated().count(), 1, "a house holder's ruling applies");
+    assert_eq!(
+        canon.tolerated().count(),
+        1,
+        "a house holder's ruling applies"
+    );
 }
 
 #[test]
@@ -1954,18 +2041,30 @@ fn you_may_withdraw_your_own_proposal_but_not_somebody_elses_rule() {
     acts.push(mine.clone());
     acts.push(theirs.clone());
     acts.push(Act::new(
-        ActKind::Retract { target: mine.id.clone(), rationale: "never mind".into() },
+        ActKind::Retract {
+            target: mine.id.clone(),
+            rationale: "never mind".into(),
+        },
         200,
         "human:stranger",
     ));
     acts.push(Act::new(
-        ActKind::Retract { target: theirs.id.clone(), rationale: "I disagree".into() },
+        ActKind::Retract {
+            target: theirs.id.clone(),
+            rationale: "I disagree".into(),
+        },
         200,
         "human:stranger",
     ));
     let canon = Log::from_acts(acts).derive();
-    assert!(matches!(canon.get(&mine.id).unwrap().status, Status::Retracted { .. }));
-    assert!(matches!(canon.get(&theirs.id).unwrap().status, Status::Active));
+    assert!(matches!(
+        canon.get(&mine.id).unwrap().status,
+        Status::Retracted { .. }
+    ));
+    assert!(matches!(
+        canon.get(&theirs.id).unwrap().status,
+        Status::Active
+    ));
     assert_eq!(canon.ungoverned.len(), 1);
 }
 
@@ -2009,12 +2108,20 @@ fn a_stranger_cannot_tombstone_the_grants_that_shut_them_out() {
         5,
         "the grant it could not write, and the four it could not delete"
     );
-    assert!(canon.ungoverned.iter().any(|(_, why)| why.contains("reverted")));
+    assert!(canon
+        .ungoverned
+        .iter()
+        .any(|(_, why)| why.contains("reverted")));
 }
 
 #[test]
 fn your_own_revert_is_yours_the_house_may_undo_the_kitchen_and_not_the_reverse() {
-    let dana = ratification_at("joint:human:dana,human:sam", "house.kitchen", 100, "human:dana");
+    let dana = ratification_at(
+        "joint:human:dana,human:sam",
+        "house.kitchen",
+        100,
+        "human:dana",
+    );
 
     // Hers to withdraw, like any other act she wrote.
     let mut acts = governed_house();
@@ -2060,6 +2167,10 @@ fn your_own_revert_is_yours_the_house_may_undo_the_kitchen_and_not_the_reverse()
         "human:dana",
     ));
     let canon = Log::from_acts(acts).derive();
-    assert_eq!(canon.ratifications.len(), 1, "the kitchen does not undo the house");
+    assert_eq!(
+        canon.ratifications.len(),
+        1,
+        "the kitchen does not undo the house"
+    );
     assert_eq!(canon.ungoverned.len(), 1);
 }

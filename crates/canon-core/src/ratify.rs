@@ -216,8 +216,7 @@ impl Canon {
             Some(s) => {
                 let covering: Vec<&&crate::scope::Grant> =
                     prior.iter().filter(|g| g.scope.covers(s)).collect();
-                covering.iter().any(|g| g.actor == actor)
-                    || (covering.is_empty() && holds_any())
+                covering.iter().any(|g| g.actor == actor) || (covering.is_empty() && holds_any())
             }
             // The whole canon: anyone holding a top-level scope, or anyone
             // at all if no top-level scope has been granted.
@@ -239,7 +238,9 @@ impl Canon {
     /// and the clock. Nothing else.
     pub fn ratify(&self, c: &Commitment, now: i64) -> Verdict {
         let scope = self.scope_of(&c.id).cloned();
-        let rule = self.ratification_for_at(scope.as_ref(), c.asserted_at).clone();
+        let rule = self
+            .ratification_for_at(scope.as_ref(), c.asserted_at)
+            .clone();
         // The people who ratify a scope's rules are the ones who hold it at
         // the NARROWEST level anyone does — the kitchen's holders for a
         // kitchen rule, even though the whole house covers the kitchen.
@@ -264,16 +265,17 @@ impl Canon {
         // first grants were written in the same sitting has not locked its
         // founders out of their own charter; see `may_govern`.
         let nobody_holds = match &scope {
-            Some(s) => !self
-                .grants
-                .iter()
-                .any(|g| g.granted_at < c.asserted_at && g.held_at(c.asserted_at) && g.scope.covers(s)),
+            Some(s) => !self.grants.iter().any(|g| {
+                g.granted_at < c.asserted_at && g.held_at(c.asserted_at) && g.scope.covers(s)
+            }),
             None => !self
                 .grants
                 .iter()
                 .any(|g| g.granted_at < c.asserted_at && g.held_at(c.asserted_at)),
         };
-        let where_ = scope.as_ref().map_or_else(|| "this canon".to_string(), ToString::to_string);
+        let where_ = scope
+            .as_ref()
+            .map_or_else(|| "this canon".to_string(), ToString::to_string);
 
         // What people said about it. Only human holders count; the record
         // keeps everyone's word, ratification counts the people the rule
@@ -330,7 +332,11 @@ impl Canon {
                     None => Verdict::Proposed {
                         needs: format!(
                             "approval from one person who holds {where_}{}",
-                            if proposer_human { "" } else { " — the proposer is not a person" }
+                            if proposer_human {
+                                ""
+                            } else {
+                                " — the proposer is not a person"
+                            }
                         ),
                     },
                 }
@@ -351,7 +357,11 @@ impl Canon {
                     Verdict::Proposed {
                         needs: format!(
                             "approval from {}",
-                            missing.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
+                            missing
+                                .iter()
+                                .map(|s| s.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ")
                         ),
                     }
                 }
@@ -418,7 +428,12 @@ mod tests {
 
     #[test]
     fn the_spelling_round_trips() {
-        for raw in ["standing", "joint:human:dana,human:sam", "threshold:2/1", "consent:7d"] {
+        for raw in [
+            "standing",
+            "joint:human:dana,human:sam",
+            "threshold:2/1",
+            "consent:7d",
+        ] {
             let r = Ratify::parse(raw).expect(raw);
             assert_eq!(r.name(), raw, "{raw}");
         }

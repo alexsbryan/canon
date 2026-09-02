@@ -5,7 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
-use canon_core::{Act, ActKind, Canon, Log, Policy as _, ActId, Status};
+use canon_core::{Act, ActId, ActKind, Canon, Log, Policy as _, Status};
 
 use crate::config::{Config, Key};
 use crate::profile::Profile;
@@ -123,12 +123,18 @@ pub fn report_status(d: &Path, id: &ActId) {
     match &c.status {
         Status::Active => println!("  in force"),
         Status::Proposed { needs } => {
-            println!("{}", crate::wrap::hang("  PROPOSED, not yet a rule — needs ", needs));
+            println!(
+                "{}",
+                crate::wrap::hang("  PROPOSED, not yet a rule — needs ", needs)
+            );
             println!("  approve it:  canon approve {id}");
             println!("  object:      canon object {id} -m \"<why>\"");
         }
         Status::Refused { by, why, .. } => {
-            println!("{}", crate::wrap::hang(&format!("  REFUSED by {by}: "), why));
+            println!(
+                "{}",
+                crate::wrap::hang(&format!("  REFUSED by {by}: "), why)
+            );
         }
         Status::Superseded { .. } | Status::Retracted { .. } => {}
     }
@@ -261,7 +267,13 @@ pub fn add(args: &[String]) -> i32 {
     ) {
         Ok(act) => {
             if let Some(s) = scope {
-                if let Err(e) = write(&d, ActKind::Scoped { commitment: act.id.clone(), scope: s }) {
+                if let Err(e) = write(
+                    &d,
+                    ActKind::Scoped {
+                        commitment: act.id.clone(),
+                        scope: s,
+                    },
+                ) {
                     return fail(e);
                 }
             }
@@ -471,7 +483,9 @@ pub fn why(args: &[String]) -> i32 {
 pub fn supersede(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail("usage: canon supersede <id> \"<new text>\" -m \"<reason>\" [--scope <scope>]");
+        return fail(
+            "usage: canon supersede <id> \"<new text>\" -m \"<reason>\" [--scope <scope>]",
+        );
     }
     let (d, _, st) = match load() {
         Ok(v) => v,
@@ -498,7 +512,13 @@ pub fn supersede(args: &[String]) -> i32 {
     ) {
         Ok(act) => {
             if let Some(s) = scope {
-                if let Err(e) = write(&d, ActKind::Scoped { commitment: act.id.clone(), scope: s }) {
+                if let Err(e) = write(
+                    &d,
+                    ActKind::Scoped {
+                        commitment: act.id.clone(),
+                        scope: s,
+                    },
+                ) {
                     return fail(e);
                 }
             }
@@ -738,7 +758,9 @@ pub fn log(args: &[String]) -> i32 {
                 Some(sc) => format!("ratify     {} over {sc}", rule.name()),
                 None => format!("ratify     {}", rule.name()),
             },
-            ActKind::Allot { unit, units, scope, .. } => {
+            ActKind::Allot {
+                unit, units, scope, ..
+            } => {
                 format!("allot      {} {unit}(s) in {scope}", units.len())
             }
             ActKind::Allocation { rule, scope, .. } => {

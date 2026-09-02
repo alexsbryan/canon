@@ -146,9 +146,10 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         Status::Proposed { needs } => {
             lines.push(format!("status: PROPOSED, not yet a rule — needs {needs}"))
         }
-        Status::Refused { at, by, why } => {
-            lines.push(format!("status: REFUSED by {by}, {}: {why}", store::ymd(*at)))
-        }
+        Status::Refused { at, by, why } => lines.push(format!(
+            "status: REFUSED by {by}, {}: {why}",
+            store::ymd(*at)
+        )),
     }
 
     // Why it stopped being in force, if it did.
@@ -170,10 +171,18 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     // over this pair said the two do or do not conflict. On the record,
     // shown, and marked — a `why` that hid them would be the tool quietly
     // showing less than the log holds.
-    for act in log.acts().iter().filter(|a| canon.ungoverned.iter().any(|(x, _)| x == &a.id)) {
+    for act in log
+        .acts()
+        .iter()
+        .filter(|a| canon.ungoverned.iter().any(|(x, _)| x == &a.id))
+    {
         let (verb, a, b, why) = match &act.kind {
-            ActKind::Dismiss { a, b, rationale } => ("called not in conflict with", a, b, rationale),
-            ActKind::Accept { a, b, rationale, .. } => ("would carry against", a, b, rationale),
+            ActKind::Dismiss { a, b, rationale } => {
+                ("called not in conflict with", a, b, rationale)
+            }
+            ActKind::Accept {
+                a, b, rationale, ..
+            } => ("would carry against", a, b, rationale),
             _ => continue,
         };
         if a != id && b != id {
@@ -184,7 +193,11 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
             "{} {verb} {other}, {} — not applied: outside their standing{}",
             act.actor,
             store::ymd(act.ts_unix),
-            if why.is_empty() { String::new() } else { format!(": {why}") }
+            if why.is_empty() {
+                String::new()
+            } else {
+                format!(": {why}")
+            }
         ));
     }
 
@@ -201,18 +214,20 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         let ruled = |want_accept: bool| -> String {
             log.acts()
                 .iter()
-                .filter(|act| match &act.kind {
+                .rfind(|act| match &act.kind {
                     ActKind::Accept { a, b, .. } => want_accept && conflict.is_pair(a, b),
                     ActKind::Dismiss { a, b, .. } => !want_accept && conflict.is_pair(a, b),
                     _ => false,
                 })
-                .last()
                 .map(|act| format!(" by {}, {}", act.actor, store::ymd(act.ts_unix)))
                 .unwrap_or_default()
         };
         match &conflict.disposition {
             Disposition::Tolerated { rationale, revisit } => {
-                lines.push(format!("carried against {other}{}: {rationale}", ruled(true)));
+                lines.push(format!(
+                    "carried against {other}{}: {rationale}",
+                    ruled(true)
+                ));
                 if let Some(r) = revisit {
                     lines.push(format!("  revisit by {r}"));
                 }
@@ -223,7 +238,10 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                 } else {
                     rationale
                 };
-                lines.push(format!("called not in conflict with {other}{}: {why}", ruled(false)));
+                lines.push(format!(
+                    "called not in conflict with {other}{}: {why}",
+                    ruled(false)
+                ));
             }
             Disposition::Open { reason } => {
                 lines.push(format!("open tension with {other}: {reason}"))
@@ -371,7 +389,9 @@ mod answered_question_tests {
         );
         let log = Log::from_acts(vec![q.clone(), answer.clone()]);
         let canon = log.derive();
-        let out = explain(&log, &canon, &answer.id).expect("an explanation").render("");
+        let out = explain(&log, &canon, &answer.id)
+            .expect("an explanation")
+            .render("");
         assert!(
             out.contains("the question \"Who waters the plants when everyone travels at once?\""),
             "{out}"

@@ -301,7 +301,9 @@ impl Canon {
                 Ok(out)
             }
             Order::FromDraw { commit } => {
-                let drawn = self.draw(commit).map_err(|e| PoolError::Draw(e.to_string()))?;
+                let drawn = self
+                    .draw(commit)
+                    .map_err(|e| PoolError::Draw(e.to_string()))?;
                 let mut out = holders;
                 crate::draw::shuffle(&drawn.seed, &mut out);
                 Ok(out)
@@ -322,8 +324,17 @@ mod tests {
     /// The eleven named spots, west to east along the coast.
     fn sites() -> Vec<String> {
         [
-            "kizilburun", "incekum", "karaburun", "mahmutlar", "konakli", "payallar",
-            "turkler", "okurcalar", "avsallar", "demirtas", "kargicak",
+            "kizilburun",
+            "incekum",
+            "karaburun",
+            "mahmutlar",
+            "konakli",
+            "payallar",
+            "turkler",
+            "okurcalar",
+            "avsallar",
+            "demirtas",
+            "kargicak",
         ]
         .iter()
         .map(|s| (*s).to_string())
@@ -332,8 +343,16 @@ mod tests {
 
     fn boats() -> Vec<String> {
         [
-            "human:kemal", "human:ayla", "human:bora", "human:cemre", "human:deniz",
-            "human:ege", "human:fikret", "human:gul", "human:halim", "human:irem",
+            "human:kemal",
+            "human:ayla",
+            "human:bora",
+            "human:cemre",
+            "human:deniz",
+            "human:ege",
+            "human:fikret",
+            "human:gul",
+            "human:halim",
+            "human:irem",
             "human:jale",
         ]
         .iter()
@@ -404,23 +423,29 @@ mod tests {
         // a draw each September, and from then each boat moves one site along
         // each day. This is the whole appropriation rule of a fishery that has
         // worked since the seventies, and it costs no per-turn act at all.
-        let canon = fishery(
-            Order::Given { actors: boats() },
-            1,
-            &boats(),
-            sites(),
-        );
+        let canon = fishery(Order::Given { actors: boats() }, 1, &boats(), sites());
         let day = |n: i64| START + DAY + n * DAY;
 
-        assert_eq!(site_of(&canon, day(0), "human:kemal").as_deref(), Some("kizilburun"));
-        assert_eq!(site_of(&canon, day(1), "human:kemal").as_deref(), Some("incekum"));
-        assert_eq!(site_of(&canon, day(2), "human:kemal").as_deref(), Some("karaburun"));
+        assert_eq!(
+            site_of(&canon, day(0), "human:kemal").as_deref(),
+            Some("kizilburun")
+        );
+        assert_eq!(
+            site_of(&canon, day(1), "human:kemal").as_deref(),
+            Some("incekum")
+        );
+        assert_eq!(
+            site_of(&canon, day(2), "human:kemal").as_deref(),
+            Some("karaburun")
+        );
 
         // Everybody is somewhere, nobody is in two places, and no site is
         // worked twice — which is the property that makes cheating visible to
         // your neighbour and is why the fishery needs no enforcer.
         for n in 0..13 {
-            let s = canon.pool_at(&scope("fishery.sites"), day(n)).expect("schedule");
+            let s = canon
+                .pool_at(&scope("fishery.sites"), day(n))
+                .expect("schedule");
             assert_eq!(s.awards.len(), 11, "day {n}");
             let mut actors: Vec<&str> = s.awards.iter().map(|a| a.actor.as_str()).collect();
             actors.sort_unstable();
@@ -452,8 +477,14 @@ mod tests {
         let east = fishery(Order::Given { actors: boats() }, 1, &boats(), sites());
         let west = fishery(Order::Given { actors: boats() }, -1, &boats(), sites());
         let day1 = START + DAY + DAY;
-        assert_eq!(site_of(&east, day1, "human:kemal").as_deref(), Some("incekum"));
-        assert_eq!(site_of(&west, day1, "human:kemal").as_deref(), Some("kargicak"));
+        assert_eq!(
+            site_of(&east, day1, "human:kemal").as_deref(),
+            Some("incekum")
+        );
+        assert_eq!(
+            site_of(&west, day1, "human:kemal").as_deref(),
+            Some("kargicak")
+        );
     }
 
     #[test]
@@ -486,7 +517,9 @@ mod tests {
         let day = |n: i64| START + DAY + n * DAY;
         let mut ever: Vec<String> = Vec::new();
         for n in 0..11 {
-            let s = canon.pool_at(&scope("fishery.sites"), day(n)).expect("schedule");
+            let s = canon
+                .pool_at(&scope("fishery.sites"), day(n))
+                .expect("schedule");
             assert_eq!(s.awards.len(), 4, "day {n}");
             assert_eq!(s.idle.len(), 7, "day {n}: the rest are named, not dropped");
             for a in s.awards {
