@@ -158,7 +158,7 @@ pub fn run_scenario(
             .and_then(|v| v.as_str())
             .unwrap_or(&kind)
             .to_string();
-        let canon = Log::from_acts(acts.clone()).derive();
+        let canon = Log::from_acts(acts.clone()).derive_at(now);
 
         let result = match kind.as_str() {
             "clock" => {
@@ -231,6 +231,29 @@ pub fn run_scenario(
                     "targets": due.iter().map(|o| o.target.to_string()).collect::<Vec<_>>(),
                 })
             }
+            // Where a commitment stands under its scope's ratification rule.
+            // The step a fixture uses to show a proposal becoming a rule, or
+            // not, and on whose word.
+            "status" => {
+                let id = id_of(&body, "commitment", &labels).map_err(at)?;
+                let Some(c) = canon.get(&id) else {
+                    return Err(at(format!("no commitment {id}")));
+                };
+                let scope = canon.scope_of(&id);
+                let (status, detail) = match &c.status {
+                    canon_core::Status::Active => ("in-force", String::new()),
+                    canon_core::Status::Proposed { needs } => ("proposed", needs.clone()),
+                    canon_core::Status::Refused { by, why, .. } => ("refused", format!("{by}: {why}")),
+                    canon_core::Status::Superseded { by } => ("superseded", by.to_string()),
+                    canon_core::Status::Retracted { .. } => ("retracted", String::new()),
+                };
+                json!({
+                    "status": status,
+                    "detail": detail,
+                    "rule": canon.ratification_for(scope).name(),
+                    "by": c.actor,
+                })
+            }
             "unattended" => json!({
                 "unattended": canon
                     .unattended
@@ -263,6 +286,8 @@ pub fn run_scenario(
             "state" => json!({
                 "acts": acts.len(),
                 "live": canon.active().count(),
+                "proposed": canon.proposed().count(),
+                "ungoverned": canon.ungoverned.len(),
                 "open_questions": canon.open().count(),
                 "carried": canon.carried.len(),
                 "tolerated": canon.tolerated().count(),
@@ -485,6 +510,73 @@ pub fn render_divergence(rows: &[Divergence], forced: &str, total: usize) -> Str
     out
 }
 
+/// The same answer, glanceable: one line per decision that moved, grouped by
+/// which way it moved. The reasons on each side are the full rendering's job;
+/// on a projector the question is "how many, which ones, which direction".
+pub fn render_divergence_brief(rows: &[Divergence], forced: &str, total: usize) -> String {
+    let head = |what: String| {
+        format!("Under `{forced}` instead of the rules this canon adopted, {what}\n")
+    };
+    if rows.is_empty() {
+        return head(format!("nothing changes. All {total} decision(s) land the same way."));
+    }
+    // Mildest first, the same order `Authority` declares. A move down the
+    // list is a decision that got harder to take; up, easier.
+    let ladder = [
+        canon_core::Authority::Act,
+        canon_core::Authority::ActAndNotify,
+        canon_core::Authority::AskOne,
+        canon_core::Authority::AskPanel,
+        canon_core::Authority::Refuse,
+    ];
+    let rank = |prose: &str| ladder.iter().position(|a| a.prose() == prose);
+    let mut easier: Vec<&Divergence> = Vec::new();
+    let mut harder: Vec<&Divergence> = Vec::new();
+    let mut sideways: Vec<&Divergence> = Vec::new();
+    for r in rows {
+        match (rank(&r.was.0), rank(&r.would.0)) {
+            (Some(a), Some(b)) if b < a => easier.push(r),
+            (Some(a), Some(b)) if b > a => harder.push(r),
+            _ => sideways.push(r),
+        }
+    }
+    let mut out = head(format!("{} of {total} decisions land somewhere else.", rows.len()));
+    let mut summary = Vec::new();
+    if !easier.is_empty() {
+        summary.push(format!("{} would be easier to do", easier.len()));
+    }
+    if !harder.is_empty() {
+        summary.push(format!("{} harder", harder.len()));
+    }
+    if !sideways.is_empty() {
+        summary.push(format!("{} decided the same way for a different reason", sideways.len()));
+    }
+    out.push_str(&format!("{}.\n", summary.join("; ")));
+    let subj = |r: &Divergence| {
+        let twice = rows.iter().filter(|o| o.subject == r.subject).count() > 1;
+        if twice {
+            format!("{}  ({})", r.subject, r.name.replace('-', " "))
+        } else {
+            r.subject.clone()
+        }
+    };
+    // Two lines a decision: what it was about, then the move. One line
+    // would need a column wide enough for "replace the front door lock with
+    // a keypad only I know the code to", and there is no such projector.
+    for (label, group) in [("EASIER", &easier), ("HARDER", &harder), ("SAME OUTCOME, DIFFERENT REASON", &sideways)] {
+        if group.is_empty() {
+            continue;
+        }
+        out.push_str(&format!("\n  {label}\n"));
+        for r in group {
+            out.push_str(&crate::wrap::hang("    ", &subj(r)));
+            out.push_str(&format!("\n        {} → {}\n", r.was.0, r.would.0));
+        }
+    }
+    out.push_str("\n  the reason on each side: the same command without --brief\n");
+    out
+}
+
 // ── the verb ────────────────────────────────────────────────
 
 /// Compare a run against what the fixture said would happen.
@@ -568,7 +660,11 @@ pub fn run(args: &[String]) -> i32 {
             Err(e) => return fail(e),
             Ok(adopted) => {
                 let rows = diverge(&adopted, &replay);
-                Some(render_divergence(&rows, &rule.name(), adopted.steps.len()))
+                Some(if has(args, "--brief") {
+                    render_divergence_brief(&rows, &rule.name(), adopted.steps.len())
+                } else {
+                    render_divergence(&rows, &rule.name(), adopted.steps.len())
+                })
             }
         },
     };
@@ -681,10 +777,16 @@ fn elapsed(d: std::time::Duration) -> String {
     }
 }
 
-/// The acceptance test, read off a replay: one row per Ostrom principle a
-/// step was tagged with, the strength the fixture claims for it, and how many
-/// steps carry it. Untagged steps are the acts between the decisions and are
-/// counted on the last line rather than listed.
+/// The acceptance test, read off a replay: for each of Ostrom's eight, the
+/// strength the fixture claims and the scenes that carry it, each on one
+/// line with what it asked and what came back. Untagged steps are the acts
+/// between the decisions and are counted on the last line rather than
+/// listed.
+///
+/// The scenes are the substance. A table of eight green rows in eleven
+/// milliseconds looks like a claim; the same table with "theo proposes a
+/// rota for the kitchen → ask one person with standing" under it is a record
+/// of what was tried and what the rules said.
 pub fn render_principles(steps: &[Step]) -> String {
     const NAMES: [&str; 8] = [
         "clearly defined boundaries",
@@ -696,33 +798,107 @@ pub fn render_principles(steps: &[Step]) -> String {
         "rights to organize not undermined",
         "nested enterprises",
     ];
-    let mut rows: Vec<(usize, String)> = (0..8).map(|_| (0, String::new())).collect();
+    let mut rows: Vec<(String, Vec<String>)> = (0..8).map(|_| (String::new(), vec![])).collect();
     for s in steps {
         let Some(n) = s.principle else { continue };
         let Some(row) = usize::from(n).checked_sub(1).and_then(|i| rows.get_mut(i)) else {
             continue;
         };
-        row.0 += 1;
         if let Some(m) = &s.strength {
-            row.1 = m.clone();
+            row.0 = m.clone();
+        }
+        row.1.push(scene_line(s));
+    }
+    let mut out = String::from("Ostrom's eight, over this history\n");
+    for (i, (strength, scenes)) in rows.iter().enumerate() {
+        // The fixture's words are `mechanism` and `affordance`; the room's
+        // words are whether the tool does it or leaves it to people.
+        let mark = match (scenes.is_empty(), strength.as_str()) {
+            (true, _) => "-",
+            (_, "mechanism") => "built in",
+            (_, "affordance") => "left to people",
+            (_, other) => other,
+        };
+        out.push_str(&format!("\n  {}  {:<38} {mark}\n", i + 1, NAMES[i]));
+        for line in scenes {
+            out.push_str(&crate::wrap::hang("       ", line));
+            out.push('\n');
         }
     }
-    let mut out = String::from("Ostrom's eight design principles, over this history\n");
-    for (i, (count, strength)) in rows.iter().enumerate() {
-        let mark = if *count == 0 { "-" } else { strength.as_str() };
-        let steps = match count {
-            0 => String::new(),
-            1 => "1 step".to_string(),
-            n => format!("{n} steps"),
-        };
-        out.push_str(&format!("  {:<2} {:<38} {:<11} {steps}\n", i + 1, NAMES[i], mark));
-    }
-    let cleared = rows.iter().filter(|r| r.0 > 0).count();
+    let cleared = rows.iter().filter(|r| !r.1.is_empty()).count();
     let untagged = steps.iter().filter(|s| s.principle.is_none()).count();
     out.push_str(&format!(
-        "\n{cleared} of 8 principles exercised; {untagged} step(s) are the acts in between\n"
+        "\n{cleared} of 8 held; {untagged} step(s) are the everyday acts in between\n"
     ));
     out
+}
+
+/// One scene, in the words a person would use: what was asked, what the
+/// rules answered. Reads the step's result by shape rather than by kind, so a
+/// fixture step this build has never seen still gets its name printed.
+fn scene_line(s: &Step) -> String {
+    let r = &s.result;
+    let str_ = |k: &str| r.get(k).and_then(Value::as_str).unwrap_or("").to_string();
+    let list = |k: &str| {
+        r.get(k)
+            .and_then(Value::as_array)
+            .map(|a| {
+                a.iter()
+                    .filter_map(Value::as_str)
+                    .map(|x| x.trim_start_matches("human:").to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default()
+    };
+    let name = s.name.replace('-', " ");
+    if r.get("authority").is_some() {
+        let subject = s.subject.clone().unwrap_or_else(|| name.clone());
+        let rung = canon_core::Authority::parse(&str_("authority"))
+            .map_or_else(|| str_("authority"), |a| a.prose().to_string());
+        return format!("{subject} → {rung}");
+    }
+    if r.get("holders").is_some() {
+        return format!("{name}: {}", list("holders"));
+    }
+    if r.get("status").is_some() {
+        let detail = str_("detail");
+        return if detail.is_empty() {
+            format!("{name} → {}", str_("status"))
+        } else {
+            format!("{name} → {} ({detail})", str_("status"))
+        };
+    }
+    if r.get("generation").is_some() {
+        return format!(
+            "{name}: {} inherited, {} written here, on {}@{}",
+            r.get("inherited").and_then(Value::as_u64).unwrap_or(0),
+            r.get("local").and_then(Value::as_u64).unwrap_or(0),
+            str_("lineage"),
+            str_("generation")
+        );
+    }
+    if r.get("unattended").is_some() {
+        return format!("{name}: {} named to the house", list("unattended"));
+    }
+    if let Some(n) = r.get("count").and_then(Value::as_u64) {
+        return format!("{name}: {n} overdue");
+    }
+    if r.get("positions").is_some() {
+        return format!(
+            "{name}: {} position(s), {} decision(s)",
+            r.get("positions").and_then(Value::as_u64).unwrap_or(0),
+            r.get("decided").and_then(Value::as_u64).unwrap_or(0)
+        );
+    }
+    if r.get("live").is_some() {
+        return format!(
+            "{name}: {} live, {} carried knowingly",
+            r.get("live").and_then(Value::as_u64).unwrap_or(0),
+            r.get("tolerated").and_then(Value::as_u64).unwrap_or(0)
+        );
+    }
+    name
 }
 
 fn compact(v: &Value) -> String {

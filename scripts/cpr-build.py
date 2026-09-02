@@ -46,7 +46,7 @@ DAYS = {
     "policy": 5, "local": 13, "scope": 16, "rank": 17, "silence": 19,
     "p3_policy": 60, "monitor_pos": 69, "monitor_dismiss": 70,
     "clock_after_horizon": 126, "decided_1": 127, "decided_2": 128,
-    "accept": 129, "revisit": 300, "upgrade": 130,
+    "accept": 129, "revisit": 300, "upgrade": 130, "upstream_retract": 131,
     "panel_commit": 172, "seal": 173, "clock_past_boundary": 183, "reveal": 183,
 }
 MONITOR_HORIZON_DAYS = 120

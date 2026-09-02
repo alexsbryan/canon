@@ -130,6 +130,12 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
             lines.push(format!("status: SUPERSEDED by {by} — \"{next}\""));
         }
         Status::Retracted { at } => lines.push(format!("status: RETRACTED {}", store::ymd(*at))),
+        Status::Proposed { needs } => {
+            lines.push(format!("status: PROPOSED, not yet a rule — needs {needs}"))
+        }
+        Status::Refused { at, by, why } => {
+            lines.push(format!("status: REFUSED by {by}, {}: {why}", store::ymd(*at)))
+        }
     }
 
     // Why it stopped being in force, if it did.
@@ -147,15 +153,53 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         }
     }
 
+    // Rulings that were made and did not take: somebody without standing
+    // over this pair said the two do or do not conflict. On the record,
+    // shown, and marked — a `why` that hid them would be the tool quietly
+    // showing less than the log holds.
+    for act in log.acts().iter().filter(|a| canon.ungoverned.iter().any(|(x, _)| x == &a.id)) {
+        let (verb, a, b, why) = match &act.kind {
+            ActKind::Dismiss { a, b, rationale } => ("called not in conflict with", a, b, rationale),
+            ActKind::Accept { a, b, rationale, .. } => ("would carry against", a, b, rationale),
+            _ => continue,
+        };
+        if a != id && b != id {
+            continue;
+        }
+        let other = if a == id { b } else { a };
+        lines.push(format!(
+            "{} {verb} {other}, {} — not applied: outside their standing{}",
+            act.actor,
+            store::ymd(act.ts_unix),
+            if why.is_empty() { String::new() } else { format!(": {why}") }
+        ));
+    }
+
     for conflict in canon.conflicts.iter().filter(|x| x.a == *id || x.b == *id) {
         let other = if conflict.a == *id {
             &conflict.b
         } else {
             &conflict.a
         };
+        // WHO ruled, and when. A ruling with no name reads as the tool's own,
+        // and the whole point of recording one is that it was somebody's — a
+        // helper agent's dismissal and the house overruling it are two acts by
+        // two actors, and `why` has to show both as such.
+        let ruled = |want_accept: bool| -> String {
+            log.acts()
+                .iter()
+                .filter(|act| match &act.kind {
+                    ActKind::Accept { a, b, .. } => want_accept && conflict.is_pair(a, b),
+                    ActKind::Dismiss { a, b, .. } => !want_accept && conflict.is_pair(a, b),
+                    _ => false,
+                })
+                .last()
+                .map(|act| format!(" by {}, {}", act.actor, store::ymd(act.ts_unix)))
+                .unwrap_or_default()
+        };
         match &conflict.disposition {
             Disposition::Tolerated { rationale, revisit } => {
-                lines.push(format!("carried against {other}: {rationale}"));
+                lines.push(format!("carried against {other}{}: {rationale}", ruled(true)));
                 if let Some(r) = revisit {
                     lines.push(format!("  revisit by {r}"));
                 }
@@ -166,7 +210,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                 } else {
                     rationale
                 };
-                lines.push(format!("not in conflict with {other}: {why}"));
+                lines.push(format!("called not in conflict with {other}{}: {why}", ruled(false)));
             }
             Disposition::Open { reason } => {
                 lines.push(format!("open tension with {other}: {reason}"))
@@ -198,6 +242,7 @@ fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
             lines.push(format!("status: ANSWERED by {by} — \"{text}\""));
         }
         Status::Retracted { at } => lines.push(format!("status: WITHDRAWN {}", store::ymd(*at))),
+        Status::Proposed { .. } | Status::Refused { .. } => {}
     }
     Explanation {
         headline: format!("{}  ? {}", q.id, q.text),

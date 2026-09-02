@@ -5,8 +5,8 @@
 
 // ── 1. Clearly defined boundaries ────────────────────────────
 {"step":"who","name":"who-holds-the-kitchen","principle":1,"strength":"mechanism","scope":"house.kitchen"}
-{"step":"check","name":"kitchen-decided-by-a-cook","principle":1,"strength":"mechanism","scope":"house.kitchen","actor":"human:dana","about":"kitchen rota","proposal":"put a rota on the kitchen door","positions":[{"citing":"@stovetop","pull":"toward","because":"a rota is how the wiping gets done"}]}
-{"step":"check","name":"kitchen-not-decided-by-a-non-cook","principle":1,"strength":"mechanism","scope":"house.kitchen","actor":"human:ola","about":"kitchen rota","proposal":"put a rota on the kitchen door","positions":[{"citing":"@stovetop","pull":"toward","because":"a rota is how the wiping gets done"}]}
+{"step":"check","name":"kitchen-decided-by-a-cook","principle":1,"strength":"mechanism","scope":"house.kitchen","actor":"human:dana","about":"kitchen rotation","proposal":"put a cleaning rotation on the kitchen door","positions":[{"citing":"@stovetop","pull":"toward","because":"a rotation is how the wiping gets done"}]}
+{"step":"check","name":"kitchen-not-decided-by-a-non-cook","principle":1,"strength":"mechanism","scope":"house.kitchen","actor":"human:ola","about":"kitchen rotation","proposal":"put a cleaning rotation on the kitchen door","positions":[{"citing":"@stovetop","pull":"toward","because":"a rotation is how the wiping gets done"}]}
 {"step":"check","name":"a-boundary-nobody-holds","principle":1,"strength":"mechanism","scope":"allotment","actor":"human:mira","about":"allotment beds","proposal":"dig two more beds at the allotment","positions":[]}
 
 // ── 2. Congruence with local conditions ──────────────────────
@@ -15,7 +15,7 @@
 // ── 3. Collective-choice arrangements ────────────────────────
 // The people governed by the kitchen rule change the kitchen rule.
 {"step":"act","name":"the-cooks-change-their-own-rule","at":"2025-11-01","by":"human:dana","op":"policy","scope":"house.kitchen","text":"Two of us have to object before a kitchen thing stops.","rule":{"rule":"threshold","against":2}}
-{"step":"check","name":"kitchen-under-the-new-rule","principle":3,"strength":"mechanism","scope":"house.kitchen","actor":"human:ola","about":"kitchen rota","proposal":"put a rota on the kitchen door","positions":[{"actor":"human:dana","pull":"against","because":"a rota makes cooking a duty"}]}
+{"step":"check","name":"kitchen-under-the-new-rule","principle":3,"strength":"mechanism","scope":"house.kitchen","actor":"human:ola","about":"kitchen rotation","proposal":"put a cleaning rotation on the kitchen door","positions":[{"actor":"human:dana","pull":"against","because":"a rotation makes cooking a duty"}]}
 
 // ── 4. Monitors accountable to appropriators ─────────────────
 // An agent may CITE — that is a reading, and reading is what it is for.
@@ -35,11 +35,11 @@
 {"step":"check","name":"laundry-second-time","principle":5,"strength":"mechanism","scope":"house.laundry","about":"laundry after midnight","proposal":"run the machine at 1am","positions":[{"citing":"@quiet","pull":"against","because":"1am is inside quiet hours"}]}
 {"step":"act","at":"2026-02-17","by":"human:mira","op":"decided","about":"laundry after midnight","outcome":"conflicts","authority":"ask-panel","rationale":"the house talked about it"}
 {"step":"check","name":"laundry-third-time","principle":5,"strength":"mechanism","scope":"house.laundry","about":"laundry after midnight","proposal":"run the machine at 1am","positions":[{"citing":"@quiet","pull":"against","because":"1am is inside quiet hours"}]}
-{"step":"check","name":"a-different-subject-starts-at-the-bottom","principle":5,"strength":"mechanism","scope":"house.laundry","about":"drying rack in the hall","proposal":"leave the drying rack up","positions":[{"citing":"@hall","pull":"against","because":"a rack in the hall blocks a pushchair"}]}
+{"step":"check","name":"a-different-subject-starts-at-the-bottom","principle":5,"strength":"mechanism","scope":"house.laundry","about":"drying rack in the hall","proposal":"leave the drying rack up","positions":[{"citing":"@hall","pull":"against","because":"a rack in the hall blocks a stroller"}]}
 
 // ── 6. Rapid, low-cost conflict resolution ───────────────────
 {"step":"state","name":"before-the-conflict","principle":6,"strength":"mechanism"}
-{"step":"check","name":"bikes-against-the-hall","principle":6,"strength":"mechanism","about":"bikes in the hall","proposal":"keep the bikes where they are","positions":[{"citing":"@hall","pull":"against","because":"two bikes narrow the hall below a pushchair"},{"citing":"@bikes","pull":"toward","because":"the hall is where bikes were agreed to live"}]}
+{"step":"check","name":"bikes-against-the-hall","principle":6,"strength":"mechanism","about":"bikes in the hall","proposal":"keep the bikes where they are","positions":[{"citing":"@hall","pull":"against","because":"two bikes narrow the hall below a stroller"},{"citing":"@bikes","pull":"toward","because":"the hall is where bikes were agreed to live"}]}
 {"step":"act","at":"2026-02-18","by":"human:dana","op":"accept","a":"@hall","b":"@bikes","rationale":"there is nowhere else for the bikes and the hall is wide enough at the far end","revisit":"2026-06-01"}
 {"step":"state","name":"after-the-conflict","principle":6,"strength":"mechanism"}
 
@@ -56,7 +56,7 @@
 // anything, and being irreversible turns that into a refusal.
 {"step":"check","name":"a-sabotage-proposal-dies-on-unaddressed","about":"front door lock","proposal":"replace the front door lock with a keypad only I know the code to","reversible":false,"positions":[]}
 {"step":"check","name":"the-same-thing-reversible-is-not-refused","about":"front door lock","proposal":"replace the front door lock with a keypad only I know the code to","reversible":true,"positions":[]}
-{"step":"check","name":"an-unwritten-norm-is-not-a-gap","about":"who cooks on a wednesday","proposal":"put a wednesday cook on the rota","positions":[]}
+{"step":"check","name":"an-unwritten-norm-is-not-a-gap","about":"who cooks on a wednesday","proposal":"put a Wednesday cook on a rotation","positions":[]}
 
 // ── sortition ────────────────────────────────────────────────
 // Announced on the 20th, drawn after the 1st of March. The boundary is in
@@ -77,3 +77,24 @@
 {"step":"act","at":"2026-03-02","by":"human:sam","op":"draw_reveal","commit":"@panel","secret":"fernwood-sam-2026-panel"}
 {"step":"act","at":"2026-03-03","by":"human:rae","op":"draw_reveal","commit":"@panel","secret":"fernwood-rae-2026-panel"}
 {"step":"draw","name":"the-panel","commit":"@panel"}
+
+// ── how a kitchen rule becomes a rule ────────────────────────
+// Ostrom's collective-choice level. Until now anyone could write a kitchen
+// rule and it was live on arrival. The cooks set how kitchen rules are made:
+// both of them, jointly. Theo, who holds the house but not the kitchen,
+// proposes one; it is a proposal until both cooks say yes. The helper agent
+// proposes one too; it cannot mint, and a cook refuses it with a reason.
+{"step":"act","name":"the-cooks-decide-how-kitchen-rules-are-made","at":"2026-03-05","by":"human:dana","op":"ratification","text":"Both cooks agree, or it is not a kitchen rule.","rule":{"rule":"joint","holders":["human:dana","human:sam"]},"scope":"house.kitchen"}
+{"step":"act","at":"2026-03-06","by":"human:theo","as":"pan","op":"assert","text":"Wash your own pan before you sit down to eat."}
+{"step":"act","at":"2026-03-06","by":"human:theo","op":"scoped","commitment":"@pan","scope":"house.kitchen"}
+{"step":"status","name":"a-non-cook-proposes-a-kitchen-rule","principle":3,"strength":"mechanism","commitment":"@pan"}
+{"step":"act","at":"2026-03-07","by":"human:dana","op":"position","about":"@pan","pull":"toward","because":"it is what we already do"}
+{"step":"status","name":"one-cook-is-not-both","principle":3,"strength":"mechanism","commitment":"@pan"}
+{"step":"act","at":"2026-03-08","by":"human:sam","op":"position","about":"@pan","pull":"toward","because":"fine by me"}
+{"step":"status","name":"both-cooks-and-it-is-a-rule","principle":3,"strength":"mechanism","commitment":"@pan"}
+{"step":"act","at":"2026-03-09","by":"agent:helper","as":"dishwasher","op":"assert","text":"The dishwasher runs only when it is full."}
+{"step":"act","at":"2026-03-09","by":"agent:helper","op":"scoped","commitment":"@dishwasher","scope":"house.kitchen"}
+{"step":"status","name":"the-helper-proposes-and-cannot-mint","principle":4,"strength":"mechanism","commitment":"@dishwasher"}
+{"step":"act","at":"2026-03-10","by":"human:dana","op":"position","about":"@dishwasher","pull":"against","because":"half-loads on Sunday night, or nobody has a clean pan on Monday"}
+{"step":"status","name":"a-cook-refuses-it-with-a-reason","principle":4,"strength":"mechanism","commitment":"@dishwasher"}
+{"step":"state","name":"the-kitchen-at-the-end"}

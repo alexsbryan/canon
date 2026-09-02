@@ -132,7 +132,17 @@ impl Log {
         out
     }
 
+    /// Fold at the moment of the last act. Deterministic, so a replay of the
+    /// same file folds the same way on every machine.
     pub fn derive(&self) -> crate::fold::Canon {
         crate::fold::derive(&self.acts)
+    }
+
+    /// Fold as of `now`. A consent window that has run out, or standing
+    /// that has lapsed, reads differently today than it did when the last
+    /// act was written; the CLI folds at the wall clock and a replay at the
+    /// scenario's clock.
+    pub fn derive_at(&self, now: i64) -> crate::fold::Canon {
+        crate::fold::derive_at(&self.acts, now)
     }
 }

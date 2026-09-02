@@ -95,6 +95,7 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `withdraw` | `holder`, `scope`, `rationale?` | Standing given up, or stood down |
 | `scoped` | `commitment`, `scope` | A commitment belongs to a scope |
 | `policy` | `text`, `rule`, `scope?` | What this canon decides under |
+| `ratification` | `text`, `rule`, `scope?` | How a proposal in a scope becomes a rule |
 | `decided` | `about`, `outcome`, `authority`, `rationale?` | The group decided something |
 | `rank` | `commitment`, `rank` | A principle rather than a convention |
 | `horizon` | `target`, `at`, `rationale?` | Look at this again by then |
@@ -210,7 +211,8 @@ the log is a hole in the record — a truncated file, a hand edit, a
 snapshot adopted without its history. Surface it. Do not treat it as a
 no-op.
 
-Resulting commitment statuses: `active`, `superseded{by}`, `retracted{at}`.
+Resulting commitment statuses: `active`, `superseded{by}`, `retracted{at}`,
+`proposed{needs}`, `refused{at, by, why}`. The last two come from rule 6.
 
 **4. A conflict carries its disposition.** `accept` and `dismiss` describe
 the same underlying thing — two commitments that may not both be honoured —
@@ -239,6 +241,53 @@ two transitions is how a format grows a dialect.
 
 A `question` is not an adjudication. An implementation MUST NOT flag one
 authored by a non-human actor — noticing a gap decides nothing.
+
+**6. A commitment is a proposal until its scope ratifies it.** Every
+commitment introduced by `assert` or `supersede` derives to `proposed`
+until the ratification rule of its scope is met, and to `active` once it
+is. The rule is the deepest `ratification` act covering the commitment's
+scope, else the canon-wide one, else `standing`. Four rules ship:
+
+- `standing` — a holder of the scope writes a rule directly; anyone
+  else's write takes one holder's approval; a scope nobody holds is open.
+- `joint{holders}` — every named person must approve; one of them
+  objecting refuses it.
+- `threshold{approve, block}` — this many holders approving carries it,
+  this many objecting refuses it.
+- `consent{days}` — a rule after this many days unless a holder objects
+  with a reason.
+
+Approvals and objections are `position` acts whose `about` is the
+commitment's id: `toward` approves, `against` with a non-empty `because`
+objects. Only positions from people who hold the scope at its **narrowest
+granted level** count; everyone else's are kept and do not count. Positions
+from non-human actors never count, and a non-human actor never ratifies its
+own write by holding standing. A holder is one whose grant covers the scope
+and is held at the time of the position, and who holds it at the deepest
+level anyone does — subsidiarity, applied to authorship.
+
+A `supersede` retires its targets only once the new commitment is
+`active`. A proposed replacement leaves the rule it would replace standing.
+
+A canon with no `grant` act before a commitment was written has no
+holders and no gate: that commitment is `active` on arrival. This is every
+canon that predates this rule, and they MUST keep deriving the same way.
+
+**7. Governing takes standing.** A `grant`, `withdraw` of somebody else,
+`policy` or `ratification` act whose actor does not hold standing over the
+scope it names — or over the scope above it — is recorded and NOT applied.
+So is a ruling on the record by somebody without standing over what it
+touches: `accept` or `dismiss` over a pair, `retract` of somebody else's
+commitment (withdrawing your own is always yours), or `decided` by somebody
+with no standing in the canon at all. The act stays in the log, flagged,
+and has no effect on the derived state. An agent with a seat over the
+kitchen that dismisses a pair of hall rules has spoken, and the record
+keeps that it did; nothing changed. Implementations MUST surface such acts rather
+than drop them. Only grants made strictly before the act count, for and
+against: acts written in the same second cannot govern one another, so a
+founder's first twelve grants all take. A canon with no earlier grant is
+ungoverned and open; the first grant closes it. Withdrawing your own
+standing is always yours to do.
 
 ## Canonical ordering
 

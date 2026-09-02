@@ -13,13 +13,14 @@ and decision has been broken.
 ```sh
 canon replay fixtures/fernwood-commons
 canon replay fixtures/fernwood-commons --policy consent   # the counterfactual
+canon replay fixtures/fernwood-commons --brief            # Ostrom's eight, as a table
 ```
 
 | # | Ostrom principle | Carried by | The scenario asserts | Strength |
 |---|---|---|---|---|
 | 1 | Clearly defined boundaries | scope grants | a `house.kitchen` proposal routes to the cooks; someone with only house-wide standing gets `ask-one`, not `act`; a scope nobody holds **refuses** | mechanism |
 | 2 | Congruence with local conditions | `adopt` + `from` provenance | three commitments came from the network canon and five were written here; the divergence is visible without git | affordance |
-| 3 | Collective-choice arrangements | policy in the ledger | the cooks change the kitchen's own rule, and the next decision goes the other way on the same evidence | mechanism |
+| 3 | Collective-choice arrangements | policy and **ratification** in the ledger | the cooks change the kitchen's own rule, and the next decision goes the other way on the same evidence; then they set how kitchen rules are *made* — both cooks, jointly — and a non-cook's rule is a **proposal** until both say yes | mechanism |
 | 4 | Monitors accountable to appropriators | `unattended` + a grant horizon | the agent's citation is fine, its **adjudication is named to the house**, its standing lapses into `overdue` with nobody having to remember, and its record is one query | mechanism, with a human residue |
 | 5 | Graduated sanctions | authority ladder over prior decisions | first `ask-one`, second `ask-panel`, third `refuse` — counted from **decisions**, and a different subject starts at the bottom | mechanism |
 | 6 | Rapid, low-cost conflict resolution | `check` → `accept` | a conflict surfaced and carried knowingly in **one act**, with no meeting and no model call | mechanism |
@@ -41,7 +42,7 @@ somebody stretched a definition to make it green.
   refusal came from the attribute and not from the wording.
 - **Deliberate silence is not a gap.** Who cooks on a Wednesday has sorted
   itself out for two years. `check` says UNWRITTEN ON PURPOSE and what that
-  protects, instead of prompting for a rota.
+  protects, instead of prompting for a rotation.
 - **A draw nobody can steer.** Announced on 20 February for 1 March, five
   people seal a secret, four open one. The fifth is excluded — withholding
   costs you your seat, which is what bounds the last-revealer's one bit.

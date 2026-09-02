@@ -70,8 +70,10 @@ USAGE
 
 RECORD                                        (no model needed)
   init [--profile personal|code|house]  start a canon here
-  add \"<text>\"                          assert a commitment
-  list                                   what is live now
+  add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
+  approve <id> [-m \"<why>\"]             approve a proposal, by name
+  object <id> -m \"<why>\"                object to one; the reason is required
+  list                                   what is live now, and what is proposed
   why <id>                               what this replaced, when, and why
   supersede <id> \"<text>\" -m \"<reason>\"  replace a commitment
   retract <id> -m \"<reason>\"             withdraw one, no replacement
@@ -89,6 +91,8 @@ GOVERN                                        (no model needed)
   withdraw <actor> <scope>               step back from a scope, or stand down
   scope <id> <scope>                     put a commitment in a scope
   policy show | set <rule> [-m \"...\"]    what this canon decides under
+  ratification show | set <rule>         how a proposal becomes a rule, per scope:
+                                         standing, joint:a,b, threshold:n/m, consent:Nd
   position \"<about>\" --against|--toward  a vote, an objection, a second
   decide \"<about>\" --outcome --authority record what the group decided
   rank <id> <rank>                       a principle, not a convention
@@ -166,6 +170,8 @@ fn main() {
     let code = match cmd.as_str() {
         "init" => cmds::init(rest),
         "add" => cmds::add(rest),
+        "approve" => cmds::approve(rest),
+        "object" => cmds::object(rest),
         "list" => cmds::list(rest),
         "why" => cmds::why(rest),
         "supersede" => cmds::supersede(rest),
@@ -180,6 +186,7 @@ fn main() {
         "withdraw" => govern::withdraw(rest),
         "scope" => govern::scoped(rest),
         "policy" => govern::policy(rest),
+        "ratification" => govern::ratification(rest),
         "position" => govern::position(rest),
         "decide" => govern::decide(rest),
         "rank" => govern::rank(rest),
@@ -266,6 +273,8 @@ mod tests {
         for verb in [
             "init",
             "add",
+            "approve",
+            "object",
             "list",
             "why",
             "supersede",
@@ -281,6 +290,7 @@ mod tests {
             "withdraw",
             "scope",
             "policy",
+            "ratification",
             "position",
             "decide",
             "rank",

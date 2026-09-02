@@ -276,6 +276,56 @@ attributes, so a policy can say "irreversible and unaddressed means refuse and
 escalate" without the library ever learning what a door is. Effect
 classification is the caller's job; the attribute is the interface.
 
+### Ratification — the collective-choice level
+
+`BUILT` (`ratify.rs`: `Ratify`, `Verdict`, `Canon::{ratify, ratification_for,
+may_govern}`; `act.rs`: the `ratification` op; `fold.rs`: pass 4, and the
+`proposed` / `refused` statuses)
+
+Policy as described above judges proposals to *act*. It said nothing about
+proposals to *legislate*, and so for its first months this library had a hole
+Ostrom would have spotted in a minute: any actor could `assert` a rule over
+any scope and it was in force the moment it was written. Everyone had equal
+authorship. That is not a governance model with a permissive setting; it is a
+shared notebook, and the graduated ladder, the scopes and the standing queries
+were all advice about a record anyone could rewrite.
+
+Ostrom's three levels — operational rules, the collective-choice rules that
+make them, the constitutional rules that make *those* — are now three layers
+here:
+
+```
+assert / supersede            a PROPOSAL, scoped
+ratification rule (per scope)  standing | joint{holders} | threshold{n/m} | consent{days}
+   ratify(proposal, positions, standing, now) -> ratified | proposed | refused
+grant / policy / ratification  applied only by somebody holding the scope, or the one above
+```
+
+The ratification function is pure and lives beside `policy`: the same
+`(evidence, standing, clock) -> verdict` shape, replayed in the same
+milliseconds, subject to the same counterfactual. Approvals and objections are
+ordinary `position` acts about the proposal's id, so a vote for a rule and an
+objection to a proposal are one primitive. Only holders of the scope at its
+narrowest granted level count — the kitchen's cooks for a kitchen rule, even
+though the house covers the kitchen — which is subsidiarity applied to
+authorship, and the same reading `check` gives it.
+
+**An agent may propose and may object. It may not mint.** Its own write is a
+proposal even where it holds standing, and its approvals do not count. That is
+Ostrom's fourth principle stated as a type: the monitor is answerable to the
+people, never the reverse. A house can change this; the record will show it did.
+
+**The constitutional level is standing, today.** Changing how a scope makes
+rules is gated by holding that scope or the one above it. That closes the
+obvious loophole — a member lowering the bar for their own corner — and it is
+not yet Ostrom's full answer, which would make a change to the ratification
+rule itself a proposal ratified at the level above. Written down here so it is
+a known gap and not an oversight.
+
+The default is `standing`, which is exactly what every canon did before, made
+explicit. A canon that has never granted standing to anyone is ungoverned and
+open; the first grant closes it.
+
 ## Primitive 8 — Two standing queries
 
 `BUILT` (`tensions`; `horizon.rs`: `Canon::{overdue, unreadable_dates}`, the
@@ -741,13 +791,19 @@ weigh it.
 
 ### Enforcement
 
-Not a tension so much as an undecided question, kept here so it is not mistaken
-for an oversight. The adequacy test showed a graduated ladder is modellable
+Half decided. The adequacy test showed a graduated ladder is modellable
 without a surveillance file, since it counts prior *decisions* rather than prior
-*observations*. What nobody has decided is whether this library should carry an
-enforcement ladder at all, or only ever advise while humans act. Ostrom found
-that both zero enforcement and harsh first-strike enforcement fail; that is an
-argument for the middle, not for us picking it on a community's behalf.
+*observations*. On *acting*, the library still only advises: `check` returns an
+authority and nothing stops a person from ignoring it. On *legislating* and on *ruling*, it
+now enforces, because Ostrom's third principle is unstateable otherwise: a rule
+is a proposal until the people who live under it ratify it (see Ratification,
+under Primitive 7); a governance act by somebody without standing is recorded
+and not applied; and so is a ruling on the record — an accept, a dismiss, a
+retraction of somebody else's rule, a decision — by somebody without standing
+over what it touches. A member may speak anywhere. It decides only where it was
+given a say. Ostrom found that both zero enforcement and harsh
+first-strike enforcement fail; the middle chosen here is that the *record*
+enforces who may change the rules, and people enforce the rules.
 
 ## What we are borrowing, and from whom
 
