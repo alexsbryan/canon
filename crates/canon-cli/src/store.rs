@@ -75,7 +75,14 @@ pub fn append(dir: &Path, act: &Act) -> Result<(), String> {
         .append(true)
         .open(&path)
         .map_err(|e| format!("opening {}: {e}", path.display()))?;
-    writeln!(f, "{line}").map_err(|e| format!("writing {}: {e}", path.display()))
+    // **One `write_all`, newline included, and that is the whole point.**
+    // `writeln!` formats in pieces and issues TWO writes — the line, then the
+    // newline — so two `canon add`s running at once could interleave under
+    // `O_APPEND` into `{act}{act}\n\n`: one unparseable line and one empty
+    // one, in the file that IS the record. A single append-mode write is
+    // atomic, which is what makes the promise above true.
+    f.write_all(format!("{line}\n").as_bytes())
+        .map_err(|e| format!("writing {}: {e}", path.display()))
 }
 
 pub fn now() -> i64 {
@@ -129,5 +136,46 @@ mod tests {
             canon_core::date::ymd(1_771_027_200)
         );
         assert_eq!(super::ymd(0), "1970-01-01");
+    }
+
+    #[test]
+    fn two_writers_at_once_cannot_corrupt_the_record() {
+        // `writeln!` formats in pieces and issues TWO writes, the line and
+        // then the newline, so two appends racing under `O_APPEND` could
+        // interleave into one unparseable line and one empty one — in the
+        // file that IS the record, and whose own doc comment promises that a
+        // concurrent writer's line is never lost.
+        use canon_core::{Act, ActKind};
+        let dir = std::env::temp_dir().join("canon-store-race");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let (writers, each) = (8, 40);
+        let done: Vec<_> = (0..writers)
+            .map(|w| {
+                let dir = dir.clone();
+                std::thread::spawn(move || {
+                    for i in 0..each {
+                        let act = Act::new(
+                            ActKind::Assert {
+                                text: format!("writer {w} commitment {i}"),
+                                from: None,
+                                source: None,
+                            },
+                            1_771_027_200 + i,
+                            format!("human:writer-{w}"),
+                        );
+                        super::append(&dir, &act).unwrap();
+                    }
+                })
+            })
+            .collect();
+        for t in done {
+            t.join().unwrap();
+        }
+
+        // Every line lands, and every line parses. Either failure is the bug.
+        let log = super::read(&dir).expect("the record is still readable");
+        assert_eq!(log.len(), (writers * each) as usize);
     }
 }

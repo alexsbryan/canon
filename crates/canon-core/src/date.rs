@@ -40,7 +40,17 @@ pub fn parse_ymd(s: &str) -> Option<i64> {
     let y: i64 = parts.next()?.parse().ok()?;
     let m: i64 = parts.next()?.parse().ok()?;
     let d: i64 = parts.next()?.parse().ok()?;
-    if parts.next().is_some() || !(1..=12).contains(&m) || !(1..=31).contains(&d) {
+    // **The year is bounded because the arithmetic below is not.** `YYYY` is
+    // four digits by construction, and without the bound
+    // `parse_ymd("999999999999-01-01")` panicked on `attempt to multiply with
+    // overflow` in debug and wrapped to some other century in release — from
+    // `--horizon`, and from an `Accept.revisit` string read straight out of
+    // `acts.jsonl`, where a bad merge is enough to produce one.
+    if parts.next().is_some()
+        || !(1..=9999).contains(&y)
+        || !(1..=12).contains(&m)
+        || !(1..=31).contains(&d)
+    {
         return None;
     }
     // days-from-civil, the inverse of the above.
@@ -89,6 +99,13 @@ mod tests {
             "2026-00-10",
             "2026-1-1-1",
             "next tuesday",
+            // Arithmetic, not just grammar: these overflowed i64 on the way
+            // to a day number — a panic in debug, a wrong century in release
+            // — and they arrive from `--horizon` and from a `revisit` string
+            // sitting in somebody's `acts.jsonl`.
+            "999999999999-01-01",
+            "9223372036854775807-01-01",
+            "0000-01-01",
         ] {
             assert_eq!(parse_ymd(bad), None, "`{bad}` is not a date");
         }

@@ -12,16 +12,25 @@
 //! and quietly ignored everyone else's. A canon lives in whatever its group
 //! already writes in: `.org`, `.rst`, `.eml`, a `NOTES` file with no
 //! extension, a transcript pasted into a `.log`. So readability is decided by
-//! the BYTES. Text is read. Anything that is not valid UTF-8 is skipped and
+//! the BYTES. Text is read. Anything that is not text is skipped and
 //! reported.
 //!
-//! Three things a walk still passes over, each reported and each with a way
-//! round it:
+//! **The walk is [`ignore`], ripgrep's, and that is deliberate.** It used to
+//! be thirty lines here, and those thirty lines had three bugs that only a
+//! decade of other people's bug reports finds: `is_dir()` follows symlinks,
+//! so a link in the folder walked out of the tree it was pointed at and read
+//! whatever it found — the traversal escape `SECURITY.md` names; one
+//! unreadable subdirectory returned `Err` and ended the walk at zero sources;
+//! and a fifo passed the size cap with a length of 0 and then blocked on
+//! `read` forever, with no output and no timeout. Directory walking is a
+//! solved problem that does not look like one.
 //!
-//! - **What the project itself calls generated** — `git check-ignore`, so the
-//!   authority is the person's own `.gitignore` and not a list of build
-//!   directories we guessed at. Without it, pointing at any checked-out repo
-//!   reads its `target/` or `node_modules/`. `--include-ignored` reads them.
+//! Four things a walk passes over, each reported and each with a way round it:
+//!
+//! - **What the project itself calls generated** — `.gitignore`, so the
+//!   authority is the person's own file and not a list of build directories
+//!   we guessed at. Without it, pointing at any checked-out repo reads its
+//!   `target/` or `node_modules/`. `--include-ignored` reads them.
 //! - **Structured data**, which is not writing. A file that parses as whole
 //!   JSON and holds no conversation is a lockfile or an export, and a
 //!   `package-lock.json` read as prose produces commitments cited to
@@ -29,9 +38,27 @@
 //!   that happens to be JSON and lets a `.json` full of minutes through.
 //! - **A file larger than [`MAX_BYTES`]**, which is a log or a database
 //!   rather than anybody's writing.
+//! - **Anything that leaves the tree that was pointed at.** A symlink is
+//!   followed only when its target stays inside the root, because every
+//!   passage read here is quoted verbatim into a proposal, and therefore into
+//!   `acts.jsonl`, and therefore into somebody's git history. A link to
+//!   `~/.aws` is not a thing to resolve quietly.
 //!
 //! A file NAMED directly is read whatever it is — the person said so. Only a
-//! walk filters, because a walk is a guess about intent.
+//! walk filters, because a walk is a guess about intent. The single exception
+//! is that it has to be a FILE: `--from /dev/zero` and `--from some.fifo` are
+//! not large reads, they are reads that never return, and "the person said
+//! so" cannot have meant that. `--from -` is the way to stream.
+//!
+//! **Encodings are read only where the bytes DECLARE one.** A byte-order mark
+//! is the file saying what it is, so `EF BB BF` is stripped rather than left
+//! to lead the first citation, and `FF FE` / `FE FF` are decoded as UTF-16 —
+//! which is what every Windows editor writes when a person picks "Unicode".
+//! What this deliberately does NOT do is guess. Sniffing an encoding
+//! statistically would read more files, and would sometimes read them WRONG:
+//! a mis-guessed Shift-JIS file is not skipped and reported, it is mojibake
+//! that looks like a quotation, and it goes into the log as one. Every decode
+//! here is a declaration the file made about itself.
 //!
 //! **The rule underneath all of it: a file that was not read is reported.**
 //! Pointing at a directory containing *some* readable files used to drop the
@@ -49,10 +76,9 @@
 //! actually decided in.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 
+use ignore::WalkBuilder;
 use serde_json::Value;
 
 /// Past this, a walk passes a file over: it is a log, a dump or a database,
@@ -75,9 +101,23 @@ const BURST_MAX_MESSAGES: usize = 25;
 pub struct Source {
     /// Relative to the root that was pointed at. Absolute paths are 90
     /// characters of noise in the review loop, where the whole job is reading
-    /// quotes.
+    /// quotes. Made unique across roots by [`Gathered::resolve_names`].
     pub name: String,
     pub text: String,
+    /// Where it came from, when it came from disk. `None` for stdin and for
+    /// commit bodies, which have no path to be disambiguated by.
+    pub path: Option<PathBuf>,
+}
+
+impl Source {
+    /// A source that did not come from a path — stdin, or a commit body.
+    pub fn unplaced(name: impl Into<String>, text: impl Into<String>) -> Self {
+        Source {
+            name: name.into(),
+            text: text.into(),
+            path: None,
+        }
+    }
 }
 
 /// What was read, and what was passed over.
@@ -87,11 +127,67 @@ pub struct Gathered {
     /// Why each unread file was unread, and how many of them there were.
     /// Rendered by [`Gathered::skipped_note`]; never dropped.
     pub skipped: BTreeMap<String, usize>,
+    /// Canonical paths already taken, so that overlapping roots — `--from .
+    /// ./notes`, or the same file named twice — read a file once. Not
+    /// reported: nothing was withheld, it is the same passage.
+    seen: BTreeSet<PathBuf>,
 }
 
 impl Gathered {
     fn skip(&mut self, reason: impl Into<String>) {
         *self.skipped.entry(reason.into()).or_insert(0) += 1;
+    }
+
+    fn take(&mut self, source: Source) {
+        if let Some(p) = &source.path {
+            let key = p.canonicalize().unwrap_or_else(|_| p.clone());
+            if !self.seen.insert(key) {
+                return;
+            }
+        }
+        self.sources.push(source);
+    }
+
+    /// Give every source a name no other source has.
+    ///
+    /// **A citation is the thing a reader checks a rule against**, so two
+    /// passages answering to the same coordinates is the one ambiguity this
+    /// module cannot ship. Names are relative to the root they were found
+    /// under, which is what keeps `handbook.md:3-4` readable — and which made
+    /// `--from project-a project-b` produce two sources both called
+    /// `README.md`, where `README.md:3-4` named a passage in neither.
+    ///
+    /// Widened by one leading path component at a time, and only for the
+    /// names that actually collide, so the common case keeps its short names
+    /// and the ambiguous case gets exactly enough path to be told apart.
+    pub fn resolve_names(&mut self) {
+        loop {
+            let mut by_name: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
+            for (i, s) in self.sources.iter().enumerate() {
+                by_name.entry(s.name.as_str()).or_default().push(i);
+            }
+            let clashing: Vec<usize> = by_name
+                .into_values()
+                .filter(|group| group.len() > 1)
+                .flatten()
+                .collect();
+            if clashing.is_empty() {
+                return;
+            }
+            let mut widened = false;
+            for i in clashing {
+                if let Some(longer) = widen(&self.sources[i]) {
+                    self.sources[i].name = longer;
+                    widened = true;
+                }
+            }
+            // Two sources with no path left to spend — a `--as` name that
+            // matches a file, say. Nothing more to try, and a loop that
+            // cannot make progress must not run again.
+            if !widened {
+                return;
+            }
+        }
     }
 
     /// What to tell the person before they spend a model run on this.
@@ -115,145 +211,174 @@ impl Gathered {
     }
 }
 
+/// One more leading path component than the name already carries, or `None`
+/// when the name has spent the whole path and there is nothing left to add.
+fn widen(source: &Source) -> Option<String> {
+    let path = source.path.as_ref()?;
+    let parts: Vec<_> = path.components().collect();
+    let have = Path::new(&source.name).components().count();
+    if have >= parts.len() {
+        return None;
+    }
+    let tail: PathBuf = parts[parts.len() - (have + 1)..].iter().collect();
+    Some(tail.to_string_lossy().to_string())
+}
+
 /// Read one path — a file or a directory tree — into sources.
 ///
 /// `include_ignored` overrides the `.gitignore` filter that a walk applies.
 pub fn gather(root: &Path, into: &mut Gathered, include_ignored: bool) -> Result<(), String> {
-    if !root.is_dir() {
-        let name = root
-            .file_name()
-            .map(|n| n.to_string_lossy().to_string())
-            .unwrap_or_else(|| root.to_string_lossy().to_string());
-        // No size cap and no structure test: the person named this file.
-        return match read_one(root, &name, None) {
-            Ok(s) => {
-                into.sources.push(s);
-                Ok(())
-            }
-            Err(why) => Err(format!("{}: {why}", root.display())),
-        };
+    // Follows a link, because the person named this path and meant the thing
+    // at the end of it. Only what a WALK finds is held to the root.
+    let meta = std::fs::metadata(root).map_err(|e| format!("{}: {}", root.display(), why(&e)))?;
+    if meta.is_dir() {
+        walk(root, into, include_ignored);
+        return Ok(());
     }
-
-    let base = root.to_path_buf();
-    let mut found: Vec<(PathBuf, String)> = Vec::new();
-    walk(&base, &base, &mut found)?;
-    // One `git check-ignore` for the whole walk rather than one per file: a
-    // repo of any size makes that thousands of processes.
-    let generated = if include_ignored {
-        BTreeSet::new()
-    } else {
-        ignored(&base, &found)
-    };
-    for (path, rel) in found {
-        if generated.contains(&rel) {
-            into.skip("ignored by .gitignore");
-            continue;
-        }
-        match read_one(&path, &rel, Some(MAX_BYTES)) {
-            Ok(s) => into.sources.push(s),
-            Err(why) => into.skip(why),
-        }
+    if !meta.is_file() {
+        // The hang this replaces: a character device or a fifo has a length
+        // of 0, so it passed every size cap, and then `read` blocked forever
+        // with nothing printed and no timeout.
+        return Err(format!(
+            "{}: not a regular file — a device, socket or pipe. \
+             `… | canon draft --from -` streams instead.",
+            root.display()
+        ));
     }
-    Ok(())
+    let name = root
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| root.to_string_lossy().to_string());
+    // No size cap and no structure test: the person named this file.
+    match read_one(root, &name, None) {
+        Ok(s) => {
+            into.take(s);
+            Ok(())
+        }
+        Err(why) => Err(format!("{}: {why}", root.display())),
+    }
 }
 
-fn walk(base: &Path, dir: &Path, found: &mut Vec<(PathBuf, String)>) -> Result<(), String> {
-    let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)
-        .map_err(|e| format!("reading {}: {e}", dir.display()))?
-        .filter_map(|e| e.ok().map(|e| e.path()))
-        .collect();
+/// Walk a tree, reading what is writing and reporting what is not.
+///
+/// **Nothing is pruned, and the ignore decision is asked per file.** Pruning
+/// an ignored directory is faster and loses the count, and "N file(s) were not
+/// read" is the promise this module is built around — a walk that silently
+/// declines to mention `node_modules` is the same defaulted absence as one
+/// that silently declines to mention a Slack export. This still spawns no
+/// process and pipes no paths, so it is strictly less work than the
+/// `git check-ignore` shell-out it replaces.
+fn walk(root: &Path, into: &mut Gathered, include_ignored: bool) {
+    let mut matcher = if include_ignored {
+        None
+    } else {
+        // A second builder, with the standard filters left ON, purely to
+        // answer "would git ignore this?". `.ignore` files are switched off
+        // so the reported reason stays true to the word `.gitignore`.
+        WalkBuilder::new(root).ignore(false).build_matchers().pop()
+    };
+    let root_abs = root.canonicalize().ok();
     // Sorted, because chunk ids are positions and a run that reads the same
     // folder twice in a different order produces an artifact that cannot be
     // compared with the first (§18.4).
-    entries.sort();
-    for path in entries {
-        let name = path
-            .file_name()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string();
+    let walker = WalkBuilder::new(root)
+        .standard_filters(false)
         // Hidden directories are infrastructure, not notes: `.git` alone
         // would bury a run in objects, and `.canon` is the tool's own state.
         // Not counted as skipped — nobody meant them.
-        if name.starts_with('.') {
+        .hidden(true)
+        .follow_links(false)
+        .sort_by_file_name(|a, b| a.cmp(b))
+        .build();
+
+    // Ignored directories, so a file inherits its parent's fate the way git
+    // decides it. Asking only about the file would read `target/debug/x.log`
+    // out of a `target/` nobody wanted walked.
+    let mut ignored_dirs: Vec<PathBuf> = Vec::new();
+
+    for entry in walker {
+        let entry = match entry {
+            Ok(e) => e,
+            // One unreadable directory used to end the walk and return zero
+            // sources: a single `chmod 000` folder anywhere under
+            // `~/Documents` failed the whole ingest. It is one skip now, and
+            // the walk goes on.
+            Err(_) => {
+                into.skip("in a folder that could not be read");
+                continue;
+            }
+        };
+        let Some(kind) = entry.file_type() else {
+            continue;
+        };
+        let path = entry.path();
+        let Ok(rel) = path.strip_prefix(root) else {
+            continue;
+        };
+        if rel.as_os_str().is_empty() {
             continue;
         }
-        if path.is_dir() {
-            walk(base, &path, found)?;
+        if let Some(m) = matcher.as_mut() {
+            if ignored_dirs.iter().any(|d| rel.starts_with(d)) {
+                if !kind.is_dir() {
+                    into.skip("ignored by .gitignore");
+                }
+                continue;
+            }
+            if m.matched(rel, kind.is_dir()).is_ignore() {
+                if kind.is_dir() {
+                    ignored_dirs.push(rel.to_path_buf());
+                } else {
+                    into.skip("ignored by .gitignore");
+                }
+                continue;
+            }
+        }
+        if kind.is_dir() {
             continue;
         }
-        let rel = path
-            .strip_prefix(base)
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .to_string();
-        found.push((path, rel));
+        let name = rel.to_string_lossy().to_string();
+        if kind.is_symlink() {
+            match resolved(path, root_abs.as_deref()) {
+                // Its files are reached by their real path inside this same
+                // walk, so nothing is withheld by not descending it twice.
+                Some(target) if target.is_dir() => continue,
+                Some(_) => {}
+                None => {
+                    into.skip("a link out of the folder that was pointed at");
+                    continue;
+                }
+            }
+        } else if !kind.is_file() {
+            // Carrying its own way out, because the general note below —
+            // "naming a file directly reads it whatever it is" — is the one
+            // hint that is NOT true of a pipe.
+            into.skip("not a regular file (a device, socket or pipe); `… | canon draft --from -` streams one");
+            continue;
+        }
+        match read_one(path, &name, Some(MAX_BYTES)) {
+            Ok(s) => into.take(s),
+            Err(reason) => into.skip(reason),
+        }
     }
-    Ok(())
 }
 
-/// Which of these paths the project itself calls generated.
+/// Where a link actually points, or `None` if that is outside `root` — or
+/// nowhere at all, which a dangling link is.
 ///
-/// Shelling out to `git check-ignore` rather than carrying a list of build
-/// directories: `target/`, `node_modules/`, `_build/`, `.venv/` and whatever
-/// this year's toolchain emits are already enumerated, correctly, in the
-/// repo's own `.gitignore`. A guessed list is a whitelist wearing a different
-/// hat — it works on the ecosystems we thought of.
-///
-/// No git, or a folder outside a repo, means nothing is declared generated
-/// and nothing is skipped. That is silence rather than a failure: a folder
-/// that never declared a `.gitignore` has not withheld anything.
-///
-/// **Asked in names relative to `base`, with git run from `base`.** Feeding
-/// it the paths as built — which are relative to the CWD whenever `--from`
-/// was — and running git from `base` makes it resolve `notes/x.md` inside
-/// `notes/`, match nothing, and skip nothing: gitignore filtering that
-/// silently does not happen, which is the defaulted absence §18.3 forbids.
-/// Relative names remove the distinction rather than papering over it, so
-/// there is no absolute-vs-relative case left to get wrong.
-fn ignored(base: &Path, found: &[(PathBuf, String)]) -> BTreeSet<String> {
-    if found.is_empty() {
-        return BTreeSet::new();
+/// **This is the traversal escape `SECURITY.md` asks to hear about first.**
+/// Every passage read here is quoted verbatim into a proposal, into
+/// `acts.jsonl`, and into somebody's git history. A link inside the tree is
+/// somebody's own organisation of their own notes and is followed; a link to
+/// `~/.aws` is not.
+fn resolved(path: &Path, root_abs: Option<&Path>) -> Option<PathBuf> {
+    let target = path.canonicalize().ok()?;
+    match root_abs {
+        // No canonical root to compare against means no way to prove the
+        // target is inside it, and an unprovable containment is a no.
+        Some(base) => target.starts_with(base).then_some(target),
+        None => None,
     }
-    let Ok(mut child) = Command::new("git")
-        .args(["check-ignore", "--stdin", "-z"])
-        .current_dir(base)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-    else {
-        return BTreeSet::new();
-    };
-    let Some(mut sink) = child.stdin.take() else {
-        return BTreeSet::new();
-    };
-    let payload: Vec<u8> = found
-        .iter()
-        .flat_map(|(_, rel)| {
-            let mut b = rel.as_bytes().to_vec();
-            b.push(0);
-            b
-        })
-        .collect();
-    // Written from its own thread. git answers as it reads, so a walk whose
-    // paths exceed the pipe buffer — about 64 KiB, which is a few thousand
-    // files — deadlocks if one thread tries to do both.
-    let writer = std::thread::spawn(move || {
-        let _ = sink.write_all(&payload);
-    });
-    let out = child.wait_with_output();
-    let _ = writer.join();
-    let Ok(out) = out else {
-        return BTreeSet::new();
-    };
-    // git echoes back the names it was given, so these are the same relative
-    // names `found` holds and compare equal without normalising.
-    out.stdout
-        .split(|b| *b == 0)
-        .filter(|s| !s.is_empty())
-        .map(|s| String::from_utf8_lossy(s).into_owned())
-        .collect()
 }
 
 /// Read a file, or say why it was passed over.
@@ -268,10 +393,10 @@ fn read_one(path: &Path, name: &str, limit: Option<u64>) -> Result<Source, Strin
             return Err(format!("larger than {} MiB", max / (1024 * 1024)));
         }
     }
-    let bytes = std::fs::read(path).map_err(|e| format!("unreadable ({e})"))?;
+    let bytes = std::fs::read(path).map_err(|e| format!("unreadable ({})", why(&e)))?;
     // The one readability test. Not an extension, not a magic number: can
     // these bytes be shown to a person as text.
-    let text = String::from_utf8(bytes).map_err(|_| "not text".to_string())?;
+    let text = decode(&bytes)?;
     if text.trim().is_empty() {
         return Err("empty".to_string());
     }
@@ -283,6 +408,7 @@ fn read_one(path: &Path, name: &str, limit: Option<u64>) -> Result<Source, Strin
             return Ok(Source {
                 name: name.to_string(),
                 text: rendered,
+                path: Some(path.to_path_buf()),
             });
         }
         // Structured data that holds no conversation is machine output, and
@@ -294,7 +420,84 @@ fn read_one(path: &Path, name: &str, limit: Option<u64>) -> Result<Source, Strin
     Ok(Source {
         name: name.to_string(),
         text,
+        path: Some(path.to_path_buf()),
     })
+}
+
+// ── encodings ───────────────────────────────────────────────
+
+/// Bytes as text, where the bytes said which text they are.
+///
+/// Every branch below is a DECLARATION the file made about itself, never a
+/// guess. See the module note on why there is no statistical sniffing here.
+fn decode(bytes: &[u8]) -> Result<String, String> {
+    let text = declared(bytes)?;
+    // **A NUL is not something that can be shown to a person, and
+    // `String::from_utf8` accepts it.** UTF-16 ASCII with no byte-order mark
+    // is VALID UTF-8 — one NUL between every letter — so it passed the
+    // readability test whole and went to the model as a passage with a NUL
+    // in every gap. Valid is not the same as text.
+    if text.contains('\0') {
+        return Err(unreadable(bytes));
+    }
+    Ok(text)
+}
+
+/// Text in whichever encoding the bytes said they were in.
+fn declared(bytes: &[u8]) -> Result<String, String> {
+    if let Some(rest) = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]) {
+        // Stripped rather than kept: left in, U+FEFF leads the file, so it
+        // leads the first chunk, so it leads the first quotation a person is
+        // asked to check a rule against.
+        return String::from_utf8(rest.to_vec()).map_err(|_| "not UTF-8 text".to_string());
+    }
+    // Before the UTF-16 marks, because a UTF-32LE file also starts `FF FE`.
+    if bytes.starts_with(&[0xFF, 0xFE, 0x00, 0x00]) || bytes.starts_with(&[0x00, 0x00, 0xFE, 0xFF])
+    {
+        return Err("UTF-32 text, which nothing writes prose in".to_string());
+    }
+    if let Some(rest) = bytes.strip_prefix(&[0xFF, 0xFE]) {
+        return utf16(rest, u16::from_le_bytes);
+    }
+    if let Some(rest) = bytes.strip_prefix(&[0xFE, 0xFF]) {
+        return utf16(rest, u16::from_be_bytes);
+    }
+    String::from_utf8(bytes.to_vec()).map_err(|_| unreadable(bytes))
+}
+
+fn utf16(rest: &[u8], order: fn([u8; 2]) -> u16) -> Result<String, String> {
+    if !rest.len().is_multiple_of(2) {
+        return Err("truncated UTF-16 text".to_string());
+    }
+    let units: Vec<u16> = rest
+        .chunks_exact(2)
+        .map(|pair| order([pair[0], pair[1]]))
+        .collect();
+    String::from_utf16(&units).map_err(|_| "malformed UTF-16 text".to_string())
+}
+
+/// Why bytes could not be shown to a person, said usefully.
+///
+/// A file with no byte-order mark is not decoded — but "not text" is a lie
+/// about a UTF-16 file, and a person who is told the truth can re-save it.
+/// Reporting a shape is not the same as guessing at content: nothing here
+/// decides what the bytes SAY.
+fn unreadable(bytes: &[u8]) -> String {
+    let head = &bytes[..bytes.len().min(512)];
+    let nuls = head.iter().filter(|b| **b == 0).count();
+    if head.len() >= 8 && nuls * 3 >= head.len() {
+        return "not UTF-8 (looks like UTF-16 with no byte-order mark)".to_string();
+    }
+    "not text".to_string()
+}
+
+/// An IO error the way a person would say it.
+fn why(e: &std::io::Error) -> String {
+    match e.kind() {
+        std::io::ErrorKind::NotFound => "no such file or folder".to_string(),
+        std::io::ErrorKind::PermissionDenied => "permission denied".to_string(),
+        _ => e.to_string(),
+    }
 }
 
 // ── chat ────────────────────────────────────────────────────

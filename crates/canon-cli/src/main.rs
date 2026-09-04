@@ -9,6 +9,7 @@
 //! [`check::exit_code`].
 
 mod check;
+mod cli;
 mod cmds;
 mod config;
 mod draft;
@@ -134,6 +135,7 @@ ADJUDICATE                                    (needs an endpoint)
         --resume                         finish a review, no model call
         --include-ignored                read what .gitignore covers
         --max-chunks <n>                 read at most n passages this run
+        --yes                            do not ask before a large run
         --samples <n> --dry-run          read each passage n times (measurement)
         --refold <dir> --k <n>           re-fold those readings, no model call
         --replay <run.json>              re-run a recorded run, no model call
@@ -175,6 +177,15 @@ fn main() {
         std::process::exit(if args.is_empty() { 2 } else { 0 });
     }
     let (cmd, rest) = args.split_first().unwrap();
+    // **Before dispatch, because after it the act is written.** An argument
+    // nobody recognised used to be passed over in silence — including
+    // `--dry-runn`, which made the flag meaning "write nothing" fail open.
+    let rest = &match cli::check(cmd, rest) {
+        Ok(checked) => checked,
+        // Through `fail`, so a refused argument reads like every other thing
+        // this tool declines to do, and exits the same way.
+        Err(report) => std::process::exit(cmds::fail(report)),
+    }[..];
     let code = match cmd.as_str() {
         "init" => cmds::init(rest),
         "add" => cmds::add(rest),

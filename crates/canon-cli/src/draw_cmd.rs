@@ -38,18 +38,18 @@ fn secrets_dir(dir: &Path) -> Result<std::path::PathBuf, String> {
 /// else can compute in advance, and "it fell back to the clock" is exactly the
 /// silent substitution that makes a lottery look fair when it is not (§18.3).
 fn fresh_secret() -> Result<String, String> {
-    use std::io::Read;
-    // `read_exact`, not `read` — `/dev/urandom` is an endless stream and
-    // `fs::read` on it does not return. Read exactly what is needed.
+    // **The OS is asked, not a file.** This read `/dev/urandom` directly,
+    // which is correct on Unix and does not exist on Windows — so sortition,
+    // the one primitive that cannot be done without randomness, was
+    // unavailable on a whole platform. `getrandom` asks the OS for entropy
+    // through whatever it actually offers; on Unix that is the same source.
     let mut bytes = [0u8; 32];
-    std::fs::File::open("/dev/urandom")
-        .and_then(|mut f| f.read_exact(&mut bytes))
-        .map_err(|e| {
-            format!(
-                "no source of randomness on this machine ({e}) — refusing to seal a \
-                 secret somebody could guess"
-            )
-        })?;
+    getrandom::fill(&mut bytes).map_err(|e| {
+        format!(
+            "no source of randomness on this machine ({e}) — refusing to seal a \
+             secret somebody could guess"
+        )
+    })?;
     Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
 }
 

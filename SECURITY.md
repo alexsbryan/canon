@@ -42,8 +42,10 @@ tests, because each is a way to look local without being local.
 
 **Ingest reading more than it was pointed at.** `canon draft --from <path>`
 walks a directory and reads anything textual under it. It honours
-`.gitignore` unless you pass `--include-ignored`. A traversal that escapes
-the given root, or a credential file that ends up quoted verbatim in a
+`.gitignore` unless you pass `--include-ignored`, it does not follow a
+symlink whose target leaves the root it was given, and a path that is not a
+regular file is refused rather than read. A traversal that escapes the given
+root anyway, or a credential file that ends up quoted verbatim in a
 proposal — and therefore in `acts.jsonl`, and therefore in your git
 history — is a real hazard, since every proposal carries its source passage
 by design.

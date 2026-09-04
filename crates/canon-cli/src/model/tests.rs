@@ -145,12 +145,26 @@ fn locality_is_decided_conservatively() {
         "http://127.1.2.3/v1",
         "http://[::1]:8080/v1",
         "http://dev.localhost:8080/v1",
+        // Written absolutely, shouted, and wearing a v6 hat. All three are
+        // this machine, and all three used to be refused.
+        "http://localhost./v1",
+        "http://LOCALHOST:8080/v1",
+        "http://[::ffff:127.0.0.1]:8080/v1",
     ];
     let remote = [
         "https://api.example.com/v1",
         "https://localhost.example.com/v1",
         "http://user@10.0.0.4:8080/v1",
         "http://127.0.0.1.example.com/v1",
+        // **The shape of a loopback address is not the fact of one.** The
+        // rule was "first label `127`, four labels", and every one of these
+        // satisfies it while resolving wherever its DNS says — with
+        // `describe()` printing `(local)` over the top and `draft` posting
+        // somebody's own journal to it.
+        "http://127.attacker.example.net/v1",
+        "http://127.a.b.c/v1",
+        "http://127.0.0.999/v1",
+        "http://0x7f.0.0.1/v1",
     ];
     for e in local {
         let c = Client::new(&Config {
