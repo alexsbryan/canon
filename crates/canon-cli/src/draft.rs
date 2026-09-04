@@ -45,7 +45,7 @@
 //! And there is no `--accept-all`: a canon adopted wholesale is disengagement
 //! at t=0, so onboarding *is* the first governance session.
 
-use std::io::{BufRead, Read as _, Write};
+use std::io::{BufRead, IsTerminal as _, Read as _, Write};
 use std::path::{Path, PathBuf};
 
 use canon_core::ActKind;
@@ -1498,30 +1498,108 @@ fn read_sources(args: &[String]) -> Result<Gathered, String> {
     if crate::cmds::has(args, "--from-git") {
         let since = crate::cmds::flag(args, "--since").unwrap_or("1y");
         for (name, text) in read_git(since)? {
-            got.sources.push(Source { name, text });
+            got.sources.push(Source::unplaced(name, text));
         }
     }
-    for p in from_paths(args) {
+    let paths = from_paths(args);
+    // `--from` with nothing after it is its own mistake, and the general
+    // "nothing to draft from" answers it by printing the command that was
+    // just run.
+    if crate::cmds::has(args, "--from") && paths.is_empty() {
+        return Err(
+            "`--from` needs at least one path — a file, a folder, or `-` for stdin".to_string(),
+        );
+    }
+    for p in &paths {
         if p == "-" {
             got.sources.push(read_stdin(args)?);
             continue;
         }
-        sources::gather(Path::new(&p), &mut got, include_ignored)?;
+        sources::gather(Path::new(p), &mut got, include_ignored)?;
     }
     if got.sources.is_empty() {
-        // A run with nothing to read says what it looked at, or "nothing to
-        // draft from" is indistinguishable from "your folder is the wrong
-        // kind of folder".
-        let mut msg = String::from(
-            "nothing to draft from — `canon draft --from <paths>`, `--from -` for stdin, \
-             or `--from-git --since 1y`",
-        );
-        if let Some(note) = got.skipped_note() {
-            msg.push_str(&format!("\n{note}"));
-        }
-        return Err(msg);
+        return Err(nothing_read(&paths, &got));
     }
+    // Two sources cannot answer to the same citation. Resolved once, here,
+    // because a collision is a property of the SET rather than of any root.
+    got.resolve_names();
     Ok(got)
+}
+
+/// Why a run that was pointed somewhere came back with nothing.
+///
+/// **One sentence used to answer three different questions**, and two of them
+/// it answered by printing the command the person had just run: pointing at an
+/// empty folder said "nothing to draft from — `canon draft --from <paths>`".
+/// A folder that holds no writing, a folder whose every file was filtered, and
+/// a run pointed nowhere at all are different mistakes with different ways out.
+fn nothing_read(paths: &[String], got: &Gathered) -> String {
+    if paths.is_empty() {
+        return "nothing to draft from — `canon draft --from <paths>`, `--from -` for stdin, \
+                or `--from-git --since 1y`"
+            .to_string();
+    }
+    let where_at = paths.join(", ");
+    match got.skipped_note() {
+        // Every file under there was passed over, and the note says by what.
+        Some(note) => format!("nothing readable in {where_at}\n{note}"),
+        // It exists, it was walked, and there was nothing in it.
+        None => format!(
+            "nothing readable in {where_at} — the walk found no files there. \
+             Hidden folders are passed over; `canon draft --from <file>` reads one by name."
+        ),
+    }
+}
+
+/// Files were read, and none of them held a passage worth citing.
+///
+/// **This is the chunker, not the reader.** Saying only "nothing readable in
+/// those sources" sent a person back to a folder that was never the problem —
+/// a list of errands is readable, it just has nothing in it long enough to
+/// check a rule against.
+fn nothing_long_enough(sources: usize) -> String {
+    format!(
+        "{sources} source(s) read, but no passage in them reached the {CHUNK_MIN} characters \
+         a citation needs to be checkable against."
+    )
+}
+
+/// More passages than anybody means to pay for without being asked.
+///
+/// Extraction is one completion per passage, so a folder is a bill. The
+/// failure this prevents is pointing at `~/Documents`, walking away, and
+/// finding out afterwards.
+const CONFIRM_ABOVE: usize = 200;
+
+/// Whether this run is one to ask about, kept apart from the asking so the
+/// rule can be tested without a terminal.
+///
+/// **`interactive` is a precondition, not a convenience.** A pipeline, an
+/// agent on the MCP surface, and `--from -` — which has already eaten stdin —
+/// all reach here with nothing able to answer, and a prompt nobody can answer
+/// is a hang rather than a safeguard.
+fn needs_asking(args: &[String], passages: usize, interactive: bool) -> bool {
+    passages > CONFIRM_ABOVE && interactive && !crate::cmds::has(args, "--yes")
+}
+
+/// Say what a large run will cost, and on a terminal ask before spending it.
+fn confirmed(args: &[String], sources: usize, passages: usize) -> bool {
+    if passages <= CONFIRM_ABOVE {
+        return true;
+    }
+    // Said either way. The count is the thing a person needed before the run,
+    // whether or not there is anybody there to answer for it.
+    eprintln!("{sources} source(s) read, {passages} passage(s) — one model call each.");
+    if !needs_asking(args, passages, std::io::stdin().is_terminal()) {
+        return true;
+    }
+    eprint!("That is a large run. Proceed? [y/N] ");
+    let _ = std::io::stderr().flush();
+    let mut answer = String::new();
+    if std::io::stdin().read_line(&mut answer).is_err() {
+        return false;
+    }
+    matches!(answer.trim().to_ascii_lowercase().as_str(), "y" | "yes")
 }
 
 /// `--from` takes every following argument until the next flag, because a
@@ -1567,12 +1645,10 @@ fn read_stdin(args: &[String]) -> Result<Source, String> {
             text = rendered;
         }
     }
-    Ok(Source {
-        name: crate::cmds::flag(args, "--as")
-            .unwrap_or("stdin")
-            .to_string(),
+    Ok(Source::unplaced(
+        crate::cmds::flag(args, "--as").unwrap_or("stdin"),
         text,
-    })
+    ))
 }
 
 /// Commit bodies as source text. Extends `store::actor`'s shell-out pattern
@@ -1788,7 +1864,10 @@ pub fn run(args: &[String]) -> i32 {
     let already_read = found - chunks.len();
     if chunks.is_empty() {
         if found == 0 {
-            return crate::cmds::fail("nothing readable in those sources");
+            // Files WERE read — this is the chunker, not the reader, and
+            // saying only "nothing readable" sends a person back to a folder
+            // that was never the problem.
+            return crate::cmds::fail(nothing_long_enough(sources.len()));
         }
         // Nothing new is a RESULT, not an error: an agent polling a feed
         // gets this most of the time, and it has to be cheap and quiet. Same
@@ -1839,6 +1918,16 @@ pub fn run(args: &[String]) -> i32 {
             "{by_line} of {} passage(s) are line-oriented — cited by line, not by sentence",
             chunks.len()
         );
+    }
+
+    // **Before the endpoint, because after it the money is spent.** A folder
+    // is a bill: one completion per passage, and the person who pointed at
+    // their home directory has no way to know that until it is running.
+    if !confirmed(args, sources.len(), chunks.len()) {
+        eprintln!(
+            "nothing read. `--max-chunks <n>` reads a slice first; `--yes` skips this prompt."
+        );
+        return 0;
     }
 
     let client = match model::client_for(&dir, crate::cmds::has(args, "--allow-remote")) {

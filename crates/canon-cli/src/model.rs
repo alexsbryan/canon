@@ -427,15 +427,36 @@ impl Client {
     ///
     /// Conservative on purpose: anything not obviously loopback counts as
     /// remote, so a misconfiguration errs toward keeping a journal at home.
+    ///
+    /// **An address is PARSED, never pattern-matched.** The rule used to be
+    /// "first label is `127` and there are four labels", which is the shape of
+    /// a loopback address rather than the fact of one — so
+    /// `http://127.attacker.example.net/v1` read as local, resolved wherever
+    /// its DNS said, and `describe()` printed `(local)` over the top of it
+    /// while `draft` posted somebody's own journal to it. `Ipv4Addr` decides
+    /// this now, and `127.a.b.c` is simply not an address.
     pub fn is_local(&self) -> bool {
-        let host = self.host();
-        host == "localhost"
-            || host.ends_with(".localhost")
-            || host == "::1"
-            || host == "0.0.0.0"
-            || host
-                .split_once('.')
-                .is_some_and(|(first, _)| first == "127" && host.split('.').count() == 4)
+        // Hostnames are case-insensitive, and a single trailing dot is the
+        // same name written absolutely.
+        let host = self.host().to_ascii_lowercase();
+        let host = host.strip_suffix('.').unwrap_or(&host);
+        if host == "localhost" || host.ends_with(".localhost") {
+            return true;
+        }
+        if let Ok(v4) = host.parse::<std::net::Ipv4Addr>() {
+            // Unspecified as well as loopback: connecting to `0.0.0.0` is a
+            // connection to this machine, and it is what a server bound to
+            // every interface is usually written as.
+            return v4.is_loopback() || v4.is_unspecified();
+        }
+        if let Ok(v6) = host.parse::<std::net::Ipv6Addr>() {
+            // `::ffff:127.0.0.1` is 127.0.0.1 wearing a v6 hat.
+            if let Some(mapped) = v6.to_ipv4_mapped() {
+                return mapped.is_loopback() || mapped.is_unspecified();
+            }
+            return v6.is_loopback() || v6.is_unspecified();
+        }
+        false
     }
 
     /// Refuse unless the endpoint is on this machine. Callers that handle

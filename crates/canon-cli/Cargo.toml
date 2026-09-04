@@ -16,3 +16,6 @@ canon-core = { path = "../canon-core" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 ureq = { workspace = true }
+ignore = { workspace = true }
+clap = { workspace = true }
+getrandom = { workspace = true }

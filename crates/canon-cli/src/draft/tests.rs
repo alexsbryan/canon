@@ -331,7 +331,9 @@ fn a_directory_is_read_in_a_stable_order() {
     for (p, body) in [
         ("b.md", "second".as_bytes()),
         ("a.md", "first".as_bytes()),
-        ("notes.bin", &[0xff, 0xfe, 0x00][..]),
+        // Bytes that declare nothing. `FF FE` would be a UTF-16 mark,
+        // which is a file saying what it is, and so is now read.
+        ("notes.bin", &[0xff, 0xd8, 0xff, 0xe0][..]),
         ("sub/c.txt", "third".as_bytes()),
         (".git/config", "not notes".as_bytes()),
     ] {
@@ -1678,4 +1680,70 @@ fn a_run_written_before_samples_existed_reads_as_one_reading() {
     let run: DraftRun = serde_json::from_value(old).unwrap();
     assert_eq!(run.samples, 1);
     assert_eq!(run.stopped_after, None);
+}
+
+// ── being pointed somewhere, and coming back empty ──────────
+
+#[test]
+fn from_with_no_paths_does_not_answer_with_the_command_just_run() {
+    // `canon draft --from --dry-run` used to print "nothing to draft from —
+    // `canon draft --from <paths>`", which is the command the person had just
+    // run with the mistake still in it.
+    let message = read_sources(&args(&["--from", "--dry-run"]))
+        .err()
+        .expect("no paths given");
+    assert!(message.contains("needs at least one path"), "{message}");
+}
+
+#[test]
+fn an_empty_folder_is_a_different_mistake_from_no_folder() {
+    // Three questions used to get one answer. A folder that exists and holds
+    // nothing is not the same as never having been pointed anywhere, and
+    // telling someone to run `--from <paths>` when they just did is a dead
+    // end.
+    let d = scratch("draft-empty-folder");
+    std::fs::create_dir_all(&d).unwrap();
+    let pointed = d.to_string_lossy().to_string();
+    let message = read_sources(&args(&["--from", &pointed]))
+        .err()
+        .expect("nothing in there");
+    assert!(message.contains("nothing readable in"), "{message}");
+    assert!(message.contains(&pointed), "{message}");
+
+    // And pointed nowhere at all still says how to point.
+    let nowhere = read_sources(&args(&["--dry-run"]))
+        .err()
+        .expect("pointed nowhere");
+    assert!(nowhere.contains("nothing to draft from"), "{nowhere}");
+}
+
+#[test]
+fn a_folder_of_scraps_says_it_was_the_passages_not_the_folder() {
+    // A shopping list is readable. It just has nothing in it long enough to
+    // check a rule against, and "nothing readable in those sources" sent the
+    // person back to a folder that was never the problem.
+    let d = scratch("draft-scraps");
+    std::fs::create_dir_all(&d).unwrap();
+    std::fs::write(d.join("todo.md"), "milk\neggs\n").unwrap();
+    let got = read_sources(&args(&["--from", &d.to_string_lossy()])).unwrap();
+    assert_eq!(got.sources.len(), 1, "the file itself reads fine");
+    assert!(chunk_text("todo.md", &got.sources[0].text).is_empty());
+
+    let said = nothing_long_enough(got.sources.len());
+    assert!(said.contains("1 source(s) read"), "{said}");
+    assert!(said.contains(&CHUNK_MIN.to_string()), "{said}");
+}
+
+#[test]
+fn a_prompt_nobody_can_answer_is_never_asked() {
+    // The guard exists so a folder is not silently a bill. It must not become
+    // a hang: an agent on the MCP surface, a pipeline, and `--from -` (which
+    // has already eaten stdin) all arrive with nothing able to type `y`.
+    let big = CONFIRM_ABOVE + 1;
+    assert!(!needs_asking(&args(&["--dry-run"]), big, false));
+    // On a terminal it is asked — unless the person already answered.
+    assert!(needs_asking(&args(&["--dry-run"]), big, true));
+    assert!(!needs_asking(&args(&["--dry-run", "--yes"]), big, true));
+    // And a small run is never worth interrupting anybody for.
+    assert!(!needs_asking(&args(&["--dry-run"]), CONFIRM_ABOVE, true));
 }
