@@ -59,10 +59,11 @@ has to be asked who decides — it's a query.
 
 ### "How do we stop one person quietly rewriting the rules?"
 
-Say what makes a proposal into a rule. Four rules ship: `standing` (whoever
+Say what makes a proposal into a rule. Five rules ship: `standing` (whoever
 holds the scope writes directly — the default), `joint:a,b` (everyone named),
 `threshold:n/m` (n approving carries, m objecting stops), `consent:Nd` (N
-days' silence carries it).
+days' silence carries it), `twice:<turnover|Nd>:<rule>` (carried twice, with
+somebody new or N days in between — below).
 
 ```sh
 canon policy set consent --cautious \
@@ -308,6 +309,113 @@ Want to ask better questions than the record can know about?
 canon replay --write-scenario questions.jsonl   # the derived ones, to edit
 canon replay --scenario questions.jsonl --policy consent --brief
 ```
+
+### "How do we make a rule outlast the people who made it?"
+
+Carry it twice, with somebody new in between. That is the Nordic amendment
+rule — two votes, a general election between them — and it is the only
+mechanism on the constitutional record that raises the cost of capture
+without depending on anyone's virtue. It cannot detect bad intent, so it
+does not try; it demands a duration only genuine, broad support survives.
+
+```sh
+canon ratification set twice:turnover:standing --scope house \
+  -m "A house rule is carried twice, and somebody has to have moved in between."
+canon add "Guests may stay up to three nights." --scope house
+```
+
+```text
+can-22b5fa43cdd6  Guests may stay up to three nights.
+  PROPOSED, not yet a rule — needs someone who did not hold house on 2026-09-08 to be granted it,
+                                   then a second approval
+```
+
+Dana holds the house, so her own write was the first vote. Sam approving
+now changes nothing: he held the house at the first vote too, and the same
+two people cannot elect themselves. Re-granting yourself is not turnover,
+and neither is somebody leaving. Ola moves in, and the second vote opens:
+
+```sh
+canon grant human:ola house -m "moved in"
+canon list
+```
+
+```text
+1 proposed, not yet in force:
+can-853867d33b12  Guests may stay up to three nights.
+                  needs a second time, since 2026-08-29: approval from one person who holds house
+```
+
+```sh
+canon approve can-853867d33b12 -m "still fine"     # as Sam
+```
+
+```text
+can-853867d33b12  approved by human:sam
+  in force
+```
+
+`twice:90d:<rule>` is the same shape with a waiting period instead of an
+election. Either composes with the rule of rules: a scope under
+`twice:turnover:consent:14d` cannot have that rule loosened except by a
+change that itself survives a turnover. And before you adopt it, ask what
+it would have done to you:
+
+```sh
+canon replay --ratification twice:turnover:consent:7d --brief
+```
+
+### "How do we change how we decide?"
+
+The same way you change anything else. `canon ratification set` is a
+proposal, judged under the rule it is replacing, by the same people:
+
+```text
+can-ba046850dc17  twice:turnover:standing  over house  (deciding now)
+  A house rule is carried twice, and somebody has to have moved in between.
+  set 2026-09-08 by human:dana, judged under standing
+  in force since 2026-09-08
+```
+
+Dana held the house and the house was under `standing`, so it landed at
+once — which is what every canon did before there was a choice. Had the
+house been under `joint:human:dana,human:sam`, Sam would have had to agree
+to loosen it, and one reasoned objection from him would have refused it and
+left `joint` standing. A rule change that is still proposed decides nothing;
+a ratified one decides from the moment it was ratified, not the moment it
+was written. `canon ratification show` says which one is deciding each
+scope today.
+
+### "Someone edited the ledger by hand"
+
+The fold cannot tell. `ts_unix` and `actor` are strings somebody wrote, and
+a self-grant dated before the founding satisfies every rule. Where the
+ledger lives in git, git can tell, and `canon witness` asks it:
+
+```sh
+canon witness --gate --base main
+```
+
+```text
+witness: .canon/acts.jsonl against main, slack 1d
+  backdated   can-d01e323e8836  claims 2026-08-09, 30d earlier than the newest act already held (2026-09-08)
+
+1 finding(s). An offline append can land a little late; a self-grant dated before the founding cannot. `--slack` widens what is forgiven.
+  not seen: an act backdated by less than 1d; a rewrite of git history itself; whoever holds the
+  remote; who typed the actor string — signed commits and code-owner review are for that
+```
+
+Exit code 1. With no `--base` it walks every commit that touched the
+ledger — each one added lines and nothing else, none dated before what the
+ledger already held — which is what the hook runs, because by the time a
+push happens the bad commit is already in `main` locally. `canon guard git`
+installs that hook, prints the CI step and the branch-protection settings,
+and `--apply` sets them through `gh`. `canon guard show` says what is
+guarding yours. None of it is on by default: a canon with no guard trusts
+its log, and says so in one line.
+
+The residual is printed every time on purpose. An unstated boundary is an
+undefended one.
 
 ### "Someone changed something they had no say over"
 

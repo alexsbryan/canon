@@ -56,6 +56,7 @@ jobs:
     outputs:
       rust: ${{ steps.filter.outputs.rust }}
       docs: ${{ steps.filter.outputs.docs }}
+      ledger: ${{ steps.filter.outputs.ledger }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v3
@@ -68,6 +69,10 @@ jobs:
               - 'Cargo.lock'
               - 'rust-toolchain.toml'
               - 'rustfmt.toml'
+              - 'fixtures/**'
+              - '.github/workflows/ci.yml'
+            ledger:
+              - '.canon/**'
               - '.github/workflows/ci.yml'
             docs:
               - '**/*.md'
@@ -128,13 +133,35 @@ jobs:
           cargo build --release
           ./target/release/canon replay fixtures/fernwood-commons --brief
 
+  # This project's own ledger, witnessed by git. `canon guard git` is opt-in
+  # for everyone else and adopted here: every commit that touched
+  # .canon/acts.jsonl must have added lines and nothing else, none of them
+  # dated before what the ledger already held. The fold cannot see a
+  # backdated line — it takes ts_unix as given — and this is the check that
+  # can. Full history, because the check walks every commit.
+  ledger:
+    name: Ledger (append-only, not backdated)
+    needs: changes
+    if: needs.changes.outputs.ledger == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: false
+      - run: |
+          cargo build --release
+          ./target/release/canon witness --gate
+
   # The one required check. Aggregates the rest so branch protection has a
   # single stable name to gate on, and so a SKIPPED job (the paths filter
   # doing its job) is not mistaken for a failed one.
   ci-ok:
     name: CI OK
     if: always()
-    needs: [changes, fmt, docs, test]
+    needs: [changes, fmt, docs, test, ledger]
     runs-on: ubuntu-latest
     steps:
       - name: Verify nothing failed or was cancelled

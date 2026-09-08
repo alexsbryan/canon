@@ -154,6 +154,9 @@ pub struct Replay {
     pub labels: BTreeMap<String, ActId>,
     /// The rule every step was decided under, when one was forced.
     pub forced: Option<canon_core::Rule>,
+    /// The ratification rule every `status` step was judged under, when one
+    /// was forced.
+    pub forced_ratify: Option<canon_core::Ratify>,
 }
 
 /// Run a scenario over a seed canon.
@@ -164,6 +167,7 @@ pub fn run_scenario(
     seed: &str,
     scenario: &str,
     override_policy: Option<canon_core::Rule>,
+    override_ratify: Option<canon_core::Ratify>,
 ) -> Result<Replay, String> {
     let (mut acts, mut labels) = load_acts(seed)?;
     let mut now = acts.iter().map(|a| a.ts_unix).max().unwrap_or(0);
@@ -264,25 +268,7 @@ pub fn run_scenario(
             // not, and on whose word.
             "status" => {
                 let id = id_of(&body, "commitment", &labels).map_err(at)?;
-                let Some(c) = canon.get(&id) else {
-                    return Err(at(format!("no commitment {id}")));
-                };
-                let scope = canon.scope_of(&id);
-                let (status, detail) = match &c.status {
-                    canon_core::Status::Active => ("in-force", String::new()),
-                    canon_core::Status::Proposed { needs } => ("proposed", needs.clone()),
-                    canon_core::Status::Refused { by, why, .. } => {
-                        ("refused", format!("{by}: {why}"))
-                    }
-                    canon_core::Status::Superseded { by } => ("superseded", by.to_string()),
-                    canon_core::Status::Retracted { .. } => ("retracted", String::new()),
-                };
-                json!({
-                    "status": status,
-                    "detail": detail,
-                    "rule": canon.ratification_for(scope).name(),
-                    "by": c.actor,
-                })
+                status_step(&canon, &id, now, override_ratify.as_ref()).map_err(at)?
             }
             "unattended" => json!({
                 "unattended": canon
@@ -347,6 +333,7 @@ pub fn run_scenario(
         steps,
         labels,
         forced: override_policy,
+        forced_ratify: override_ratify,
     })
 }
 
@@ -374,6 +361,67 @@ fn id_of(body: &Value, key: &str, labels: &BTreeMap<String, ActId>) -> Result<Ac
 
 /// A `check` step: the positions a model would have produced, supplied
 /// directly, decided under the canon's own policy.
+/// A `status` step: where a commitment — or a change to how a scope
+/// decides — stands under its scope's ratification rule, or under the one
+/// forced. The rule reported is the one that DECIDED it: the rule in force
+/// when it was written, not whatever the scope adopted since.
+fn status_step(
+    canon: &Canon,
+    id: &ActId,
+    now: i64,
+    forced: Option<&canon_core::Ratify>,
+) -> Result<Value, String> {
+    use canon_core::Verdict;
+    let render = |v: &Verdict| match v {
+        Verdict::Ratified { .. } => ("in-force", String::new()),
+        Verdict::Proposed { needs } => ("proposed", needs.clone()),
+        Verdict::Refused { by, why, .. } => ("refused", format!("{by}: {why}")),
+    };
+    if let Some(c) = canon.get(id) {
+        let scope = canon.scope_of(id);
+        let deciding = forced.map_or_else(
+            || canon.ratification_for_at(scope, c.asserted_at).name(),
+            canon_core::Ratify::name,
+        );
+        let (status, detail) = match (&c.status, forced) {
+            (canon_core::Status::Superseded { by }, _) => ("superseded", by.to_string()),
+            (canon_core::Status::Retracted { .. }, _) => ("retracted", String::new()),
+            (_, Some(rule)) => render(&canon.ratify_under(rule, &canon.proposal_of(c), now)),
+            (canon_core::Status::Active, None) => ("in-force", String::new()),
+            (canon_core::Status::Proposed { needs }, None) => ("proposed", needs.clone()),
+            (canon_core::Status::Refused { by, why, .. }, None) => {
+                ("refused", format!("{by}: {why}"))
+            }
+        };
+        return Ok(json!({
+            "status": status,
+            "detail": detail,
+            "rule": deciding,
+            "by": c.actor,
+        }));
+    }
+    if let Some(r) = canon.ratifications.iter().find(|r| r.act == *id) {
+        let p = canon_core::Proposal {
+            id: &r.act,
+            scope: r.scope.as_ref(),
+            at: r.at,
+            actor: &r.actor,
+        };
+        let (status, detail) = match forced {
+            Some(rule) => render(&canon.ratify_under(rule, &p, now)),
+            None => render(&r.verdict),
+        };
+        return Ok(json!({
+            "status": status,
+            "detail": detail,
+            "rule": forced.map_or_else(|| r.under.name(), canon_core::Ratify::name),
+            "by": r.actor,
+            "sets": r.rule.name(),
+        }));
+    }
+    Err(format!("no commitment {id}"))
+}
+
 fn check_step(
     canon: &Canon,
     body: &Value,
@@ -484,6 +532,24 @@ pub fn diverge(adopted: &Replay, forced: &Replay) -> Vec<Divergence> {
                 .unwrap_or("")
                 .to_string()
         };
+        // A `status` step diverges when a rule stands somewhere else:
+        // in force under one ratification rule, still a proposal under
+        // another.
+        let (sa, sf) = (read(a, "status"), read(f, "status"));
+        if !sa.is_empty() {
+            if sa != sf {
+                out.push(Divergence {
+                    name: a.name.clone(),
+                    subject: a
+                        .subject
+                        .clone()
+                        .unwrap_or_else(|| a.name.replace('-', " ")),
+                    was: (sa.replace('-', " "), read(a, "detail")),
+                    would: (sf.replace('-', " "), read(f, "detail")),
+                });
+            }
+            continue;
+        }
         // Only steps that produce a ruling can diverge. `who`, `lineage` and
         // the standing queries answer the same way under any policy.
         let (aa, fa) = (read(a, "authority"), read(f, "authority"));
@@ -570,7 +636,15 @@ pub fn render_divergence_brief(rows: &[Divergence], forced: &str, total: usize) 
         canon_core::Authority::AskPanel,
         canon_core::Authority::Refuse,
     ];
-    let rank = |prose: &str| ladder.iter().position(|a| a.prose() == prose);
+    // A rule's standing has its own short ladder: in force, then proposed,
+    // then refused. Down it is harder to have a rule; up it is easier.
+    let standing = ["in force", "proposed", "refused"];
+    let rank = |prose: &str| {
+        ladder
+            .iter()
+            .position(|a| a.prose() == prose)
+            .or_else(|| standing.iter().position(|s| *s == prose))
+    };
     let mut easier: Vec<&Divergence> = Vec::new();
     let mut harder: Vec<&Divergence> = Vec::new();
     let mut sideways: Vec<&Divergence> = Vec::new();
@@ -861,6 +935,34 @@ fn derive_scenario(canon: &Canon, now: i64, last: i64) -> (String, usize) {
         fields.push(("positions", json!(positions_on(canon, &about))));
         lines.push(step_line(&fields));
     }
+    // Where each rule stands under its scope's ratification rule — the
+    // steps `--ratification` re-judges. Only in a canon somebody holds: in
+    // a notebook every line is in force and there is nothing to re-judge.
+    if !canon.grants.is_empty() {
+        for c in &canon.commitments {
+            if matches!(
+                c.status,
+                canon_core::Status::Superseded { .. } | canon_core::Status::Retracted { .. }
+            ) {
+                continue;
+            }
+            let mut name = format!("stands-{}", slug(&c.text));
+            let mut n = 2;
+            while names.contains(&name) {
+                name = format!("stands-{}-{n}", slug(&c.text));
+                n += 1;
+            }
+            names.push(name.clone());
+            lines.push(step_line(&[
+                ("step", json!("status")),
+                ("name", json!(name)),
+                ("proposal", json!(c.text)),
+                ("commitment", json!(c.id.to_string())),
+            ]));
+        }
+    }
+    // Counted as what people argued over; the status steps ride along and
+    // are the counterfactual's to count when a ratification rule is forced.
     let checks = seen.len();
     lines.push(step_line(&[
         ("step", json!("state")),
@@ -938,7 +1040,7 @@ pub fn run(args: &[String]) -> i32 {
     // Absence reported as absence. A canon nobody has recorded a position or
     // a decision in has nothing to re-decide, and saying "0 of 0 changed"
     // would look like an answer.
-    if derived == Some(0) {
+    if derived == Some(0) && flag(args, "--ratification").is_none() {
         println!("nothing here records what anyone argued about or what the group decided,");
         println!("so there is nothing to re-decide under another rule. Either act does it:\n");
         println!("  canon position \"<subject>\" --against -m \"<why>\"");
@@ -956,8 +1058,23 @@ pub fn run(args: &[String]) -> i32 {
             Err(e) => return fail(e),
         },
     };
+    // The same for how a proposal becomes a rule: `--ratification` re-judges
+    // every `status` step under the rule named, so "what would twice have
+    // done to the last year" is a question with an answer.
+    let forced_ratify = match flag(args, "--ratification") {
+        None => None,
+        Some(raw) => match canon_core::Ratify::parse(raw) {
+            Some(r) => Some(r),
+            None => {
+                return fail(format!(
+                    "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
+                     threshold:2/1, consent:7d, or twice:turnover:consent:7d"
+                ))
+            }
+        },
+    };
     let started = std::time::Instant::now();
-    let replay = match run_scenario(&seed, &scenario, forced.clone()) {
+    let replay = match run_scenario(&seed, &scenario, forced.clone(), forced_ratify.clone()) {
         Ok(r) => r,
         Err(e) => return fail(e),
     };
@@ -965,24 +1082,35 @@ pub fn run(args: &[String]) -> i32 {
     // The counterfactual, decided twice. A forced run on its own can say what
     // happened under the other rule; it takes the adopted rule's own pass to
     // say what CHANGED, which is the question a group actually has.
-    let counterfactual = match &forced {
+    let forced_name = match (&forced, &forced_ratify) {
+        (Some(r), Some(q)) => Some(format!("{}, {}", r.name(), q.name())),
+        (Some(r), None) => Some(r.name()),
+        (None, Some(q)) => Some(q.name()),
+        (None, None) => None,
+    };
+    let counterfactual = match &forced_name {
         None => None,
-        Some(rule) => match run_scenario(&seed, &scenario, None) {
+        Some(name) => match run_scenario(&seed, &scenario, None, None) {
             Err(e) => return fail(e),
             Ok(adopted) => {
                 let rows = diverge(&adopted, &replay);
                 // Decisions, not steps. `who` and `state` answer questions
                 // and decide nothing, so counting them would put a
-                // reassuring denominator under a real number.
+                // reassuring denominator under a real number. A `status`
+                // step is a decision only when a ratification rule is
+                // being weighed.
                 let decisions = adopted
                     .steps
                     .iter()
-                    .filter(|s| s.result.get("authority").is_some())
+                    .filter(|s| {
+                        (forced.is_some() && s.result.get("authority").is_some())
+                            || (forced_ratify.is_some() && s.result.get("status").is_some())
+                    })
                     .count();
                 Some(if has(args, "--brief") {
-                    render_divergence_brief(&rows, &rule.name(), decisions)
+                    render_divergence_brief(&rows, name, decisions)
                 } else {
-                    render_divergence(&rows, &rule.name(), decisions)
+                    render_divergence(&rows, name, decisions)
                 })
             }
         },
@@ -1029,6 +1157,9 @@ pub fn run(args: &[String]) -> i32 {
             // a replay of what happened from a replay of what would have.
             println!("decided under a forced rule: {}\n", rule.name());
         }
+        if let Some(rule) = &replay.forced_ratify {
+            println!("ratified under a forced rule: {}\n", rule.name());
+        }
         if let Some(text) = &counterfactual {
             print!("{text}");
         }
@@ -1037,7 +1168,7 @@ pub fn run(args: &[String]) -> i32 {
         // not what you read when you are deciding whether to change a rule.
         // Without a forced rule the whole answer is the acceptance test: which
         // of Ostrom's eight principles this history exercised, and how.
-        if has(args, "--brief") && replay.forced.is_none() {
+        if has(args, "--brief") && replay.forced.is_none() && replay.forced_ratify.is_none() {
             print!("{}", render_principles(&replay.steps));
         }
         for s in &replay.steps {
@@ -1061,7 +1192,7 @@ pub fn run(args: &[String]) -> i32 {
         // Somebody who typed one word should not have to read the manual to
         // find out that the interesting flag exists.
         if let Some(n) = derived {
-            if n > 0 && forced.is_none() && !has(args, "--json") {
+            if n > 0 && forced_name.is_none() && !has(args, "--json") {
                 println!(
                     "\n{n} decision(s), from what this canon already records, in {}",
                     elapsed(started.elapsed())
@@ -1069,6 +1200,7 @@ pub fn run(args: &[String]) -> i32 {
                 println!("what another rule would have done:");
                 println!("  canon replay --policy consent --brief");
                 println!("  canon replay --policy threshold --objections 2 --brief");
+                println!("  canon replay --ratification twice:turnover:consent:7d --brief");
             }
         }
         return 0;
@@ -1088,7 +1220,7 @@ pub fn run(args: &[String]) -> i32 {
     // A briefed counterfactual has already said what moved, decision by
     // decision. Listing the same movements again as field-level mismatches
     // reads as twenty failures under a line that just said nine changed.
-    if has(args, "--brief") && replay.forced.is_some() {
+    if has(args, "--brief") && (replay.forced.is_some() || replay.forced_ratify.is_some()) {
         return 0;
     }
     for (step, key, want, got) in &bad {
@@ -1101,7 +1233,7 @@ pub fn run(args: &[String]) -> i32 {
     // lines above are still printed — they say which recorded answers moved —
     // but exiting non-zero here would report "what if we decided differently"
     // as a broken fixture.
-    i32::from(replay.forced.is_none())
+    i32::from(replay.forced.is_none() && replay.forced_ratify.is_none())
 }
 
 fn elapsed(d: std::time::Duration) -> String {
@@ -1327,7 +1459,7 @@ mod tests {
         );
 
         // And it runs, which is the whole point of deriving it.
-        let run = run_scenario(&Log::from_acts(acts).render(), &text, None).expect("replays");
+        let run = run_scenario(&Log::from_acts(acts).render(), &text, None, None).expect("replays");
         let decided = run
             .steps
             .iter()
@@ -1345,7 +1477,7 @@ mod tests {
         let (text, _) = derive_scenario(&canon, last, last);
         assert!(!text.contains(r#""step":"clock""#), "{text}");
 
-        let run = run_scenario(&Log::from_acts(acts).render(), &text, None).expect("replays");
+        let run = run_scenario(&Log::from_acts(acts).render(), &text, None, None).expect("replays");
         let who = run
             .steps
             .iter()

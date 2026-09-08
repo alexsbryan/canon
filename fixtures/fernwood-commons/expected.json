@@ -100,6 +100,29 @@
   },
   "the-kitchen-at-the-end": { "live": 9, "proposed": 0, "ungoverned": 1 },
 
+  "the-change-to-the-gardens-rule-is-itself-judged": {
+    "status": "in-force",
+    "rule": "standing",
+    "sets": "twice:turnover:standing",
+    "by": "human:ola"
+  },
+  "carried-once-and-waiting-for-the-garden-to-change-hands": {
+    "status": "proposed",
+    "detail": "someone who did not hold house.garden on 2026-04-03 to be granted it, then a second approval",
+    "rule": "twice:turnover:standing",
+    "by": "human:juno"
+  },
+  "the-same-two-cannot-carry-it-twice": {
+    "status": "proposed",
+    "detail": "someone who did not hold house.garden on 2026-04-03 to be granted it, then a second approval"
+  },
+  "kit-joins-and-the-second-vote-opens": {
+    "status": "proposed",
+    "detail": "a second time, since 2026-05-01: approval from one person who holds house.garden"
+  },
+  "carried-a-second-time-after-the-election": { "status": "in-force", "rule": "twice:turnover:standing" },
+  "the-garden-at-the-end": { "live": 10, "proposed": 0, "ungoverned": 1 },
+
   "the-panel": {
     "pool": 11,
     "withheld": ["human:ola"],

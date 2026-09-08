@@ -36,7 +36,7 @@ pub use id::{short_digest, ActId, ID_PREFIX};
 pub use lineage::{Divergence, Fate, Inherited, Snapshot, SnapshotCommitment};
 pub use log::{Log, ParseError};
 pub use policy::{default_outcome, Attributes, Authority, Decision, Policy, Rule};
-pub use ratify::{AdoptedRatify, Ratify, Verdict};
+pub use ratify::{AdoptedRatify, Between, Proposal, Ratify, Verdict};
 pub use scope::{Grant, Scope};
 pub use standing::{Outcome, Position, Pull, Source, Standing};
 

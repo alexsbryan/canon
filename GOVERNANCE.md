@@ -58,6 +58,24 @@ the rules of a scope; anyone else proposes, and one holder's approval makes
 it a rule. An agent may propose and object under any of them and **cannot
 mint a rule**, even where it holds standing.
 
+## What guards the ledger
+
+The fold takes `ts_unix` and `actor` as given. It has to: a pure function of
+the log is what makes replay and merge possible. So whoever can append to
+`.canon/acts.jsonl` writes this project's rules, and two hand-written lines
+would unseat the steward with every rule satisfied. The canon says so itself
+(`canon why can-50996b2caed2`), and records that identity and time are
+deliberately not inside the format.
+
+What defends the file here is git, and this repository adopts the opt-in
+guard the tool ships: `scripts/pre-push.sh` and CI both run `canon witness
+--gate`, which walks every commit that touched the ledger and refuses one
+that removed a line or added an act dated before what the ledger already
+held. `canon guard show` says what is in place, and what is not: branch
+protection and signed commits are settings on the remote, and
+`canon guard git --apply` sets them. Until they are on, the honest sentence
+is that the steward's push is the boundary.
+
 ## Where this is going
 
 The people under a rule should, in time, be the ones making it. Right now

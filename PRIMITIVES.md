@@ -78,8 +78,10 @@ way. Revert tombstones an act *and its effects*, and reverting a revert
 reapplies the original. A format version greater than the reader understands is
 refused rather than partially interpreted.
 
-**The failure it prevents:** a record that can be edited after the fact is not a
-record, it is a claim. Every accountability property downstream — that a
+**The failure it prevents:** a record whose *semantics* can be edited after the
+fact is not a record, it is a claim. (The bytes are a text file anybody with
+write access can change, and the fold takes them as given; what defends the
+bytes is the substrate, named under Primitive 7.) Every accountability property downstream — that a
 decision once made stays made, that you can see who decided, that nobody can
 quietly relitigate — rests here and nowhere else.
 
@@ -326,15 +328,78 @@ turned up while walking the three tiers with the CLI; `revert` is now judged
 exactly like `retract`, and the acceptance test for it is
 `a_stranger_cannot_tombstone_the_grants_that_shut_them_out`.
 
-Two gaps remain, and neither is an oversight. A holder can still lower the bar
-for their own corner, because holding `house.kitchen` *is* standing over
-`house.kitchen`; a house that does not want that grants one level up and
-accepts that the corner's rules are ratified there. And the change is not
-itself a proposal ratified one level above, which is Ostrom's full answer.
+**The rule change is itself a proposal, judged under the rule it is
+changing.** An earlier draft of this section named two gaps: a holder could
+lower the bar for their own corner, and the change was not itself ratified.
+One mechanism closed both. A `ratification` act still takes standing over
+the scope or the one above to write at all, and is then judged exactly as a
+commitment in that scope would be — under the rule in force when it was
+written, by the holders at the narrowest level, with positions `about` its
+id. Under `standing` a holder's change lands at once, which is what every
+canon did before; under anything stricter it waits for the people the old
+rule names. The amendment clause governs its own amendment, and a ratified
+change takes effect from the moment it was ratified, not the moment it was
+written. Two things follow that are worth stating. **First word wins**: a
+reasoned objection refuses a proposal only if it lands before the proposal
+completed, because a late objection that could unmake a settled rule would,
+through the rule of rules, unmake everything decided under it. And a
+`revert` of a ratification act is still gated only by `may_revert` — your
+own is yours, the house may undo the kitchen — so the one remaining gap is
+that an amendment clause can be tomb-stoned by its author. Named here rather
+than closed, because closing it means deciding whether a revert is a
+proposal, and no institution has asked yet.
+
+**`twice` is the time lock.** The only mechanism on the constitutional
+record that raises the cost of capture without depending on anyone's virtue
+is the Nordic one: two votes with a general election between them. It cannot
+detect bad intent, so it does not try; it demands a duration that only
+durable, broad support survives. `twice:<gap>:<rule>` is that rule as a
+ratification rule: carried under `<rule>`, then again after the gap, where the
+gap is either days or **turnover** — somebody who did not hold the scope at
+the first vote has been granted it. Re-granting yourself is not turnover, a
+lapse nobody fills is not turnover, and a member who left and came back is
+not turnover; the only way a coalition satisfies it alone is to admit
+somebody, on the record, under its own name. It composes with the paragraph
+above: a scope whose rule is `twice:turnover:consent:14d` cannot have that
+rule loosened except by a change that itself survives a turnover. Cheap over
+a decade, near-impossible in a year. And it can be asked about first:
+`canon replay --ratification twice:turnover:consent:7d --brief`
+says what it would have done to the record you already have.
 
 The default is `standing`, which is exactly what every canon did before, made
 explicit. A canon that has never granted standing to anyone is ungoverned and
 open; the first grant closes it.
+
+### What the fold takes as given
+
+Every gate above reads three things it cannot check: `ts_unix`, `actor`, and
+the file itself. All three are strings somebody wrote, and the fold is a
+pure function of them on purpose — that purity is what makes replay, union
+merge, no server and no accounts possible. So whoever can append to
+`acts.jsonl` writes the derived state. Two hand-written lines — a self-grant
+dated before the founder's, and a `ratification standing` after it — unseat
+a house with every rule above satisfied. Nothing broke. The attacker is a
+non-standard model of the rules, and no rule added inside can exclude it.
+
+This is the boundary layer, and the honest thing is to say where it is
+rather than to pretend the format closes it. What defends the file is
+whoever may append to it: git in a repository, the household on a shared
+folder. Neither is canon's. What canon does is, first, tell the truth about
+itself — `log` marks every governance act the fold refused and why, and
+`list` and `log` note lines that sit after acts they claim to predate — and
+second, ship an **opt-in** second-order tool for the git case. `canon
+witness` checks the ledger against a witness it does not govern: every
+commit that touched it added lines and nothing else, none dated before what
+the ledger already held, none from the future. `canon guard git` installs
+that as a pre-push hook, prints the CI step and the branch-protection
+settings, and applies them through `gh` on request; `canon guard show` says
+what is guarding a canon by looking, not by consulting a record. It lives
+outside the format, outside the op census and outside the ledger, because a
+guard recorded inside the thing it guards is removed by the rewrite it exists
+to catch. And every run prints what it cannot see: an act backdated by less
+than the slack, a rewrite of git history itself, whoever holds the remote,
+and who typed the actor string. A canon with no guard trusts its log, and
+`guard show` says so in one line.
 
 ## Primitive 8 — Two standing queries
 
@@ -529,6 +594,8 @@ sortition onto what it already does the way one adds a dependency.
 | Recording a gap | `op:question` | built |
 | Deliberate non-decision | `op:silence` | built |
 | Cohort ratification | `op:adopt` + `op:ratification` | built |
+| Time-locked amendment, intervening election | `op:ratification` + `op:grant` + `op:position` | built |
+| Self-amending amendment clause | `op:ratification` + `op:position` | built |
 | Deliberative minipublics | `op:draw_commit` + `op:grant` + `op:horizon` + `op:question` | built |
 | Sortition | `op:draw_commit` + `op:draw_secret` + `op:draw_reveal` | built |
 | Graduated sanctions | `op:decided` + `op:policy` + `policy:graduated` | built |

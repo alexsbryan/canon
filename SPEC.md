@@ -249,7 +249,7 @@ authored by a non-human actor — noticing a gap decides nothing.
 commitment introduced by `assert` or `supersede` derives to `proposed`
 until the ratification rule of its scope is met, and to `active` once it
 is. The rule is the deepest `ratification` act covering the commitment's
-scope, else the canon-wide one, else `standing`. Four rules ship:
+scope, else the canon-wide one, else `standing`. Five rules ship:
 
 - `standing` — a holder of the scope writes a rule directly; anyone
   else's write takes one holder's approval; a scope nobody holds is open.
@@ -259,6 +259,29 @@ scope, else the canon-wide one, else `standing`. Four rules ship:
   this many objecting refuses it.
 - `consent{days}` — a rule after this many days unless a holder objects
   with a reason.
+- `twice{each, between}` — carried under `each`, then again after
+  `between`: `{"between":"days","days":N}` or `{"between":"turnover"}`,
+  where turnover means somebody who did not hold the scope at the first
+  vote has since been granted it. Nothing said before the gap counts toward
+  the second vote, and the writer's own act is never the second vote.
+
+A reader that does not recognise a `rule` value MUST refuse the line, as it
+would any malformed known op. A new rule kind is therefore announced in this
+list rather than versioned: an older reader refuses the act and says so,
+and does not carry it as though it had read it.
+
+**A `ratification` act is itself a proposal.** Writing one takes standing
+over its scope or the one above (rule 7); it is then judged under the
+ratification rule in force for that scope when it was written, by the same
+holders and the same positions as a commitment would be, and takes effect
+only from the moment it is ratified. Under `standing` a holder's change
+takes effect at once, which is how every earlier canon behaved and how they
+MUST keep deriving. A change that is refused or still proposed decides
+nothing.
+
+**First word wins.** A reasoned objection refuses a proposal only when it
+precedes the moment the proposal completed. One written after a rule was
+carried is kept and changes nothing.
 
 Approvals and objections are `position` acts whose `about` is the
 commitment's id: `toward` approves, `against` with a non-empty `because`

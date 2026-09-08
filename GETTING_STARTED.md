@@ -317,7 +317,7 @@ can-7e3dfab7d635  Bikes go against the left wall of the hall.
   PROPOSED, not yet a rule — needs 1 more approval(s) from people who hold house.hall
 ```
 
-Four things to know before you lean on it:
+Five things to know before you lean on it:
 
 - **The narrowest seat counts.** Holding `house` covers the kitchen, but
   a kitchen rule is ratified by whoever holds `house.kitchen`. Wider
@@ -331,6 +331,12 @@ Four things to know before you lean on it:
   ratification rule, a ruling or an `undo` by somebody without standing
   over what it touches lands in the log marked `NOT APPLIED`, and
   `canon list` says how many are sitting there.
+- **Changing how a scope decides is judged under how it decides today.**
+  `canon ratification set` is a proposal like any other, put to the same
+  people under the rule it is replacing. Under `standing` a holder's
+  change lands at once; under `joint` both have to agree to loosen it; and
+  `twice:turnover:<rule>` means a change survives only if somebody new has
+  joined between the first vote and the second.
 
 ### Before you change how you decide, ask what the change would do
 
@@ -338,6 +344,7 @@ Four things to know before you lean on it:
 canon replay                                              # your own record, re-decided
 canon replay --policy consent --brief                     # what consent would have done
 canon replay --policy threshold --objections 2 --brief    # or two objections to stop a thing
+canon replay --ratification twice:turnover:consent:7d --brief   # which rules would still be waiting
 ```
 
 No setup, no files. The questions come from what your canon already holds —
