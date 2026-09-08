@@ -69,6 +69,11 @@ There are two kinds, and they answer different questions:
   on. This measures ingest, so it needs an endpoint to produce a run and
   none to score one.
 
+Prose is held to [docs/VOICE.md](./docs/VOICE.md): one job per document,
+lead with what it does, no pre-explaining what a command will show, and
+nothing that is there to impress. The demo's screen text is held to the
+same page.
+
 Either way, a fixture carries a `PROVENANCE.md` naming where it came
 from — the upstream commit and the sha256 of every file copied. Vendored,
 never depended on across repositories: a standalone `git clone` has to
@@ -110,7 +115,7 @@ What both of them check:
 |---|---|
 | `cargo fmt --all --check` | rustfmt, on the pinned toolchain |
 | `cargo clippy --all-targets -- -D warnings` | no warnings, not a ratchet — the tree is small enough to keep at zero |
-| `cargo test --workspace` | 398 tests, ~6 seconds |
+| `cargo test --workspace` | 436 tests, ~6 seconds |
 | `./scripts/docs-gate.sh` | every repository path a narrative document links to still resolves |
 
 Two of those tests are worth calling out, because they gate the *design*
