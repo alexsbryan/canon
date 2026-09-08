@@ -1,6 +1,9 @@
 # Automation for the People — the run of show
 
 `./scripts/demo.sh` — [enter] between acts, `…` at each beat within one.
+Fifty-two pauses end to end. The copy is held to [VOICE.md](./docs/VOICE.md):
+a line lands on the same screen as the output it describes, nothing
+pre-explains a command, and nothing is there to impress.
 `--auto` runs straight through with no clears. `--offline` skips the live
 half of act 2 and acts 3–4, the only parts that need an endpoint.
 
@@ -11,28 +14,33 @@ the old one or wrote down why. Jefferson names the failure. Ostrom is the
 hero: she showed ordinary people can govern what they share, and found the
 eight things groups that last all do. Those eight are the bar.
 
+**Each part asks something the last one could not.** Part one: can it read,
+and who decides. Part two: on what terms does it hold a seat. Part three: does
+the reading hold at the scale of a country, and was it reading at all. Part
+two never re-tells a contradiction; part one did that. Every beat in it is a
+term of membership the room has not seen yet.
+
 **What is on the screen is for the room.** Every line `demo.sh` prints is
 audience-facing and written for a smart high-school crowd: no jargon, plain
 words. Presenter notes live here.
 
 ## Cold open
 
-Five cards, one line each. Say the rest.
+Four cards, one line each. Say the rest.
 
 1. *Automation for the People.*
 2. *"The earth belongs to the living."* Jefferson to Madison, 1789. He meant
    that no generation should be bound by rules it can't see and can't
    revise. Then he helped write a document that still contains the
-   three-fifths clause.
-3. *Every group forgets why.* Your house, your club, your team. Rules pile
-   up. Reasons don't.
-4. *Ostrom's eight.* Elinor Ostrom spent a career on ordinary people who
+   three-fifths clause. Under it, in the room's words: every group forgets
+   why. Rules pile up. Reasons don't.
+3. *Ostrom's eight.* Elinor Ostrom spent a career on ordinary people who
    shared a pasture, a canal, a fishing ground, and kept it going for
    centuries with no king and no market. Eight things they all did. Say two
    or three in plain words: everyone knows who's in; the people who live
    under a rule can change it; whoever watches can be overruled by the
    people they watch.
-5. *We're about to add a new kind of member to our groups. On what terms?*
+4. *We're about to add a new kind of member to our groups. On what terms?*
 
 ## The three parts
 
@@ -47,23 +55,22 @@ Five cards, one line each. Say the rest.
 | — | **the turn** — everything that read went through a model. Pull the cable out. | | |
 | 5 | the people decide: carry it knowingly, then ask why | `canon accept a b -m "…"` · `canon why b` | no |
 | | **Part two. A member.** | | |
-| 6 | two rules, one hall: the stroller and the bikes; the helper called no conflict from a kitchen seat, and it never took effect; Dana decided | `canon why <the hall rule>` | no |
-| 7 | the helper's whole record: a seat with an end date, an objection, a call outside its seat, a proposal refused | `canon voice agent:helper` | no |
-| 7, cont. | **live, no model:** a non-cook writes a kitchen rule; it lands as a proposal; both cooks approve; it is a rule | `canon add … --scope house.kitchen` · `canon approve` ×2 | no |
-| 8 | nobody had to remember | `canon overdue` | no |
-| 9 | Wednesday dinners, unwritten on purpose; the laundry asked three times, and what each ask cost | `canon voice human:mira` | no |
-| 10 | two years against Ostrom's eight, in milliseconds | `canon replay fixtures/fernwood-commons --brief` | no |
-| 11 | what if we had decided differently | `… --policy default --brief` | no |
-| 12 | not just houses, yours: one institution's vocabulary is nouns only; the grid; then the three commands that put an agent in your repo on the same terms | `cargo test --test transfer_bar -- --nocapture` | no |
+| 6 | the thesis screen, read top to bottom: a seat with a room and an end date; an objection, anywhere; a call outside its seat, kept and not applied; then January came | `canon voice agent:helper` · `canon overdue` | no |
+| 7 | **live, no model:** a non-cook writes a kitchen rule; it lands as a proposal; both cooks approve; it is a rule. Then Ostrom's three levels: the helper tries to change how the kitchen makes rules, kept and not applied; Theo tries, and it is a proposal for the cooks | `canon add … --scope house.kitchen` · `canon approve` ×2 · `canon ratification set …` ×2 | no |
+| 7, cont. | the garden went further: a rule carried twice, with somebody new between the votes | `canon why <the watering rule>` | no |
+| 8 | Wednesday dinners, unwritten on purpose; the laundry in two lines | `canon voice human:mira` | no |
+| 9 | the eight in the room's words, each tied to a beat they saw; then two years checked against all eight, in milliseconds | `canon replay fixtures/fernwood-commons --brief` | no |
+| 10 | what if we had decided differently | `… --policy default --brief` | no |
+| 11 | not just houses, yours: one institution's vocabulary is nouns only; the grid; then the three commands that put an agent in your repo on the same terms | `cargo test --test transfer_bar -- --nocapture` | no |
 | | **Part three. A country.** | | |
-| 13 | the agent reads the founding documents cold | `canon draft --replay <run>` | recorded |
-| 14 | 283 contradictions proposed. Four of them, one wrong | a reader over the run file | no |
+| 12 | the agent reads the founding documents cold | `canon draft --replay <run>` | recorded |
+| 13 | 283 contradictions proposed. Four of them, one wrong | a reader over the run file | no |
 | — | **close** — reading, or remembering? Five and four. Under the record, not above it. | | |
 | — | **curtain call** — a cat crosses the screen trailing a rainbow, and leaves Ostrom's line: *a resource arrangement that works in practice can work in theory.* | | |
 
 ## Say that the replays are recordings
 
-The second half of act 2 and act 13 replay recordings: real replies a real
+The second half of act 2 and act 12 replay recordings: real replies a real
 model gave, run back through the same steps. The screen says "a recording"
 each time; say it too. The live read of Article I that opens act 2 is what
 makes the word land: the room has just watched a recording get made.
@@ -79,51 +86,83 @@ makes the word land: the room has just watched a recording get made.
   of the cousin. The cousin is the safe one: it lands on act 1's pair.
 - **Act 5** — the first thing without a model is people deciding. *"It can't
   fix this tonight. It can write down that it knows."*
-- **Part two card** — name the boundary. Part one was a house that had not
-  said who is in; anyone could write and everything was a rule. *"This one
-  drew a boundary."* Everything in part two follows from that.
-- **Act 6** — set up the people before the bot. *"Dana wrote both rules the
-  same day. A parent and the cyclists, one corridor."* Then the helper's
-  call, from a kitchen seat, about the hall. *"The record kept what it said,
-  and it never took effect."* Then Dana's decision. The line: *"A member may
-  speak anywhere. It decides only where it was given a say."*
-- **Act 7** — the thesis on one screen. A seat, given by Mira, that ended in
-  January. An objection, citing a rule. A call, overruled. A proposal,
-  refused by a cook with a reason. *"That's a member."* Then the live beat:
-  Theo types a kitchen rule and the screen says PROPOSED. *"Nobody's word
-  has been taken away from them, and nobody's rule has been written for
-  them."* Dana approves, still one short. Sam approves. *"Both cooks. Now
-  it's a rule, and the record says who made it one."*
-- **Act 9** — two stories, told before the command. Wednesday dinners: two
-  years of someone just cooking, then a rotation proposed, then Mira's no with
-  her reason. *"A rotation would turn a kindness into a duty."* Hold that; it is
-  the emotional beat. Then the laundry, which is Ostrom's graduated
-  sanctions in one record: ask one, ask the house, no. *"Nobody kept a file
-  on anyone."*
-- **Act 10** — this is where a room decides whether it's real. Say the eight
-  in plain words. Then show the two files: one raw step from the script of
-  the house's two years, and the prediction written for it before the replay
-  ran. *"Replay rebuilds the whole history from the record and checks every
-  prediction."* The table prints every scene under its principle: what was
-  asked, what the rules said. *Built in* means the tool does it; *left to
-  people* means it stays out of the way. Close: *"It can fail, and act 12
-  shows it failing."*
-- **Act 11** — the brief form groups what moved into EASIER and HARDER, two
+- **Part two card** — say what changes. *"In part one the agent read, and
+  the people decided. This house went further: it said who is in, who
+  decides what, and for how long. Then it gave a helper a seat."* Then the
+  three questions, and let them be the spine of the part: what was it given,
+  what did it say, where did the people overrule it. Do not re-tell the hall
+  as a conflict story. The room just watched a contradiction get found and
+  carried; another one reads as the same act again.
+- **Act 6** — one screen, read top to bottom, and each line is a new term.
+  Top line: *"One room, the kitchen. Given by a person, Mira. An end date,
+  January. That's a seat."* Middle: set up the hall in one breath, as
+  context for the objection, not as a story. *"Dana wrote two rules the
+  same day: the hall stays clear for a stroller, and the bikes live in the
+  hall. The helper objected, citing the rule. A member may speak
+  anywhere."* Bottom: *"Then it tried to decide. The hall is not the
+  kitchen. The record kept what it said, and it never took effect."* The
+  line: *"Speak anywhere. Decide only where it was given a say."* Then
+  `overdue`, ten seconds: *"January came. The seat lapsed on its date.
+  Nobody had to remember."*
+- **Act 7** — the live beat, and the one thing part one could not do. Open
+  on the contrast: *"In part one anyone could write a rule and it was a
+  rule on arrival."* Theo types a kitchen rule and the screen says
+  PROPOSED. *"Nobody's word was taken from them, and nobody's rule was
+  written for them."* Dana approves, still one short. Sam approves.
+  *"Both cooks. Now it's a rule, and the record says who made it one."*
+  Then the ladder. Ostrom counted three levels of rules, and the room has
+  now seen two: what you may do (the leftovers), and how those rules get
+  made (both cooks). The third is who may change *that*. Show it as an
+  attempt, not a lecture: *"The helper tries."* It sets the kitchen back to
+  "whoever holds it writes directly", and the screen says NOT APPLIED, with
+  the reason. Then Theo tries the same thing. He holds the house, so he
+  may; the screen says PROPOSED, needs approval from dana, sam. *"Not
+  applied is for someone with no say. Proposed is for someone with a say
+  and not the last word. Changing how the kitchen decides is judged the way
+  the kitchen decides today."* The line: *"Three levels, and the record
+  answers at all three."* This is the one beat that says the system extends
+  upward, so do not rush it.
+- **Act 7, continued** — the garden, one command. Set it up in a sentence:
+  *"A garden rule is carried twice, and somebody new has to have moved in
+  between the votes."* Then `why` on Juno's watering rule, and read the
+  status line: carried by Juno, then Kit joined, then Ola again. The line
+  is Jefferson's from the cold open, landed: *"The earth belongs to the
+  living. In the garden a rule doesn't count until somebody who wasn't
+  there yet says yes too."* Do not explain turnover further; the sentence
+  is the mechanism.
+- **Act 8** — the Wednesday story before the command, three sentences.
+  Then the screen, then the line: *"A rotation would turn a kindness into a
+  duty."* Hold that; it is the emotional beat. The laundry gets two
+  sentences, no more: *"Asked once, ask one person. Asked again, ask the
+  house. Counted from what the house decided, never from watching
+  anyone."* Row 5 of the next act shows the ladder itself.
+- **Act 9** — the table is a recap, not new information, and the legend is
+  what makes it one. Read the legend as recognition: *"Row 4 is the helper.
+  Row 3 is Theo's leftovers. Row 5 is the laundry. Row 6 is the bikes."*
+  Then one sentence on the test before the command: *"Every step's answer
+  was written down before the replay ran, so it can fail."* Then the table.
+  Two rows say *left to people*: *"the tool stays out of those. A table
+  where all eight say built in is the tell that somebody stretched a
+  definition."* Close on the last line: fifty-six steps, all as expected,
+  eight milliseconds. Do not put the raw step or the prediction on the
+  screen; if anyone asks how the test can fail, [the answer is
+  below](#if-someone-asks).
+- **Act 10** — the brief form groups what moved into EASIER and HARDER, two
   lines a decision. Point at the front-door lock under EASIER: *"one person
-  could have waved through a change nobody could undo."* Then hold the
-  silence. *"Every group has had this argument. No group has ever been able
-  to check."*
-- **Act 12** — this is the builders' act; everyone in the room is asking
+  could have waved through a change nobody could undo."* End there. The
+  claim that nobody has been able to check this before was cut: the screen
+  makes it, and saying it is selling.
+- **Act 11** — this is the builders' act; everyone in the room is asking
   "how do I use this." Answer in order: the cost of entry (the codebase's
   vocabulary, nouns and nothing else, *"the same 104 lines run all
-  fourteen"*), the grid (*"four broken on purpose, that's how you know the
-  test is real"*), then the three commands. Read them slowly. `canon mcp` is
-  the line that lands: *"your agent joins over MCP, and reads what is in
-  force and how a proposal stands. Anything it writes is a proposal. Its seat
-  expires. Same terms as the people."*
+  fourteen"*), the grid (*"four broken on purpose, and each one fails where
+  we said it would"*: act 9's test, failing), then the three commands.
+  Read them slowly. `canon mcp` is the line that lands: *"your agent joins
+  over MCP, and reads what is in force and how a proposal stands. Anything
+  it writes is a proposal. Its seat expires. Same terms as the people."*
 - **Part three card** — Jefferson again, without saying his name. *"The
   Constitution still contains the three-fifths clause. Nobody struck it."*
-- **Act 14** — read the first pair aloud and stop. All men are created equal,
+- **Act 13** — read the first pair aloud and stop. All men are created equal,
   against three fifths of all other Persons. Then the fourth, which is wrong.
 - **The close** — volunteer the number that hurts. Five dropped, four didn't.
   *"You should ask that of every agent."* Then the last card: under the
@@ -134,11 +173,75 @@ makes the word land: the room has just watched a recording get made.
   that works in practice can work in theory."* Let the room read the last
   line, *"So can a demo,"* and take the laugh. Skipped in `--auto`.
 
+## If someone asks
+
+Three things came off the stage after the first audience, because each one
+raised more questions than it answered. They are still true and still one
+command away.
+
+**Who did decide the hall?** Act 6 says Dana did; the screen shows the
+helper's call marked *not applied*. To show the human decision beside it:
+
+```sh
+canon why <the hall rule>       # canon list | grep -i 'hall stays clear'
+```
+
+Two adjacent lines: the helper's call, *not applied: outside their standing*,
+and Dana's *carried against … there is nowhere else for the bikes*, with a
+revisit date. This used to open part two, and it reads as act 5 again.
+
+**How can the Ostrom test fail?** The fixture is two files: a script of the
+house's two years, fifty-six steps in canon's own verbs, and a prediction for
+every step written from Ostrom's principle before the replay ran. One step and
+its prediction:
+
+```sh
+grep '"bikes-against-the-hall"' fixtures/fernwood-commons/scenario.jsonl | python3 -m json.tool
+grep -A5 '"bikes-against-the-hall"' fixtures/fernwood-commons/expected.json
+```
+
+Replay rebuilds the history and checks every prediction; a step that lands
+somewhere else fails the run. Act 11's four ablations are that failure, on
+purpose. Raw JSON on the projector is what made this a question rather than
+an answer.
+
+**Can't it just edit the file?** Yes, and so can a person. The record is a
+text file, and the fold takes the time and the name on each line as given;
+two hand-written lines dated before the founding would unseat a house with
+every rule satisfied. Nothing inside the format can tell. Where the ledger
+lives in git, git can, and `canon guard git` has it: every commit that
+touched the ledger added lines and nothing else, none dated before what it
+already held. It is opt-in, it prints what it cannot see, and a canon with
+no guard says it trusts its log. One command shows the shape:
+
+```sh
+canon witness            # every commit that touched the ledger, checked against its parent
+```
+
+The demo does not put this on stage because the evening's question is on
+what terms an agent is a member, and this is about the floor under
+everybody. It is the first question a sharp room asks after "under the
+record", so have the answer.
+
+**What stops a holder loosening their own rule?** Nothing stops them
+proposing it; the proposal is judged under the rule it would replace, by
+the same people. Under `joint` both cooks have to agree to loosen `joint`.
+The one remaining gap, named in
+[PRIMITIVES.md](./PRIMITIVES.md#ratification--the-collective-choice-level):
+an author can still `undo` their own rule change, because undoing your own
+act is always yours.
+
+**The laundry ladder.** Act 8 gives it two sentences and row 5 of act 9's
+table shows the three rungs: ask one person, ask the group, not under this
+policy. It is counted from Mira's two recorded decisions, never from anyone
+watching anyone. A different subject, the drying rack, starts at the bottom
+again.
+
 ## Before you present
 
 ```sh
 cargo build
-cargo test --test transfer_bar         # act 12 runs this; build it first
+cargo test --test transfer_bar         # act 11 runs this; build it first
 ./scripts/demo.sh --offline --auto     # everything but the live parts, no endpoint
 ./scripts/demo.sh --auto               # the whole thing, under a minute
 ```
@@ -230,35 +333,36 @@ and how to make each artifact again.
 | 3 | the house's rules answer a proposal | `check "…"` | positions with a source, a pull and a reason; a verdict must cite something the canon holds |
 | 4 | the house disagrees with itself | `tensions` | positions again; every pair is a *proposal* until `accept` or `dismiss` |
 | 5 | the people carry the contradiction, and can say why | `accept a b -m`, `why b` | the ledger: append-only, reasoned, the citation `draft` cut still attached |
-| 6 | the hall and the bikes; a bot ruled from outside its seat and the ruling did not apply; the house decided | `why <id>` | rulings take standing: `dismiss` without it is recorded and not applied; `accept` by a holder is |
-| 7 | the helper's record, then a non-cook's kitchen rule becomes a proposal and then a rule | `voice agent:helper`, `add --scope`, `approve` | standing with a horizon; **ratification**: a write is a proposal until the scope's rule is met |
-| 8 | nobody had to remember | `overdue` | horizons on grants and on carried contradictions |
-| 9 | what Mira decided not to have | `voice human:mira` | standing queries; `silence` as data |
-| 10 | two years against Ostrom's eight | `replay --brief` | `Log → Canon → policy → Decision`, pure |
-| 11 | what a different rule would have done | `replay --policy default --brief` | policy as a pure function; decided twice, diffed |
-| 12 | fourteen commons, one spine | `cargo test --test transfer_bar` | the same nine primitives; only the nouns change |
-| 13 | the founding documents, cold | `draft --replay <run>` | resolvers, at 12,672 words |
-| 14 | 283 tensions, four read aloud | a reader over the run file | — |
+| 6 | the helper's record, then January | `voice agent:helper`, `overdue` | standing with a horizon; rulings take standing: `dismiss` without it is recorded and not applied; horizons on grants and on carried contradictions |
+| 7 | a non-cook's kitchen rule becomes a proposal and then a rule; the helper and then Theo try to change how the kitchen makes rules; the garden's rule carried twice | `add --scope`, `approve`, `ratification set`, `why` | **ratification**: a write is a proposal until the scope's rule is met; changing the rule takes standing over the scope or the one above (`may_govern`) and is then itself a proposal under the rule it replaces; `twice` waits for turnover |
+| 8 | what Mira decided not to have | `voice human:mira` | standing queries; `silence` as data |
+| 9 | two years against Ostrom's eight | `replay --brief` | `Log → Canon → policy → Decision`, pure |
+| 10 | what a different rule would have done | `replay --policy default --brief` | policy as a pure function; decided twice, diffed |
+| 11 | fourteen commons, one spine | `cargo test --test transfer_bar` | the same nine primitives; only the nouns change |
+| 12 | the founding documents, cold | `draft --replay <run>` | resolvers, at 12,672 words |
+| 13 | 283 tensions, four read aloud | a reader over the run file | — |
 
 ### The fixtures are ledgers, and the ledgers are verbs
 
-**Fernwood Commons** (acts 6–11) is a `.canon/acts.jsonl` written in seed
+**Fernwood Commons** (acts 6–10) is a `.canon/acts.jsonl` written in seed
 dialect: 8 `assert`, 15 `grant`, 4 `policy set`, 2 `scope`, 1 `adopt`,
-1 `silence`. The scenario then does what a house does over two years, in
+1 `silence`; the scenario adds three more `grant`s for the garden. The scenario then does what a house does over two years, in
 canon's verbs: `position` (an agent's objection), `dismiss`, `accept` with a
 `horizon`, `policy set` on the kitchen's own scope, `decide` twice, a
 `draw commit` / `draw seal` / `draw open` sequence for a panel, and at the end
 `ratification set` on the kitchen, a non-cook's `add` that stays a proposal
-until both cooks `approve`, and the helper's proposal that a cook refuses.
+until both cooks `approve`, the helper's proposal that a cook refuses, and
+the garden's `ratification set twice:turnover:standing` with a rule carried
+once, waiting, and carried again after Kit is granted the garden.
 `expected.json` is what those verbs must produce. No model ever touched it.
 
 ```sh
-canon replay fixtures/fernwood-commons            # 56 step(s), all as expected
+canon replay fixtures/fernwood-commons            # 70 step(s), all as expected
 canon replay fixtures/fernwood-commons --out /tmp/fw/.canon
 CANON_DIR=/tmp/fw/.canon canon log                # read the ledger the acts made
 ```
 
-**The CPR study** (act 12) is the same ledger fourteen times. The spine is
+**The CPR study** (act 11) is the same ledger fourteen times. The spine is
 104 lines of those same verbs with the nouns left blank; a `vocab.json` fills
 in actors, scopes, commitments and proposals and may not name a rule, a
 policy, an authority or an outcome. The one generator in this repo,
@@ -295,12 +399,12 @@ Cut 2026-08-31 against `localhost:9841/v1`, alias `primary`, served by
 recorded replies and refuses if the build asks for a call the recording lacks.
 (`scripts/record-demo-tape.sh` is those three lines with a scratch canon.)
 
-The **founding run** (acts 13–14) is the same two verbs over
+The **founding run** (acts 12–13) is the same two verbs over
 `fixtures/founding/founding.md`, completed 2026-08-31 on a rented A6000
 carrying the same 27B: 850 calls, 676 of 676 comparison passes, 1h37m. The
 corpus itself is rebuilt from vendored National Archives and Avalon HTML by
 `fixtures/founding/build.py`, no network, no model; the eleven supersessions in
-its `truth.json` are parsed from the Archives' own notes. Act 14's reader,
+its `truth.json` are parsed from the Archives' own notes. Act 13's reader,
 `scripts/founding-highlights.py`, opens that run file and prints four chosen
 pairs, the fourth chosen because it is wrong.
 
@@ -322,8 +426,8 @@ and `canon list` shows them with their sources if anyone asks.
 
 | kind | acts | reproduces |
 |---|---|---|
-| **ledger verbs** | 1, 5–12 | byte for byte, any machine, no endpoint |
-| **recorded** | 2 (the rest), 13 | byte for byte from the recording; re-cutting gives a different candidate set |
+| **ledger verbs** | 1, 5–11 | byte for byte, any machine, no endpoint |
+| **recorded** | 2 (the rest), 12 | byte for byte from the recording; re-cutting gives a different candidate set |
 | **live** | 2 (first passage), 3, 4 | wording varies; the shape holds: four guest rules citing 3-8, two conflicts on the cousin, the two reversals as tensions |
 
 The live half of act 2 and acts 3–4 need an OpenAI-compatible endpoint that can enforce a JSON schema

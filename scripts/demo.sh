@@ -93,10 +93,9 @@ if [ $AUTO -eq 0 ]; then
   card "Automation for the People"
   wait_
   card "\"The earth belongs to the living.\"" "Thomas Jefferson to James Madison, 1789"
-  wait_
-  card "Every group forgets why."
-  say "Rules pile up. Reasons don't. Someone changes a rule and nobody"
-  say "strikes the old one. Two years later, nobody can say why it's there."
+  say "Every group forgets why. Rules pile up. Reasons don't. Someone changes"
+  say "a rule and nobody strikes the old one. Two years later, nobody can say"
+  say "why it's there."
   wait_
   card "Ostrom's eight." "Elinor Ostrom, Governing the Commons, 1990"
   say "She studied ordinary people who shared a pasture, a canal, a fishing"
@@ -115,7 +114,6 @@ wait_
 beat "Where we start."
 say "One document. Eleven charter articles, thirteen decisions from"
 say "monthly meetings, appended over two years. 1,728 words."
-hold
 say "Article I, at the top:"
 passage maple-house.md 3-5
 hold
@@ -129,12 +127,11 @@ wait_
 TAPED=0
 beat "The agent's first job: read what the house already wrote."
 if [ $OFFLINE -eq 0 ]; then
-  say "Live. It reads Article I, the passage you just saw. Twenty seconds."
+  say "It reads Article I, the passage you just saw. Twenty seconds."
   run $CANON draft --dry-run --max-chunks 1 --from "$DOC"
   hold
   say "Four rules. Every one cites maple-house.md:3-8. That's Article I."
   say "A rule it can't point to in the document is never shown."
-  hold
   say "Last line: 'run recorded at'. Every reply it got is written down."
   say "That file is a recording."
   wait_
@@ -157,9 +154,8 @@ else
   run $CANON draft --from "$DOC"
 fi
 hold
-say "Fifty proposals. It proposes. It does not decide."
-hold
-say "People go through them one at a time. There is no accept-all."
+say "Fifty proposals. It proposes. It does not decide. People go through"
+say "them one at a time. There is no accept-all."
 hold
 [ $TAPED -eq 1 ] && $CANON replay "$SEED" --out "$CANON_DIR" --profile house >/dev/null
 say "Reviewed by hand. Six kept."
@@ -171,7 +167,6 @@ if [ $OFFLINE -eq 0 ]; then
   # Take one from the room if you like: type it in place of the cousin.
   beat "Ask the house a question."
   say "The house's own rules answer, in the house's own words."
-  hold
   run $CANON check "my cousin wants to stay for two weeks"
   hold
   say "Two rules. Article I allows two nights. A decision banned guests."
@@ -202,7 +197,6 @@ wait_
 beat "The people decide."
 say "The house can't fix this tonight. It can write down that it knows."
 run $CANON accept can-64864f34b1b5 can-ea11bfde216d -m "Article I was never repealed. Revisit at the October meeting."
-hold
 say "Six months from now, somebody asks why."
 run $CANON why can-ea11bfde216d
 hold
@@ -211,152 +205,182 @@ say "The model proposed. People disposed. The record keeps the reason."
 wait_
 
 # ═══════════════════════════════════════════════════════════
+# PART TWO IS ABOUT TERMS, NOT CONFLICTS. Part one already showed a
+# contradiction found and carried; the room does not need it again. Every
+# beat here is a term of membership the room has not seen yet: a seat has a
+# room and an end date; a member may speak anywhere and decide only in its
+# room; a rule is a proposal until the group's own rule for making rules is
+# met; a seat expires with nobody remembering. The hall and the bikes are
+# one line of context for the helper's record, not a story of their own.
 card "Part two. A member."
-say "A different house. This one drew a boundary: it said who is in, and"
-say "who decides what. Two years in, it gave a helper agent a seat."
+say "In part one the agent read, and the people decided."
+say "This house went further. It said who is in, who decides what, and for"
+say "how long. Then it gave a helper agent a seat."
+say "Three questions. What was it given? What did it say? Where did the"
+say "people overrule it?"
 wait_
 
 DEMO2="$DEMO/fernwood"
 $CANON replay fixtures/fernwood-commons --out "$DEMO2/.canon" --profile house >/dev/null
 export CANON_DIR="$DEMO2/.canon"
-# Ids are content-addressed, so a wording edit to the fixture moves them.
-# Look the hall rule up by its text rather than pinning an id.
-HALL=$($CANON list 2>/dev/null | grep -i 'hall stays clear' | grep -o 'can-[0-9a-f]*' | head -1)
 
-# ── act 6 · the hall, the bikes, and the helper ──────────────
-# The human story first, or the bot's record means nothing. Dana wrote two
-# rules the same day: the hall stays clear for a stroller, and the bikes
-# live in the hall. A parent and the cyclists, one corridor. The helper
-# looked at the two rules and said they don't conflict. The people living
-# with a stroller and three bikes knew better.
-beat "Two rules, one hall."
-say "Dana wrote both, the same day. The hall stays clear enough for a"
-say "stroller. And the bikes live in the hall, against the left wall."
-say "A parent and the cyclists. One corridor."
-hold
-say "The house had given a helper agent a say over the kitchen, with an"
-say "end date. The helper looked at the two hall rules and called it:"
-say "no conflict."
-hold
-say "The hall is not the kitchen. The record kept what the helper said,"
-say "and it never took effect. The people with the stroller and the three"
-say "bikes decided for themselves."
-run $CANON why "$HALL"
-hold
-say "The helper's call, by name and date, marked as outside its seat."
-say "Dana's decision, by name and date, with a reason and a revisit date."
-say "A member may speak anywhere. It decides only where it was given a say."
-wait_
-
-# ── act 7 · the helper's whole record ──────────────────────
-beat "Everything the helper was given, said, and had set aside."
+# ── act 6 · the seat ────────────────────────────────────────
+# The thesis screen, read top to bottom: the seat, then what it said, then
+# what was set aside. The hall is set up in one breath, as context for the
+# objection, and never becomes the subject.
+beat "What the helper was given, said, and had set aside."
+say "One command. The helper's whole two years."
 run $CANON voice agent:helper
+say "Top line, the seat. One room: the kitchen. Given by a person: Mira."
+say "An end date: January. That is what a seat is."
 hold
-say "A seat, given by a person, that ended in January. One objection,"
-say "citing a rule. One call outside its seat, kept and not applied. One"
-say "proposal, refused by a cook with a reason. That is a member."
+say "Then it spoke. Dana had written two rules the same day: the hall stays"
+say "clear for a stroller, and the bikes live in the hall. The helper"
+say "objected, citing the rule. A member may speak anywhere."
+hold
+say "Then it tried to decide. It called the two hall rules no conflict."
+say "The hall is not the kitchen. The record kept what it said, and it never"
+say "took effect. The people with the stroller and the bikes decided."
+say "Speak anywhere. Decide only where it was given a say."
+hold
+say "January came."
+run $CANON overdue
+hold
+say "The seat lapsed on its date. The bikes come back up in June."
+say "The record carries this. Nobody has to."
 wait_
 
-# ── act 7, continued · a rule is a proposal until the cooks say so ──
+# ── act 7 · a rule is a proposal until the cooks say so ─────
 # LIVE, no model. Theo holds the house, not the kitchen. The cooks set how
 # kitchen rules are made: both of them, jointly. Theo types a kitchen rule
 # and it lands as a proposal. Dana approves; still one short. Sam approves;
 # it is a rule. Actors are set per command with CANON_ACTOR.
-sub "Now somebody who is not a cook writes a kitchen rule."
-say "The cooks decided how kitchen rules get made: both of them, jointly."
+beat "A rule is a proposal until the group says so."
+say "In part one, anyone could write a rule and it was a rule on arrival."
+say "Here the cooks decided how kitchen rules get made: both of them, jointly."
+hold
 say "Theo lives here and holds the house. He does not hold the kitchen."
-hold
+say "He writes a kitchen rule."
 CANON_ACTOR=human:theo run $CANON add "Leftovers are labelled with a name and a date." --scope house.kitchen
-hold
-say "Written. Visible. Not a rule. Nobody's word has been taken away from"
-say "them, and nobody's rule has been written for them."
+say "Written. Visible. Not a rule. Nobody's word was taken from them, and"
+say "nobody's rule was written for them."
 hold
 PROP=$($CANON list 2>/dev/null | grep 'Leftovers are labelled' | grep -o 'can-[0-9a-f]*' | head -1)
 CANON_ACTOR=human:dana run $CANON approve "$PROP" -m "we lose a tub of soup a week to this"
 hold
 CANON_ACTOR=human:sam run $CANON approve "$PROP" -m "yes"
-hold
 say "Both cooks. Now it is a rule, and the record says who made it one."
-wait_
-
-# ── act 8 · nobody had to remember ──────────────────────────
-beat "Nobody had to remember."
-run $CANON overdue
 hold
-say "The helper's seat lapsed in January. The bikes come up again in June."
-say "Nobody carries this in their head."
+# THE THIRD LEVEL. Ostrom separated three: operational rules (what you may
+# do), collective-choice rules (how those get made), constitutional rules
+# (how the collective-choice rules themselves change). The room has now
+# seen two. The third is shown as an attempt: the helper, seat lapsed, tries
+# to drop the kitchen back to "whoever holds it writes directly". Changing
+# how a scope makes rules takes standing over that scope or the one above
+# it (ratify.rs, may_govern), so it is kept on the record and not applied.
+say "Ostrom counted three levels of rules. You have now seen two."
+say ""
+say "   what you may do              leftovers get a name and a date"
+say "   how those rules get made     both cooks, jointly"
+say "   who may change that          ?"
+hold
+say "The helper tries."
+CANON_ACTOR=agent:helper run $CANON ratification set standing --scope house.kitchen -m "simpler this way"
+say "Kept on the record. Not applied. The helper's seat lapsed in January."
+hold
+# THEO MAY. He holds the house, which covers the kitchen, so he may write
+# how the kitchen decides — and the change is judged the way the kitchen
+# decides today: both cooks. Two answers side by side: NOT APPLIED for no
+# say, PROPOSED for a say without the last word.
+say "Theo tries. He holds the house, which covers the kitchen."
+CANON_ACTOR=human:theo run $CANON ratification set standing --scope house.kitchen -m "simpler this way"
+say "Not applied is for someone with no say. Proposed is for someone with a"
+say "say and not the last word. Changing how the kitchen decides is judged"
+say "the way the kitchen decides today: both cooks."
+say ""
+say "   who may change that          the cooks, by the cooks' own rule"
+say ""
+say "Three levels, and the record answers at all three."
 wait_
 
-# ── act 9 · what Mira decided not to have ───────────────────
-# Two human stories are in Mira's record, and neither reads without setup.
+# THE GARDEN WENT FURTHER. A garden rule is carried twice, and somebody who
+# was not there for the first vote has to have joined before the second. It
+# is Jefferson's line as a mechanism, and `why` shows the two votes with
+# Kit's arrival between them.
+sub "The garden went further."
+say "A garden rule is carried twice, and somebody new has to have moved in"
+say "between the votes. Juno wrote one in April."
+GARDEN=$($CANON list 2>/dev/null | grep 'Water before nine' | grep -o 'can-[0-9a-f]*' | head -1)
+run $CANON why "$GARDEN"
+hold
+say "Carried by Juno, who holds the garden. Then Kit moved in. Then Ola,"
+say "again. Nothing the same two people said in between counted."
+say "The earth belongs to the living. In the garden a rule doesn't count"
+say "until somebody who wasn't there yet says yes too."
+wait_
+
+# ── act 8 · what Mira decided not to have ───────────────────
 # Wednesday dinners: for two years somebody has just cooked, nobody organised
-# it, and when a rotation was proposed Mira said no and wrote down why. That is a
-# SILENCE: unwritten on purpose, not by neglect, and the thing groups lose.
-# The laundry: the same request three times, and each time it cost more to
-# ask, counted from decisions the house made, never from watching anyone.
+# it, and when a rotation was proposed Mira said no and wrote down why. That
+# is a SILENCE: unwritten on purpose, and the thing groups lose. The laundry
+# above it is the sanctions ladder in two lines; say it in two.
 beat "What Mira decided NOT to have."
 say "Every Wednesday for two years, somebody has cooked dinner for the house."
-say "Nobody organised it. Nobody was ever asked to."
-hold
-say "Last spring somebody proposed a rotation. Mira said no, and wrote down why."
-hold
+say "Nobody organised it. Last spring somebody proposed a rotation."
+say "Mira said no, and wrote down why."
 run $CANON voice human:mira
 hold
-say "Unwritten on purpose. A rotation would turn a kindness into a duty. That is"
-say "the line groups lose, and losing it is why the same proposal comes back"
-say "every spring. Here it stays, with Mira's name and her reason."
+say "Unwritten on purpose. A rotation would turn a kindness into a duty."
+say "Groups lose that line, and the same proposal comes back every spring."
+say "Here it stays, with Mira's name and her reason."
 hold
-say "And the laundry, above it. Someone asked to run the machine at 1am."
-say "Then again. First time: ask one person. Second: ask the whole house."
-say "The third time, the house's own rule said no before anyone had to."
-say "The cost of asking went up each time, counted from what the house had"
-say "decided. Nobody kept a file on anyone."
+say "Above it, the laundry. Someone asked to run the machine at 1am, then"
+say "asked again. First time, ask one person. Second, ask the house. The"
+say "cost of asking went up, counted from what the house had decided."
+say "Nobody kept a file on anyone."
 wait_
 
-# ── act 10 · Ostrom's eight ─────────────────────────────────
-# THE SAUCE, or this looks like vaporware. The fixture is two files: a script
-# of the house's two years, fifty-six steps in canon's own verbs, and a file
-# of predicted outcomes written from Ostrom's principles before the replay
-# ran. Show one raw step and its prediction, THEN replay. The table's rows
-# are backed by scenes, and `--brief` now prints them.
+# ── act 9 · Ostrom's eight ──────────────────────────────────
+# THE TEST, framed as recognition. The room has just watched this house do
+# most of the eight; the legend names each one in the room's words and says
+# where they saw it, so the table that follows is a recap they can read,
+# not eight new terms. The raw step and its prediction stay off the stage
+# (they are in DEMO.md for anyone who asks how the test can fail).
 beat "Two years of this house, against Ostrom's eight."
-say "Who's in and who decides. Rules the group can change itself. A monitor"
-say "the group can overrule. Consequences that escalate. Cheap ways to settle"
-say "a fight. The right to organise. Small groups inside bigger ones."
+say "Ostrom found eight things every group that lasts does. You have just"
+say "watched this house do them."
+say ""
+say "   1  who's in, who decides               the kitchen and its cooks"
+say "   2  rules that fit the place            three inherited, five written here"
+say "   3  the group changes its own rules     Theo's leftovers, the garden's two votes"
+say "   4  a watcher the group can overrule    the helper"
+say "   5  consequences that escalate          the laundry"
+say "   6  settle a fight cheaply              the bikes"
+say "   7  the right to organise               nobody above can take its rules"
+say "   8  small groups inside bigger ones     a kitchen inside a house"
 hold
-say "What gets replayed: a script of the house's two years. Fifty-six steps."
-say "Who was given what. Who objected. What someone proposed. One of them,"
-say "as written:"
-printf '\n\033[2m'; grep '"bikes-against-the-hall"' fixtures/fernwood-commons/scenario.jsonl | python3 -m json.tool --indent 2 | sed 's/^/     /'; printf '\033[0m'
-hold
-say "Beside it, a prediction for every step, written before the replay"
-say "existed, from what Ostrom's principle says should happen:"
-printf '\n\033[2m'; grep -A5 '"bikes-against-the-hall"' fixtures/fernwood-commons/expected.json | sed 's/^/   /'; printf '\033[0m'
-hold
-say "Replay rebuilds the whole history from the record, step by step, and"
-say "checks every prediction. No model. Watch the clock."
+say "Now the whole two years, rebuilt from the record and checked against all"
+say "eight. Every step's answer was written down before the replay ran, so"
+say "it can fail. No model."
 run $CANON replay fixtures/fernwood-commons --brief
 hold
-say "Every line under a principle is a scene: what was asked, what the rules"
-say "said. 'All as expected' means all fifty-six matched a prediction made"
-say "before the run. That is the test. It can fail, and act 12 shows it failing."
+say "Every line under a number is a moment you saw: what was asked, what the"
+say "rules said. Two rows say 'left to people': the tool stays out of those."
+say "Seventy steps, all as expected, in milliseconds."
 wait_
 
-# ── act 11 · what if ────────────────────────────────────────
+# ── act 10 · what if ────────────────────────────────────────
 beat "What if we had decided differently?"
 say "They're arguing about how they decide. What would the other way have"
 say "done to the last two years? Every group has this argument."
-hold
 run $CANON replay fixtures/fernwood-commons --policy default --brief
 hold
 say "Every decision that would have gone differently, by name, and which way"
 say "it moves. Look at the lock. Under the other rule, one person could have"
 say "waved through a change nobody could undo."
-hold
-say "No group has ever been able to check this before."
 wait_
 
-# ── act 12 · not just houses. yours. ────────────────────────
+# ── act 11 · not just houses. yours. ────────────────────────
 # The builder's question is "what would I write?" So show the cost of entry
 # before the result: one institution's vocabulary, which is nouns and nothing
 # else, then the grid, then the three commands that put an agent on the same
@@ -367,16 +391,14 @@ beat "Not just houses. Yours."
 say "A fishery. A canal. An alpine pasture shared since 1483. A makerspace."
 say "A codebase: nine engineers, one repository, and a CI bot nobody wants"
 say "to own."
-hold
 say "What it costs to bring one in. The codebase, as written. Nouns only:"
 say "who, what is shared, who watches. There are no rules of the game in"
 say "here. The same 104 lines run all fourteen."
 printf '\n\033[2m'; { sed -n '2,4p;10,14p' fixtures/cpr/meridian-monorepo/vocab.json; printf '  "members": [ … nine people … ],\n'; grep '"monitor"' fixtures/cpr/meridian-monorepo/vocab.json; printf '  …\n'; } | sed 's/^/     /'; printf '\033[0m'
 hold
 run cargo test --test transfer_bar -- --nocapture 2>/dev/null
-hold
 say "Ostrom's eight hold in all ten. Four we broke on purpose, and each one"
-say "fails exactly where we said it would. That's how you know the test is real."
+say "fails where we said it would. That is act 9's test, failing."
 hold
 say "So, your project. Three commands:"
 say ""
@@ -401,7 +423,6 @@ if [ -f "$FOUNDING" ]; then
   beat "The agent reads the oldest rules we have."
   say "The Declaration. The Articles of Confederation. The Constitution and"
   say "all twenty-seven amendments. 12,672 words. Cold."
-  hold
   say "Same command as act 2. A rented GPU, an hour and thirty-seven minutes,"
   say "850 replies from a real model. This is that run, replayed."
   hold
@@ -414,7 +435,6 @@ if [ -f "$FOUNDING" ]; then
   # ── act 14 · four of 283 ──────────────────────────────────
   beat "283 contradictions proposed. Four of them."
   run python3 ./scripts/founding-highlights.py "$FOUNDING"
-  hold
   say "The fourth is wrong. It proposes things that aren't there."
   say "That is why people review, one at a time. That is why every proposal"
   say "has to quote its passage."
@@ -424,7 +444,6 @@ if [ -f "$FOUNDING" ]; then
   card "Was it reading, or remembering?"
   say "Every model has read the Constitution. So we took the nine it found,"
   say "removed the fact each one turns on, and asked again."
-  hold
   say "Five dropped. Four didn't."
   say "We published both numbers. You should ask that of every agent."
   wait_
