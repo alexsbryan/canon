@@ -31,6 +31,43 @@ pub fn home() -> Option<PathBuf> {
     std::env::var_os("HOME").map(PathBuf::from)
 }
 
+/// Lines that claim a time earlier than a line above them, as a note, or
+/// nothing.
+///
+/// The fold sorts by `(ts_unix, id)` and forgets file order on purpose, so
+/// this is the one place that can see the shape a hand-appended, backdated
+/// line has: it sits after acts it claims to predate. `canon add` writes
+/// at the wall clock and a rendered merge is sorted, so the honest causes
+/// are a merge nobody re-rendered and two clocks that disagree. A note,
+/// never a refusal — the record is still the record — and it names what
+/// can actually check: `canon witness`, where git is holding the file.
+pub fn disorder(dir: &Path) -> Option<String> {
+    let raw = std::fs::read_to_string(dir.join(FILE)).ok()?;
+    let mut latest = i64::MIN;
+    let mut first: Option<String> = None;
+    let mut count = 0usize;
+    for line in raw.lines().filter(|l| !l.trim().is_empty()) {
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        let ts = v.get("ts_unix").and_then(serde_json::Value::as_i64)?;
+        if ts < latest {
+            count += 1;
+            if first.is_none() {
+                first = v.get("id").and_then(|i| i.as_str()).map(str::to_string);
+            }
+        }
+        latest = latest.max(ts);
+    }
+    (count > 0).then(|| {
+        format!(
+            "note: {count} act(s) appear after acts they claim to predate (first: {}); \
+             `canon witness` reads the git history if this canon is in a repository",
+            first.unwrap_or_default()
+        )
+    })
+}
+
 pub fn read(dir: &Path) -> Result<Log, String> {
     let path = dir.join(FILE);
     let raw =

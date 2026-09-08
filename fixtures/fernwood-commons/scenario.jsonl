@@ -98,3 +98,28 @@
 {"step":"act","at":"2026-03-10","by":"human:dana","op":"position","about":"@dishwasher","pull":"against","because":"half-loads on Sunday night, or nobody has a clean pan on Monday"}
 {"step":"status","name":"a-cook-refuses-it-with-a-reason","principle":4,"strength":"mechanism","commitment":"@dishwasher"}
 {"step":"state","name":"the-kitchen-at-the-end"}
+
+// ── a rule that outlasts the people who made it ──────────────
+// The Nordic amendment rule, as a ratification rule: carried twice, with an
+// intervening election. Mira hands the garden to Ola and Juno; Ola sets the
+// garden to `twice:turnover:standing` — the change itself is a proposal
+// under the garden's rule at the time (standing) and lands at once because
+// Ola holds it. Juno writes a garden rule; her own write is the first vote.
+// Nothing Ola or Juno say now is a second vote: it waits for somebody who
+// did not hold the garden then to be granted it. Kit joins; a holder's
+// approval after that carries it. Cheap over a long horizon, impossible
+// over a short one, and no rule about anyone's intent.
+{"step":"act","at":"2026-04-01","by":"human:mira","op":"grant","holder":"human:ola","scope":"house.garden","rationale":"digs most of it"}
+{"step":"act","at":"2026-04-01","by":"human:mira","op":"grant","holder":"human:juno","scope":"house.garden","rationale":"digs the rest"}
+{"step":"act","name":"the-garden-decides-to-decide-twice","at":"2026-04-02","by":"human:ola","as":"garden-rule","op":"ratification","text":"A garden rule is carried twice, and somebody new has to have joined in between.","rule":{"rule":"twice","each":{"rule":"standing"},"between":{"between":"turnover"}},"scope":"house.garden"}
+{"step":"status","name":"the-change-to-the-gardens-rule-is-itself-judged","principle":3,"strength":"mechanism","commitment":"@garden-rule"}
+{"step":"act","at":"2026-04-03","by":"human:juno","as":"watering","op":"assert","text":"Water before nine or after seven."}
+{"step":"act","at":"2026-04-03","by":"human:juno","op":"scoped","commitment":"@watering","scope":"house.garden"}
+{"step":"status","name":"carried-once-and-waiting-for-the-garden-to-change-hands","principle":3,"strength":"mechanism","commitment":"@watering"}
+{"step":"act","at":"2026-04-10","by":"human:ola","op":"position","about":"@watering","pull":"toward","because":"yes, obviously"}
+{"step":"status","name":"the-same-two-cannot-carry-it-twice","principle":3,"strength":"mechanism","commitment":"@watering"}
+{"step":"act","at":"2026-05-01","by":"human:mira","op":"grant","holder":"human:kit","scope":"house.garden","rationale":"moved in with a trowel"}
+{"step":"status","name":"kit-joins-and-the-second-vote-opens","principle":3,"strength":"mechanism","commitment":"@watering"}
+{"step":"act","at":"2026-05-03","by":"human:ola","op":"position","about":"@watering","pull":"toward","because":"still yes"}
+{"step":"status","name":"carried-a-second-time-after-the-election","principle":3,"strength":"mechanism","commitment":"@watering"}
+{"step":"state","name":"the-garden-at-the-end"}

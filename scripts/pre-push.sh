@@ -52,6 +52,12 @@ gate "rustfmt"          cargo fmt --all --check
 gate "clippy"           cargo clippy --workspace --all-targets -- -D warnings
 gate "tests"            cargo test --workspace
 gate "docs links"       ./scripts/docs-gate.sh
+# The ledger, checked against git by the tool itself: every commit that
+# touched .canon/acts.jsonl added lines and nothing else, none of them dated
+# before what the ledger already held. This is `canon guard git`, adopted
+# here (GOVERNANCE.md says why). The tests gate above already built the
+# binary.
+gate "ledger witnessed"  ./target/debug/canon witness --gate
 
 elapsed=$(( SECONDS - start ))
 
@@ -63,6 +69,7 @@ if [ ${#failed[@]} -ne 0 ]; then
     echo "  clippy       cargo clippy --workspace --all-targets --fix"
     echo "  tests        cargo test --workspace -- --nocapture"
     echo "  docs links   ./scripts/docs-gate.sh   (names the file and line)"
+    echo "  ledger       ./target/debug/canon witness   (names the commit and the act)"
     echo
     echo "  Genuinely stuck and need the push? git push --no-verify — then say"
     echo "  so on the PR, so a red CI run is expected rather than a surprise."

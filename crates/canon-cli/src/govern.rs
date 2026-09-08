@@ -217,14 +217,15 @@ pub fn ratification(args: &[String]) -> i32 {
         Some("set") => {
             let Some(raw) = pos.get(1) else {
                 return fail(
-                    "usage: canon ratification set <standing|joint:a,b|threshold:n/m|consent:Nd> \
+                    "usage: canon ratification set \
+                     <standing|joint:a,b|threshold:n/m|consent:Nd|twice:<turnover|Nd>:<rule>> \
                      [--scope s] [-m \"<how it reads>\"]",
                 );
             };
             let Some(rule) = canon_core::Ratify::parse(raw) else {
                 return fail(format!(
                     "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
-                     threshold:2/1, or consent:7d"
+                     threshold:2/1, consent:7d, or twice:turnover:consent:7d"
                 ));
             };
             let scope = match scope_from(args) {
@@ -252,6 +253,8 @@ pub fn ratification(args: &[String]) -> i32 {
                         Some(s) => println!("  how rules are made in {s} and everything under it"),
                         None => println!("  how rules are made in this canon"),
                     }
+                    // The change is judged under the rule it is changing.
+                    crate::cmds::report_status(&d, &act.id);
                     crate::cmds::report_governed(&d, &act.id)
                 }
                 Err(e) => fail(e),
@@ -278,13 +281,25 @@ pub fn ratification(args: &[String]) -> i32 {
                 );
                 return 0;
             }
+            let now = store::now();
             for r in &canon.ratifications {
+                // The one deciding its scope today, among the history kept.
+                let deciding = canon
+                    .adopted_at(r.scope.as_ref(), now)
+                    .is_some_and(|d| d.act == r.act);
+                let mark = if deciding { "  (deciding now)" } else { "" };
                 match &r.scope {
-                    Some(s) => println!("{}  {}  over {s}", r.act, r.rule.name()),
-                    None => println!("{}  {}  (whole canon)", r.act, r.rule.name()),
+                    Some(s) => println!("{}  {}  over {s}{mark}", r.act, r.rule.name()),
+                    None => println!("{}  {}  (whole canon){mark}", r.act, r.rule.name()),
                 }
                 println!("  {}", r.text);
-                println!("  adopted {} by {}", store::ymd(r.at), r.actor);
+                println!(
+                    "  set {} by {}, judged under {}",
+                    store::ymd(r.at),
+                    r.actor,
+                    r.under.name()
+                );
+                crate::cmds::report_verdict(&r.act, &r.verdict);
             }
             0
         }
@@ -301,7 +316,7 @@ pub fn ratification(args: &[String]) -> i32 {
 /// A rotation counted in seconds from its own adoption needs no timezone, no
 /// leap rule and no agreement about when a week starts. Two readers on two
 /// continents compute the same turn.
-fn every(raw: &str) -> Result<i64, String> {
+pub(crate) fn every(raw: &str) -> Result<i64, String> {
     let raw = raw.trim();
     let (n, mult) = match raw.chars().last() {
         Some('d') => (&raw[..raw.len() - 1], 86_400),

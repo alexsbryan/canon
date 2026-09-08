@@ -47,6 +47,7 @@ const VALUED: &[&str] = &[
     "--outcome",
     "--policy",
     "--profile",
+    "--ratification",
     "--refold",
     "--replay",
     "--revisit",
@@ -61,6 +62,9 @@ const VALUED: &[&str] = &[
     "--per",
     "--at",
     "--since",
+    "--base",
+    "--slack",
+    "--check",
     "--write-scenario",
 ];
 
@@ -119,7 +123,14 @@ pub fn load() -> Result<(PathBuf, Log, Canon), String> {
 pub fn report_status(d: &Path, id: &ActId) {
     let Ok(log) = store::read(d) else { return };
     let canon = log.derive_at(store::now());
-    let Some(c) = canon.get(id) else { return };
+    let Some(c) = canon.get(id) else {
+        // A change to how a scope decides is a proposal too, judged under
+        // the rule it is changing, and the person who set it hears so here.
+        if let Some(r) = canon.ratifications.iter().find(|r| r.act == *id) {
+            report_verdict(id, &r.verdict);
+        }
+        return;
+    };
     match &c.status {
         Status::Active => println!("  in force"),
         Status::Proposed { needs } => {
@@ -137,6 +148,28 @@ pub fn report_status(d: &Path, id: &ActId) {
             );
         }
         Status::Superseded { .. } | Status::Retracted { .. } => {}
+    }
+}
+
+/// Where a change to a scope's rule stands, in the words `list` uses.
+pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
+    use canon_core::Verdict;
+    match v {
+        Verdict::Ratified { since, .. } => println!("  in force since {}", store::ymd(*since)),
+        Verdict::Proposed { needs } => {
+            println!(
+                "{}",
+                crate::wrap::hang("  PROPOSED, not yet how this scope decides — needs ", needs)
+            );
+            println!("  approve it:  canon approve {id}");
+            println!("  object:      canon object {id} -m \"<why>\"");
+        }
+        Verdict::Refused { by, why, .. } => {
+            println!(
+                "{}",
+                crate::wrap::hang(&format!("  REFUSED by {by}: "), why)
+            );
+        }
     }
 }
 
@@ -437,6 +470,9 @@ pub fn list(args: &[String]) -> i32 {
     if let Some(note) = carried_note(&st) {
         eprintln!("\n{note}");
     }
+    if let Some(note) = store::disorder(&d) {
+        eprintln!("\n{note}");
+    }
     0
 }
 
@@ -696,7 +732,7 @@ pub fn carried_note(canon: &Canon) -> Option<String> {
 }
 
 pub fn log(args: &[String]) -> i32 {
-    let (_, log, _) = match load() {
+    let (d, log, st) = match load() {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
@@ -806,10 +842,19 @@ pub fn log(args: &[String]) -> i32 {
             act.actor,
             what
         );
+        // A governance act the fold refused is on the record and changed
+        // nothing; `list` counts them and sends the reader here, so here
+        // has to say which.
+        if let Some((_, why)) = st.ungoverned.iter().find(|(x, _)| *x == act.id) {
+            println!("{}", crate::wrap::hang("    NOT APPLIED: ", why));
+        }
     }
     println!("\n{} acts", log.len());
-    if let Some(note) = carried_note(&log.derive()) {
+    if let Some(note) = carried_note(&st) {
         println!("{note}");
+    }
+    if let Some(note) = store::disorder(&d) {
+        eprintln!("\n{note}");
     }
     0
 }

@@ -16,6 +16,7 @@ mod draft;
 mod draw_cmd;
 mod explain;
 mod govern;
+mod guard;
 mod lineage;
 mod locate;
 mod mcp;
@@ -93,7 +94,8 @@ GOVERN                                        (no model needed)
   scope <id> <scope>                     put a commitment in a scope
   policy show | set <rule> [-m \"...\"]    what this canon decides under
   ratification show | set <rule>         how a proposal becomes a rule, per scope:
-                                         standing, joint:a,b, threshold:n/m, consent:Nd
+                                         standing, joint:a,b, threshold:n/m, consent:Nd,
+                                         twice:turnover:<rule> or twice:Nd:<rule>
   allot <scope> --named a,b,c            what this commons has to share
   allocation set rotation --scope s      how it goes round: --step, --per, --order
                                          or --from-draw <id> for a lot nobody steers
@@ -108,6 +110,10 @@ GOVERN                                        (no model needed)
   draw seal | open <draw-id>             your secret, before and after
   draw show <draw-id>                    the panel, recomputed from the log
   silence \"<subject>\" -m \"<why>\"         unwritten on purpose, not by neglect
+  witness [--base <ref>] [--gate]        the ledger checked against git: append-only,
+                                         not backdated. Opt in; see `guard`
+  guard show | git [--apply]             what defends this ledger from outside the
+                                         fold, and what each guard cannot see
   voice [<actor>]                        what someone raised, and what came of it
   leave <scope> [-m \"<question>\"]        step out, and leave the question behind
   replay [<dir>] [--policy <rule>]       re-decide this canon\'s own record;
@@ -171,7 +177,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
         // `canon help all` is the only way to the long form. Somebody who
-        // typed `canon` by accident gets six verbs, not forty-seven.
+        // typed `canon` by accident gets seven verbs, not forty-nine.
         let all = args.iter().skip(1).any(|a| a == "all" || a == "--all");
         print!("{}", if all { HELP_ALL } else { HELP });
         std::process::exit(if args.is_empty() { 2 } else { 0 });
@@ -219,6 +225,8 @@ fn main() {
         "voice" => govern::voice(rest),
         "leave" => govern::leave(rest),
         "replay" => replay::run(rest),
+        "witness" => guard::witness(rest),
+        "guard" => guard::guard(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),
@@ -336,6 +344,8 @@ mod tests {
             "draft",
             "check",
             "mcp",
+            "witness",
+            "guard",
         ] {
             assert!(
                 HELP_ALL.contains(verb),

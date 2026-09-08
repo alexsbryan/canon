@@ -134,7 +134,15 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     }
 
     match &c.status {
-        Status::Active => lines.push("status: in force".into()),
+        // How it became a rule, in a canon somebody holds. "Why is this rule
+        // like this" includes who made it one — and, under `twice`, who
+        // had joined by the second vote.
+        Status::Active => match canon.ratify(c, store::now()) {
+            canon_core::Verdict::Ratified { how, .. } if !canon.grants.is_empty() => {
+                lines.push(format!("status: in force — {how}"))
+            }
+            _ => lines.push("status: in force".into()),
+        },
         Status::Superseded { by } => {
             let next = canon
                 .get(by)

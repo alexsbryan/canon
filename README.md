@@ -100,10 +100,13 @@ canon object can-9b31 -m "…" # one named holder's reason refuses it
 
 That is Ostrom's three tiers in one log: the rules, the rules for making
 rules, and who may change *those* — the same acts, aimed one scope up.
-Four ratification rules ship: `standing` (holders write, others propose),
+Five ratification rules ship: `standing` (holders write, others propose),
 `joint` (named people, all of them), `threshold` (so many for, so many
-against) and `consent` (a rule after N days unless a holder objects with
-a reason).
+against), `consent` (a rule after N days unless a holder objects with a
+reason) and `twice` (carried twice, with days or a change of holders in
+between — the Nordic amendment rule, for a rule that should outlast the
+people who made it). Changing a scope's rule is itself a proposal, judged
+under the rule it replaces.
 
 An agent may propose and object under any of them. It cannot mint a rule,
 even where it holds standing. Governing out of seat — a grant, a policy,
@@ -173,7 +176,7 @@ canon replay fixtures/fernwood-commons --policy default --brief    # or a worked
 ```
 
 ```text
-Under `default` instead of the rules this canon adopted, 9 of 56 decisions land somewhere else.
+Under `default` instead of the rules this canon adopted, 9 of 12 decisions land somewhere else.
 6 would be easier to do; 3 harder.
 
   EASIER
@@ -229,7 +232,17 @@ before the data that tests them.
 
 It's early. Another group hasn't used this yet. You'd be among the first,
 which is worth knowing before your house puts its rules somewhere. Every
-verb is implemented and tested — 398 tests.
+verb is implemented and tested — 436 tests.
+
+The fold trusts its log. `ts_unix` and `actor` are strings somebody wrote,
+and whoever can append to `acts.jsonl` writes the derived state — two
+hand-written lines can unseat a house with every rule satisfied. Nothing
+inside the format closes that, and canon says so rather than pretending.
+Where the ledger lives in git, `canon guard git` is the opt-in defense:
+every commit that touched it must have added lines and nothing else, none
+dated before what the ledger already held, as a hook, a CI step and the
+branch settings. `canon guard show` says what is guarding yours, and what
+it cannot see.
 
 The ingest is the good part and the imperfect part. It calls a language
 model, and a language model misses real rules and proposes things that
@@ -276,7 +289,7 @@ get detected, and a stale number is worse than none. Measure your own:
 
 ```sh
 cargo build --release      # binary at target/release/canon
-cargo test                 # 398 tests, about six seconds
+cargo test                 # 436 tests, about six seconds
 ```
 
 Two crates, no native dependencies. `rust-toolchain.toml` pins the

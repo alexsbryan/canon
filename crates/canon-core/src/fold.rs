@@ -821,6 +821,7 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
     }
 
     // Pass 3 — effects, in time order, so a later act wins over an earlier one.
+    let mut pending_rules: Vec<crate::ratify::AdoptedRatify> = Vec::new();
     for act in live_acts() {
         // Attribution: everything except asserting and adopting is an
         // adjudication, and adjudications are expected to be human.
@@ -1023,14 +1024,20 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 }
                 // Kept, not replaced: a commitment is judged under the rule
                 // in force when it was written, so the history has to stay.
-                // `ratification_for` picks the latest per scope.
-                canon.ratifications.push(crate::ratify::AdoptedRatify {
+                // Not applied yet either: the change is itself a proposal,
+                // judged in pass 4a once every position is folded. The
+                // placeholder verdict never escapes this function.
+                pending_rules.push(crate::ratify::AdoptedRatify {
                     scope: scope.clone(),
                     rule: rule.clone(),
                     text: text.clone(),
                     at: act.ts_unix,
                     actor: act.actor.clone(),
                     act: act.id.clone(),
+                    verdict: crate::ratify::Verdict::Proposed {
+                        needs: String::new(),
+                    },
+                    under: crate::ratify::Ratify::Standing,
                 });
             }
             ActKind::Allot {
@@ -1184,6 +1191,26 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
             }
             ActKind::Assert { .. } | ActKind::Revert { .. } | ActKind::Question { .. } => {}
         }
+    }
+
+    // Pass 4a — the rules of rules, in the order they were written.
+    //
+    // A change to how a scope decides is judged under the rule that scope
+    // had when the change was written, and only a ratified change decides
+    // anything after it. Each entry is judged against exactly the earlier,
+    // already-judged entries, so a change never governs itself, and pushed
+    // only once its verdict is known.
+    for mut r in pending_rules {
+        let p = crate::ratify::Proposal {
+            id: &r.act,
+            scope: r.scope.as_ref(),
+            at: r.at,
+            actor: &r.actor,
+        };
+        let under = canon.ratification_for_at(p.scope, p.at).clone();
+        r.verdict = canon.ratify_under(&under, &p, now);
+        r.under = under;
+        canon.ratifications.push(r);
     }
 
     // Pass 4 — ratification, in time order.

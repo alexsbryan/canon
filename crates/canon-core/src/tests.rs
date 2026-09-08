@@ -2174,3 +2174,345 @@ fn your_own_revert_is_yours_the_house_may_undo_the_kitchen_and_not_the_reverse()
     );
     assert_eq!(canon.ungoverned.len(), 1);
 }
+
+// ── the rule of rules is itself a proposal ──────────────────
+
+const DAY: i64 = 86_400;
+
+fn verdict_of<'a>(canon: &'a Canon, act: &ActId) -> &'a crate::ratify::Verdict {
+    &canon
+        .ratifications
+        .iter()
+        .find(|r| r.act == *act)
+        .expect("the change is on the record")
+        .verdict
+}
+
+#[test]
+fn a_house_holder_changing_the_kitchens_rule_proposes_and_one_cook_carries_it() {
+    use crate::ratify::{Ratify, Verdict};
+    // Theo holds the house, which covers the kitchen, so he MAY write the
+    // kitchen's rule — and under the kitchen's own rule (standing) he is
+    // not a cook, so what he wrote is a proposal until a cook says so.
+    let mut acts = governed_house();
+    let change = ratification_at(
+        "joint:human:dana,human:sam",
+        "house.kitchen",
+        100,
+        "human:theo",
+    );
+    acts.push(change.clone());
+    let canon = Log::from_acts(acts.clone()).derive();
+    let Verdict::Proposed { needs } = verdict_of(&canon, &change.id) else {
+        panic!("a house holder proposes the kitchen's rule; the cooks ratify it")
+    };
+    assert!(needs.contains("holds house.kitchen"), "{needs}");
+    assert_eq!(
+        canon.ratification_for(Some(&scope("house.kitchen"))),
+        &Ratify::Standing,
+        "until then the kitchen decides the way it did"
+    );
+    assert!(canon.ungoverned.is_empty(), "this is not out of seat");
+
+    // A pan rule written meanwhile is judged under standing, not joint.
+    let pan = assert_at("Wash your own pan.", 150, "human:theo");
+    acts.push(scoped_at(&pan.id, "house.kitchen", 150));
+    acts.push(pan.clone());
+    acts.push(approve_at(&change.id, 200, "human:dana"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(
+        matches!(
+            verdict_of(&canon, &change.id),
+            Verdict::Ratified { since: 200, .. }
+        ),
+        "one cook's approval carries it, and it is in force from then"
+    );
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("theo's pan rule is a proposal")
+    };
+    assert!(
+        needs.contains("one person who holds"),
+        "{needs}: standing, not joint"
+    );
+
+    // A pan rule written after the change needs both cooks.
+    let later = assert_at("Dry it too.", 250, "human:theo");
+    acts.push(scoped_at(&later.id, "house.kitchen", 250));
+    acts.push(later.clone());
+    let canon = Log::from_acts(acts).derive();
+    let Status::Proposed { needs } = &canon.get(&later.id).unwrap().status else {
+        panic!("still a proposal")
+    };
+    assert_eq!(needs, "approval from human:dana, human:sam");
+}
+
+#[test]
+fn a_rule_change_is_judged_under_the_rule_it_is_changing() {
+    use crate::ratify::{Ratify, Verdict};
+    let mut acts = governed_house();
+    let joint = ratification_at(
+        "joint:human:dana,human:sam",
+        "house.kitchen",
+        30,
+        "human:dana",
+    );
+    acts.push(joint.clone());
+    // Sam holds the kitchen and may write its rule. Lowering the bar back
+    // to standing is judged under joint: Dana has to agree.
+    let lower = ratification_at("standing", "house.kitchen", 100, "human:sam");
+    acts.push(lower.clone());
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(
+        matches!(
+            verdict_of(&canon, &joint.id),
+            Verdict::Ratified { since: 30, .. }
+        ),
+        "a cook's change under standing lands at once, as it always did"
+    );
+    let Verdict::Proposed { needs } = verdict_of(&canon, &lower.id) else {
+        panic!("nobody lowers the bar for their own corner alone")
+    };
+    assert_eq!(needs, "approval from human:dana");
+    assert_eq!(
+        canon.ratification_for(Some(&scope("house.kitchen"))).name(),
+        "joint:human:dana,human:sam"
+    );
+
+    acts.push(approve_at(&lower.id, 200, "human:dana"));
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(
+        canon.ratification_for(Some(&scope("house.kitchen"))),
+        &Ratify::Standing
+    );
+}
+
+#[test]
+fn a_cook_objecting_refuses_a_rule_change_and_the_old_rule_stands() {
+    use crate::ratify::Verdict;
+    let mut acts = governed_house();
+    acts.push(ratification_at(
+        "joint:human:dana,human:sam",
+        "house.kitchen",
+        30,
+        "human:dana",
+    ));
+    let lower = ratification_at("standing", "house.kitchen", 100, "human:sam");
+    acts.push(lower.clone());
+    acts.push(object_at(
+        &lower.id,
+        150,
+        "human:dana",
+        "we agreed both of us, always",
+    ));
+    let canon = Log::from_acts(acts).derive();
+    let Verdict::Refused { by, why, .. } = verdict_of(&canon, &lower.id) else {
+        panic!("one named cook objecting refuses it")
+    };
+    assert_eq!(by, "human:dana");
+    assert!(why.contains("both of us"));
+    assert_eq!(
+        canon.ratification_for(Some(&scope("house.kitchen"))).name(),
+        "joint:human:dana,human:sam"
+    );
+}
+
+#[test]
+fn a_consent_rule_change_governs_only_what_is_written_after_its_window_closes() {
+    use crate::ratify::Verdict;
+    let mut acts = governed_house();
+    acts.push(ratification_at(
+        "consent:7d",
+        "house.kitchen",
+        30,
+        "human:dana",
+    ));
+    // Sam proposes going back to standing. Under consent it takes a week.
+    let back = ratification_at("standing", "house.kitchen", 1_000, "human:sam");
+    acts.push(back.clone());
+    // Theo writes a rule three days in: consent still governs it, and the
+    // window on his own rule starts from when he wrote it.
+    let early = assert_at("Label your food.", 1_000 + 3 * DAY, "human:theo");
+    acts.push(scoped_at(&early.id, "house.kitchen", 1_000 + 3 * DAY));
+    acts.push(early.clone());
+    // And one eight days in: standing by then, so it needs a cook.
+    let late = assert_at("Rinse the sink.", 1_000 + 8 * DAY, "human:theo");
+    acts.push(scoped_at(&late.id, "house.kitchen", 1_000 + 8 * DAY));
+    acts.push(late.clone());
+
+    let canon = Log::from_acts(acts.clone()).derive_at(1_000 + 3 * DAY + 1);
+    assert!(matches!(
+        verdict_of(&canon, &back.id),
+        Verdict::Proposed { .. }
+    ));
+
+    let canon = Log::from_acts(acts).derive_at(1_000 + 8 * DAY + 1);
+    let Verdict::Ratified { since, .. } = verdict_of(&canon, &back.id) else {
+        panic!("a week of silence carries it")
+    };
+    assert_eq!(
+        *since,
+        1_000 + 7 * DAY,
+        "in force from the end of the window"
+    );
+    let Status::Proposed { needs } = &canon.get(&early.id).unwrap().status else {
+        panic!("written under consent, its own window is still open")
+    };
+    assert!(needs.starts_with("no objection"), "{needs}");
+    let Status::Proposed { needs } = &canon.get(&late.id).unwrap().status else {
+        panic!("written under standing, by a non-cook")
+    };
+    assert!(needs.contains("one person who holds"), "{needs}");
+}
+
+#[test]
+fn an_objection_after_a_rule_is_settled_does_not_unmake_it() {
+    let mut acts = governed_house();
+    acts.push(ratification_at(
+        "threshold:1/1",
+        "house.kitchen",
+        30,
+        "human:dana",
+    ));
+    let pan = assert_at("Wash your own pan.", 100, "human:theo");
+    acts.push(scoped_at(&pan.id, "house.kitchen", 100));
+    acts.push(pan.clone());
+    acts.push(approve_at(&pan.id, 200, "human:sam"));
+    // Dana objects a hundred seconds too late. On the record; nothing moves.
+    let mut late = acts.clone();
+    late.push(object_at(&pan.id, 300, "human:dana", "I never liked it"));
+    let canon = Log::from_acts(late).derive();
+    assert!(
+        matches!(canon.get(&pan.id).unwrap().status, Status::Active),
+        "first word wins: otherwise any holder unmakes any settled rule at any time"
+    );
+    // The other order still refuses.
+    let mut early = acts;
+    early.push(object_at(&pan.id, 150, "human:dana", "I never liked it"));
+    let canon = Log::from_acts(early).derive();
+    assert!(matches!(
+        canon.get(&pan.id).unwrap().status,
+        Status::Refused { .. }
+    ));
+}
+
+#[test]
+fn twice_by_turnover_waits_for_someone_who_did_not_hold_the_kitchen_at_the_first_approval() {
+    let mut acts = governed_house();
+    acts.push(ratification_at(
+        "twice:turnover:standing",
+        "house.kitchen",
+        30,
+        "human:dana",
+    ));
+    let pan = assert_at("Wash your own pan.", 100, "human:theo");
+    acts.push(scoped_at(&pan.id, "house.kitchen", 100));
+    acts.push(pan.clone());
+    let canon = Log::from_acts(acts.clone()).derive();
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("first vote not yet cast")
+    };
+    assert!(needs.starts_with("first of two:"), "{needs}");
+
+    acts.push(approve_at(&pan.id, 200, "human:dana"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("carried once; now it waits for the kitchen to change hands")
+    };
+    assert!(needs.contains("did not hold house.kitchen"), "{needs}");
+
+    // Dana approving again, before anyone new arrives, counts for nothing.
+    acts.push(approve_at(&pan.id, 300, "human:dana"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(matches!(
+        canon.get(&pan.id).unwrap().status,
+        Status::Proposed { .. }
+    ));
+
+    // Rae joins the kitchen. That is the election.
+    acts.push(grant("human:rae", "house.kitchen", None, 400));
+    let canon = Log::from_acts(acts.clone()).derive_at(500);
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("the second vote is open, and nothing said before it counts")
+    };
+    assert!(needs.starts_with("a second time, since"), "{needs}");
+
+    // Any cook's approval after that carries it — Rae's lever was to object.
+    acts.push(approve_at(&pan.id, 600, "human:sam"));
+    let canon = Log::from_acts(acts).derive_at(700);
+    assert!(matches!(canon.get(&pan.id).unwrap().status, Status::Active));
+    let v = canon.ratify(canon.get(&pan.id).unwrap(), 700);
+    let crate::ratify::Verdict::Ratified { since, how } = v else {
+        panic!()
+    };
+    assert_eq!(since, 600);
+    assert!(how.contains("human:rae joined"), "{how}");
+}
+
+#[test]
+fn renewing_your_own_standing_is_not_turnover_and_neither_is_a_lapse_nobody_fills() {
+    let mut acts = vec![
+        grant("human:sam", "house", None, 10),
+        grant("human:dana", "house.kitchen", Some(1_000), 20),
+        grant("human:sam", "house.kitchen", None, 20),
+    ];
+    acts.push(ratification_at(
+        "twice:turnover:standing",
+        "house.kitchen",
+        30,
+        "human:dana",
+    ));
+    let pan = assert_at("Wash your own pan.", 100, "human:theo");
+    acts.push(scoped_at(&pan.id, "house.kitchen", 100));
+    acts.push(pan.clone());
+    acts.push(approve_at(&pan.id, 200, "human:dana"));
+    // Sam renews himself; Dana's standing lapses at 1000 and nobody takes
+    // her seat; Dana is granted the kitchen again at 1200. None of these
+    // is somebody who did not hold the kitchen at the first vote.
+    acts.push(grant("human:sam", "house.kitchen", None, 500));
+    acts.push(grant("human:dana", "house.kitchen", None, 1_200));
+    acts.push(approve_at(&pan.id, 1_300, "human:sam"));
+    let canon = Log::from_acts(acts.clone()).derive_at(1_400);
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("the same coalition cannot elect itself")
+    };
+    assert!(needs.contains("did not hold house.kitchen"), "{needs}");
+
+    // Somebody who last held it years ago and returns is new to THIS vote.
+    acts.push(grant("human:theo", "house.kitchen", None, 1_500));
+    acts.push(approve_at(&pan.id, 1_600, "human:sam"));
+    let canon = Log::from_acts(acts).derive_at(1_700);
+    assert!(matches!(canon.get(&pan.id).unwrap().status, Status::Active));
+}
+
+#[test]
+fn twice_by_days_counts_only_approvals_written_after_the_boundary_and_no_implicit_one() {
+    let mut acts = governed_house();
+    acts.push(ratification_at(
+        "twice:7d:standing",
+        "house.kitchen",
+        30,
+        "human:dana",
+    ));
+    // Dana holds the kitchen: her own write is the first vote, at once.
+    let pan = assert_at("Wash your own pan.", 100, "human:dana");
+    acts.push(scoped_at(&pan.id, "house.kitchen", 100));
+    acts.push(pan.clone());
+    let canon = Log::from_acts(acts.clone()).derive_at(100 + 3 * DAY);
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("carried once; the week has not passed")
+    };
+    assert!(needs.starts_with("a second approval after"), "{needs}");
+
+    // An approval inside the week does not count, and neither does having
+    // written it: the second vote is cast, not implied.
+    acts.push(approve_at(&pan.id, 100 + 3 * DAY, "human:dana"));
+    let canon = Log::from_acts(acts.clone()).derive_at(100 + 8 * DAY);
+    let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
+        panic!("still one vote short")
+    };
+    assert!(needs.starts_with("a second time, since"), "{needs}");
+
+    acts.push(approve_at(&pan.id, 100 + 8 * DAY, "human:dana"));
+    let canon = Log::from_acts(acts).derive_at(100 + 9 * DAY);
+    assert!(matches!(canon.get(&pan.id).unwrap().status, Status::Active));
+}
