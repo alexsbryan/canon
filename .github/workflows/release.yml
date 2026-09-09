@@ -1,0 +1,171 @@
+# Release for canon — one binary, five platforms, cut by pushing a tag.
+#
+#   git tag v$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2) && git push origin --tags
+#
+# The tag must match [workspace.package].version in Cargo.toml; the first
+# step refuses to spend a build on one that doesn't, so `canon --version`
+# always agrees with the release it came from.
+#
+# What it produces, attached to a GitHub Release named after the tag:
+#
+#   canon-<target>.tar.gz     the `canon` binary and LICENSE   (macOS, Linux)
+#   canon-<target>.zip        the same                          (Windows)
+#   SHA256SUMS                one line per archive
+#
+# `install.sh` at the repository root downloads the archive for the caller's
+# platform from here and checks it against SHA256SUMS. The "latest" it
+# resolves is GitHub's own /releases/latest, which is safe because this repo
+# ships one artifact stream: there is no second tag prefix for that pointer
+# to wander off to.
+#
+# Everything runs on hosted runners, which are free for a public repository.
+# canon has no native dependencies — rustls, not OpenSSL; no build script;
+# no C++ — so the Intel Mac cross-compiles from the arm64 runner and the two
+# Linux legs are static musl binaries that run on any distro regardless of
+# its glibc. Nothing here is signed or notarized: a binary fetched with curl
+# and run from a terminal is not quarantined by Gatekeeper.
+#
+# The whole thing takes a few minutes. There is no cache: a release build
+# from cold is about as long as restoring one, and a release-scoped cache
+# would compete with CI's for the repository's 10 GB.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  # Build-only. Every leg runs and the archives land on the workflow run,
+  # but nothing is published — the way to check a new runner image or a
+  # new target before spending a tag on it.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: build / ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-14
+          # Cross-compiled on the same arm64 image. GitHub's hosted Intel Macs
+          # queue for a long time, and with no native code there is nothing
+          # the cross build can get wrong that a native one would catch.
+          - target: x86_64-apple-darwin
+            runner: macos-14
+          - target: x86_64-unknown-linux-musl
+            runner: ubuntu-22.04
+          - target: aarch64-unknown-linux-musl
+            runner: ubuntu-22.04-arm
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2022
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Verify the tag matches Cargo.toml
+        shell: bash
+        run: |
+          case "$GITHUB_REF" in
+            refs/tags/v*)
+              want="${GITHUB_REF#refs/tags/v}"
+              have="$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)"
+              if [ "$want" != "$have" ]; then
+                echo "::error::tag v$want but Cargo.toml [workspace.package] says $have" >&2
+                exit 1
+              fi
+              echo "version $have" ;;
+            *) echo "not a tag ($GITHUB_REF): build only" ;;
+          esac
+
+      # rust-toolchain.toml pins the channel; this only adds the target.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.95.0"
+          targets: ${{ matrix.target }}
+
+      # `ring` carries a little C that has to be compiled for musl. musl-tools
+      # provides the musl-gcc wrapper that cc-rs picks up for a *-musl target.
+      - name: musl toolchain
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }} -p canon-cli
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          t="${{ matrix.target }}"
+          stage="dist/stage"
+          mkdir -p "$stage"
+          case "$t" in
+            *windows*)
+              cp "target/$t/release/canon.exe" LICENSE "$stage/"
+              archive="canon-$t.zip"
+              (cd "$stage" && 7z a -bd "../$archive" canon.exe LICENSE >/dev/null) ;;
+            *)
+              cp "target/$t/release/canon" LICENSE "$stage/"
+              strip "$stage/canon" || true
+              archive="canon-$t.tar.gz"
+              tar -czf "dist/$archive" -C "$stage" canon LICENSE ;;
+          esac
+          cd dist
+          if command -v sha256sum >/dev/null; then sha256sum "$archive" > "$archive.sha256"
+          else shasum -a 256 "$archive" > "$archive.sha256"; fi
+          cat "$archive.sha256"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: canon-${{ matrix.target }}
+          path: |
+            dist/canon-${{ matrix.target }}.*
+          if-no-files-found: error
+
+  release:
+    name: publish
+    needs: build
+    # A tag push only. With `!cancelled()` rather than the default, one leg
+    # that fails still lets the others ship; a release missing one platform
+    # is better than no release, and install.sh says which platform it
+    # couldn't find.
+    if: startsWith(github.ref, 'refs/tags/v') && !cancelled()
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Combine checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          cat ./*.sha256 > SHA256SUMS
+          rm ./*.sha256
+          echo "--- SHA256SUMS ---"; cat SHA256SUMS
+          ls -la
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/canon-*.tar.gz
+            dist/canon-*.zip
+            dist/SHA256SUMS

@@ -18,12 +18,20 @@ About an hour. Most of it is the conversation, not the tool.
 ## Install
 
 ```sh
-git clone <this repo> && cd canon
-cargo build --release
+curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh | sh
 ```
 
-The binary lands at `target/release/canon`. Put it on your `PATH`. If you
-don't have Rust, `rustup.rs` is a one-line installer.
+That puts one `canon` binary in `~/.local/bin` and tells you if that
+directory isn't on your `PATH` yet. macOS and Linux; on Windows, take the
+zip from the [releases page](https://github.com/alexsbryan/canon/releases/latest).
+
+Or build it yourself. If you don't have Rust, `rustup.rs` is a one-line
+installer:
+
+```sh
+git clone https://github.com/alexsbryan/canon && cd canon
+cargo build --release      # binary at target/release/canon
+```
 
 ### Pointing it at a model
 

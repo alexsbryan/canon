@@ -3,7 +3,7 @@ members = ["crates/canon-core", "crates/canon-cli"]
 resolver = "2"
 
 [workspace.package]
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.95"
 license = "AGPL-3.0-or-later"

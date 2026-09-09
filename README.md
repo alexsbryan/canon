@@ -16,6 +16,19 @@ canon draft --from ~/house-stuff     # a folder. anything text in it.
 You review one at a time. There's no `--accept-all` — a set of rules
 nobody read isn't worth having.
 
+## Install
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh | sh
+```
+
+One binary, about 5 MB, into `~/.local/bin`. macOS and Linux, Intel and
+Arm; Windows gets a zip on the [releases
+page](https://github.com/alexsbryan/canon/releases/latest). The script is
+short and checks what it downloads against the release's checksums —
+[read it](./install.sh) before you pipe it. Prefer to build from source?
+[Below](#build).
+
 **New here? [Getting started](./GETTING_STARTED.md) walks a house through
 its first hour.**
 
@@ -293,7 +306,10 @@ cargo test                 # 436 tests, about six seconds
 ```
 
 Two crates, no native dependencies. `rust-toolchain.toml` pins the
-version, so `rustup` fetches the right one by itself.
+version, so `rustup` fetches the right one by itself. If you only want
+the binary, [Install](#install) above is the shorter path: the releases
+it draws on are built from tagged commits of this tree by
+[`release.yml`](./.github/workflows/release.yml).
 
 ## Contributing
 
