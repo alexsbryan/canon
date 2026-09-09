@@ -16,14 +16,35 @@ use crate::store;
 /// a question as easily as a rule, and rendering the second as "(unknown)"
 /// hides exactly the link that makes the answer make sense: the gap somebody
 /// noticed, and the rule they wrote to close it.
-fn replaced_text(canon: &Canon, id: &ActId) -> String {
+/// One line of a text, cut at a word if it runs long. A `why` that quotes
+/// a whole paragraph to name a rule has stopped being about the rule.
+pub fn one_line(text: &str) -> String {
+    const MAX: usize = 72;
+    if text.chars().count() <= MAX {
+        return text.to_string();
+    }
+    let cut: String = text.chars().take(MAX).collect();
+    let at = cut.rfind(' ').unwrap_or(cut.len());
+    format!("{}…", cut[..at].trim_end())
+}
+
+/// A commitment or question named the way a person names it: by what it
+/// says, with the id after so the next command has something to type.
+/// Every surface that used to print a bare id goes through here.
+pub fn named(canon: &Canon, id: &ActId) -> String {
     if let Some(c) = canon.get(id) {
-        return format!("\"{}\"", c.text);
+        return format!("\"{}\"  {id}", one_line(&c.text));
     }
     match canon.questions.iter().find(|q| q.id == *id) {
-        Some(q) => format!("the question \"{}\"", q.text),
-        None => "(unknown)".to_string(),
+        Some(q) => format!("the question \"{}\"  {id}", one_line(&q.text)),
+        None => format!("{id}  (not in this canon)"),
     }
+}
+
+/// A person by name. `human:` is the format's business, not the reader's;
+/// an agent keeps its prefix because "agent:helper" is the fact.
+pub fn person(actor: &str) -> &str {
+    actor.strip_prefix("human:").unwrap_or(actor)
 }
 
 /// One line of an explanation. The caller supplies the prefix so a CLI can
@@ -42,7 +63,12 @@ impl Explanation {
         };
         out.push('\n');
         for l in &self.lines {
-            out.push_str(&crate::wrap::hang(indent, l));
+            // A line that starts with spaces is a sub-line of the one above
+            // it — who ruled, under what was ruled. `hang` splits on
+            // whitespace, so the lead has to ride in the prefix to survive.
+            let lead = l.len() - l.trim_start().len();
+            let prefix = format!("{indent}{}", " ".repeat(lead));
+            out.push_str(&crate::wrap::hang(&prefix, l.trim_start()));
             out.push('\n');
         }
         out
@@ -101,14 +127,14 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
 
     let headline = format!("{}  {}", c.id, c.text);
     let mut lines = vec![format!(
-        "asserted {} by {}",
+        "written {} by {}{}",
         store::ymd(c.asserted_at),
-        c.actor
+        person(&c.actor),
+        c.source
+            .as_ref()
+            .map_or_else(String::new, |src| format!(", from {src}"))
     )];
 
-    if let Some(src) = &c.source {
-        lines.push(format!("drafted from {src}"));
-    }
     if let Some(up) = &c.from {
         lines.push(format!("inherited from upstream {up}"));
     }
@@ -130,7 +156,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     }
 
     for old in &c.replaces {
-        lines.push(format!("replaced {old}: {}", replaced_text(canon, old)));
+        lines.push(format!("replaced {}", named(canon, old)));
     }
 
     match &c.status {
@@ -139,23 +165,19 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         // had joined by the second vote.
         Status::Active => match canon.ratify(c, store::now()) {
             canon_core::Verdict::Ratified { how, .. } if !canon.grants.is_empty() => {
-                lines.push(format!("status: in force — {how}"))
+                lines.push(format!("in force — {}", person_in(&how)))
             }
-            _ => lines.push("status: in force".into()),
+            _ => lines.push("in force".into()),
         },
-        Status::Superseded { by } => {
-            let next = canon
-                .get(by)
-                .map(|p| p.text.as_str())
-                .unwrap_or("(unknown)");
-            lines.push(format!("status: SUPERSEDED by {by} — \"{next}\""));
-        }
-        Status::Retracted { at } => lines.push(format!("status: RETRACTED {}", store::ymd(*at))),
-        Status::Proposed { needs } => {
-            lines.push(format!("status: PROPOSED, not yet a rule — needs {needs}"))
-        }
+        Status::Superseded { by } => lines.push(format!("superseded by {}", named(canon, by))),
+        Status::Retracted { at } => lines.push(format!("retracted {}", store::ymd(*at))),
+        Status::Proposed { needs } => lines.push(format!(
+            "proposed, not yet a rule — needs {}",
+            person_in(needs)
+        )),
         Status::Refused { at, by, why } => lines.push(format!(
-            "status: REFUSED by {by}, {}: {why}",
+            "refused by {}, {}: {why}",
+            person(by),
             store::ymd(*at)
         )),
     }
@@ -198,13 +220,17 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         }
         let other = if a == id { b } else { a };
         lines.push(format!(
-            "{} {verb} {other}, {} — not applied: outside their standing{}",
-            act.actor,
+            "{} {verb} {}",
+            person(&act.actor),
+            named(canon, other)
+        ));
+        lines.push(format!(
+            "  {}, not applied: outside their standing{}",
             store::ymd(act.ts_unix),
             if why.is_empty() {
                 String::new()
             } else {
-                format!(": {why}")
+                format!(". \"{why}\"")
             }
         ));
     }
@@ -227,17 +253,23 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                     ActKind::Dismiss { a, b, .. } => !want_accept && conflict.is_pair(a, b),
                     _ => false,
                 })
-                .map(|act| format!(" by {}, {}", act.actor, store::ymd(act.ts_unix)))
+                .map(|act| format!("by {}, {}", person(&act.actor), store::ymd(act.ts_unix)))
                 .unwrap_or_default()
         };
+        // Who ruled and why on its own line under what was ruled: one event,
+        // read top to bottom, rather than one sentence carrying an id, a
+        // name, a date and a reason.
         match &conflict.disposition {
             Disposition::Tolerated { rationale, revisit } => {
-                lines.push(format!(
-                    "carried against {other}{}: {rationale}",
-                    ruled(true)
-                ));
+                lines.push(format!("carried against {}", named(canon, other)));
+                let who = ruled(true);
+                lines.push(if who.is_empty() {
+                    format!("  {rationale}")
+                } else {
+                    format!("  {who}: {rationale}")
+                });
                 if let Some(r) = revisit {
-                    lines.push(format!("  revisit by {r}"));
+                    lines.push(format!("  look again by {r}"));
                 }
             }
             Disposition::Dismissed { rationale } => {
@@ -247,12 +279,19 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                     rationale
                 };
                 lines.push(format!(
-                    "called not in conflict with {other}{}: {why}",
-                    ruled(false)
+                    "called not in conflict with {}",
+                    named(canon, other)
                 ));
+                let who = ruled(false);
+                lines.push(if who.is_empty() {
+                    format!("  {why}")
+                } else {
+                    format!("  {who}: {why}")
+                });
             }
             Disposition::Open { reason } => {
-                lines.push(format!("open tension with {other}: {reason}"))
+                lines.push(format!("open tension with {}", named(canon, other)));
+                lines.push(format!("  {reason}"));
             }
         }
     }
@@ -260,27 +299,32 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     Ok(Explanation { headline, lines })
 }
 
+/// `human:` stripped inside a sentence the fold wrote, such as a verdict's
+/// `how` or `needs`. The fold names actors as the format does; this surface
+/// names them as people do.
+fn person_in(text: &str) -> String {
+    text.replace("human:", "")
+}
+
 fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
-    let mut lines = vec![format!("asked {} by {}", store::ymd(q.asked_at), q.actor)];
+    let mut lines = vec![format!(
+        "asked {} by {}",
+        store::ymd(q.asked_at),
+        person(&q.actor)
+    )];
     if let Some(p) = &q.proposal {
         lines.push(format!("surfaced by the proposal: \"{p}\""));
     }
     match &q.status {
         Status::Active => {
-            lines.push("status: OPEN — the canon does not cover this".into());
+            lines.push("open — the canon does not cover this".into());
             lines.push(format!(
                 "answer it:  canon supersede {} \"<the rule>\" -m \"<reason>\"",
                 q.id
             ));
         }
-        Status::Superseded { by } => {
-            let text = canon
-                .get(by)
-                .map(|c| c.text.as_str())
-                .unwrap_or("(unknown)");
-            lines.push(format!("status: ANSWERED by {by} — \"{text}\""));
-        }
-        Status::Retracted { at } => lines.push(format!("status: WITHDRAWN {}", store::ymd(*at))),
+        Status::Superseded { by } => lines.push(format!("answered by {}", named(canon, by))),
+        Status::Retracted { at } => lines.push(format!("withdrawn {}", store::ymd(*at))),
         Status::Proposed { .. } | Status::Refused { .. } => {}
     }
     Explanation {
@@ -350,7 +394,7 @@ mod tests {
         let canon = log.derive();
 
         let e = explain(&log, &canon, &old.id).unwrap();
-        assert!(e.lines.iter().any(|l| l.contains("SUPERSEDED")));
+        assert!(e.lines.iter().any(|l| l.contains("superseded by")));
         assert!(e
             .lines
             .iter()

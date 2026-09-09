@@ -49,14 +49,14 @@
   "laundry-third-time": { "outcome": "conflicts", "authority": "refuse", "because": "2 prior decision(s)" },
   "a-different-subject-starts-at-the-bottom": { "outcome": "conflicts", "authority": "ask-one", "because": "0 prior decision(s) about `drying rack in the hall`" },
 
-  "before-the-conflict": { "acts": 36, "tolerated": 0 },
+  "before-the-conflict": { "acts": 37, "tolerated": 0 },
   "bikes-against-the-hall": {
     "outcome": "conflicts",
     "authority": "refuse",
     "because": "one is enough",
     "cites": ["@hall", "@bikes"]
   },
-  "after-the-conflict": { "acts": 37, "tolerated": 1, "live": 8 },
+  "after-the-conflict": { "acts": 38, "tolerated": 1, "live": 8 },
 
   "the-fork-keeps-what-it-wrote": { "generation": "g3", "local": 5, "inherited": 3 },
 

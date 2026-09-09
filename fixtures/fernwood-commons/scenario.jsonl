@@ -18,11 +18,25 @@
 {"step":"check","name":"kitchen-under-the-new-rule","principle":3,"strength":"mechanism","scope":"house.kitchen","actor":"human:ola","about":"kitchen rotation","proposal":"put a cleaning rotation on the kitchen door","positions":[{"actor":"human:dana","pull":"against","because":"a rotation makes cooking a duty"}]}
 
 // ── 4. Monitors accountable to appropriators ─────────────────
+// The helper is a process on a server. It does nothing unasked: it runs
+// when the record changes and on a nightly schedule, and both end in the
+// same shell running `canon` under its own name. The crontab is the house's;
+// the record holds only what the helper wrote.
+//
+// Theo asks, on the record: a position for the bikes, citing the bikes rule.
+{"step":"act","at":"2025-11-08","by":"human:theo","op":"position","about":"bikes in the hall","citing":"@bikes","pull":"toward","because":"the hall is where bikes were agreed to live"}
+// The record changed, so the helper ran `canon check "keep the bikes where
+// they are"` and filed what check found: the stroller rule pulls against.
 // An agent may CITE — that is a reading, and reading is what it is for.
 {"step":"act","at":"2025-11-09","by":"agent:helper","op":"position","about":"bikes in the hall","citing":"@hall","pull":"against","because":"two bikes narrow the hall below the width the rule names"}
-// It may not ADJUDICATE. Nothing stops it writing the act, because the fold
-// has no policy — what happens is that the house is told, by name.
-{"step":"act","name":"the-agent-tries-to-adjudicate","at":"2025-11-10","by":"agent:helper","as":"agent-dismiss","op":"dismiss","a":"@hall","b":"@bikes","rationale":"these do not really conflict"}
+// It may not ADJUDICATE. That night its job ran `canon tensions`, which
+// proposes pairs for a PERSON to accept or dismiss. The helper read both,
+// judged them compatible, and instead of leaving the pair for a person it
+// dismissed it itself. Nothing stops it writing the act, because the fold
+// has no policy — what happens is that the house is told, by name. Dana,
+// who has stood in that hall, rules the same way in February: it may even
+// have been right, and it was not its call.
+{"step":"act","name":"the-agent-tries-to-adjudicate","at":"2025-11-10","by":"agent:helper","as":"agent-dismiss","op":"dismiss","a":"@hall","b":"@bikes","rationale":"tensions flagged these two. Read both: against the left wall leaves room for a stroller. Not a conflict."}
 {"step":"unattended","name":"the-agents-adjudication-is-surfaced","principle":4,"strength":"mechanism"}
 {"step":"clock","name":"three-months-later","at":"2026-02-15"}
 {"step":"overdue","name":"the-agents-standing-lapsed","principle":4,"strength":"mechanism"}

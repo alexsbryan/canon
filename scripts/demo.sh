@@ -10,7 +10,7 @@
 # ONE QUESTION, THREE TIMES. On what terms can an agent be a member of a
 # group? Part one: a house, and the agent's first job — read what the house
 # already wrote and make it legible, proposing and never ruling. Part two: a
-# house that gave a helper a seat for two years — what it was given, what it
+# house that gave a helper a seat — what it was given, what it
 # said, where the people overruled it, and how the whole thing measures
 # against Ostrom's eight. Part three: a country, and the same failure two
 # hundred years deep. Every part turns on the same moment: a group changed a
@@ -113,7 +113,7 @@ wait_
 # ── act 1 · before ──────────────────────────────────────────
 beat "Where we start."
 say "One document. Eleven charter articles, thirteen decisions from"
-say "monthly meetings, appended over two years. 1,728 words."
+say "monthly meetings, appended over six months. 1,728 words."
 say "Article I, at the top:"
 passage maple-house.md 3-5
 hold
@@ -195,8 +195,12 @@ wait_
 
 # ── act 5 · the people decide ───────────────────────────────
 beat "The people decide."
-say "The house can't fix this tonight. It can write down that it knows."
-run $CANON accept can-64864f34b1b5 can-ea11bfde216d -m "Article I was never repealed. Revisit at the October meeting."
+# `accept` accepts that the two CONTRADICT and carries both — it does not
+# accept the ban. The reason says the decision, not the problem, and the
+# date is passed as a date so `overdue` can raise it, as act 6's June does.
+say "The house can't fix this tonight. It can carry both, say why, and set"
+say "a date."
+run $CANON accept can-64864f34b1b5 can-ea11bfde216d --revisit 2026-10-01 -m "Both stand for now. Article I was never repealed and the March decision was made; which one holds is for the October meeting."
 say "Six months from now, somebody asks why."
 run $CANON why can-ea11bfde216d
 hold
@@ -225,29 +229,58 @@ $CANON replay fixtures/fernwood-commons --out "$DEMO2/.canon" --profile house >/
 export CANON_DIR="$DEMO2/.canon"
 
 # ── act 6 · the seat ────────────────────────────────────────
-# The thesis screen, read top to bottom: the seat, then what it said, then
-# what was set aside. The hall is set up in one breath, as context for the
-# objection, and never becomes the subject.
+# EVENTS FIRST, THEN THE READBACK. Every line in this house is one command
+# run by one person or one program under its own name, so the room sees the
+# six commands that made the helper's record before `voice` reads them
+# back — otherwise `voice` is three sections of ids with no story under
+# them. The ids are resolved live from the canon the room is looking at.
+# The helper's two moves are different in kind: a position citing a rule is
+# READING, which is the seat's job; a dismiss is a RULING, and the hall is
+# not the kitchen, so the fold kept the line and applied nothing.
+HALL=$($CANON list 2>/dev/null | grep 'stroller through' | grep -o 'can-[0-9a-f]*' | head -1)
+BIKES=$($CANON list 2>/dev/null | grep 'Bikes live in the hall' | grep -o 'can-[0-9a-f]*' | head -1)
 beat "What the helper was given, said, and had set aside."
-say "One command. The helper's whole two years."
-run $CANON voice agent:helper
-say "Top line, the seat. One room: the kitchen. Given by a person: Mira."
-say "An end date: January. That is what a seat is."
+say "Every line in this house is one command, run by one person or one"
+say "program, under its own name. The helper is a program: it runs the same"
+say "commands as everyone, and over MCP it can only read. It runs when the"
+say "record changes and on a nightly schedule, with the house's model; that"
+say "crontab is the house's, and the record holds only what it wrote."
+say "Six commands, five months:"
+say ""
+say "   2025-09-05  mira    canon grant agent:helper house.kitchen --horizon 2026-01-31"
+say "   2025-09-14  dana    canon add \"The hall stays clear enough to get a stroller through.\""
+say "                       canon add \"Bikes live in the hall, against the left wall.\""
+say "   2025-11-08  theo    canon position \"bikes in the hall\" --toward --citing $BIKES"
+say "   2025-11-09  helper  canon position \"bikes in the hall\" --against --citing $HALL"
+say "   2025-11-10  helper  canon dismiss $HALL $BIKES -m \"tensions flagged these two. Read both: not a conflict.\""
+say "   2026-02-18  dana    canon accept $HALL $BIKES --revisit 2026-06-01"
 hold
-say "Then it spoke. Dana had written two rules the same day: the hall stays"
-say "clear for a stroller, and the bikes live in the hall. The helper"
-say "objected, citing the rule. A member may speak anywhere."
+# IN ORDER: September, the seat and the rules. November, the two days.
+# January, the seat lapses. February, Dana rules. The record is read back
+# between November and January, and Dana's ruling is told after the
+# `overdue` that shows the June date it set.
+say "September. Mira gave the helper one room, the kitchen, with an end date."
+say "That is a seat. Nine days later Dana wrote the two hall rules."
+say ""
+say "November. Theo asked, on the record: a position for the bikes. The"
+say "record changed, so the helper ran check, the command from act 3, and"
+say "filed what it found: the stroller rule pulls against. That is reading,"
+say "and it is what the seat is for. A member may speak anywhere."
 hold
-say "Then it tried to decide. It called the two hall rules no conflict."
-say "The hall is not the kitchen. The record kept what it said, and it never"
-say "took effect. The people with the stroller and the bikes decided."
+say "That night its job ran tensions, the command from act 4, which proposes"
+say "pairs for a person to rule on. It ruled instead: no conflict. The hall"
+say "is not the kitchen. The line is in the record and changed nothing."
 say "Speak anywhere. Decide only where it was given a say."
+hold
+say "One command reads the helper's record back."
+run $CANON voice agent:helper
 hold
 say "January came."
 run $CANON overdue
-hold
-say "The seat lapsed on its date. The bikes come back up in June."
-say "The record carries this. Nobody has to."
+say "The seat lapsed on its date. Nobody had to remember. And in February,"
+say "Dana, who has stood in that hall, ruled the same way the helper read it,"
+say "with a date to look again: June. June has come and gone, and the record"
+say "is still asking. It may even have been right. It was not its call."
 wait_
 
 # ── act 7 · a rule is a proposal until the cooks say so ─────
@@ -255,9 +288,25 @@ wait_
 # kitchen rules are made: both of them, jointly. Theo types a kitchen rule
 # and it lands as a proposal. Dana approves; still one short. Sam approves;
 # it is a rule. Actors are set per command with CANON_ACTOR.
+# THE SEATS FIRST. A seat is one grant line: who holds a room, until when.
+# You may grant a room you hold or the room above it; the first grant in an
+# empty record needs nobody's leave, which is how a house is founded. The
+# room sees the four commands that gave the cooks the kitchen and set its
+# rule before Theo writes into it, so `standing` reads as what it is.
 beat "A rule is a proposal until the group says so."
 say "In part one, anyone could write a rule and it was a rule on arrival."
-say "Here the cooks decided how kitchen rules get made: both of them, jointly."
+say "Here, a seat is one line: who holds a room, and until when. You may"
+say "grant a room you hold, or the room above it. The first grant in an"
+say "empty record needs nobody's leave; that is how a house is founded."
+say ""
+say "   2025-09-03  mira  canon grant human:mira house -m \"founding member\"     the first line"
+say "   2025-09-03  mira  canon grant human:theo house                          and ten more"
+say "   2025-09-04  mira  canon grant human:dana house.kitchen -m \"cooks most nights\""
+say "                     canon grant human:sam  house.kitchen -m \"cooks most nights\""
+say "   2026-03-05  dana  canon ratification set joint:human:dana,human:sam --scope house.kitchen"
+say ""
+say "Whoever holds a room writes its rules; that is the default, called"
+say "standing. The cooks raised the kitchen's bar: both of them, jointly."
 hold
 say "Theo lives here and holds the house. He does not hold the kitchen."
 say "He writes a kitchen rule."
@@ -307,14 +356,36 @@ wait_
 # was not there for the first vote has to have joined before the second. It
 # is Jefferson's line as a mechanism, and `why` shows the two votes with
 # Kit's arrival between them.
+# THE FIVE WAYS, in house words, before the garden picks the fifth. Each
+# room chooses how a written line becomes a rule; the kitchen chose joint,
+# the garden chooses twice. Ola's April approval is on screen because it is
+# the line that shows the mechanism: the same two people cannot carry it.
 sub "The garden went further."
-say "A garden rule is carried twice, and somebody new has to have moved in"
-say "between the votes. Juno wrote one in April."
 GARDEN=$($CANON list 2>/dev/null | grep 'Water before nine' | grep -o 'can-[0-9a-f]*' | head -1)
+say "Each room picks how a written line becomes a rule. Five ways ship:"
+say ""
+say "   standing         whoever holds the room writes it; anyone else needs one holder's yes"
+say "   joint:a,b        everyone named says yes                                  the kitchen"
+say "   threshold:2/1    two holders say yes; one reasoned no stops it"
+say "   consent:7d       seven days pass and no holder has objected"
+say "   twice:…          carried twice, with days or a new holder in between      the garden"
+say ""
+say "The default is standing. The kitchen raised it to joint. The garden went"
+say "further: a rule is carried twice, and somebody who wasn't in the garden"
+say "for the first vote has to have joined before the second."
+hold
+say "Five commands, one month:"
+say ""
+say "   2026-04-02  ola   canon ratification set twice:turnover:standing --scope house.garden"
+say "   2026-04-03  juno  canon add \"Water before nine or after seven.\" --scope house.garden"
+say "   2026-04-10  ola   canon approve $GARDEN                    counts for nothing: same two people"
+say "   2026-05-01  mira  canon grant human:kit house.garden"
+say "   2026-05-03  ola   canon approve $GARDEN                    the second vote"
 run $CANON why "$GARDEN"
 hold
-say "Carried by Juno, who holds the garden. Then Kit moved in. Then Ola,"
-say "again. Nothing the same two people said in between counted."
+say "Juno holds the garden, so her own write was the first vote. Ola's yes a"
+say "week later changed nothing: she was there for the first vote too. Then"
+say "Kit moved in, and Ola's yes counted."
 say "The earth belongs to the living. In the garden a rule doesn't count"
 say "until somebody who wasn't there yet says yes too."
 wait_
@@ -326,8 +397,13 @@ wait_
 # above it is the sanctions ladder in two lines; say it in two.
 beat "What Mira decided NOT to have."
 say "Every Wednesday for two years, somebody has cooked dinner for the house."
-say "Nobody organised it. Last spring somebody proposed a rotation."
-say "Mira said no, and wrote down why."
+say "Nobody organised it. A year ago somebody proposed a rotation. Mira said"
+say "no, and wrote down why. Her commands, and the two about the laundry:"
+say ""
+say "   2025-09-20  mira  canon silence \"who cooks on a wednesday\" -m \"it has sorted itself out"
+say "                       every week for two years, and a rotation would turn a kindness into a duty\""
+say "   2026-02-16  mira  canon decide \"laundry after midnight\" --outcome conflicts --authority ask-one"
+say "   2026-02-17  mira  canon decide \"laundry after midnight\" --outcome conflicts --authority ask-panel"
 run $CANON voice human:mira
 hold
 say "Unwritten on purpose. A rotation would turn a kindness into a duty."
@@ -346,7 +422,7 @@ wait_
 # where they saw it, so the table that follows is a recap they can read,
 # not eight new terms. The raw step and its prediction stay off the stage
 # (they are in DEMO.md for anyone who asks how the test can fail).
-beat "Two years of this house, against Ostrom's eight."
+beat "This house, against Ostrom's eight."
 say "Ostrom found eight things every group that lasts does. You have just"
 say "watched this house do them."
 say ""
@@ -359,20 +435,20 @@ say "   6  settle a fight cheaply              the bikes"
 say "   7  the right to organise               nobody above can take its rules"
 say "   8  small groups inside bigger ones     a kitchen inside a house"
 hold
-say "Now the whole two years, rebuilt from the record and checked against all"
-say "eight. Every step's answer was written down before the replay ran, so"
+say "Now the whole record, a year of this house, rebuilt and checked against"
+say "all eight. Every step's answer was written down before the replay ran, so"
 say "it can fail. No model."
 run $CANON replay fixtures/fernwood-commons --brief
 hold
 say "Every line under a number is a moment you saw: what was asked, what the"
 say "rules said. Two rows say 'left to people': the tool stays out of those."
-say "Seventy steps, all as expected, in milliseconds."
+say "Seventy-one steps, all as expected, in milliseconds."
 wait_
 
 # ── act 10 · what if ────────────────────────────────────────
 beat "What if we had decided differently?"
 say "They're arguing about how they decide. What would the other way have"
-say "done to the last two years? Every group has this argument."
+say "done to the last year? Every group has this argument."
 run $CANON replay fixtures/fernwood-commons --policy default --brief
 hold
 say "Every decision that would have gone differently, by name, and which way"
@@ -380,27 +456,12 @@ say "it moves. Look at the lock. Under the other rule, one person could have"
 say "waved through a change nobody could undo."
 wait_
 
-# ── act 11 · not just houses. yours. ────────────────────────
-# The builder's question is "what would I write?" So show the cost of entry
-# before the result: one institution's vocabulary, which is nouns and nothing
-# else, then the grid, then the three commands that put an agent on the same
-# terms in their repo. `canon mcp` is read-only by design — an agent reads
-# what is in force and how a proposal stands; anything it writes, it writes
-# as a proposal under a seat with an end date.
-beat "Not just houses. Yours."
-say "A fishery. A canal. An alpine pasture shared since 1483. A makerspace."
-say "A codebase: nine engineers, one repository, and a CI bot nobody wants"
-say "to own."
-say "What it costs to bring one in. The codebase, as written. Nouns only:"
-say "who, what is shared, who watches. There are no rules of the game in"
-say "here. The same 104 lines run all fourteen."
-printf '\n\033[2m'; { sed -n '2,4p;10,14p' fixtures/cpr/meridian-monorepo/vocab.json; printf '  "members": [ … nine people … ],\n'; grep '"monitor"' fixtures/cpr/meridian-monorepo/vocab.json; printf '  …\n'; } | sed 's/^/     /'; printf '\033[0m'
-hold
-run cargo test --test transfer_bar -- --nocapture 2>/dev/null
-say "Ostrom's eight hold in all ten. Four we broke on purpose, and each one"
-say "fails where we said it would. That is act 9's test, failing."
-hold
-say "So, your project. Three commands:"
+# ── act 11 · yours ──────────────────────────────────────────
+# The builders' answer, one screen. The transfer study that used to fill
+# this act runs as a continuation with SHOW_TRANSFER=1.
+beat "Yours."
+say "Three commands put an agent in your repository on the same terms as the"
+say "people in it:"
 say ""
 say "   canon init --profile code                 the record lives in your repo"
 say "   canon grant agent:yourbot repo.deps --horizon 90"
@@ -408,15 +469,67 @@ say "                                             a seat: one scope, ninety days
 say "   canon mcp                                 your agent joins over MCP"
 say ""
 say "Over MCP it reads: what is in force, why, what is open, how a proposal"
-say "stands. Anything it writes, it writes as a proposal. Its rulings take"
-say "standing. Its seat expires. Same terms as the people."
+say "stands. Anything it writes, it writes through the same commands as"
+say "everyone, as a proposal, under its own name. Its rulings take standing."
+say "Its seat expires. Same terms as the people."
 wait_
+
+# ── act 11, continued · the transfer study ── OFF BY DEFAULT ─
+# Fourteen places from one spine. Whole, behind SHOW_TRANSFER=1: the show
+# ran long, and the three commands above are what the room came for.
+if [ "${SHOW_TRANSFER:-0}" -eq 1 ]; then
+  # The builder's question is "what would I write?" So show the cost of entry
+  # before the result: one institution's vocabulary, which is nouns and nothing
+  # else, then the grid, then the three commands that put an agent on the same
+  # terms in their repo. `canon mcp` is read-only by design — an agent reads
+  # what is in force and how a proposal stands; anything it writes, it writes
+  # as a proposal under a seat with an end date.
+  sub "Not just houses."
+  say "Fernwood was one house. Is any of this a house thing? Here is the test."
+  say "Take the same year of governance, the same 104 commands in the same"
+  say "order, and run it in fourteen places, changing only the names. A"
+  say "fishery. A canal. An alpine pasture shared since 1483. A makerspace."
+  say "A codebase: nine engineers, one repository, and a CI bot nobody wants"
+  say "to own."
+  say ""
+  say "This is everything the codebase supplies. Names only: who is in, what"
+  say "the rooms are called, who watches. No rule, no vote count, no policy"
+  say "may appear in here, and the build fails if one does."
+  printf '\n\033[2m'; { sed -n '2,4p;10,14p' fixtures/cpr/meridian-monorepo/vocab.json; printf '  "members": [ … nine people … ],\n'; grep '"monitor"' fixtures/cpr/meridian-monorepo/vocab.json; printf '  …\n'; } | sed 's/^/     /'; printf '\033[0m'
+  hold
+  run cargo test --test transfer_bar -- --nocapture 2>/dev/null
+  say "Fourteen rows, one per place. Eight columns, Ostrom's eight, checked the"
+  say "way act 9 checked the house. A dot: it held there. Ten real places, all"
+  say "eight hold. The four marked ablation we broke on purpose: took away the"
+  say "boundary, imposed the rules from outside, removed the watcher, let the"
+  say "upstream capture the record. Each fails at exactly the principle we"
+  say "broke, and nowhere else. An n is a principle that place says does not"
+  say "apply, with a reason. A test that cannot fail is not one."
+  say ""
+  say "The three lines under it are act 10's what-if, run in all ten places:"
+  say "each rule moves the same decisions everywhere. One signature."
+  hold
+  wait_
+fi
 
 # ═══════════════════════════════════════════════════════════
 if [ -f "$FOUNDING" ]; then
   card "Part three. A country."
   say "The Constitution still contains the three-fifths clause."
   say "Nobody struck it. Same failure as Article I, two hundred years deep."
+  wait_
+
+  # GÖDEL. The other failure, and the one act 7 just answered in a house:
+  # the amendment clause governing its own amendment. Morgenstern's memo
+  # records the episode and not the argument, so "the best guess" is the
+  # honest phrase. The last line is the segue into the agent reading.
+  card "\"I have discovered a legal route to a dictatorship.\"" "Kurt Gödel, 1947, on the way to his citizenship hearing"
+  say "Einstein spent the drive talking him out of telling the judge. The best"
+  say "guess at what he found is Article V: the clause that says how to amend"
+  say "the Constitution can be used to amend itself. That is the kitchen's"
+  say "third level, at the scale of a country, with nothing above it."
+  say ""
+  say "He didn't get there from a theorem. He got there by reading the document."
   wait_
 
   # ── act 13 · read it cold ─────────────────────────────────

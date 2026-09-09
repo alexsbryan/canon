@@ -209,10 +209,10 @@ canon why can-e7ab38908043
 
 ```text
 can-e7ab38908043  Anyone can invite a guest for up to three nights; longer needs a house chat.
-  asserted 2026-08-29 by mira
+  written 2026-08-29 by mira
   reason for the change: Sam's cousin stayed two weeks in June and nobody knew how to raise it.
-  replaced can-ffc1e6e30686: "Anyone can invite a guest for up to three nights."
-  status: in force
+  replaced "Anyone can invite a guest for up to three nights."  can-ffc1e6e30686
+  in force
 ```
 
 A year later, *why do we have this rule about guests?* has an answer and
