@@ -971,7 +971,11 @@ pub fn overdue(args: &[String]) -> i32 {
                 }
             }
             canon_core::Due::Revisit { other, rationale } => {
-                println!("{when}  {}  carried against {other}", o.target);
+                println!(
+                    "{when}  {}\n          carried against {}",
+                    crate::explain::named(&canon, &o.target),
+                    crate::explain::named(&canon, other)
+                );
                 println!("          \"{rationale}\"");
             }
             canon_core::Due::Standing { holder, scope } => {
@@ -1101,20 +1105,24 @@ pub fn voice(args: &[String]) -> i32 {
                 };
                 held.push(format!(
                     "  over {scope}, granted by {} on {}{end}",
-                    act.actor,
+                    crate::explain::person(&act.actor),
                     store::ymd(act.ts_unix)
                 ));
             }
             canon_core::ActKind::Dismiss { a, b, rationale } if act.actor == who => {
                 let outside = canon.ungoverned.iter().any(|(x, _)| x == &act.id);
+                // The verdict on one line, the two rules named under it, and
+                // what became of it under those.
                 rulings.push(format!(
-                    "  said {a} and {b} do not conflict, {}{}{}",
+                    "  said these two do not conflict, {}{}\n    {}\n    {}{}",
                     store::ymd(act.ts_unix),
                     if rationale.is_empty() {
                         String::new()
                     } else {
                         format!(" — {rationale}")
                     },
+                    crate::explain::named(&canon, a),
+                    crate::explain::named(&canon, b),
                     if outside {
                         "\n    not applied: outside their standing".to_string()
                     } else {
@@ -1126,8 +1134,10 @@ pub fn voice(args: &[String]) -> i32 {
                 a, b, rationale, ..
             } if act.actor == who => {
                 rulings.push(format!(
-                    "  carried {a} against {b}, {} — {rationale}{}",
+                    "  carried the first against the second, {} — {rationale}\n    {}\n    {}{}",
                     store::ymd(act.ts_unix),
+                    crate::explain::named(&canon, a),
+                    crate::explain::named(&canon, b),
                     overruled(&log, &canon, a, b, act.ts_unix)
                 ));
             }
@@ -1170,7 +1180,13 @@ pub fn voice(args: &[String]) -> i32 {
                 canon_core::Pull::Against => "against",
                 canon_core::Pull::Toward => "toward",
             };
-            println!("  {way} \"{}\" — {}", p.about, p.position.because);
+            // `about` is a proposal's id when the position ratifies one, and
+            // a subject in words when it argues about one. Name the rule.
+            let about = match canon_core::ActId::from_raw(p.about.clone()) {
+                id if canon.get(&id).is_some() => crate::explain::named(&canon, &id),
+                _ => format!("\"{}\"", p.about),
+            };
+            println!("  {way} {about} — {}", p.position.because);
         }
     }
     if !rulings.is_empty() {

@@ -626,8 +626,13 @@ pub fn accept(args: &[String]) -> i32 {
         },
     ) {
         Ok(act) => {
-            println!("carrying {a} against {b} knowingly");
+            println!("carrying both, knowingly:");
+            println!("  {}", crate::explain::named(&st, &a));
+            println!("  {}", crate::explain::named(&st, &b));
             println!("  {rationale}");
+            if let Some(r) = flag(args, "--revisit") {
+                println!("  look again by {r}");
+            }
             report_governed(&d, &act.id)
         }
         Err(e) => fail(e),

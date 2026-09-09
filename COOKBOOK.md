@@ -194,10 +194,10 @@ canon why can-33be28b8ccee
 
 ```text
 can-33be28b8ccee  Whoever is away longest waters the plants; say so in the group chat before you go.
-  asserted 2026-09-02 by human:mira
+  written 2026-09-02 by mira
   reason for the change: Three plants died in August and nobody had been asked.
-  replaced can-65840b5de0cc: the question "Who looks after the plants when everyone travels at once?"
-  status: in force
+  replaced the question "Who looks after the plants when everyone travels at once?"  can-65840b5de0cc
+  in force
 ```
 
 **Say when you decided *not* to have a rule.** A gap and a deliberate silence
