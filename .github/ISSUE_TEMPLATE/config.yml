@@ -12,7 +12,7 @@ contact_links:
       unexpectedly? Report it privately here — see SECURITY.md. Do not open a
       public issue.
   - name: What this project has already decided
-    url: https://github.com/alexsbryan/canon/blob/main/GOVERNANCE.md
+    url: https://github.com/alexsbryan/canon/blob/main/docs/GOVERNANCE.md
     about: >
       canon governs itself in a canon. Three things are recorded as decided
       against, three questions are open, and each carries its reason.

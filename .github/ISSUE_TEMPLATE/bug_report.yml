@@ -10,7 +10,7 @@ body:
 
         If this is a security or privacy issue — including any way something
         could leave a machine unexpectedly — please **don't** file it here.
-        See [SECURITY.md](https://github.com/alexsbryan/canon/blob/main/SECURITY.md).
+        See [SECURITY.md](https://github.com/alexsbryan/canon/blob/main/docs/SECURITY.md).
   - type: textarea
     id: what-happened
     attributes:

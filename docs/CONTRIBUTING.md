@@ -46,7 +46,7 @@ eight principles as a table, your build is good.
 
 A model is only needed for four verbs — `draft`, `check`, `tensions`,
 `rebase` — and only those need an endpoint. Everything else, which is most
-of the tool, is pure. [The README](./README.md#what-needs-a-model-and-what-doesnt)
+of the tool, is pure. [The README](../README.md#what-needs-a-model-and-what-doesnt)
 draws the line.
 
 ## The fastest way in
@@ -78,7 +78,7 @@ Either way, a fixture carries a `PROVENANCE.md` naming where it came
 from — the upstream commit and the sha256 of every file copied. Vendored,
 never depended on across repositories: a standalone `git clone` has to
 work, and that's the property the whole tool is built around. Read
-[`fixtures/maple-house/PROVENANCE.md`](./fixtures/maple-house/PROVENANCE.md);
+[`fixtures/maple-house/PROVENANCE.md`](../fixtures/maple-house/PROVENANCE.md);
 it's short and it explains why each half is there.
 
 **Other things that are worth as much as code:**
@@ -216,7 +216,7 @@ git push origin main --tags
 [`release.yml`](./.github/workflows/release.yml) refuses a tag that
 disagrees with `Cargo.toml`, builds the binary for macOS, Linux and
 Windows on hosted runners, and publishes a GitHub Release with the
-archives and a `SHA256SUMS`. [`install.sh`](./install.sh) at the root is
+archives and a `SHA256SUMS`. [`install.sh`](../install.sh) at the root is
 what users run; it fetches from that release and verifies against those
 sums. To check a new runner image or target without spending a tag, run
 the workflow by hand from the Actions tab: every leg builds, nothing is
@@ -224,7 +224,7 @@ published.
 
 ## Licensing
 
-canon is free software under [AGPL-3.0-or-later](./LICENSE) and stays that
+canon is free software under [AGPL-3.0-or-later](../LICENSE) and stays that
 way. **The record format is separate: [SPEC.md](./SPEC.md) is CC0.**
 Adopting the format must not be a lock-in decision, so an independent
 implementation owes this project nothing.

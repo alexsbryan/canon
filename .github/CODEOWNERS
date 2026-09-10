@@ -21,7 +21,7 @@
 # The record format is CC0 and other implementations read it. A change here
 # is a promise to them, not just to this repository. `adequacy_bar` gates a
 # new op mechanically; what it cannot judge is whether the op should exist.
-/SPEC.md                        @alexsbryan
+/docs/SPEC.md                   @alexsbryan
 /crates/canon-core/src/act.rs   @alexsbryan
 
 # --- The fold --------------------------------------------------------------
@@ -56,6 +56,6 @@
 # append-only, so a change that is not a new line at the end is a rewrite of
 # the record and should be rejected on sight.
 /.canon/                        @alexsbryan
-/GOVERNANCE.md                  @alexsbryan
-/CLA.md                         @alexsbryan
+/docs/GOVERNANCE.md             @alexsbryan
+/docs/CLA.md                    @alexsbryan
 /LICENSE                        @alexsbryan

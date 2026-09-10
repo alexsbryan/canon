@@ -91,7 +91,7 @@ every principle still has to hold in at least eight of the ten institutions.
 > and are there as a control: the eight principles were derived from cases like
 > those, so an instrument that works on a makerspace and fails on an alpine
 > pasture is measuring the wrong thing.
-> [PROVENANCE](./fixtures/cpr/PROVENANCE.md) says what they are and are not.
+> [PROVENANCE](../fixtures/cpr/PROVENANCE.md) says what they are and are not.
 
 ## The eight criteria
 
@@ -461,8 +461,8 @@ python3 scripts/ostrom-reach.py des-moines-noise fixtures/des-moines-noise/runs/
 Leg 1 needs no endpoint and no network and takes about three seconds. Leg 2
 scores whatever runs you have; making new ones is a sweep against your own
 model, and the numbers above are ours and not yours.
+- [fixtures/cpr/README.md](../fixtures/cpr/README.md) — the fourteen, and how to add one
 
-- [fixtures/cpr/README.md](./fixtures/cpr/README.md) — the fourteen, and how to add one
-- [fixtures/cpr/PROVENANCE.md](./fixtures/cpr/PROVENANCE.md) — what they are, and are not
+- [fixtures/cpr/PROVENANCE.md](../fixtures/cpr/PROVENANCE.md) — what they are, and are not
 - [PRIMITIVES.md](./PRIMITIVES.md) — the nine primitives and the line under them
 - [DEMO_PLAN.md](./DEMO_PLAN.md) — the founding-documents ledger

@@ -76,7 +76,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path-to-signatures: 'signatures/version1/cla.json'
-          path-to-document: 'https://github.com/alexsbryan/canon/blob/main/CLA.md'
+          path-to-document: 'https://github.com/alexsbryan/canon/blob/main/docs/CLA.md'
           branch: 'cla-signatures'
           # People and bots exempt from signing: the maintainer and automation.
           allowlist: alexsbryan,dependabot[bot],github-actions[bot]
@@ -85,7 +85,7 @@ jobs:
           custom-pr-sign-comment: 'I have read the CLA Document and I hereby sign the CLA'
           custom-notsigned-prcomment: >-
             Thanks for the pull request. Before it can be merged we need you to
-            sign the [Contributor License Agreement](https://github.com/alexsbryan/canon/blob/main/CLA.md).
+            sign the [Contributor License Agreement](https://github.com/alexsbryan/canon/blob/main/docs/CLA.md).
             You keep your copyright; the project stays open source, and the
             record format stays CC0. It takes one reply and covers all your
             future contributions.

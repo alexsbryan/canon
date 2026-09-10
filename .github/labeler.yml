@@ -15,7 +15,7 @@
 "area: format":
   - changed-files:
       - any-glob-to-any-file:
-          - "SPEC.md"
+          - "docs/SPEC.md"
           - "crates/canon-core/src/act.rs"
 
 # Fixtures are the contribution most likely to arrive from someone who has
@@ -40,4 +40,4 @@
   - changed-files:
       - any-glob-to-any-file:
           - ".canon/**"
-          - "GOVERNANCE.md"
+          - "docs/GOVERNANCE.md"

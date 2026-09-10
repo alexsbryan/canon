@@ -29,7 +29,7 @@ short and checks what it downloads against the release's checksums —
 [read it](./install.sh) before you pipe it. Prefer to build from source?
 [Below](#build).
 
-**New here? [Getting started](./GETTING_STARTED.md) walks a house through
+**New here? [Getting started](./docs/GETTING_STARTED.md) walks a house through
 its first hour.**
 
 It's a house tool, and it's also a bet: that how a group decides things
@@ -127,7 +127,7 @@ a ruling, a retraction or an undo by somebody with no say over what it
 touches — is kept on the record and changes nothing. A canon that has
 granted nobody standing is a notebook, and stays one until the first
 grant. The tier table is in [Getting
-started](./GETTING_STARTED.md#later-decide-how-you-decide).
+started](./docs/GETTING_STARTED.md#later-decide-how-you-decide).
 
 ## What needs a model, and what doesn't
 
@@ -237,7 +237,7 @@ it.
 
 So the honest reading of 9 of 11 is that at least five are the model
 reading the passage in front of it and up to four are recall, and neither
-number is quoted without the other. [DEMO_PLAN.md](./DEMO_PLAN.md) is the
+number is quoted without the other. [DEMO_PLAN.md](./docs/DEMO_PLAN.md) is the
 ledger of what's measured and what isn't, including the bars written down
 before the data that tests them.
 
@@ -277,23 +277,23 @@ get detected, and a stale number is worse than none. Measure your own:
 
 ## More
 
-- [One page](./ONE_PAGER.md) — why you'd use it, the ideas that carry it,
+- [One page](./docs/ONE_PAGER.md) — why you'd use it, the ideas that carry it,
   and exactly where a model is called.
-- [Getting started](./GETTING_STARTED.md) — a house's first hour.
-- [Cookbook](./COOKBOOK.md) — the questions groups actually ask, and the acts
+- [Getting started](./docs/GETTING_STARTED.md) — a house's first hour.
+- [Cookbook](./docs/COOKBOOK.md) — the questions groups actually ask, and the acts
   that answer them, with real output.
 - `canon --help` is seven verbs. `canon help all` is all of them.
-- [SPEC.md](./SPEC.md) — the file format, CC0. Adopting the format isn't
+- [SPEC.md](./docs/SPEC.md) — the file format, CC0. Adopting the format isn't
   a lock-in decision.
-- [STUDY.md](./STUDY.md) — the CPR transfer study, and what it does not
+- [STUDY.md](./docs/STUDY.md) — the CPR transfer study, and what it does not
   establish.
-- [PRIMITIVES.md](./PRIMITIVES.md) — the design argument: nine
+- [PRIMITIVES.md](./docs/PRIMITIVES.md) — the design argument: nine
   primitives, the line between mechanism and policy, and eighteen
   technologies of political economy tested against them.
-- [DEMO_PLAN.md](./DEMO_PLAN.md) — the founding-documents ledger.
-- [Contributing](./CONTRIBUTING.md) — every path is open; the fastest way
-  in is a fixture. [Governance](./GOVERNANCE.md), [security](./SECURITY.md),
-  and [where to get help](./SUPPORT.md).
+- [DEMO_PLAN.md](./docs/DEMO_PLAN.md) — the founding-documents ledger.
+- [Contributing](./docs/CONTRIBUTING.md) — every path is open; the fastest way
+  in is a fixture. [Governance](./docs/GOVERNANCE.md), [security](./docs/SECURITY.md),
+  and [where to get help](./docs/SUPPORT.md).
 - [Commonwealth](https://github.com/alexsbryan/commonwealth-ai) — pool
   your machines with people you trust and run a model none of them could
   hold alone. What canon was built and measured against.
@@ -319,7 +319,7 @@ change is the suite, not a list of permitted directories, and
 
 The most useful thing you can send isn't a patch — it's a **fixture**, or
 what happened when you pointed `canon draft` at your own mess. Another
-group hasn't used this yet. [CONTRIBUTING.md](./CONTRIBUTING.md) has the
+group hasn't used this yet. [CONTRIBUTING.md](./docs/CONTRIBUTING.md) has the
 rest.
 
 canon governs itself, in canon. `.canon/acts.jsonl` is committed and holds
@@ -334,7 +334,7 @@ canon open        # what nobody has decided
 canon why <id>    # where any one of them came from
 ```
 
-[GOVERNANCE.md](./GOVERNANCE.md) says who decides today and what would
+[GOVERNANCE.md](./docs/GOVERNANCE.md) says who decides today and what would
 change that.
 
 AGPL-3.0-or-later. The format specification is CC0.

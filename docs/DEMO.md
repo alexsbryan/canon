@@ -447,7 +447,7 @@ cargo test --test transfer_bar                    # the study as a bar, ~3 s
 **Maple House** (acts 1–4) is the one fixture that is a *document* rather than
 a ledger, because acts 2–4 are about turning a document into one. Written by
 hand as fiction for Commonwealth's tension bench, vendored with its sha256
-pinned in [PROVENANCE.md](./fixtures/maple-house/PROVENANCE.md). Eleven
+pinned in [PROVENANCE.md](../fixtures/maple-house/PROVENANCE.md). Eleven
 tensions planted, seven decoys, all labelled.
 
 ### Making a recording is two verbs

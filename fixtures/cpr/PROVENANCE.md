@@ -24,7 +24,7 @@ fixes.
 Nobody pointed `canon draft` at a Valais village archive. The vocabularies are
 written; the governance is derived. Whether an Ostrom-conformant canon falls
 out of a real community's actual mess is a different question, it needs a
-model, and it is [STUDY.md](../../STUDY.md) leg 2 — which has produced no
+model, and it is [STUDY.md](../../docs/STUDY.md) leg 2 — which has produced no
 number yet and says so.
 
 **That the three historical fixtures are history.** `torbel-alpine`,

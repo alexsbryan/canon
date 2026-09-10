@@ -145,7 +145,7 @@ const CENSUS: &[(&str, &str, &str)] = &[
 const VERDICTS: [&str; 4] = ["built", "carried", "absent", "out-of-scope"];
 
 fn primitives_md() -> String {
-    let p = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../PRIMITIVES.md");
+    let p = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/PRIMITIVES.md");
     std::fs::read_to_string(&p).unwrap_or_else(|e| panic!("reading {}: {e}", p.display()))
 }
 

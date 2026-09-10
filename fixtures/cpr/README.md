@@ -31,7 +31,7 @@ cargo test --test transfer_bar  # the same thing as a bar
 
 `·` holds · `x` does not · `n` declared inapplicable, with a reason the bar
 makes the fixture prove. The eight criteria are in
-[STUDY.md](../../STUDY.md#the-eight-criteria).
+[STUDY.md](../../docs/STUDY.md#the-eight-criteria).
 
 **The ten differ on purpose.** 6 to 24 people, two holders of the inner
 boundary or five, two levels of nesting or three, monitored by a bot or by one

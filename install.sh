@@ -114,4 +114,4 @@ case ":$PATH:" in
 esac
 
 printf '\n  next:  canon init --profile house\n'
-printf '         https://github.com/%s/blob/main/GETTING_STARTED.md\n\n' "$REPO"
+printf '         https://github.com/%s/blob/main/docs/GETTING_STARTED.md\n\n' "$REPO"
