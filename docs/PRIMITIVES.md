@@ -1,9 +1,25 @@
 # The primitives — what a governance library must expose, and what it must not
 
-**Status: all nine BUILT.** Each primitive below is marked `BUILT`, `PARTIAL`
-or `NOT BUILT`. A document that reads like a description of working software
-while describing an intention is the same defect as a green test that never
-ran, so the marks are load-bearing and must be kept honest.
+The ten, at a glance. Each has a section below; the argument for why the set stops at ten comes after them.
+
+| # | Primitive | What it is | Status |
+|---|---|---|---|
+| 1 | [The ledger](#primitive-1--the-ledger) | The append-only record. Nothing is edited or erased; changing your mind is a new act that leaves the old one visible. | `BUILT` |
+| 2 | [Four structural ops](#primitive-2--four-structural-ops-closed-and-strict) | The only ways the record changes: something enters, replaces something, is withdrawn, or is undone. | `BUILT` |
+| 3 | [Open annotations](#primitive-3--open-annotations-forward-compatible) | Statements *about* commitments — a question, an accepted contradiction, a deliberate silence, a grant. New kinds never break an older reader. | `BUILT` |
+| 4 | [Resolvers](#primitive-4--resolvers-text-in-typed-evidence-out-never-a-verdict) | Text in, typed evidence out. A model may help read; code holds every decision. | `BUILT` |
+| 5 | [Positions](#primitive-5--positions-cited-evidence-with-a-source-a-direction-and-a-reason) | Support or objection that cites something real and gives a reason. | `BUILT` |
+| 6 | [Boundaries](#primitive-6--boundaries-who-holds-standing-over-what) | Who holds standing, over what. Scopes nest; grants expire. | `BUILT` |
+| 7 | [Policy](#primitive-7--policy-a-pure-function-from-evidence-to-outcome-and-authority) | A pure function from evidence to outcome and authority — including how a proposal becomes a rule, and who may make one. | `BUILT` |
+| 8 | [Two standing queries](#primitive-8--two-standing-queries) | What contradicts what; what has gone stale. | `BUILT` |
+| 9 | [A fair draw](#primitive-9--a-fair-draw) | Selection of people by lot that nobody can steer. | `BUILT` |
+| 10 | [Appropriation](#primitive-10--appropriation-whose-turn-is-it) | Whose turn is it — a rotation over a shared thing, with no bookkeeping. | `PARTIAL` |
+
+**Status: nine of the ten BUILT; Primitive 10 is PARTIAL.** Each primitive below
+is marked `BUILT`, `PARTIAL` or `NOT BUILT`. A document that reads like a
+description of working software while describing an intention is the same defect
+as a green test that never ran, so the marks are load-bearing and must be kept
+honest.
 
 **The acceptance test is Ostrom's eight design principles, and it clears.**
 `crates/canon-cli/tests/governance_bar.rs` replays two fixtures — a twelve-person
