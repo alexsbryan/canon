@@ -128,11 +128,30 @@ fn every_command_line_in_the_documentation_still_parses() {
     // parser here.
     let mut checked = 0usize;
     let mut broken: Vec<String> = Vec::new();
-    for entry in std::fs::read_dir(root()).unwrap().flatten() {
-        let path = entry.path();
-        if path.extension().is_none_or(|e| e != "md") {
-            continue;
+    // README at the top level, the rest of the documents in docs/. Both
+    // are walked, recursively under docs/, so a moved or new document
+    // cannot quietly leave the gate.
+    let mut documents: Vec<std::path::PathBuf> = std::fs::read_dir(root())
+        .unwrap()
+        .flatten()
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().is_some_and(|e| e == "md"))
+        .collect();
+    let mut stack = vec![root().join("docs")];
+    while let Some(dir) = stack.pop() {
+        for entry in std::fs::read_dir(&dir).unwrap().flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            if path.extension().is_none_or(|e| e != "md") {
+                continue;
+            }
+            documents.push(path);
         }
+    }
+    for path in documents {
         let body = std::fs::read_to_string(&path).unwrap();
         for line in body.lines() {
             let Some(rest) = published(line) else {

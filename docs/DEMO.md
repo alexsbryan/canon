@@ -1,7 +1,7 @@
 # Automation for the People — the run of show
 
 `./scripts/demo.sh` — [enter] between acts, `…` at each beat within one.
-Fifty-two pauses end to end, with the transfer study off. The copy is held to [VOICE.md](./docs/VOICE.md):
+Fifty-two pauses end to end, with the transfer study off. The copy is held to [VOICE.md](./VOICE.md):
 a line lands on the same screen as the output it describes, nothing
 pre-explains a command, and nothing is there to impress.
 `--auto` runs straight through with no clears. `--offline` skips the live

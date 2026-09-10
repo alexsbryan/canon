@@ -69,7 +69,7 @@ There are two kinds, and they answer different questions:
   on. This measures ingest, so it needs an endpoint to produce a run and
   none to score one.
 
-Prose is held to [docs/VOICE.md](./docs/VOICE.md): one job per document,
+Prose is held to [VOICE.md](./VOICE.md): one job per document,
 lead with what it does, no pre-explaining what a command will show, and
 nothing that is there to impress. The demo's screen text is held to the
 same page.
@@ -213,7 +213,7 @@ git tag v$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
 git push origin main --tags
 ```
 
-[`release.yml`](./.github/workflows/release.yml) refuses a tag that
+[`release.yml`](../.github/workflows/release.yml) refuses a tag that
 disagrees with `Cargo.toml`, builds the binary for macOS, Linux and
 Windows on hosted runners, and publishes a GitHub Release with the
 archives and a `SHA256SUMS`. [`install.sh`](../install.sh) at the root is
