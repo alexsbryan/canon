@@ -31,6 +31,7 @@ mod sources;
 mod store;
 mod subject;
 mod tensions;
+mod term;
 #[cfg(test)]
 mod testing;
 mod wrap;
@@ -138,7 +139,8 @@ ADJUDICATE                                    (needs an endpoint)
         --as <name>                      what to call it in the citations
         --from-git --since 1y            commit bodies as the source
         --dry-run [--json]               propose, write nothing
-        --resume                         finish a review, no model call
+        --resume [run]                   finish a review, no model call — every run with
+                                         candidates left, oldest first, or the one named
         --include-ignored                read what .gitignore covers
         --max-chunks <n>                 read at most n passages this run
         --yes                            do not ask before a large run

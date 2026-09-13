@@ -151,7 +151,7 @@ pub fn policy(args: &[String]) -> i32 {
                     scope: scope.clone(),
                 },
             ) {
-                Ok(act) => {
+                Ok(act) => crate::cmds::governed(&d, &act.id, || {
                     println!("{}  {}", act.id, rule.name());
                     println!("  {text}");
                     if own.is_none() {
@@ -161,8 +161,7 @@ pub fn policy(args: &[String]) -> i32 {
                         Some(s) => println!("  governs {s} and everything under it"),
                         None => println!("  governs this canon"),
                     }
-                    crate::cmds::report_governed(&d, &act.id)
-                }
+                }),
                 Err(e) => fail(e),
             }
         }
@@ -246,7 +245,7 @@ pub fn ratification(args: &[String]) -> i32 {
                     scope: scope.clone(),
                 },
             ) {
-                Ok(act) => {
+                Ok(act) => crate::cmds::governed(&d, &act.id, || {
                     println!("{}  {}", act.id, rule.name());
                     println!("  {text}");
                     match &scope {
@@ -255,8 +254,7 @@ pub fn ratification(args: &[String]) -> i32 {
                     }
                     // The change is judged under the rule it is changing.
                     crate::cmds::report_status(&d, &act.id);
-                    crate::cmds::report_governed(&d, &act.id)
-                }
+                }),
                 Err(e) => fail(e),
             }
         }
@@ -385,10 +383,11 @@ pub fn allot(args: &[String]) -> i32 {
         },
     ) {
         Ok(act) => {
-            println!("{}  {} {unit}(s) in {scope}", act.id, units.len());
-            println!("  {text}");
-            println!("  {}", units.join(", "));
-            let code = crate::cmds::report_governed(&d, &act.id);
+            let code = crate::cmds::governed(&d, &act.id, || {
+                println!("{}  {} {unit}(s) in {scope}", act.id, units.len());
+                println!("  {text}");
+                println!("  {}", units.join(", "));
+            });
             if code == 0 {
                 println!("\n  now say how they are shared:  canon allocation set rotation --scope {scope}");
             }
@@ -469,10 +468,11 @@ pub fn allocation(args: &[String]) -> i32 {
                 },
             ) {
                 Ok(act) => {
-                    println!("{}  {}", act.id, rule.name());
-                    println!("  {text}");
-                    println!("  shares {scope} and everything under it");
-                    let code = crate::cmds::report_governed(&d, &act.id);
+                    let code = crate::cmds::governed(&d, &act.id, || {
+                        println!("{}  {}", act.id, rule.name());
+                        println!("  {text}");
+                        println!("  shares {scope} and everything under it");
+                    });
                     if code == 0 {
                         println!("\n  whose turn is it:  canon pool {scope}");
                     }
@@ -608,14 +608,13 @@ pub fn decide(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(act) => {
+        Ok(act) => crate::cmds::governed(&d, &act.id, || {
             println!("{act_id}  decided about \"{about}\"", act_id = act.id);
             println!("  {} / {authority}", format!("{outcome:?}").to_lowercase());
             // The rung is shown because the ladder is the point: a decision
             // that silently moves the next one up is a decision nobody saw.
             println!("  this is decision {} about it", prior + 1);
-            crate::cmds::report_governed(&d, &act.id)
-        }
+        }),
         Err(e) => fail(e),
     }
 }
@@ -718,7 +717,44 @@ pub fn who(args: &[String]) -> i32 {
         println!("{}  over {}{until}", g.actor, g.scope);
     }
     println!("\n{} with standing, narrowest first", deciders.len());
-    println!("decided under: {}", canon.policy_for(Some(&scope)).name());
+    // Two rules, two lines, each named. One unlabelled line read as the
+    // ratification rule next to a ratification rule you had just set, and
+    // said `default` — which is the policy, and looked like the set had
+    // not taken.
+    let made = match canon.adopted_at(Some(&scope), now) {
+        Some(r) => format!(
+            "{} — set {} by {} over {}",
+            r.rule.name(),
+            store::ymd(r.at),
+            r.actor,
+            r.scope
+                .as_ref()
+                .map_or("this canon".to_string(), ToString::to_string)
+        ),
+        None => "standing (shipped)".to_string(),
+    };
+    println!("rules made under: {made}");
+    // A change still waiting is shown under the rule it would replace, so
+    // "I set it and it did not take" has its answer on the same screen.
+    for r in canon
+        .ratifications
+        .iter()
+        .filter(|r| r.scope.as_ref().is_none_or(|s| s.covers(&scope)))
+    {
+        if let canon_core::Verdict::Proposed { needs } = &r.verdict {
+            println!(
+                "{}",
+                crate::wrap::hang(
+                    &format!("  a change to {} is PROPOSED — needs ", r.rule.name()),
+                    needs
+                )
+            );
+        }
+    }
+    println!(
+        "proposals judged under: {}",
+        canon.policy_for(Some(&scope)).name()
+    );
     0
 }
 
@@ -751,14 +787,43 @@ pub fn grant(args: &[String]) -> i32 {
         },
     ) {
         Ok(act) => {
-            match horizon {
-                Some(h) => println!("{} holds {scope} until {}", pos[0], store::ymd(h)),
-                None => println!(
-                    "{} holds {scope} with no end — `canon overdue` will never mention it",
-                    pos[0]
-                ),
+            let holder = pos[0];
+            let code = crate::cmds::governed(&d, &act.id, || {
+                match horizon {
+                    Some(h) => println!("{holder} holds {scope} until {}", store::ymd(h)),
+                    None => println!(
+                        "{holder} holds {scope} with no end — `canon overdue` will never mention it"
+                    ),
+                }
+                // Who granted is on the line, because it is not always who
+                // you think: with `CANON_ACTOR` unset it is the git name.
+                println!("  granted by {}", act.actor);
+            });
+            if code != 0 || holder == act.actor {
+                return code;
             }
-            crate::cmds::report_governed(&d, &act.id)
+            // A founder who grants somebody else, under a name that is not
+            // their own, has seated that person and not themselves — and
+            // every act they write from the next second on is a proposal
+            // waiting on the holder. Neither the grant nor the next add
+            // said so; this does, on the act that caused it.
+            let now = store::now();
+            let seated = store::read(&d).map(|l| l.derive_at(now)).is_ok_and(|c| {
+                c.who_decides(&scope, now)
+                    .iter()
+                    .any(|g| g.actor == act.actor)
+            });
+            if !seated {
+                println!(
+                    "  {} does not hold {scope}. From the next second, their writes here are",
+                    act.actor
+                );
+                println!(
+                    "  proposals waiting on {holder} — `canon grant {} {scope}` if that is wrong.",
+                    act.actor
+                );
+            }
+            code
         }
         Err(e) => fail(e),
     }
@@ -790,10 +855,11 @@ pub fn withdraw(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(_) => {
-            println!("{} no longer holds {scope}, or anything under it", pos[0]);
-            0
-        }
+        // Standing somebody else down takes standing over the scope, and
+        // the fold said so while this printed success anyway.
+        Ok(act) => crate::cmds::governed(&d, &act.id, || {
+            println!("{} no longer holds {scope}, or anything under it", pos[0])
+        }),
         Err(e) => fail(e),
     }
 }

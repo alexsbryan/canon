@@ -304,6 +304,11 @@ canon ratification set threshold:2/1 --scope house.hall    # what makes a propos
 canon policy set consent -m "One reasoned objection stops a thing."
 ```
 
+Acts written in the same second cannot govern one another, so a script that
+grants and then writes in one breath finds its first writes went in while the
+scope was still open — each says `applied while open` — and the gate closes
+from the next second. Typed by hand, you never notice.
+
 **Ratification** is how a written proposal becomes a rule: `standing`
 (whoever holds the scope writes directly — the default, and what every
 canon did before there was a choice), `joint:a,b` (everyone named),

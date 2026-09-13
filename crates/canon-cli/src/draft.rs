@@ -880,7 +880,7 @@ pub fn extract(
         reason,
     };
     for c in got.commitments {
-        let text = c.text.trim().to_string();
+        let text = strip_emphasis(c.text.trim());
         if text.is_empty() {
             dropped.push(refuse(text, String::new(), "empty commitment text".into()));
             continue;
@@ -937,6 +937,60 @@ pub fn extract(
         });
     }
     Ok((kept, dropped))
+}
+
+/// Markdown emphasis out of a rule's text, and never out of its quote.
+///
+/// A model reading `**build_self_manifest must derive…**` copies the stars
+/// into the sentence it writes, and the stars are then the first thing a
+/// person is asked to accept. The quote keeps them: it is the passage's
+/// words, verbatim, and evidence is not tidied. Only the text is cleaned.
+///
+/// Backtick spans are left whole — a symbol is quoted as written, stars and
+/// all. Doubled markers (`**`, `__`) are removed only when they pair up, so
+/// a lone `**` is not evidence of emphasis and stays. A single `*` or `_`
+/// wrapping the whole sentence is removed; one inside a word is a word.
+pub fn strip_emphasis(text: &str) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    // Count doubled markers outside code first: an odd number is not a
+    // pair, and removing half of one is worse than leaving both.
+    let mut pairs = std::collections::BTreeMap::from([('*', 0usize), ('_', 0usize)]);
+    let mut in_code = false;
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '`' {
+            in_code = !in_code;
+        } else if !in_code && (c == '*' || c == '_') && chars.get(i + 1) == Some(&c) {
+            *pairs.get_mut(&c).unwrap_or(&mut 0) += 1;
+            i += 2;
+            continue;
+        }
+        i += 1;
+    }
+    let strips = |c: char| pairs.get(&c).is_some_and(|n| n % 2 == 0 && *n > 0);
+
+    let mut out = String::with_capacity(text.len());
+    in_code = false;
+    i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '`' {
+            in_code = !in_code;
+        } else if !in_code && strips(c) && chars.get(i + 1) == Some(&c) {
+            i += 2;
+            continue;
+        }
+        out.push(c);
+        i += 1;
+    }
+    let t = out.trim();
+    for m in ['*', '_'] {
+        if t.chars().count() > 2 && t.starts_with(m) && t.ends_with(m) {
+            return t[m.len_utf8()..t.len() - m.len_utf8()].trim().to_string();
+        }
+    }
+    t.to_string()
 }
 
 // ── support: does the citation carry the rule's numbers? ────
@@ -1693,55 +1747,116 @@ fn read_git(since: &str) -> Result<Vec<(String, String)>, String> {
 /// The run artifact already holds every candidate and every citation, so this
 /// costs NO model call. Anything already in the canon is skipped, so resuming
 /// twice cannot write a thing twice.
-fn resume(dir: &Path, profile: Profile, seen: &mut Seen) -> i32 {
+///
+/// **Every run with something left, oldest first**, not the newest run
+/// alone. An import large enough to split across runs used to strand every
+/// run but the last, candidates and all, because resume took the file that
+/// sorted last. Naming one run picks it: `canon draft --resume <file>`.
+/// `[q]uit` ends the sitting, not the run — the next run would otherwise
+/// open under the person's hands the moment they said stop.
+fn resume(dir: &Path, profile: Profile, seen: &mut Seen, pick: Option<&str>) -> i32 {
+    let (found, partial) = match runs_to_resume(dir, pick) {
+        Ok(v) => v,
+        Err(e) => return crate::cmds::fail(e),
+    };
+    // Said, not skipped in silence: the person who ran `--resume` while an
+    // import was drafting is the person who needs to know it is still going.
+    for p in &partial {
+        eprintln!(
+            "a run is still being drafted and is not offered: {}",
+            p.file_name().unwrap_or_default().to_string_lossy()
+        );
+    }
+    if found.is_empty() {
+        return crate::cmds::fail("no draft runs to resume — `canon draft --from <paths>`");
+    }
+    let mut accepted = 0usize;
+    let mut opened = 0usize;
+    for path in &found {
+        let raw = match std::fs::read_to_string(path) {
+            Ok(r) => r,
+            Err(e) => return crate::cmds::fail(format!("reading {}: {e}", path.display())),
+        };
+        let run: DraftRun = match serde_json::from_str(&raw) {
+            Ok(r) => r,
+            Err(e) => return crate::cmds::fail(format!("{}: {e}", path.display())),
+        };
+        // Re-read per run: what the last run's review wrote is already in
+        // the canon, and the next run must not offer it again.
+        let Ok(canon) = store::read(dir).map(|l| l.derive()) else {
+            return crate::cmds::fail("cannot read this canon");
+        };
+        // Already in the canon, by its own words. Text is what a person
+        // edited and what they will recognise; an id would not survive the
+        // `[e]dit` path that rewrites the text before it is written.
+        let remaining = remaining(&run, &canon, seen);
+        if remaining.is_empty() {
+            continue;
+        }
+        opened += 1;
+        println!(
+            "resuming {} — {} of {} left, no model call",
+            path.file_name().unwrap_or_default().to_string_lossy(),
+            remaining.len(),
+            run.kept.len()
+        );
+        match review(dir, &run.candidates, &remaining, seen) {
+            Ok((a, quit)) => {
+                accepted += a.len();
+                if quit {
+                    break;
+                }
+            }
+            Err(e) => return crate::cmds::fail(e),
+        }
+    }
+    if opened == 0 {
+        println!("nothing left to review.");
+    } else if accepted == 0 {
+        println!("nothing accepted.");
+    } else {
+        println!("\n{} accepted.", profile.count(accepted));
+    }
+    0
+}
+
+/// The finished runs to offer, oldest first, and the checkpoints that are
+/// not offered.
+///
+/// A `.partial.json` is a run still being drafted, or one that died. Its
+/// extension is `json` too, and a run started later sorts later, so while
+/// an eighty-minute import ran `--resume` opened its half-written checkpoint
+/// and hid the finished run beside it. A checkpoint has no `kept` to review;
+/// `--replay` is the way back into one.
+fn runs_to_resume(dir: &Path, pick: Option<&str>) -> Result<(Vec<PathBuf>, Vec<PathBuf>), String> {
     let runs = dir.join(RUNS_DIR);
-    let mut found: Vec<PathBuf> = match std::fs::read_dir(&runs) {
+    let all: Vec<PathBuf> = match std::fs::read_dir(&runs) {
         Ok(rd) => rd
             .filter_map(|e| e.ok().map(|e| e.path()))
             .filter(|p| p.extension().is_some_and(|e| e == "json"))
             .collect(),
-        Err(e) => return crate::cmds::fail(format!("no draft runs to resume ({e})")),
+        Err(e) => return Err(format!("no draft runs to resume ({e})")),
     };
+    let (mut partial, mut found): (Vec<PathBuf>, Vec<PathBuf>) = all
+        .into_iter()
+        .partition(|p| p.to_string_lossy().ends_with(".partial.json"));
     found.sort();
-    let Some(latest) = found.last() else {
-        return crate::cmds::fail("no draft runs to resume — `canon draft --from <paths>`");
-    };
-    let raw = match std::fs::read_to_string(latest) {
-        Ok(r) => r,
-        Err(e) => return crate::cmds::fail(format!("reading {}: {e}", latest.display())),
-    };
-    let run: DraftRun = match serde_json::from_str(&raw) {
-        Ok(r) => r,
-        Err(e) => return crate::cmds::fail(format!("{}: {e}", latest.display())),
-    };
-    let Ok(canon) = store::read(dir).map(|l| l.derive()) else {
-        return crate::cmds::fail("cannot read this canon");
-    };
-    // Already in the canon, by its own words. Text is what a person edited
-    // and what they will recognise; an id would not survive the `[e]dit`
-    // path that rewrites the text before it is written.
-    let remaining = remaining(&run, &canon, seen);
-    println!(
-        "resuming {} — {} of {} left, no model call",
-        latest.file_name().unwrap_or_default().to_string_lossy(),
-        remaining.len(),
-        run.kept.len()
-    );
-    if remaining.is_empty() {
-        println!("nothing left to review.");
-        return 0;
-    }
-    match review(dir, &run.candidates, &remaining, seen) {
-        Ok(a) if a.is_empty() => {
-            println!("nothing accepted.");
-            0
+    partial.sort();
+    if let Some(name) = pick {
+        // By file name, by the timestamp alone, or by any tail of the path.
+        let stem = format!("{name}.json");
+        found.retain(|p| {
+            p.file_name().is_some_and(|f| f == name || *f == *stem)
+                || p.to_string_lossy().ends_with(name)
+        });
+        if found.is_empty() {
+            return Err(format!(
+                "no draft run named `{name}` — they are in {}",
+                runs.display()
+            ));
         }
-        Ok(a) => {
-            println!("\n{} accepted.", profile.count(a.len()));
-            0
-        }
-        Err(e) => crate::cmds::fail(e),
     }
+    Ok((found, partial))
 }
 
 /// Candidates from a run that are neither already in the canon nor already
@@ -1831,7 +1946,8 @@ pub fn run(args: &[String]) -> i32 {
         Seen::load(&dir)
     };
     if crate::cmds::has(args, "--resume") {
-        return resume(&dir, profile, &mut seen);
+        let pick = crate::cmds::positionals(args).first().copied();
+        return resume(&dir, profile, &mut seen, pick);
     }
     if let Some(target) = crate::cmds::flag(args, "--refold") {
         return refold(args, target);
@@ -2021,16 +2137,15 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     for chunk in &chunks {
         for s in 0..samples {
             if samples > 1 {
-                eprint!(
-                    "\r\x1b[Kextracting {}/{} (reading {}/{samples})…",
+                crate::term::progress(&format!(
+                    "extracting {}/{} (reading {}/{samples})…",
                     chunk.id + 1,
                     chunks.len(),
                     s + 1
-                );
+                ));
             } else {
-                eprint!("\r\x1b[Kextracting {}/{}…", chunk.id + 1, chunks.len());
+                crate::term::progress(&format!("extracting {}/{}…", chunk.id + 1, chunks.len()));
             }
-            let _ = std::io::stderr().flush();
             match extract(&xclient, chunk, profile) {
                 Ok((k, d)) => {
                     candidates.extend(k.into_iter().map(|mut c| {
@@ -2066,11 +2181,11 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         eprintln!("\nno chunk produced an answer.");
         return 3;
     }
-    eprintln!(
-        "\r\x1b[K{} candidate(s), {} dropped for a bad citation",
+    crate::term::done(&format!(
+        "{} candidate(s), {} dropped for a bad citation",
         candidates.len(),
         dropped.len()
-    );
+    ));
 
     // From here the artifact exists and every exit writes it. A stage that
     // fails costs its own work and nothing before it.
@@ -2259,7 +2374,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     eprintln!("run recorded at {}", path.display());
 
     // ── one at a time ───────────────────────────────────────
-    let accepted = match review(dir, &candidates, &kept, seen) {
+    let accepted = match review(dir, &candidates, &kept, seen).map(|(a, _)| a) {
         Ok(a) => a,
         Err(e) => return crate::cmds::fail(e),
     };
@@ -2301,15 +2416,19 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
 
 /// Interactive review. `[a]ccept [e]dit [r]eject [s]kip [q]uit`, one at a
 /// time, no bulk verb.
+///
+/// Returns what was accepted and whether the person quit — which ends the
+/// sitting for a caller with more than one run to offer.
 fn review(
     dir: &Path,
     candidates: &[Candidate],
     kept: &[usize],
     seen: &mut Seen,
-) -> Result<Vec<canon_core::ActId>, String> {
+) -> Result<(Vec<canon_core::ActId>, bool), String> {
     let stdin = std::io::stdin();
     let mut lines = stdin.lock().lines();
     let mut accepted = Vec::new();
+    let mut quit = false;
     // A record is not offered. It says what happened, and there is no act
     // that means "the canon now holds that George III refused his Assent" —
     // asking a person to accept or reject one is asking them to rule on the
@@ -2350,6 +2469,7 @@ fn review(
         let _ = std::io::stdout().flush();
         let Some(Ok(answer)) = lines.next() else {
             println!("\n(end of input)");
+            quit = true;
             break;
         };
         // Piped input echoes nothing, so the prompt and the reply would run
@@ -2377,7 +2497,10 @@ fn review(
                 }
                 continue;
             }
-            "q" | "quit" => break,
+            "q" | "quit" => {
+                quit = true;
+                break;
+            }
             _ => continue,
         };
         let kind = match c.kind {
@@ -2403,7 +2526,7 @@ fn review(
         println!("  {}", act.id);
         accepted.push(act.id);
     }
-    Ok(accepted)
+    Ok((accepted, quit))
 }
 
 fn persist(dir: &Path, run: &DraftRun) -> Result<PathBuf, String> {

@@ -280,6 +280,8 @@ get detected, and a stale number is worse than none. Measure your own:
 - [One page](./docs/ONE_PAGER.md) — why you'd use it, the ideas that carry it,
   and exactly where a model is called.
 - [Getting started](./docs/GETTING_STARTED.md) — a house's first hour.
+- [The pieces and the verbs](./docs/GUIDE.md) — every verb and the ten ideas
+  underneath it, in plain words.
 - [Cookbook](./docs/COOKBOOK.md) — the questions groups actually ask, and the acts
   that answer them, with real output.
 - `canon --help` is seven verbs. `canon help all` is all of them.

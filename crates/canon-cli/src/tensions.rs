@@ -267,8 +267,7 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
     let mut last_err: Option<ModelError> = None;
     for (i, idx) in sets.iter().enumerate() {
         let done = i + 1;
-        eprint!("\r\x1b[Kcomparing {done}/{passes}…");
-        let _ = std::io::Write::flush(&mut std::io::stderr());
+        crate::term::progress(&format!("comparing {done}/{passes}…"));
         // One pass failing is not the canon's. The map step has always
         // recorded a chunk it could not read and kept going; this step threw
         // away every other comparison for one refusal, and on a 34-section
@@ -310,11 +309,11 @@ pub fn detect_over(client: &Client, texts: &[&str]) -> Result<Compared, ModelErr
     if let (true, Some(e)) = (unread.len() == passes, last_err) {
         return Err(e);
     }
-    eprintln!(
-        "\r\x1b[K{}/{passes} passes done, {} pair(s) proposed",
+    crate::term::done(&format!(
+        "{}/{passes} passes done, {} pair(s) proposed",
         passes - unread.len(),
         out.len()
-    );
+    ));
     if !unread.is_empty() {
         // Loud, because every tension number from this run is a number about
         // a fraction of the pairs.

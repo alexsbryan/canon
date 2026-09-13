@@ -1980,6 +1980,76 @@ fn simultaneous_founding_grants_do_not_lock_the_founder_out() {
 }
 
 #[test]
+fn an_act_that_took_while_open_is_recorded_as_such() {
+    // A founding script: the founder's grant and an agent's self-grant share
+    // a second. Both take — nothing predates them — and the record says WHY
+    // each took, because a founder reading "applied" cannot otherwise tell a
+    // seat from an open door. A second later the door is shut: a stranger's
+    // grant is refused, and the founder's own is held, not open.
+    let stranger = Act::new(
+        ActKind::Grant {
+            holder: "human:b".into(),
+            scope: scope("house"),
+            horizon: None,
+            rationale: String::new(),
+        },
+        200,
+        "human:stranger",
+    );
+    let founder_later = grant("human:c", "house", None, 300);
+    let canon = Log::from_acts(vec![
+        grant("human:sam", "house", None, 100),
+        Act::new(
+            ActKind::Grant {
+                holder: "agent:helper".into(),
+                scope: scope("house.kitchen"),
+                horizon: None,
+                rationale: String::new(),
+            },
+            100,
+            "agent:helper",
+        ),
+        stranger.clone(),
+        founder_later.clone(),
+    ])
+    .derive();
+
+    assert_eq!(canon.bootstrap.len(), 2, "{:?}", canon.bootstrap);
+    assert!(canon
+        .bootstrap
+        .iter()
+        .all(|(_, why)| why.contains("predates this act")));
+    assert_eq!(canon.ungoverned.len(), 1);
+    assert_eq!(canon.ungoverned[0].0, stranger.id);
+    assert!(
+        !canon
+            .bootstrap
+            .iter()
+            .any(|(id, _)| *id == founder_later.id),
+        "a grant by a seated holder is held, not open"
+    );
+    assert_eq!(canon.who_decides(&scope("house"), 400).len(), 2);
+
+    // The typed answer, directly.
+    use crate::Seat;
+    let house = scope("house");
+    assert_eq!(canon.seat("human:sam", Some(&house), 100), Seat::Open);
+    assert_eq!(canon.seat("human:sam", Some(&house), 150), Seat::Held);
+    assert_eq!(
+        canon.seat("human:stranger", Some(&house), 150),
+        Seat::Lacking
+    );
+    // A corner nobody holds is open to somebody the canon has seated, and
+    // not to a stranger.
+    let attic = scope("attic");
+    assert_eq!(canon.seat("agent:helper", Some(&attic), 150), Seat::Open);
+    assert_eq!(
+        canon.seat("human:stranger", Some(&attic), 150),
+        Seat::Lacking
+    );
+}
+
+#[test]
 fn a_ruling_takes_standing_over_what_it_touches() {
     // The helper holds the kitchen. It dismisses a pair of HALL rules — outside
     // its seat. The act is on the record and flagged; the pair stays open;

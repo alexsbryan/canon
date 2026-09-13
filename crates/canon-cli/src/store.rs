@@ -81,10 +81,14 @@ pub fn read(dir: &Path) -> Result<Log, String> {
 ///
 /// **The canon is meant to be committed.** `acts.jsonl` is a text file people
 /// put in git, merge, and resolve with `canon merge-driver` — that is the
-/// point of a text log. Two things beside it are NOT the group's: `seen` is
-/// one person's ingest state, and `draft-runs/` is the evidence from their
-/// model runs. Committed, they conflict on every pull and tell the rest of
-/// the team which candidates somebody personally declined.
+/// point of a text log. Three things beside it are NOT the group's: `seen`
+/// is one person's ingest state, `draft-runs/` is the evidence from their
+/// model runs, and `config` is one machine's endpoint. Committed, the first
+/// two conflict on every pull and tell the rest of the team which
+/// candidates somebody personally declined; the third makes `canon draft`
+/// on a fresh clone fail against a port on somebody else's laptop. This
+/// list and the one in this repository's own `.canon/.gitignore` say the
+/// same thing, and the test below holds them together.
 ///
 /// Written on `init`, and again the first time a `seen` file appears, because
 /// most canons already exist by then. Never overwritten: a group that has
@@ -96,11 +100,15 @@ pub fn ignore_local(dir: &Path) {
     }
     let _ = std::fs::write(
         &path,
-        "# The canon itself is meant to be committed. These two are not:\n\
-         # `seen` is this machine's ingest state and `draft-runs/` is the\n\
-         # evidence from its model runs. Neither is an act.\n\
+        "# The canon itself is meant to be committed. These are not:\n\
+         # `seen` is this machine's ingest state, `draft-runs/` is the\n\
+         # evidence from its model runs, and `config` is the endpoint and\n\
+         # model name on ONE machine — a fresh clone should say \"no endpoint\n\
+         # configured\", not fail against a port on somebody else's laptop.\n\
+         # None of them is an act.\n\
          seen\n\
-         draft-runs/\n",
+         draft-runs/\n\
+         config\n",
     );
 }
 
@@ -164,6 +172,31 @@ pub fn ymd(ts: i64) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn init_ignores_what_this_repository_ignores() {
+        // `init` wrote `seen` and `draft-runs/` while this repository's own
+        // `.canon/.gitignore` also listed `config`, so a canon founded with
+        // the tool committed one machine's endpoint on its first commit.
+        // The two lists are held together here rather than copied.
+        let dir = std::env::temp_dir().join("canon-store-ignore");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        super::ignore_local(&dir);
+        let written = std::fs::read_to_string(dir.join(".gitignore")).unwrap();
+        let ours = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.canon/.gitignore"),
+        )
+        .expect("this repository's own .canon/.gitignore");
+        let entries = |s: &str| -> Vec<String> {
+            s.lines()
+                .map(str::trim)
+                .filter(|l| !l.is_empty() && !l.starts_with('#'))
+                .map(str::to_string)
+                .collect()
+        };
+        assert_eq!(entries(&written), entries(&ours));
+    }
+
     #[test]
     fn dates_come_from_the_one_calendar() {
         // Not a second test of the algorithm — a test that this module has

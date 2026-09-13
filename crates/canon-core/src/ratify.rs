@@ -245,6 +245,24 @@ pub enum Verdict {
     Refused { at: i64, by: String, why: String },
 }
 
+/// Where an actor stands toward governing a scope at a moment — the typed
+/// answer behind [`Canon::may_govern`].
+///
+/// Two of the three say yes, and the difference between them is the one a
+/// founder needs to see. `Held` is standing granted before the act. `Open`
+/// is the bootstrap: no grant covering the scope predates the act, so the
+/// act took because nothing yet stood in its way — and the next second, once
+/// the grants beside it count, the same act would be a proposal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Seat {
+    /// Holds standing covering the scope, granted before the moment.
+    Held,
+    /// No grant covering the scope predates the moment: it was open.
+    Open,
+    /// Somebody else holds it, and this actor does not.
+    Lacking,
+}
+
 /// Something put to a scope: a commitment, or a change to how the scope
 /// decides. The verdict reads nothing else about it.
 #[derive(Debug, Clone, Copy)]
@@ -295,7 +313,7 @@ fn settle(o: Outcome) -> Verdict {
     }
 }
 
-fn where_(scope: Option<&Scope>) -> String {
+pub(crate) fn where_(scope: Option<&Scope>) -> String {
     scope.map_or_else(|| "this canon".to_string(), ToString::to_string)
 }
 
@@ -352,7 +370,13 @@ impl Canon {
     }
 
     /// May this actor change how a scope is governed — grant standing over
-    /// it, set its policy, set its ratification rule?
+    /// it, set its policy, set its ratification rule? The yes-or-no reading
+    /// of [`Canon::seat`].
+    pub fn may_govern(&self, actor: &str, scope: Option<&Scope>, at: i64) -> bool {
+        self.seat(actor, scope, at) != Seat::Lacking
+    }
+
+    /// Where this actor stands toward governing a scope at a moment.
     ///
     /// **The constitutional level, one step up.** Standing over a scope
     /// includes standing over everything above it, so holding `house` is
@@ -366,21 +390,42 @@ impl Canon {
     /// id, which is deterministic and arbitrary. A founder writing twelve
     /// grants in one sitting must not find the first one to sort has locked
     /// the other eleven out. Simultaneous acts cannot govern each other.
-    pub fn may_govern(&self, actor: &str, scope: Option<&Scope>, at: i64) -> bool {
+    ///
+    /// The same rule makes a founding script's grant and the act right after
+    /// it simultaneous, so the act takes under [`Seat::Open`] rather than
+    /// under the grant — which is correct and was invisible: a bool cannot
+    /// say *why* it was true. The fold records every act that took while
+    /// open in [`Canon::bootstrap`], and the CLI says so on the line that
+    /// reports the act.
+    pub fn seat(&self, actor: &str, scope: Option<&Scope>, at: i64) -> Seat {
         let prior: Vec<&crate::scope::Grant> = self
             .grants
             .iter()
             .filter(|g| g.granted_at < at && g.held_at(at))
             .collect();
         if self.grants.iter().all(|g| g.granted_at >= at) {
-            return true;
+            return Seat::Open;
         }
         let holds_any = || prior.iter().any(|g| g.actor == actor);
+        // A scope nobody holds is open to anyone the canon has seated at all.
+        // A stranger to the canon does not get a corner of it for free.
+        let open_to = |in_house: bool| if in_house { Seat::Open } else { Seat::Lacking };
+        let held_by = |holders: &[&&crate::scope::Grant]| {
+            if holders.iter().any(|g| g.actor == actor) {
+                Seat::Held
+            } else {
+                Seat::Lacking
+            }
+        };
         match scope {
             Some(s) => {
                 let covering: Vec<&&crate::scope::Grant> =
                     prior.iter().filter(|g| g.scope.covers(s)).collect();
-                covering.iter().any(|g| g.actor == actor) || (covering.is_empty() && holds_any())
+                if covering.is_empty() {
+                    open_to(holds_any())
+                } else {
+                    held_by(&covering)
+                }
             }
             // The whole canon: anyone holding a top-level scope, or anyone
             // at all if no top-level scope has been granted.
@@ -388,9 +433,9 @@ impl Canon {
                 let top: Vec<&&crate::scope::Grant> =
                     prior.iter().filter(|g| g.scope.depth() == 1).collect();
                 if top.is_empty() {
-                    holds_any()
+                    open_to(holds_any())
                 } else {
-                    top.iter().any(|g| g.actor == actor)
+                    held_by(&top)
                 }
             }
         }
@@ -505,7 +550,12 @@ impl Canon {
             Ratify::Standing => {
                 if self.nobody_holds_before(p.scope, from) {
                     return Outcome {
-                        completed: Some((from, format!("nobody holds {here}; it is open"))),
+                        // "Held before", not "holds": in a founding script
+                        // the scope IS held, one second too late to count.
+                        completed: Some((
+                            from,
+                            format!("nobody held {here} before this was written; it was open"),
+                        )),
                         refused: None,
                         needs: String::new(),
                     };

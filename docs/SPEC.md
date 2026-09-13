@@ -312,8 +312,11 @@ keeps that it did; nothing changed. Implementations MUST surface such acts rathe
 than drop them. Only grants made strictly before the act count, for and
 against: acts written in the same second cannot govern one another, so a
 founder's first twelve grants all take. A canon with no earlier grant is
-ungoverned and open; the first grant closes it. Withdrawing your own
-standing is always yours to do.
+ungoverned and open; the first grant closes it. An implementation MUST be
+able to say which acts applied only because no grant predated them, the
+same way it surfaces the acts it refused: a founding script writes its
+grants and its first rules in one second, and every one of those took while
+open. Withdrawing your own standing is always yours to do.
 
 **A `revert` is gated the same way, and this one is load-bearing.** A
 tomb-stone is as much a governance move as the act it covers: gating who may

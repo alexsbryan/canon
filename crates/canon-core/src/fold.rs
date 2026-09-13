@@ -267,6 +267,15 @@ pub struct Canon {
     /// should see that it was tried.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ungoverned: Vec<(ActId, String)>,
+    /// Governance acts that applied only because no grant covering their
+    /// scope predated them — the canon, or that corner of it, was still
+    /// open. The other half of `ungoverned`: a refusal says who lacked
+    /// standing, and this says nobody had it yet. A founding script writes
+    /// its grants and its first rules in one second, and every one of those
+    /// rules took this way; a reader that cannot say so reads a notebook as
+    /// a governed canon.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bootstrap: Vec<(ActId, String)>,
     /// Annotations this build carried without interpreting, by op.
     ///
     /// The §4.3 mitigation, and it is required rather than a courtesy.
@@ -499,23 +508,55 @@ pub fn derive(acts: &[Act]) -> Canon {
     derive_at(acts, acts.iter().map(|a| a.ts_unix).max().unwrap_or(0))
 }
 
+/// The one gate on a governance act, and its bookkeeping.
+///
+/// Every act that takes standing — a grant, a policy, a ruling, a retraction
+/// of somebody else's — asks this and nothing else. The answer is recorded
+/// as it is given: an act by somebody without standing lands in `ungoverned`
+/// with `refused` as the reason and is not applied; an act that took only
+/// because nothing covering the scope predated it lands in `bootstrap` and
+/// is applied. Nine gates each writing their own `if !may_govern` was nine
+/// places for the second kind of answer to go unrecorded, which is how it
+/// went unrecorded (§10.6).
+fn gate(
+    canon: &mut Canon,
+    act: &Act,
+    scope: Option<&crate::scope::Scope>,
+    refused: impl FnOnce() -> String,
+) -> bool {
+    match canon.seat(&act.actor, scope, act.ts_unix) {
+        crate::ratify::Seat::Held => true,
+        crate::ratify::Seat::Open => {
+            canon.bootstrap.push((
+                act.id.clone(),
+                format!(
+                    "no grant over {} predates this act, so it was open",
+                    crate::ratify::where_(scope)
+                ),
+            ));
+            true
+        }
+        crate::ratify::Seat::Lacking => {
+            canon.ungoverned.push((act.id.clone(), refused()));
+            false
+        }
+    }
+}
+
 /// May this act's actor rule on this pair? Standing over either side's scope
 /// — or, for unscoped commitments, standing in the canon at all. Records the
 /// attempt in `ungoverned` when not, so the answer is also the bookkeeping.
 fn rules_over(canon: &mut Canon, act: &Act, a: &ActId, b: &ActId) -> bool {
     let scope = canon.scope_of(a).or_else(|| canon.scope_of(b)).cloned();
-    if canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
-        return true;
-    }
-    canon.ungoverned.push((
-        act.id.clone(),
+    gate(canon, act, scope.as_ref(), || {
         format!(
             "{} ruled on {a} and {b} without standing over {}",
             act.actor,
-            scope.map_or("them".to_string(), |s| s.to_string())
-        ),
-    ));
-    false
+            scope
+                .as_ref()
+                .map_or("them".to_string(), ToString::to_string)
+        )
+    })
 }
 
 /// A `grant` act applied, or recorded in `ungoverned` when its actor could
@@ -534,14 +575,12 @@ fn apply_grant(
     // Granting standing over a scope takes standing over it or over the
     // scope above. The first grant in an ungoverned canon is the bootstrap
     // and is open.
-    if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
-        canon.ungoverned.push((
-            act.id.clone(),
-            format!(
-                "{} granted {holder} standing over {scope} without holding it",
-                act.actor
-            ),
-        ));
+    if !gate(canon, act, Some(scope), || {
+        format!(
+            "{} granted {holder} standing over {scope} without holding it",
+            act.actor
+        )
+    }) {
         return;
     }
     // Re-granting the same actor the same scope CLOSES the old one rather
@@ -570,14 +609,14 @@ fn apply_grant(
 fn apply_withdraw(canon: &mut Canon, act: &Act, holder: &str, scope: &crate::scope::Scope) {
     // Stepping back yourself is always yours to do. Standing somebody else
     // down takes standing over the scope.
-    if act.actor != *holder && !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
-        canon.ungoverned.push((
-            act.id.clone(),
+    if act.actor != *holder
+        && !gate(canon, act, Some(scope), || {
             format!(
                 "{} stood {holder} down from {scope} without holding it",
                 act.actor
-            ),
-        ));
+            )
+        })
+    {
         return;
     }
     // Removes grants AT or BELOW the named scope. Carving a hole out of a
@@ -879,11 +918,12 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 // somebody else's takes standing over it.
                 let own = by_id.get(target).is_some_and(|c| c.actor == act.actor)
                     || questions.get(target).is_some_and(|q| q.actor == act.actor);
-                if !own && !canon.may_govern(&act.actor, canon.scope_of(target), act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!("{} retracted {target} without standing over it", act.actor),
-                    ));
+                let scope = canon.scope_of(target).cloned();
+                if !own
+                    && !gate(&mut canon, act, scope.as_ref(), || {
+                        format!("{} retracted {target} without standing over it", act.actor)
+                    })
+                {
                     continue;
                 }
                 match (by_id.get_mut(target), questions.get_mut(target)) {
@@ -980,17 +1020,13 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 });
             }
             ActKind::Policy { text, rule, scope } => {
-                if !canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!(
-                            "{} set a policy over {} without holding it",
-                            act.actor,
-                            scope
-                                .as_ref()
-                                .map_or("this canon".to_string(), ToString::to_string)
-                        ),
-                    ));
+                if !gate(&mut canon, act, scope.as_ref(), || {
+                    format!(
+                        "{} set a policy over {} without holding it",
+                        act.actor,
+                        crate::ratify::where_(scope.as_ref())
+                    )
+                }) {
                     continue;
                 }
                 // One policy per scope. Two live policies over one scope
@@ -1009,17 +1045,13 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
             ActKind::Ratification { text, rule, scope } => {
                 // Changing how a scope makes rules is decided one level up:
                 // by standing over the scope, which includes the scope above.
-                if !canon.may_govern(&act.actor, scope.as_ref(), act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!(
-                            "{} set how {} makes rules without holding it",
-                            act.actor,
-                            scope
-                                .as_ref()
-                                .map_or("this canon".to_string(), ToString::to_string)
-                        ),
-                    ));
+                if !gate(&mut canon, act, scope.as_ref(), || {
+                    format!(
+                        "{} set how {} makes rules without holding it",
+                        act.actor,
+                        crate::ratify::where_(scope.as_ref())
+                    )
+                }) {
                     continue;
                 }
                 // Kept, not replaced: a commitment is judged under the rule
@@ -1049,11 +1081,9 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 // Saying what a commons HAS is a governance act: it draws the
                 // boundary Ostrom's first principle is about, one level down
                 // from who holds it.
-                if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!("{} allotted {scope} without holding it", act.actor),
-                    ));
+                if !gate(&mut canon, act, Some(scope), || {
+                    format!("{} allotted {scope} without holding it", act.actor)
+                }) {
                     continue;
                 }
                 canon.allotments.retain(|a| a.scope != *scope);
@@ -1068,11 +1098,9 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 });
             }
             ActKind::Allocation { text, rule, scope } => {
-                if !canon.may_govern(&act.actor, Some(scope), act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!("{} set how {scope} is shared without holding it", act.actor),
-                    ));
+                if !gate(&mut canon, act, Some(scope), || {
+                    format!("{} set how {scope} is shared without holding it", act.actor)
+                }) {
                     continue;
                 }
                 // Kept rather than replaced, like a ratification rule: the
@@ -1095,11 +1123,9 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
             } => {
                 // A decision names no scope, so it takes standing in the
                 // canon at all: somebody the house has said is in.
-                if !canon.may_govern(&act.actor, None, act.ts_unix) {
-                    canon.ungoverned.push((
-                        act.id.clone(),
-                        format!("{} decided \"{about}\" without standing here", act.actor),
-                    ));
+                if !gate(&mut canon, act, None, || {
+                    format!("{} decided \"{about}\" without standing here", act.actor)
+                }) {
                     continue;
                 }
                 canon.rulings.push(Ruling {

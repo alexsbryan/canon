@@ -132,7 +132,19 @@ pub fn report_status(d: &Path, id: &ActId) {
         return;
     };
     match &c.status {
-        Status::Active => println!("  in force"),
+        // How it became a rule, in a canon somebody holds — the same line
+        // `why` prints. In a founding script this is where "nobody held it
+        // before this was written; it was open" shows up, on the act it is
+        // about, rather than a second later as a proposal nobody expected.
+        Status::Active => match canon.ratify(c, store::now()) {
+            canon_core::Verdict::Ratified { how, .. } if !canon.grants.is_empty() => {
+                println!(
+                    "{}",
+                    crate::wrap::hang("  in force — ", &crate::explain::person_in(&how))
+                )
+            }
+            _ => println!("  in force"),
+        },
         Status::Proposed { needs } => {
             println!(
                 "{}",
@@ -173,21 +185,67 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
     }
 }
 
-/// Did a governance act take? The fold refuses a grant, a policy, a ruling
-/// or a retraction by somebody without standing over what it touches, and
-/// the person who typed it should hear that from the same command rather
-/// than find it in `list`. Returns the exit code.
-pub fn report_governed(d: &Path, id: &ActId) -> i32 {
-    let Ok(log) = store::read(d) else { return 0 };
+/// How the fold judged a governance act, read back after the write.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Took {
+    /// Applied, by somebody who held standing over what it touched.
+    Applied,
+    /// Applied only because nothing covering the scope predated it. The
+    /// reason, in the fold's words.
+    Open(String),
+    /// Written, on the record, and not applied. The reason.
+    Refused(String),
+}
+
+/// Did a governance act take, and how? The fold refuses a grant, a policy,
+/// a ruling or a retraction by somebody without standing over what it
+/// touches, and applies one while a scope is still open; the person who
+/// typed it should hear which from the same command rather than find it in
+/// `list`.
+pub fn took(d: &Path, id: &ActId) -> Took {
+    let Ok(log) = store::read(d) else {
+        return Took::Applied;
+    };
     let canon = log.derive_at(store::now());
-    match canon.ungoverned.iter().find(|(x, _)| x == id) {
-        Some((_, why)) => {
-            println!("{}", crate::wrap::hang("  NOT APPLIED: ", why));
-            println!("  it is on the record; somebody with standing has to do it.");
+    if let Some((_, why)) = canon.ungoverned.iter().find(|(x, _)| x == id) {
+        return Took::Refused(why.clone());
+    }
+    if let Some((_, why)) = canon.bootstrap.iter().find(|(x, _)| x == id) {
+        return Took::Open(why.clone());
+    }
+    Took::Applied
+}
+
+/// Say what the fold said, in that order.
+///
+/// **A refusal is the headline, and the only line.** Every handler used to
+/// print its success line first and ask the fold second, so a refused grant
+/// read `agent:claude holds repo.defaults` and then `NOT APPLIED` — and a
+/// script or an agent reading the first line took the wrong lesson. The id
+/// stays because `undo` needs it. An act that took while open prints its
+/// headline and then says so. Returns the exit code.
+pub fn announce(t: &Took, id: &ActId, headline: impl FnOnce()) -> i32 {
+    match t {
+        Took::Refused(why) => {
+            println!("{}", crate::wrap::hang("NOT APPLIED: ", why));
+            println!("  on the record as {id}; somebody with standing has to do it.");
             1
         }
-        None => 0,
+        Took::Open(why) => {
+            headline();
+            println!("{}", crate::wrap::hang("  applied while open: ", why));
+            0
+        }
+        Took::Applied => {
+            headline();
+            0
+        }
     }
+}
+
+/// [`took`] then [`announce`]: the one path a gated write reports through.
+pub fn governed(d: &Path, id: &ActId, headline: impl FnOnce()) -> i32 {
+    announce(&took(d, id), id, headline)
 }
 
 /// `--scope <s>` on a write: the commitment is scoped in the same breath, so
@@ -587,10 +645,7 @@ pub fn retract(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(act) => {
-            println!("retracted {target}");
-            report_governed(&d, &act.id)
-        }
+        Ok(act) => governed(&d, &act.id, || println!("retracted {target}")),
         Err(e) => fail(e),
     }
 }
@@ -625,7 +680,7 @@ pub fn accept(args: &[String]) -> i32 {
             revisit: flag(args, "--revisit").map(str::to_string),
         },
     ) {
-        Ok(act) => {
+        Ok(act) => governed(&d, &act.id, || {
             println!("carrying both, knowingly:");
             println!("  {}", crate::explain::named(&st, &a));
             println!("  {}", crate::explain::named(&st, &b));
@@ -633,8 +688,7 @@ pub fn accept(args: &[String]) -> i32 {
             if let Some(r) = flag(args, "--revisit") {
                 println!("  look again by {r}");
             }
-            report_governed(&d, &act.id)
-        }
+        }),
         Err(e) => fail(e),
     }
 }
@@ -663,10 +717,9 @@ pub fn dismiss(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(act) => {
-            println!("dismissed: {a} and {b} are not in conflict");
-            report_governed(&d, &act.id)
-        }
+        Ok(act) => governed(&d, &act.id, || {
+            println!("dismissed: {a} and {b} are not in conflict")
+        }),
         Err(e) => fail(e),
     }
 }
@@ -701,15 +754,12 @@ pub fn undo(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(a) => {
-            // Deleting somebody else's act takes standing over it, the same
-            // as retracting one. Say which it was before claiming an effect.
-            let refused = report_governed(&d, &a.id);
-            if refused == 0 {
-                println!("reverted {act_id} (itself revertible)");
-            }
-            refused
-        }
+        // Deleting somebody else's act takes standing over it, the same as
+        // retracting one. The fold says which before anything claims an
+        // effect.
+        Ok(a) => governed(&d, &a.id, || {
+            println!("reverted {act_id} (itself revertible)")
+        }),
         Err(e) => fail(e),
     }
 }

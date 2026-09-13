@@ -302,7 +302,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
 /// `human:` stripped inside a sentence the fold wrote, such as a verdict's
 /// `how` or `needs`. The fold names actors as the format does; this surface
 /// names them as people do.
-fn person_in(text: &str) -> String {
+pub fn person_in(text: &str) -> String {
     text.replace("human:", "")
 }
 

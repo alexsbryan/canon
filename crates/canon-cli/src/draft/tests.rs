@@ -1747,3 +1747,69 @@ fn a_prompt_nobody_can_answer_is_never_asked() {
     // And a small run is never worth interrupting anybody for.
     assert!(!needs_asking(&args(&["--dry-run"]), CONFIRM_ABOVE, true));
 }
+
+#[test]
+fn emphasis_comes_out_of_the_text_and_symbols_stay_whole() {
+    // Pilot 2 copied `**build_self_manifest must derive…**` into a rule. The
+    // stars are the passage's markup, not the rule's words; the identifier's
+    // own underscores are its words.
+    assert_eq!(
+        strip_emphasis("**build_self_manifest must derive provider.name via size_gb.**"),
+        "build_self_manifest must derive provider.name via size_gb."
+    );
+    assert_eq!(
+        strip_emphasis("Quiet hours run __11pm__ to 7am."),
+        "Quiet hours run 11pm to 7am."
+    );
+    assert_eq!(
+        strip_emphasis("*Mornings are protected.*"),
+        "Mornings are protected."
+    );
+    // Inside backticks nothing moves: a symbol is quoted as written.
+    assert_eq!(
+        strip_emphasis("Set `**kwargs` on `__init__`."),
+        "Set `**kwargs` on `__init__`."
+    );
+    // A lone doubled marker is not emphasis, and half of it is not removed.
+    assert_eq!(
+        strip_emphasis("x ** 2 is the square."),
+        "x ** 2 is the square."
+    );
+    // One inside a word is a word.
+    assert_eq!(
+        strip_emphasis("size_gb is an alias."),
+        "size_gb is an alias."
+    );
+}
+
+#[test]
+fn resume_offers_every_finished_run_oldest_first_and_never_a_checkpoint() {
+    // While an eighty-minute import ran, `--resume` opened its half-written
+    // `.partial.json` — extension `json`, started later, sorted last — and
+    // hid the finished run beside it. And with two finished runs it offered
+    // only the newest, stranding the older one's candidates.
+    let dir = scratch("canon-draft-resume-runs");
+    let runs = dir.join(RUNS_DIR);
+    std::fs::create_dir_all(&runs).unwrap();
+    for name in ["100.json", "200.json", "300.partial.json"] {
+        std::fs::write(runs.join(name), "{}").unwrap();
+    }
+    let (found, partial) = runs_to_resume(&dir, None).unwrap();
+    let names = |v: &[std::path::PathBuf]| -> Vec<String> {
+        v.iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+            .collect()
+    };
+    assert_eq!(names(&found), ["100.json", "200.json"]);
+    assert_eq!(names(&partial), ["300.partial.json"]);
+
+    // Naming one picks it: by file name, by the timestamp alone, or by any
+    // tail of the path.
+    let (found, _) = runs_to_resume(&dir, Some("200.json")).unwrap();
+    assert_eq!(names(&found), ["200.json"]);
+    let (found, _) = runs_to_resume(&dir, Some("100")).unwrap();
+    assert_eq!(names(&found), ["100.json"]);
+    assert!(runs_to_resume(&dir, Some("999.json")).is_err());
+    // A checkpoint cannot be picked by name either.
+    assert!(runs_to_resume(&dir, Some("300.partial.json")).is_err());
+}

@@ -424,11 +424,8 @@ canon ratification set standing --scope house -m "let anyone write"    # run by 
 ```
 
 ```text
-can-aa41b198d998  standing
-  let anyone write
-  how rules are made in house and everything under it
-  NOT APPLIED: human:ola set how house makes rules without holding it
-  it is on the record; somebody with standing has to do it.
+NOT APPLIED: human:ola set how house makes rules without holding it
+  on the record as can-aa41b198d998; somebody with standing has to do it.
 ```
 
 Exit code 1, and `canon list` footers how many such acts are sitting there.
@@ -610,6 +607,7 @@ lasted: the rules (`add`), the rules for making rules (`grant`,
 `ratification set`, `policy set`), and who may change *those* (the same acts,
 aimed one scope up).
 
+- [The pieces and the verbs](./GUIDE.md) — every verb and the ten ideas underneath, in plain words.
 - [Getting started](./GETTING_STARTED.md) — a house's first hour, and the tier table.
 - [SPEC.md](./SPEC.md) — the file format, and every rule the fold applies.
 - [PRIMITIVES.md](./PRIMITIVES.md) — why each of these is a primitive rather than a feature.
