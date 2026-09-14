@@ -357,6 +357,17 @@ pub struct DraftRun {
     /// scorer would average a mid-loop probe in with a measurement.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replayed_from: Option<String>,
+    /// Set when this run was finished from another run's recorded extraction.
+    ///
+    /// Names that artifact and why it had stopped. The passages were read
+    /// once, by the run named here; this one paid only for the stages after.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub continued_from: Option<String>,
+    /// Rules the support stage kept without a number check, because no
+    /// reading of them came back. A drop count from a run with entries here
+    /// is a count over the rules that WERE read.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub support_unchecked: Vec<String>,
     /// Set when a run stopped on purpose rather than on an error.
     ///
     /// Distinct from `failed`, which means something went wrong. Both make the
@@ -1007,6 +1018,11 @@ pub struct Supported {
     pub quantities: Vec<Vec<quantify::Quantity>>,
     /// Refused, each naming the number its citation did not carry.
     pub dropped: Vec<Dropped>,
+    /// Rules kept WITHOUT a number check because no reading of them came
+    /// back, each naming the rule and why. Kept, since the refusing default
+    /// for a missing reading is "states no quantity"; listed, so a reviewer
+    /// is not told a rule was checked when it was not.
+    pub unchecked: Vec<String>,
 }
 
 /// Read every rule and every citation, drop the rules their own citation does
@@ -1039,6 +1055,7 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
             candidates: other,
             quantities,
             dropped: Vec::new(),
+            unchecked: Vec::new(),
         });
     }
     // Each rule is read alongside its own citation, in one call, because the
@@ -1047,7 +1064,13 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
         .iter()
         .map(|c| (c.text.as_str(), c.quote.as_str()))
         .collect();
-    let read = quantify::quantify_pairs(client, &pairs)?;
+    let quantified = quantify::quantify_pairs(client, &pairs)?;
+    let unchecked: Vec<String> = quantified
+        .unread
+        .iter()
+        .map(|u| format!("{} — {}", rules[u.index].text, u.error))
+        .collect();
+    let read = quantified.readings;
 
     let mut kept = Vec::new();
     let mut quantities = Vec::new();
@@ -1080,6 +1103,7 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
         candidates: kept,
         quantities,
         dropped,
+        unchecked,
     })
 }
 
@@ -1425,6 +1449,103 @@ fn refold(args: &[String], target: &str) -> i32 {
 /// Chunks come from the artifact, not from the document. A replay measures the
 /// run that was recorded, and re-reading the sources would let the file change
 /// underneath the evidence.
+/// Finish a run that stopped after extraction, from what it recorded.
+///
+/// The passages were paid for once. A run that failed in `support` or later,
+/// or was killed there, kept its chunks and candidates; this runs the stages
+/// after extraction on them as a real run, without reading a passage again.
+/// It never reviews: the result is a run on disk, and `--resume` is where a
+/// person takes it up.
+fn continue_run(
+    dir: &Path,
+    profile: Profile,
+    args: &[String],
+    target: &str,
+    seen: &mut Seen,
+) -> i32 {
+    let recorded: DraftRun = match std::fs::read_to_string(target)
+        .map_err(|e| format!("reading {target}: {e}"))
+        .and_then(|raw| serde_json::from_str(&raw).map_err(|e| format!("{target}: {e}")))
+    {
+        Ok(r) => r,
+        Err(e) => return crate::cmds::fail(e),
+    };
+    let client = match model::client_for(dir, crate::cmds::has(args, "--allow-remote")) {
+        Ok(c) => c,
+        Err(e) => return model::report(e),
+    };
+    continue_with(dir, profile, recorded, target, client, seen, args)
+}
+
+fn continue_with(
+    dir: &Path,
+    profile: Profile,
+    recorded: DraftRun,
+    target: &str,
+    client: Client,
+    seen: &mut Seen,
+    args: &[String],
+) -> i32 {
+    let why = match (&recorded.failed, &recorded.checkpoint) {
+        (Some(f), _) => format!("failed in `{}`", f.split(':').next().unwrap_or(f)),
+        (None, Some(c)) => format!("killed after `{c}`"),
+        (None, None) => {
+            return crate::cmds::fail(format!(
+                "{target} finished, so there is nothing to continue. `canon draft --resume` reviews it."
+            ))
+        }
+    };
+    if recorded.replayed_from.is_some() {
+        return crate::cmds::fail(format!(
+            "{target} is a replay, which is a measurement; its candidates are not a run to finish"
+        ));
+    }
+    if recorded.samples > 1 {
+        return crate::cmds::fail(format!(
+            "{target} read each passage {} times and stops after extraction by design",
+            recorded.samples
+        ));
+    }
+    if recorded.candidates.is_empty() {
+        return crate::cmds::fail(format!(
+            "{target} extracted nothing, so there is nothing to continue"
+        ));
+    }
+    if Profile::parse(&recorded.profile).ok() != Some(profile) {
+        return crate::cmds::fail(format!(
+            "{target} was drafted in the `{}` voice and this canon is `{}`; continue it where it was drafted",
+            recorded.profile,
+            profile.as_str()
+        ));
+    }
+    eprintln!(
+        "continuing {target} ({why}): {} candidate(s) from {} chunk(s), no passage read again",
+        recorded.candidates.len(),
+        recorded.chunks.len()
+    );
+    let pipeline = Pipeline {
+        dir,
+        profile,
+        xclient: client.for_leg(),
+        client,
+        chunks: recorded.chunks,
+        sources: recorded.sources,
+        skipped: recorded.skipped,
+        already_read: recorded.already_read,
+        capped: recorded.capped,
+        samples: recorded.samples,
+        dry_run: false,
+        replayed_from: None,
+        extracted: Some(CarriedExtraction {
+            candidates: recorded.candidates,
+            dropped: recorded.dropped,
+            unread: recorded.unread,
+        }),
+        continued_from: Some(format!("{target} ({why})")),
+    };
+    execute(pipeline, seen, args)
+}
+
 fn replay(dir: &Path, args: &[String], target: &str) -> i32 {
     let raw = match std::fs::read_to_string(target) {
         Ok(r) => r,
@@ -1539,6 +1660,8 @@ fn replay(dir: &Path, args: &[String], target: &str) -> i32 {
             Some(stage) => format!("{target} up to `{stage}`, live after"),
             None => format!("{target}, whole"),
         }),
+        extracted: None,
+        continued_from: None,
     };
     // A replay neither consults nor updates what this canon has already read:
     // it is re-scoring recorded evidence, not reading a feed.
@@ -1955,6 +2078,14 @@ pub fn run(args: &[String]) -> i32 {
     if let Some(target) = crate::cmds::flag(args, "--replay") {
         return replay(&dir, args, target);
     }
+    if let Some(target) = crate::cmds::flag(args, "--continue") {
+        if dry_run {
+            return crate::cmds::fail(
+                "`--continue` finishes a real run; a dry run has nothing to finish".to_string(),
+            );
+        }
+        return continue_run(&dir, profile, args, target, &mut seen);
+    }
     let gathered = match read_sources(args) {
         Ok(s) => s,
         Err(e) => return crate::cmds::fail(e),
@@ -2088,6 +2219,8 @@ pub fn run(args: &[String]) -> i32 {
         samples,
         dry_run,
         replayed_from: None,
+        extracted: None,
+        continued_from: None,
     };
     execute(pipeline, &mut seen, args)
 }
@@ -2114,6 +2247,18 @@ struct Pipeline<'a> {
     dry_run: bool,
     /// Set when the stages above a cut came off a recording.
     replayed_from: Option<String>,
+    /// Extraction an earlier run already did. When set, no passage is read and
+    /// the pipeline starts at `support`.
+    extracted: Option<CarriedExtraction>,
+    /// The run that extraction came from, for the artifact.
+    continued_from: Option<String>,
+}
+
+/// What an extraction produced, carried over from a recorded run.
+struct CarriedExtraction {
+    candidates: Vec<Candidate>,
+    dropped: Vec<Dropped>,
+    unread: Vec<Unread>,
 }
 
 fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
@@ -2130,11 +2275,17 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         samples,
         dry_run,
         replayed_from,
+        extracted,
+        continued_from,
     } = r;
-    let mut candidates: Vec<Candidate> = Vec::new();
-    let mut dropped: Vec<Dropped> = Vec::new();
-    let mut unread: Vec<Unread> = Vec::new();
-    for chunk in &chunks {
+    // A continued run arrives with its extraction done. Reading a passage
+    // again would pay for it twice.
+    let continuing = extracted.is_some();
+    let (mut candidates, mut dropped, mut unread) = match extracted {
+        Some(x) => (x.candidates, x.dropped, x.unread),
+        None => (Vec::new(), Vec::new(), Vec::new()),
+    };
+    for chunk in chunks.iter().filter(|_| !continuing) {
         for s in 0..samples {
             if samples > 1 {
                 crate::term::progress(&format!(
@@ -2217,6 +2368,8 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         stopped_after: None,
         checkpoint: None,
         replayed_from,
+        continued_from: continued_from.clone(),
+        support_unchecked: Vec::new(),
         tape: Vec::new(),
     };
 
@@ -2268,6 +2421,13 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
             supported.dropped.len()
         );
     }
+    if !supported.unchecked.is_empty() {
+        eprintln!(
+            "{} rule(s) kept without a number check — no reading of them came back",
+            supported.unchecked.len()
+        );
+    }
+    artifact.support_unchecked = supported.unchecked;
     dropped.extend(supported.dropped);
     let (candidates, quantities) = (supported.candidates, supported.quantities);
     artifact.candidates = candidates.clone();
@@ -2372,6 +2532,12 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
         return 0;
     }
     eprintln!("run recorded at {}", path.display());
+    // A continued run is finished, not reviewed. Review is a person's act, and
+    // a run being rescued is often being rescued by a job nobody is sitting at.
+    if continued_from.is_some() {
+        eprintln!("review it with `canon draft --resume`");
+        return 0;
+    }
 
     // ── one at a time ───────────────────────────────────────
     let accepted = match review(dir, &candidates, &kept, seen).map(|(a, _)| a) {

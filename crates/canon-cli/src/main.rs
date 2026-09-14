@@ -146,6 +146,8 @@ ADJUDICATE                                    (needs an endpoint)
         --yes                            do not ask before a large run
         --samples <n> --dry-run          read each passage n times (measurement)
         --refold <dir> --k <n>           re-fold those readings, no model call
+        --continue <run.json>            finish a run that failed after extraction, from
+                                         its recorded candidates — no passage read again
         --replay <run.json>              re-run a recorded run, no model call
         --replay <run.json> --live-from <stage>
                                          replay above <stage>, call for real from it

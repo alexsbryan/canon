@@ -105,7 +105,7 @@ fn independent_pairs_are_read_in_batches() {
             answer(&[(3, &[("10:00 PM", "", "quiet hours start", "22:00")])]),
         ),
     ]);
-    let got = quantify_pairs(&mock.client(), &refs).unwrap();
+    let got = quantify_pairs(&mock.client(), &refs).unwrap().readings;
     assert_eq!(mock.requests().len(), 2, "one call per {} pairs", BATCH / 2);
     assert_eq!(got.len(), refs.len());
     assert_eq!(got[0].0, vec![q("85", "dBA", "sound level", "85 dBA")]);
@@ -260,7 +260,7 @@ fn a_pair_is_never_split_across_two_calls() {
         .collect();
     let calls = refs.len().div_ceil(BATCH / 2);
     let mock = Mock::spawn(vec![(200, answer(&[])); calls]);
-    let got = quantify_pairs(&mock.client(), &refs).unwrap();
+    let got = quantify_pairs(&mock.client(), &refs).unwrap().readings;
     assert_eq!(got.len(), refs.len(), "every pair comes back");
 
     for body in mock.requests() {
@@ -404,4 +404,82 @@ fn a_quantity_the_rule_never_states_is_not_refused() {
         None,
         "a rule cannot misstate a number it does not state"
     );
+}
+
+// ── a reading that does not come back ───────────────────────
+
+#[test]
+fn a_reading_cut_short_is_asked_again_one_pair_at_a_time() {
+    // The Commonwealth notes load, 2026-09-13: one reading of ten texts ran to
+    // 17,221 tokens and the server's 300 s deadline, and the whole support
+    // stage failed with it after 3h25m of extraction. Every call now carries a
+    // ceiling sized to its texts, and a batch that comes back unusable is
+    // asked about again, smaller.
+    let refs = [("rule 0", "citation 0"), ("rule 1", "citation 1")];
+    let cut = json!({"choices": [{
+        "message": {"role": "assistant", "content": "{\"rules\": [{\"n\": 1, \"quantities\": ["},
+        "finish_reason": "length"
+    }]})
+    .to_string();
+    let mock = Mock::spawn(vec![
+        (200, cut),
+        (
+            200,
+            answer(&[(1, &[("85", "dBA", "sound level", "85 dBA")])]),
+        ),
+        (200, answer(&[(2, &[("7", "", "guests", "7")])])),
+    ]);
+    let got = quantify_pairs(&mock.client(), &refs).unwrap();
+    let asked = mock.requests();
+    assert_eq!(asked.len(), 3, "one batch, then each pair alone");
+    assert_eq!(asked[0]["max_tokens"], json!(MAX_TOKENS_PER_TEXT * 4));
+    assert_eq!(asked[1]["max_tokens"], json!(MAX_TOKENS_PER_TEXT * 2));
+    assert!(got.unread.is_empty(), "{:?}", got.unread);
+    assert_eq!(got.readings.len(), 2);
+    assert_eq!(
+        got.readings[0].0,
+        vec![q("85", "dBA", "sound level", "85 dBA")]
+    );
+    assert_eq!(got.readings[1].1, vec![q("7", "", "guests", "7")]);
+}
+
+#[test]
+fn a_pair_no_reading_comes_back_for_is_unread_and_the_rest_still_count() {
+    let refs = [("rule 0", "citation 0"), ("rule 1", "citation 1")];
+    let broken = || (200, completion("{\"rules\": ["));
+    let mock = Mock::spawn(vec![
+        broken(),
+        (
+            200,
+            answer(&[(1, &[("85", "dBA", "sound level", "85 dBA")])]),
+        ),
+        broken(),
+    ]);
+    let got = quantify_pairs(&mock.client(), &refs).unwrap();
+    assert_eq!(
+        got.readings.len(),
+        2,
+        "positions still line up with what was offered"
+    );
+    assert_eq!(
+        got.readings[0].0,
+        vec![q("85", "dBA", "sound level", "85 dBA")]
+    );
+    assert!(got.readings[1].0.is_empty() && got.readings[1].1.is_empty());
+    assert_eq!(got.unread.len(), 1);
+    assert_eq!(got.unread[0].index, 1);
+}
+
+#[test]
+fn a_host_that_refuses_is_not_narrowed_into_unread_pairs() {
+    // Narrowing is for a reply that came back wrong. A 4xx refuses the
+    // smaller question too, and asking it anyway would turn a broken request
+    // into a stage of rules quietly marked unread.
+    let refs = [("rule 0", "citation 0"), ("rule 1", "citation 1")];
+    let mock = Mock::spawn(vec![(
+        400,
+        json!({"error": {"message": "bad request"}}).to_string(),
+    )]);
+    assert!(quantify_pairs(&mock.client(), &refs).is_err());
+    assert_eq!(mock.requests().len(), 1);
 }

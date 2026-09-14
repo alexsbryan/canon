@@ -62,6 +62,23 @@ pub enum ModelError {
     },
 }
 
+impl ModelError {
+    /// Whether this failure is about ONE reply rather than about the host.
+    ///
+    /// A malformed or cut reply, or a server error while answering, can come
+    /// out differently when the same texts are asked about in a smaller
+    /// batch. No endpoint, a refused locality, a transport failure, a 4xx or
+    /// a host still shedding load cannot: narrowing those turns a broken host
+    /// into a stage of items quietly marked unread.
+    pub fn is_reply_fault(&self) -> bool {
+        match self {
+            Self::Malformed { .. } => true,
+            Self::Refused { status, detail } => *status >= 500 && !is_backpressure(*status, detail),
+            _ => false,
+        }
+    }
+}
+
 impl std::fmt::Display for ModelError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -266,6 +283,14 @@ pub struct Client {
     /// a model is a number about nothing — this repository has three such
     /// artifacts, which is why the field exists.
     served: std::rc::Rc<std::cell::RefCell<Option<String>>>,
+    /// The most one reply on this leg may run to, when the leg set a ceiling.
+    ///
+    /// `None` sends no `max_tokens`, which on most servers means the rest of
+    /// the context window: one reply that never closes its JSON then holds
+    /// the slot until the server's own deadline. A leg whose answer has a
+    /// known size says so with [`Client::capped`], and a reply cut there comes
+    /// back `Malformed`, naming the ceiling, instead of as a five-minute wait.
+    max_tokens: Option<u32>,
 }
 
 // ── backpressure ────────────────────────────────────────────
@@ -351,6 +376,7 @@ impl Client {
             agent,
             busy_streak: Default::default(),
             served: Default::default(),
+            max_tokens: None,
             endpoint,
             // Most local servers serve one model and ignore this field, but
             // the OpenAI schema requires it, so something must be sent.
@@ -396,6 +422,7 @@ impl Client {
             tape: self.tape.clone(),
             busy_streak: self.busy_streak.clone(),
             served: self.served.clone(),
+            max_tokens: self.max_tokens,
         }
     }
 
@@ -536,7 +563,7 @@ impl Client {
     }
 
     fn request(&self, system: &str, user: &str, response_format: Value) -> Value {
-        json!({
+        let mut body = json!({
             "model": self.model,
             // Adjudication wants the same answer twice, so temperature is
             // pinned rather than left to the server's default.
@@ -546,7 +573,11 @@ impl Client {
                 { "role": "user", "content": user },
             ],
             "response_format": response_format,
-        })
+        });
+        if let Some(n) = self.max_tokens {
+            body["max_tokens"] = json!(n);
+        }
+        body
     }
     /// POST once to a path under the endpoint; return `(parsed, raw)`.
     ///
@@ -571,6 +602,7 @@ impl Client {
             tape: Some(std::rc::Rc::new(Tape::play(entries, None))),
             busy_streak: Default::default(),
             served: Default::default(),
+            max_tokens: None,
         }
     }
 
@@ -590,6 +622,16 @@ impl Client {
     /// leg that shares everything. Both share the tape, because a run has one.
     pub fn for_leg(&self) -> Self {
         self.with_model(&self.model)
+    }
+
+    /// A leg whose replies may run to at most `max_tokens`.
+    ///
+    /// Same endpoint, model, tape and backpressure as this client; only the
+    /// ceiling on one reply differs.
+    pub fn capped(&self, max_tokens: u32) -> Self {
+        let mut leg = self.for_leg();
+        leg.max_tokens = Some(max_tokens);
+        leg
     }
 
     /// What this run has recorded so far, in order. Empty when not recording.
@@ -799,6 +841,20 @@ impl Client {
             return Err(ModelError::Refused {
                 status: 200,
                 detail: format!("the model declined: {}", cap(why)),
+            });
+        }
+        // A reply stopped at this leg's ceiling is not an answer, and parsing
+        // it would report a JSON syntax error about text nobody finished.
+        // Named for what it is.
+        let finish = parsed
+            .get("choices")
+            .and_then(|c| c.get(0))
+            .and_then(|c| c.get("finish_reason"))
+            .and_then(Value::as_str);
+        if let (Some("length"), Some(n)) = (finish, self.max_tokens) {
+            return Err(ModelError::Malformed {
+                detail: format!("the reply was cut at max_tokens {n} before it finished"),
+                raw: cap(&raw),
             });
         }
         message

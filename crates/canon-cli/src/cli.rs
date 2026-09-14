@@ -78,7 +78,7 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("merge-driver", &[], &[]),
     ("tensions", &[], &["--allow-remote", "--json"]),
     ("config", &[], &[]),
-    ("draft", &["--as", "--from", "--k", "--live-from", "--max-chunks", "--out", "--refold", "--replay", "--samples", "--since"], &["--accept-all", "--allow-remote", "--dry-run", "--from-git", "--include-ignored", "--json", "--resume", "--yes"]),
+    ("draft", &["--as", "--continue", "--from", "--k", "--live-from", "--max-chunks", "--out", "--refold", "--replay", "--samples", "--since"], &["--accept-all", "--allow-remote", "--dry-run", "--from-git", "--include-ignored", "--json", "--resume", "--yes"]),
     ("check", &["--about", "--amends", "--scope"], &["--allow-remote", "--irreversible", "--json"]),
 ];
 
@@ -235,7 +235,7 @@ fn command(verb: &'static str, valued: &[&'static str], switches: &[&'static str
 /// has no better word than "value".
 fn value_name(flag: &str) -> &'static str {
     match flag {
-        "--from" | "--out" | "--onto" | "--refold" | "--replay" => "path",
+        "--continue" | "--from" | "--out" | "--onto" | "--refold" | "--replay" => "path",
         "-m" | "--why" => "why",
         "--scope" | "--of" => "scope",
         "--after" | "--horizon" | "--revisit" | "--at" | "--since" => "date",

@@ -397,6 +397,7 @@ fn a_rule_stating_a_number_its_citation_does_not_is_dropped() {
         candidates: kept,
         quantities,
         dropped,
+        ..
     } = support(&mock.client(), cands).unwrap();
     assert!(kept.is_empty(), "{kept:#?}");
     assert!(quantities.is_empty());
@@ -426,6 +427,7 @@ fn a_number_worded_differently_from_its_citation_survives() {
         candidates: kept,
         quantities,
         dropped,
+        ..
     } = support(&mock.client(), cands).unwrap();
     assert_eq!(kept.len(), 1, "{dropped:#?}");
     assert_eq!(quantities.len(), 1);
@@ -491,6 +493,7 @@ fn the_surviving_rules_carry_their_own_reading_forward() {
         candidates: kept,
         quantities,
         dropped,
+        ..
     } = support(&mock.client(), cands).unwrap();
     assert_eq!(dropped.len(), 1, "{dropped:#?}");
     assert_eq!(kept.len(), 2);
@@ -509,6 +512,7 @@ fn nothing_extracted_asks_the_model_nothing() {
         candidates: kept,
         quantities,
         dropped,
+        ..
     } = support(&mock.client(), Vec::new()).unwrap();
     assert!(kept.is_empty() && quantities.is_empty() && dropped.is_empty());
 }
@@ -820,6 +824,8 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         stopped_after: None,
         checkpoint: None,
         replayed_from: None,
+        continued_from: None,
+        support_unchecked: Vec::new(),
         tape: Vec::new(),
     }
 }
@@ -1812,4 +1818,102 @@ fn resume_offers_every_finished_run_oldest_first_and_never_a_checkpoint() {
     assert!(runs_to_resume(&dir, Some("999.json")).is_err());
     // A checkpoint cannot be picked by name either.
     assert!(runs_to_resume(&dir, Some("300.partial.json")).is_err());
+}
+
+// ── a failed run is finished from its extraction ────────────
+
+#[test]
+fn continue_finishes_a_failed_run_without_reading_a_passage_again() {
+    // The Commonwealth notes load read 1,168 passages in 3h25m and lost the
+    // run to one runaway reading in `support`. Its 1,745 candidates were on
+    // disk and nothing could use them: a real run keeps no tape, so `--replay`
+    // refused it, and every passage was already marked read.
+    let dir = scratch("canon-continue-finishes");
+    let mut failed = in_flight(
+        chunk_text("house.md", DOC),
+        vec![
+            candidate("Quiet hours run from 11:00 PM until 7:00 AM."),
+            candidate("The kitchen must be cleaned by whoever used it."),
+        ],
+    );
+    failed.failed = Some("support: the endpoint refused (HTTP 503): deadline exceeded".into());
+    let reading =
+        |v: &str, of: &str, c: &str| json!({"value": v, "unit": "", "of": of, "canonical": c});
+    let quiet = json!([
+        reading("11:00 PM", "quiet hours start", "23:00"),
+        reading("7:00 AM", "quiet hours end", "07:00")
+    ]);
+    let mock = Mock::spawn(vec![
+        (
+            200,
+            completion(
+                &json!({"rules": [
+                    {"n": 1, "quantities": quiet},
+                    {"n": 2, "quantities": quiet},
+                    {"n": 3, "quantities": []},
+                    {"n": 4, "quantities": []}
+                ]})
+                .to_string(),
+            ),
+        ),
+        (200, completion(&json!({"groups": []}).to_string())),
+    ]);
+    let code = continue_with(
+        &dir,
+        Profile::House,
+        failed,
+        "failed.json",
+        mock.client(),
+        &mut Seen::preview(&dir),
+        &[],
+    );
+    assert_eq!(code, 0);
+    let asked = mock.requests();
+    assert_eq!(
+        asked.len(),
+        2,
+        "support and dedupe, no extraction call: {asked:#?}"
+    );
+    let system = asked[0]["messages"][0]["content"]
+        .as_str()
+        .unwrap_or_default();
+    assert!(system.starts_with("You list the quantities"), "{system}");
+
+    let runs = runs_in(&dir);
+    assert_eq!(runs.len(), 1, "{runs:?}");
+    let got: DraftRun =
+        serde_json::from_str(&std::fs::read_to_string(dir.join(RUNS_DIR).join(&runs[0])).unwrap())
+            .unwrap();
+    assert!(got.failed.is_none(), "{:?}", got.failed);
+    assert_eq!(got.chunks.len(), 2);
+    assert_eq!(got.candidates.len(), 2);
+    assert_eq!(got.kept.len(), 2);
+    let from = got
+        .continued_from
+        .expect("a continued run names where its extraction came from");
+    assert!(
+        from.starts_with("failed.json (failed in `support`"),
+        "{from}"
+    );
+}
+
+#[test]
+fn continue_refuses_a_run_that_finished() {
+    let dir = scratch("canon-continue-refuses-finished");
+    let finished = in_flight(
+        chunk_text("house.md", DOC),
+        vec![candidate("Quiet hours start at 11 PM.")],
+    );
+    let mock = Mock::spawn(Vec::new());
+    let code = continue_with(
+        &dir,
+        Profile::House,
+        finished,
+        "done.json",
+        mock.client(),
+        &mut Seen::preview(&dir),
+        &[],
+    );
+    assert_ne!(code, 0);
+    assert!(mock.requests().is_empty());
 }

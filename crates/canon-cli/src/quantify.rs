@@ -226,6 +226,49 @@ const BATCH: usize = 10;
 /// A rule's quantities and its citation's, read in one call.
 pub type PairReading = (Vec<Quantity>, Vec<Quantity>);
 
+/// Readings for every pair offered, in order, and the pairs that got none.
+///
+/// A pair in `unread` still has an entry in `readings` — the refusing
+/// default, no quantities — so positions line up with what was offered. The
+/// list is what lets a caller say which rules a number check never ran on,
+/// instead of reporting them as checked and clean.
+#[derive(Debug, Default)]
+pub struct PairReadings {
+    pub readings: Vec<PairReading>,
+    pub unread: Vec<UnreadPair>,
+}
+
+/// A pair no reading came back for, and why.
+#[derive(Debug, Clone)]
+pub struct UnreadPair {
+    /// Position among the pairs offered.
+    pub index: usize,
+    pub error: String,
+}
+
+impl PairReadings {
+    fn unread_at(&mut self, index: usize, e: ModelError) {
+        eprintln!(
+            "\nwarning: no quantities reading for rule {} ({e})",
+            index + 1
+        );
+        self.readings.push((Vec::new(), Vec::new()));
+        self.unread.push(UnreadPair {
+            index,
+            error: e.to_string(),
+        });
+    }
+}
+
+/// Tokens one text's reading may take before the reply is cut.
+///
+/// Measured on the Commonwealth notes load (2026-09-13): across 125 support
+/// calls of ten texts the longest reply that finished was 1,072 tokens, about
+/// 107 per text, and the one that did not finish ran to 17,221 tokens and the
+/// server's 300 s deadline. 256 per text is over twice the longest finished
+/// reading and about 15% of that runaway.
+const MAX_TOKENS_PER_TEXT: u32 = 256;
+
 /// Read two texts TOGETHER, so they are canonicalised against each other.
 ///
 /// **Canonical form is only agreed within one call.** The prompt asks that
@@ -240,22 +283,54 @@ pub type PairReading = (Vec<Quantity>, Vec<Quantity>);
 /// Pairs are independent of one another, so they still batch. The pairing is
 /// structural rather than a parity trick on [`BATCH`]: each call carries
 /// whole pairs because they are chunked as pairs.
-pub fn quantify_pairs(
-    client: &Client,
-    pairs: &[(&str, &str)],
-) -> Result<Vec<PairReading>, ModelError> {
-    let mut out = Vec::with_capacity(pairs.len());
-    for block in pairs.chunks(BATCH / 2) {
-        let mut flat: Vec<&str> = Vec::with_capacity(block.len() * 2);
-        for (a, b) in block {
-            flat.push(a);
-            flat.push(b);
+pub fn quantify_pairs(client: &Client, pairs: &[(&str, &str)]) -> Result<PairReadings, ModelError> {
+    let mut out = PairReadings {
+        readings: Vec::with_capacity(pairs.len()),
+        unread: Vec::new(),
+    };
+    for (b, block) in pairs.chunks(BATCH / 2).enumerate() {
+        let first = b * (BATCH / 2);
+        match read_pairs(client, block) {
+            Ok(read) => out.readings.extend(read),
+            // One reply that did not come back is not the stage's failure.
+            // The same pairs are asked about again one at a time: a smaller
+            // question has a shorter answer, and on a server that repeats
+            // itself exactly, a narrower prompt is the only retry that is not
+            // the same call twice.
+            Err(e) if e.is_reply_fault() && block.len() > 1 => {
+                eprintln!(
+                    "\nwarning: a quantities reading of {} rule(s) came back unusable ({e}) — \
+                     reading each alone",
+                    block.len()
+                );
+                for (i, pair) in block.iter().enumerate() {
+                    match read_pairs(client, std::slice::from_ref(pair)) {
+                        Ok(read) => out.readings.extend(read),
+                        Err(e) if e.is_reply_fault() => out.unread_at(first + i, e),
+                        Err(e) => return Err(e),
+                    }
+                }
+            }
+            Err(e) if e.is_reply_fault() => out.unread_at(first, e),
+            Err(e) => return Err(e),
         }
-        let read = read_block(client, &flat)?;
-        let mut it = read.into_iter();
-        while let (Some(a), Some(b)) = (it.next(), it.next()) {
-            out.push((a, b));
-        }
+    }
+    Ok(out)
+}
+
+/// One reading call over whole pairs, with a ceiling sized to its texts.
+fn read_pairs(client: &Client, block: &[(&str, &str)]) -> Result<Vec<PairReading>, ModelError> {
+    let mut flat: Vec<&str> = Vec::with_capacity(block.len() * 2);
+    for (a, b) in block {
+        flat.push(a);
+        flat.push(b);
+    }
+    let leg = client.capped(MAX_TOKENS_PER_TEXT * flat.len() as u32);
+    let read = read_block(&leg, &flat)?;
+    let mut it = read.into_iter();
+    let mut out = Vec::with_capacity(block.len());
+    while let (Some(a), Some(b)) = (it.next(), it.next()) {
+        out.push((a, b));
     }
     Ok(out)
 }
