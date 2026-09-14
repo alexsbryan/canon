@@ -21,6 +21,7 @@ use crate::model::Client;
 pub struct Mock {
     pub base: String,
     recorded: Arc<Mutex<Vec<Value>>>,
+    raw: Arc<Mutex<Vec<String>>>,
 }
 
 impl Mock {
@@ -29,7 +30,9 @@ impl Mock {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
         let port = listener.local_addr().unwrap().port();
         let recorded: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
+        let raw: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
         let rec = Arc::clone(&recorded);
+        let raw_rec = Arc::clone(&raw);
         std::thread::spawn(move || {
             for (status, body) in script {
                 let Ok((mut sock, _)) = listener.accept() else {
@@ -67,6 +70,7 @@ impl Mock {
                 if let Ok(v) = serde_json::from_str::<Value>(&request_body) {
                     rec.lock().unwrap().push(v);
                 }
+                raw_rec.lock().unwrap().push(request_body);
                 let reason = if (200..300).contains(&status) {
                     "OK"
                 } else {
@@ -84,6 +88,7 @@ impl Mock {
         Self {
             base: format!("http://127.0.0.1:{port}/v1"),
             recorded,
+            raw,
         }
     }
 
@@ -99,6 +104,15 @@ impl Mock {
     /// The request bodies the mock received, in order.
     pub fn requests(&self) -> Vec<Value> {
         self.recorded.lock().unwrap().clone()
+    }
+
+    /// The request bodies exactly as they arrived, in order.
+    ///
+    /// [`Mock::requests`] parses them, and a parsed `Value` sorts its keys in
+    /// this build, so a test about the order of what went over the wire has
+    /// to read these instead.
+    pub fn raw_requests(&self) -> Vec<String> {
+        self.raw.lock().unwrap().clone()
     }
 }
 

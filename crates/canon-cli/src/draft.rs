@@ -50,10 +50,9 @@ use std::path::{Path, PathBuf};
 
 use canon_core::ActKind;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
 use crate::locate;
-use crate::model::{self, Client, ModelError};
+use crate::model::{self, Client, ModelError, Schema};
 use crate::profile::Profile;
 use crate::quantify;
 use crate::seen::{Seen, Why};
@@ -789,38 +788,40 @@ struct ExtractedOne {
     because: String,
 }
 
-fn extract_schema() -> Value {
-    json!({
+/// Written in sorted order, the order this stage was decoded in before
+/// [`Schema`] existed and so the order it was measured in. Moving a property
+/// is a measured change, not a tidy-up.
+///
+/// `because` is required so the KEY cannot be omitted. It was described in
+/// the silence bullet but missing from the return list, so a model following
+/// that list emitted kind/first/last/text and wrote the rationale as a
+/// trailing "because" clause inside `text` — and every silence was then
+/// refused for having no stated reason. A capability with code, a test and a
+/// README section that could not fire.
+pub(crate) const EXTRACT_SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": {
+    "commitments": {
+      "type": "array",
+      "items": {
         "type": "object",
         "properties": {
-            "commitments": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "kind": { "type": "string", "enum": ["rule", "question", "silence", "record"] },
-                        "first": { "type": "integer" },
-                        "last": { "type": "integer" },
-                        "text": { "type": "string" },
-                        "because": { "type": "string" },
-                    },
-                    // `because` is required so the KEY cannot be omitted.
-                    // It was described in the silence bullet but missing from
-                    // the return list, so a model following that list emitted
-                    // kind/first/last/text and wrote the rationale as a
-                    // trailing "because" clause inside `text` — and every
-                    // silence was then refused for having no stated reason.
-                    // A capability with code, a test and a README section
-                    // that could not fire.
-                    "required": ["kind", "first", "last", "text", "because"],
-                    "additionalProperties": false,
-                },
-            },
+          "because": { "type": "string" },
+          "first": { "type": "integer" },
+          "kind": { "type": "string", "enum": ["rule", "question", "silence", "record"] },
+          "last": { "type": "integer" },
+          "text": { "type": "string" }
         },
-        "required": ["commitments"],
-        "additionalProperties": false,
-    })
-}
+        "required": ["kind", "first", "last", "text", "because"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["commitments"],
+  "additionalProperties": false
+}"#,
+);
 
 /// Whose voice the extracted rules are written in.
 ///
@@ -881,7 +882,7 @@ pub fn extract(
         ),
         None => format!("Passage:\n{shown}\nReturn what this passage states."),
     };
-    let got: Extracted = client.complete_json(&system, &user, "commitments", &extract_schema())?;
+    let got: Extracted = client.complete_json(&system, &user, "commitments", &EXTRACT_SCHEMA)?;
     let mut kept = Vec::new();
     let mut dropped = Vec::new();
     let refuse = |text: String, quote: String, reason: String| Dropped {
@@ -1129,19 +1130,19 @@ struct Grouped {
     groups: Vec<Vec<usize>>,
 }
 
-fn dedupe_schema() -> Value {
-    json!({
-        "type": "object",
-        "properties": {
-            "groups": {
-                "type": "array",
-                "items": { "type": "array", "items": { "type": "integer" } },
-            },
-        },
-        "required": ["groups"],
-        "additionalProperties": false,
-    })
-}
+pub(crate) const DEDUPE_SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": {
+    "groups": {
+      "type": "array",
+      "items": { "type": "array", "items": { "type": "integer" } }
+    }
+  },
+  "required": ["groups"],
+  "additionalProperties": false
+}"#,
+);
 
 /// Group duplicates and keep the first of each group.
 ///
@@ -1160,7 +1161,7 @@ pub fn dedupe(
         user.push_str(&format!("{}. {}\n", i + 1, c.text));
     }
     user.push_str("\nReturn the groups of duplicates.");
-    let got: Grouped = client.complete_json(DEDUPE_SYSTEM, &user, "groups", &dedupe_schema())?;
+    let got: Grouped = client.complete_json(DEDUPE_SYSTEM, &user, "groups", &DEDUPE_SCHEMA)?;
 
     // Clean the proposal up before asking anything about it.
     let mut proposed: Vec<Vec<usize>> = Vec::new();

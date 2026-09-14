@@ -18,16 +18,16 @@ struct Pairs {
     pairs: Vec<String>,
 }
 
-fn schema() -> Value {
-    json!({
-        "type": "object",
-        "properties": { "pairs": { "type": "array", "items": { "type": "string" } } },
-        "required": ["pairs"],
-    })
-}
+const SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": { "pairs": { "type": "array", "items": { "type": "string" } } },
+  "required": ["pairs"]
+}"#,
+);
 
 fn ask(client: &Client) -> Result<Pairs, ModelError> {
-    client.complete_json("system", "user", "pairs", &schema())
+    client.complete_json("system", "user", "pairs", &SCHEMA)
 }
 
 #[test]
@@ -372,7 +372,7 @@ fn a_tape_cut_at_a_stage_plays_above_it_and_goes_live_from_it() {
     let client = mock.client().playing(tape, Some("tensions".into()));
 
     let above: Pairs = client
-        .complete_json("s", "u", "commitments", &schema())
+        .complete_json("s", "u", "commitments", &SCHEMA)
         .unwrap();
     assert_eq!(
         above.pairs,
@@ -380,9 +380,7 @@ fn a_tape_cut_at_a_stage_plays_above_it_and_goes_live_from_it() {
         "above the cut: the tape answers"
     );
 
-    let at: Pairs = client
-        .complete_json("s", "u", "tensions", &schema())
-        .unwrap();
+    let at: Pairs = client.complete_json("s", "u", "tensions", &SCHEMA).unwrap();
     assert_eq!(
         at.pairs,
         vec!["live".to_string()],
@@ -405,7 +403,7 @@ fn a_stage_label_that_disagrees_with_the_recording_refuses() {
     }];
     let replayed = Client::replaying("http://127.0.0.1:1/v1", "primary", tape);
     let err = replayed
-        .complete_json::<Pairs>("s", "u", "commitments", &schema())
+        .complete_json::<Pairs>("s", "u", "commitments", &SCHEMA)
         .expect_err("an extraction must not be answered from a dedupe call");
     assert!(format!("{err}").contains("out of step"), "{err}");
 }
@@ -561,4 +559,41 @@ fn the_tape_records_a_refusal_so_a_replay_stays_in_step() {
         ask(&replayed).expect("still in step").pairs,
         vec!["second".to_string()]
     );
+}
+
+/// A `Value` sorts its keys in this build, so a schema that passed through one
+/// would reach the endpoint in an order nobody wrote.
+#[test]
+fn a_schema_goes_over_the_wire_in_the_order_it_was_written() {
+    const ZULU_FIRST: Schema = Schema::new(
+        r#"{"type":"object","properties":{"zulu":{"type":"string"},"alpha":{"type":"string"}},"required":["zulu","alpha"]}"#,
+    );
+    let mock = Mock::spawn(vec![(200, completion(r#"{"zulu":"z","alpha":"a"}"#))]);
+    let _: Value = mock
+        .client()
+        .complete_json("s", "u", "order", &ZULU_FIRST)
+        .unwrap();
+    let body = &mock.raw_requests()[0];
+    let zulu = body.find("\"zulu\":").expect("zulu sent");
+    let alpha = body.find("\"alpha\":").expect("alpha sent");
+    assert!(
+        zulu < alpha,
+        "the schema was reordered on the way out: {body}"
+    );
+}
+
+#[test]
+fn every_schema_is_json() {
+    for (stage, schema) in [
+        ("commitments", crate::draft::EXTRACT_SCHEMA),
+        ("groups", crate::draft::DEDUPE_SCHEMA),
+        ("quantities", crate::quantify::SCHEMA),
+        ("same", crate::subject::SCHEMA),
+        ("tensions", crate::tensions::SCHEMA),
+        ("bearings", crate::check::SCHEMA),
+        ("changes", crate::rebase::SCHEMA),
+    ] {
+        serde_json::from_str::<Value>(schema.written())
+            .unwrap_or_else(|e| panic!("the `{stage}` schema is not JSON: {e}"));
+    }
 }

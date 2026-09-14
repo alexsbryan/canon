@@ -34,9 +34,8 @@
 //! compare, and leaves code holding integers rather than prose.
 
 use serde::Deserialize;
-use serde_json::{json, Value};
 
-use crate::model::{Client, ModelError};
+use crate::model::{Client, ModelError, Schema};
 use crate::resolver::{self, Offered, Resolver};
 
 const SYSTEM: &str = "\
@@ -64,27 +63,27 @@ struct RuleSame {
     same_as: crate::model::Pos,
 }
 
-fn schema() -> Value {
-    json!({
+pub(crate) const SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": {
+    "rules": {
+      "type": "array",
+      "items": {
         "type": "object",
         "properties": {
-            "rules": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "n": { "type": "integer" },
-                        "same_as": { "type": "integer", "minimum": 1 },
-                    },
-                    "required": ["n", "same_as"],
-                    "additionalProperties": false,
-                },
-            },
+          "n": { "type": "integer" },
+          "same_as": { "type": "integer", "minimum": 1 }
         },
-        "required": ["rules"],
-        "additionalProperties": false,
-    })
-}
+        "required": ["n", "same_as"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["rules"],
+  "additionalProperties": false
+}"#,
+);
 
 /// Partition each proposed group by what its rules govern.
 ///
@@ -120,8 +119,8 @@ impl Resolver for SameThing {
         SYSTEM
     }
 
-    fn schema(&self) -> Value {
-        schema()
+    fn schema(&self) -> &'static Schema {
+        &SCHEMA
     }
 
     /// Represents itself, which refuses the fold. The refusing default this

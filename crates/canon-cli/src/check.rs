@@ -21,7 +21,7 @@ use canon_core::{
 use serde::Deserialize;
 use serde_json::{json, Value};
 
-use crate::model::{self, Client, ModelError};
+use crate::model::{self, Client, ModelError, Schema};
 use crate::profile::Profile;
 use crate::resolver::Offered;
 use crate::store;
@@ -65,28 +65,31 @@ struct JudgedOne {
     because: String,
 }
 
-fn schema() -> Value {
-    json!({
+/// Written in sorted order, the order this stage was decoded in before
+/// [`Schema`] existed and so the order it was measured in. Moving a property
+/// is a measured change, not a tidy-up.
+pub(crate) const SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": {
+    "bearings": {
+      "type": "array",
+      "items": {
         "type": "object",
         "properties": {
-            "bearings": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "commitment": { "type": "integer", "description": "number of the commitment" },
-                        "pull": { "type": "string", "enum": ["toward", "against"] },
-                        "because": { "type": "string" },
-                    },
-                    "required": ["commitment", "pull", "because"],
-                    "additionalProperties": false,
-                },
-            },
+          "because": { "type": "string" },
+          "commitment": { "type": "integer", "description": "number of the commitment" },
+          "pull": { "type": "string", "enum": ["toward", "against"] }
         },
-        "required": ["bearings"],
-        "additionalProperties": false,
-    })
-}
+        "required": ["commitment", "pull", "because"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["bearings"],
+  "additionalProperties": false
+}"#,
+);
 
 /// Ask how this proposal stands. Returns the standing and anything refused.
 pub fn assess(
@@ -106,7 +109,7 @@ pub fn assess(
         "Commitments:\n{}\nProposal:\n{proposal}\n",
         offered.numbered()
     );
-    let judged: Judged = client.complete_json(SYSTEM, &user, "bearings", &schema())?;
+    let judged: Judged = client.complete_json(SYSTEM, &user, "bearings", &SCHEMA)?;
 
     let mut positions = Vec::new();
     for b in judged.bearings {

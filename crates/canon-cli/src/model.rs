@@ -21,7 +21,8 @@ use std::time::Duration;
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::value::RawValue;
+use serde_json::Value;
 
 use crate::config::Config;
 
@@ -515,7 +516,7 @@ impl Client {
         system: &str,
         user: &str,
         schema_name: &str,
-        schema: &Value,
+        schema: &Schema,
     ) -> Result<T, ModelError> {
         let value = self.complete_value(system, user, schema_name, schema)?;
         serde_json::from_value(value.clone()).map_err(|e| ModelError::Malformed {
@@ -529,16 +530,19 @@ impl Client {
         system: &str,
         user: &str,
         schema_name: &str,
-        schema: &Value,
+        schema: &Schema,
     ) -> Result<Value, ModelError> {
         // Rung 1 — the endpoint enforces the shape.
         let rung1 = self.request(
             system,
             user,
-            json!({
-                "type": "json_schema",
-                "json_schema": { "name": schema_name, "strict": true, "schema": schema },
-            }),
+            Format::JsonSchema {
+                json_schema: Named {
+                    name: schema_name,
+                    strict: true,
+                    schema: schema.raw(),
+                },
+            },
         );
         let refusal = match self.post(schema_name, &rung1) {
             Ok(text) => return decode(&text),
@@ -555,29 +559,37 @@ impl Client {
         let stated = format!(
             "{user}\n\nReply with one JSON object and nothing else. It must match this schema \
              exactly:\n{}",
-            serde_json::to_string(schema).unwrap_or_default()
+            schema.written()
         );
-        let rung2 = self.request(system, &stated, json!({ "type": "json_object" }));
+        let rung2 = self.request(system, &stated, Format::JsonObject);
         // No rung 3. A refusal here is a refusal, and prose is never parsed.
         decode(&self.post(schema_name, &rung2)?)
     }
 
-    fn request(&self, system: &str, user: &str, response_format: Value) -> Value {
-        let mut body = json!({
-            "model": self.model,
+    fn request<'a>(
+        &'a self,
+        system: &'a str,
+        user: &'a str,
+        response_format: Format<'a>,
+    ) -> Request<'a> {
+        Request {
+            model: &self.model,
             // Adjudication wants the same answer twice, so temperature is
             // pinned rather than left to the server's default.
-            "temperature": 0.0,
-            "messages": [
-                { "role": "system", "content": system },
-                { "role": "user", "content": user },
+            temperature: 0.0,
+            messages: [
+                Message {
+                    role: "system",
+                    content: system,
+                },
+                Message {
+                    role: "user",
+                    content: user,
+                },
             ],
-            "response_format": response_format,
-        });
-        if let Some(n) = self.max_tokens {
-            body["max_tokens"] = json!(n);
+            response_format,
+            max_tokens: self.max_tokens,
         }
-        body
     }
     /// POST once to a path under the endpoint; return `(parsed, raw)`.
     ///
@@ -643,7 +655,7 @@ impl Client {
         &self,
         path: &str,
         stage: &str,
-        body: &Value,
+        body: &str,
     ) -> Result<(Value, String), ModelError> {
         // A tape being PLAYED answers here, before any transport exists.
         //
@@ -727,7 +739,7 @@ impl Client {
                 .set("content-type", "application/json")
                 // `send_string` rather than `send_json`: the reply is parsed by
                 // hand anyway, so ureq's `json` feature would buy nothing.
-                .send_string(&body.to_string())
+                .send_string(body)
             {
                 Ok(r) => {
                     self.busy_streak.set(0);
@@ -807,8 +819,9 @@ impl Client {
     }
 
     /// POST once; return the assistant's content string.
-    fn post(&self, stage: &str, body: &Value) -> Result<String, ModelError> {
-        let (parsed, raw) = self.post_json("chat/completions", stage, body)?;
+    fn post(&self, stage: &str, body: &Request) -> Result<String, ModelError> {
+        let body = serde_json::to_string(body).expect("a request is strings, numbers and JSON");
+        let (parsed, raw) = self.post_json("chat/completions", stage, &body)?;
         // First reply that names a model wins. Later calls cannot change it:
         // a run whose model changed underneath it is one instrument in the
         // artifact and two in fact, and the honest record is the first.
@@ -866,6 +879,69 @@ impl Client {
                 raw: cap(&raw),
             })
     }
+}
+
+/// The shape an answer must take, kept as the JSON its author wrote.
+///
+/// **Key order is part of the request.** A server that decodes by schema writes
+/// an object's properties in the order they arrive (llguidance does), and a
+/// `serde_json::Value` sorts its keys in this build: `preserve_order` is off,
+/// and `canon_core`'s annotations rely on that. Built with `json!`, the
+/// quantities schema went out alphabetised and asked for a quantity's `value`
+/// after what it measures; a rule stating no number filled that string until
+/// the endpoint's deadline (LOAD_TEST_COMMONWEALTH.md §21). So a schema is
+/// written once, as text, and that text is what goes over the wire.
+#[derive(Debug, Clone, Copy)]
+pub struct Schema(&'static str);
+
+impl Schema {
+    /// A schema as written. It must be JSON: sending it panics otherwise, and
+    /// `every_schema_is_json` checks the ones in this tree.
+    pub const fn new(written: &'static str) -> Self {
+        Self(written)
+    }
+
+    /// The text as written, for the rung that states the schema in the prompt.
+    pub fn written(&self) -> &'static str {
+        self.0
+    }
+
+    fn raw(&self) -> &'static RawValue {
+        serde_json::from_str(self.0).expect("a schema is written as JSON")
+    }
+}
+
+/// One `/chat/completions` body. A struct rather than `json!`, so the order
+/// fields are written in is the order they are sent in.
+#[derive(Serialize)]
+struct Request<'a> {
+    model: &'a str,
+    temperature: f64,
+    messages: [Message<'a>; 2],
+    response_format: Format<'a>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_tokens: Option<u32>,
+}
+
+#[derive(Serialize)]
+struct Message<'a> {
+    role: &'static str,
+    content: &'a str,
+}
+
+/// The two rungs of the structured-output ladder, as the endpoint spells them.
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum Format<'a> {
+    JsonSchema { json_schema: Named<'a> },
+    JsonObject,
+}
+
+#[derive(Serialize)]
+struct Named<'a> {
+    name: &'a str,
+    strict: bool,
+    schema: &'a RawValue,
 }
 
 /// Was this 4xx specifically about the structured-output request?

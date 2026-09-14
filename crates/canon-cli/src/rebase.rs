@@ -24,7 +24,7 @@ use serde_json::{json, Value};
 
 use crate::cmds::{fail, flag, has};
 use crate::lineage;
-use crate::model::{self, Client, ModelError};
+use crate::model::{self, Client, ModelError, Schema};
 
 const SYSTEM: &str = "\
 You are checking whether changes someone made to a set of rules still apply \
@@ -62,35 +62,38 @@ struct MappedOne {
     because: String,
 }
 
-fn schema() -> Value {
-    json!({
+/// Written in sorted order, the order this stage was decoded in before
+/// [`Schema`] existed and so the order it was measured in. Moving a property
+/// is a measured change, not a tidy-up.
+pub(crate) const SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": {
+    "changes": {
+      "type": "array",
+      "items": {
         "type": "object",
         "properties": {
-            "changes": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "change": { "type": "integer", "description": "number of the change" },
-                        "fate": {
-                            "type": "string",
-                            "enum": ["carries", "already", "conflicts", "orphaned"],
-                        },
-                        "target": {
-                            "type": ["integer", "null"],
-                            "description": "number of the target rule, or null",
-                        },
-                        "because": { "type": "string" },
-                    },
-                    "required": ["change", "fate", "target", "because"],
-                    "additionalProperties": false,
-                },
-            },
+          "because": { "type": "string" },
+          "change": { "type": "integer", "description": "number of the change" },
+          "fate": {
+            "type": "string",
+            "enum": ["carries", "already", "conflicts", "orphaned"]
+          },
+          "target": {
+            "type": ["integer", "null"],
+            "description": "number of the target rule, or null"
+          }
         },
-        "required": ["changes"],
-        "additionalProperties": false,
-    })
-}
+        "required": ["change", "fate", "target", "because"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["changes"],
+  "additionalProperties": false
+}"#,
+);
 
 /// What sort of change this is. An addition has no earlier rule behind it,
 /// which rules out one of the four fates — a constraint worth holding in the
@@ -216,7 +219,7 @@ fn map_changes(
     }
     user.push_str("\nFor each change, say whether it carries onto the new rules.");
 
-    let mapped: Mapped = client.complete_json(SYSTEM, &user, "changes", &schema())?;
+    let mapped: Mapped = client.complete_json(SYSTEM, &user, "changes", &SCHEMA)?;
 
     let mut out = Vec::new();
     for m in mapped.changes {

@@ -138,6 +138,26 @@ fn the_reading_prompt_forbids_normalising_the_units_away() {
     assert!(system.contains("part of the unit"), "{system}");
 }
 
+/// A server that decodes by schema writes an object's properties in the order
+/// it receives them. Sent sorted, a quantity asked for `value` last, and a
+/// rule with no number filled that string until the deadline
+/// (LOAD_TEST_COMMONWEALTH.md §21).
+#[test]
+fn a_quantity_is_asked_for_in_the_order_the_prompt_lists_its_fields() {
+    let mock = Mock::spawn(vec![(200, answer(&[(1, &[])]))]);
+    read_block(&mock.client(), &["a rule"]).unwrap();
+    let body = &mock.raw_requests()[0];
+    let at = |field: &str| {
+        body.find(&format!("\"{field}\":"))
+            .unwrap_or_else(|| panic!("`{field}` is not in the schema sent: {body}"))
+    };
+    let sent = [at("value"), at("unit"), at("of"), at("canonical")];
+    assert!(
+        sent.windows(2).all(|w| w[0] < w[1]),
+        "fields went out as {sent:?}: {body}"
+    );
+}
+
 // ── does a citation carry the rule's numbers? ───────────────
 
 #[test]

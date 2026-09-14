@@ -21,9 +21,8 @@
 //! where the whole difficulty is that N² pairs compete for one window.
 
 use serde::Deserialize;
-use serde_json::{json, Value};
 
-use crate::model::{Client, ModelError};
+use crate::model::{Client, ModelError, Schema};
 use crate::resolver::{self, Offered, Resolver};
 
 /// One quantity a rule states.
@@ -181,40 +180,47 @@ struct RuleQuantities {
     quantities: Vec<Quantity>,
 }
 
-fn schema() -> Value {
-    json!({
+/// A quantity's fields in the order `SYSTEM` lists them, `value` first.
+///
+/// **The order is the fix, not a style.** Sorted, a quantity asked for what it
+/// measures and its unit before its number, and on a rule stating no number
+/// the model filled the `value` string with a copy of the prompt until the
+/// endpoint's deadline (LOAD_TEST_COMMONWEALTH.md §21). The same batch, asked
+/// in this order, finishes in 301 tokens.
+pub(crate) const SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": {
+    "rules": {
+      "type": "array",
+      "items": {
         "type": "object",
         "properties": {
-            "rules": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "n": { "type": "integer" },
-                        "quantities": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "value": { "type": "string" },
-                                    "unit": { "type": "string" },
-                                    "of": { "type": "string" },
-                                    "canonical": { "type": "string" },
-                                },
-                                "required": ["value", "unit", "of"],
-                                "additionalProperties": false,
-                            },
-                        },
-                    },
-                    "required": ["n", "quantities"],
-                    "additionalProperties": false,
-                },
-            },
+          "n": { "type": "integer" },
+          "quantities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": { "type": "string" },
+                "unit": { "type": "string" },
+                "of": { "type": "string" },
+                "canonical": { "type": "string" }
+              },
+              "required": ["value", "unit", "of"],
+              "additionalProperties": false
+            }
+          }
         },
-        "required": ["rules"],
-        "additionalProperties": false,
-    })
-}
+        "required": ["n", "quantities"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["rules"],
+  "additionalProperties": false
+}"#,
+);
 
 /// How many independent rules go into one reading pass.
 ///
@@ -355,8 +361,8 @@ impl Resolver for Quantities {
         SYSTEM
     }
 
-    fn schema(&self) -> Value {
-        schema()
+    fn schema(&self) -> &'static Schema {
+        &SCHEMA
     }
 
     fn unread(&self, _index: usize) -> Vec<Quantity> {

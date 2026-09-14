@@ -15,9 +15,8 @@
 
 use canon_core::{ActId, Canon, Commitment, Conflict, Disposition};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
-use crate::model::{self, Client, ModelError};
+use crate::model::{self, Client, ModelError, Schema};
 
 const SYSTEM: &str = "\
 You compare normative commitments and find genuine tensions.
@@ -51,31 +50,31 @@ struct Pair {
     reason: String,
 }
 
-fn schema() -> Value {
-    json!({
+pub(crate) const SCHEMA: Schema = Schema::new(
+    r#"{
+  "type": "object",
+  "properties": {
+    "tensions": {
+      "type": "array",
+      "items": {
         "type": "object",
         "properties": {
-            "tensions": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "a": { "type": "integer", "description": "number of the first commitment" },
-                        "b": { "type": "integer", "description": "number of the second commitment" },
-                        "reason": {
-                            "type": "string",
-                            "description": "the situation in which both cannot be honoured",
-                        },
-                    },
-                    "required": ["a", "b", "reason"],
-                    "additionalProperties": false,
-                },
-            },
+          "a": { "type": "integer", "description": "number of the first commitment" },
+          "b": { "type": "integer", "description": "number of the second commitment" },
+          "reason": {
+            "type": "string",
+            "description": "the situation in which both cannot be honoured"
+          }
         },
-        "required": ["tensions"],
-        "additionalProperties": false,
-    })
-}
+        "required": ["a", "b", "reason"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["tensions"],
+  "additionalProperties": false
+}"#,
+);
 
 /// A pair the model proposed, still in terms of the list it was given.
 ///
@@ -378,7 +377,7 @@ fn one_pass(client: &Client, texts: &[&str], idx: &[usize]) -> Result<Vec<Propos
     }
     user.push_str("\nReturn every pair in tension, with the situation that forces the choice.");
 
-    let found: Found = client.complete_json(SYSTEM, &user, "tensions", &schema())?;
+    let found: Found = client.complete_json(SYSTEM, &user, "tensions", &SCHEMA)?;
 
     let mut out: Vec<Proposed> = Vec::new();
     for p in found.tensions {

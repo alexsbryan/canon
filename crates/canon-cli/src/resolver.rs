@@ -32,9 +32,8 @@
 use std::cell::Cell;
 
 use serde::de::DeserializeOwned;
-use serde_json::Value;
 
-use crate::model::{Client, ModelError};
+use crate::model::{Client, ModelError, Schema};
 
 /// How the list is marked in the prompt.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -163,7 +162,7 @@ pub trait Resolver {
     fn system(&self) -> &'static str;
 
     /// The shape the answer must take.
-    fn schema(&self) -> Value;
+    fn schema(&self) -> &'static Schema;
 
     /// The reading for an item the model said nothing about.
     ///
@@ -190,12 +189,7 @@ pub fn ask<R: Resolver, T: DeserializeOwned>(
     question: &str,
 ) -> Result<T, ModelError> {
     let user = format!("{heading}\n{}\n{question}\n", offered.numbered());
-    client.complete_json(
-        resolver.system(),
-        &user,
-        resolver.name(),
-        &resolver.schema(),
-    )
+    client.complete_json(resolver.system(), &user, resolver.name(), resolver.schema())
 }
 
 #[cfg(test)]
