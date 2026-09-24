@@ -187,6 +187,43 @@ The check is `who_decides(scope, now)` after the fold; it is true rather than in
 
 **Landed with batch A, inside entry 8.** Run discovery is one function: finished runs oldest first, `.partial.json` set aside and named on stderr as still being drafted, and a run can be picked by file name, by its timestamp alone, or by any tail of its path.
 
+## Candidate-selection trial (2026-09-23)
+
+`scripts/candidate-coverage.py` tests a deterministic lexical top-k selector
+against existing Maple House draft artifacts without replacing any reader. On
+the demo-tape and guardfix runs, k=15 offered all 7 train/dev planted pairs
+whose source sections survived extraction, using 425/1,035 (41%) and
+439/1,081 (41%) possible pairs respectively. On guardfix, k=8 offered 5/7
+using 244/1,081 (23%). This is a **chunk-anchored upper bound**: a candidate
+from the right section need not state the particular rule. It measures neither
+model recall nor false positives. The test split was not used to set k.
+
+The full sweep remains the default. Before promoting selected pairs into
+`tensions`, compare live model recall and compatible-pair errors against the
+full schedule on the same candidates and served model; count pairs never
+offered and record the selector and its input alongside the run. The earlier
+near-twin block experiment in `tensions.rs` lost recall, so coverage alone
+cannot license the change. Dedupe needs a separate measurement of true/false
+folds and group stability under the four-item perturbation from entry 22;
+`check` needs a proposal-to-commitment shortlist and an explicit partial
+answer when some canon IDs were not offered. None can inherit the full
+sweep's completeness claim. Exact-hash `seen` cannot match rewordings without
+retaining searchable rejected text, a separate ingest-hygiene decision.
+
+Source time now travels through draft chunks for timestamped chat and git
+commits, with unknown left unknown. It does not touch the act log or the
+fold's `ts_unix`; a historical replay cannot treat a newly accepted rule as
+having been in force when its source was written. The existing prompt already
+asks for a sentence that makes sense without its passage; entry 12's prompt
+change still waits for the same pilot notes and a before/after reading.
+For one-step agent capture, entry 7's provenance rule still applies: the
+agent can point at a draft candidate or an existing file, but canon must cut
+the passage itself before filing a proposal. A typed citation or a bulk
+approval would bypass the evidence and review this experiment is meant to
+keep. The existing `draft --resume` path retains citations for human review;
+an agent-submitted proposal needs a separate measured path before adding a
+write tool to the read-only MCP surface.
+
 ## What lands together
 
 **Batch A, model-free, no format change, landed 2026-09-13.** Entries 1, 2, 8, 10, 15, 16, 17, 18, and the emphasis strip from 12. Core: `Seat`, `bootstrap`, the gate helper. CLI: `Took`, every gated handler through it, `who`'s two lines, `progress`, `--resume` over every run. Docs: SPEC rule 7 sentence, the COOKBOOK example, the founding line in GETTING_STARTED.

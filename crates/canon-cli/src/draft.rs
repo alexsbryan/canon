@@ -84,6 +84,11 @@ pub struct Chunk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heading: Option<String>,
     pub text: String,
+    /// When this passage was said in its source, if the source supplies a
+    /// clock. A range is necessary for a chat burst containing two speakers.
+    /// Neither endpoint is the act's `ts_unix` or a date of legal effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub said_at: Option<SourceTime>,
     /// Read one unit per line, because prose splitting found no structure in
     /// it ([`locate::Basis::Lines`]). Recorded because it changes what a
     /// citation into this passage MEANS — one row of a table, not one
@@ -91,6 +96,12 @@ pub struct Chunk {
     /// read properly afterwards.
     #[serde(default, skip_serializing_if = "is_false")]
     pub by_line: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SourceTime {
+    pub from: i64,
+    pub to: i64,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -646,6 +657,7 @@ pub fn chunk_text(path: &str, text: &str) -> Vec<Chunk> {
             source: format!("{path}:{start}-{end}"),
             heading: h.clone(),
             text: body,
+            said_at: None,
             // Set by the caller, which is where the coordinate system is
             // built. `chunk_text` takes no view on how a passage is read.
             by_line: false,
@@ -693,6 +705,24 @@ pub fn chunk_text(path: &str, text: &str) -> Vec<Chunk> {
 
     for (i, c) in chunks.iter_mut().enumerate() {
         c.id = i;
+    }
+    chunks
+}
+
+/// Annotate chunks after splitting so the citation coordinates still refer
+/// to exactly the same original text, regardless of whether it has a clock.
+fn chunks_from_source(src: &Source) -> Vec<Chunk> {
+    let mut chunks = chunk_text(&src.name, &src.text);
+    for chunk in &mut chunks {
+        if let Some((_, span)) = chunk.source.rsplit_once(':') {
+            if let Some((first, last)) = span.split_once('-') {
+                if let (Ok(first), Ok(last)) = (first.parse(), last.parse()) {
+                    chunk.said_at = src
+                        .time_for_lines(first, last)
+                        .map(|(from, to)| SourceTime { from, to });
+                }
+            }
+        }
     }
     chunks
 }
@@ -1675,8 +1705,10 @@ fn read_sources(args: &[String]) -> Result<Gathered, String> {
     let include_ignored = crate::cmds::has(args, "--include-ignored");
     if crate::cmds::has(args, "--from-git") {
         let since = crate::cmds::flag(args, "--since").unwrap_or("1y");
-        for (name, text) in read_git(since)? {
-            got.sources.push(Source::unplaced(name, text));
+        for (name, text, at) in read_git(since)? {
+            let mut source = Source::unplaced(name, text);
+            source.said_at = Some(at);
+            got.sources.push(source);
         }
     }
     let paths = from_paths(args);
@@ -1819,8 +1851,12 @@ fn read_stdin(args: &[String]) -> Result<Source, String> {
     // without anyone having to declare that it is one.
     let head = text.trim_start();
     if head.starts_with('{') || head.starts_with('[') {
-        if let Some(rendered) = sources::render_chat(&text) {
+        if let Some((rendered, line_times)) = sources::render_chat_timed(&text) {
             text = rendered;
+            let mut source =
+                Source::unplaced(crate::cmds::flag(args, "--as").unwrap_or("stdin"), text);
+            source.line_times = line_times;
+            return Ok(source);
         }
     }
     Ok(Source::unplaced(
@@ -1831,12 +1867,12 @@ fn read_stdin(args: &[String]) -> Result<Source, String> {
 
 /// Commit bodies as source text. Extends `store::actor`'s shell-out pattern
 /// rather than taking a git dependency.
-fn read_git(since: &str) -> Result<Vec<(String, String)>, String> {
+fn read_git(since: &str) -> Result<Vec<(String, String, i64)>, String> {
     let out = std::process::Command::new("git")
         .args([
             "log",
             &format!("--since={since}"),
-            "--format=%H%x1f%B%x1e",
+            "--format=%H%x1f%ct%x1f%B%x1e",
             "--no-merges",
         ])
         .output()
@@ -1851,9 +1887,17 @@ fn read_git(since: &str) -> Result<Vec<(String, String)>, String> {
     Ok(text
         .split('\u{1e}')
         .filter_map(|record| {
-            let (sha, body) = record.trim_start().split_once('\u{1f}')?;
+            let (sha, rest) = record.trim_start().split_once('\u{1f}')?;
+            let (at, body) = rest.split_once('\u{1f}')?;
+            let at = at.parse::<i64>().ok()?;
             let body = body.trim();
-            (!body.is_empty()).then(|| (format!("git:{}", &sha[..sha.len().min(12)]), body.into()))
+            (!body.is_empty()).then(|| {
+                (
+                    format!("git:{}", &sha[..sha.len().min(12)]),
+                    body.into(),
+                    at,
+                )
+            })
         })
         .collect())
 }
@@ -2101,7 +2145,7 @@ pub fn run(args: &[String]) -> i32 {
 
     let mut chunks: Vec<Chunk> = Vec::new();
     for src in sources {
-        chunks.extend(chunk_text(&src.name, &src.text));
+        chunks.extend(chunks_from_source(src));
     }
     let found = chunks.len();
     // **What makes pointing at a growing feed affordable.** Extraction is one

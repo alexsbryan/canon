@@ -47,6 +47,59 @@ fn a_chunk_cites_the_lines_it_came_from() {
 }
 
 #[test]
+fn a_chat_passage_keeps_its_source_clock_in_the_run_not_the_quote() {
+    let chat = format!(
+        r#"[{{"text":"{}","ts":1772232000}},{{"text":"This rule was revised later and applies now.","ts":1772240000}}]"#,
+        "A long meeting explanation. ".repeat(65)
+    );
+    let (text, line_times) = sources::render_chat_timed(&chat).unwrap();
+    let mut source = Source::unplaced("chat", text);
+    source.line_times = line_times;
+    let chunks = chunks_from_source(&source);
+    assert_eq!(chunks.len(), 2, "a chat burst after a time gap is split");
+    assert_eq!(
+        chunks[0].said_at,
+        Some(SourceTime {
+            from: 1772232000,
+            to: 1772232000
+        })
+    );
+    assert_eq!(
+        chunks[1].said_at,
+        Some(SourceTime {
+            from: 1772240000,
+            to: 1772240000
+        })
+    );
+    assert!(
+        !chunks[0].text.contains("1772232000"),
+        "the date is not part of the quoted passage"
+    );
+    assert_eq!(chunk_text("ordinary.md", DOC)[0].said_at, None);
+}
+
+#[test]
+fn one_git_commit_time_marks_its_passage_but_does_not_backdate_an_act() {
+    let mut source = Source::unplaced(
+        "git:abc",
+        "A commitment is made in this commit, and the source dates when it was said.",
+    );
+    source.said_at = Some(1772232000);
+    let chunk = &chunks_from_source(&source)[0];
+    assert_eq!(
+        chunk.said_at,
+        Some(SourceTime {
+            from: 1772232000,
+            to: 1772232000
+        })
+    );
+    assert_eq!(chunk.source, "git:abc:1-1");
+    let encoded = serde_json::to_value(chunk).unwrap();
+    assert_eq!(encoded["said_at"]["from"], 1772232000);
+    assert_eq!(encoded["said_at"]["to"], 1772232000);
+}
+
+#[test]
 fn unstructured_prose_still_chunks_and_still_cites() {
     // Journals have no headings. The heading rule must cost nothing there.
     let text = "a\n\nb\n\nc\n";

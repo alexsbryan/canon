@@ -236,6 +236,43 @@ fn a_gap_in_the_conversation_becomes_a_chunk_boundary() {
 }
 
 #[test]
+fn chat_dates_follow_the_original_lines_without_entering_the_quote() {
+    let (text, times) = render_chat_timed(SLACK).unwrap();
+    assert_eq!(text.lines().count(), times.len());
+    assert_eq!(
+        times,
+        vec![Some(1772232000), Some(1772232060), None, Some(1772240000)]
+    );
+    let source = Source {
+        name: "chat".into(),
+        text,
+        path: None,
+        said_at: None,
+        line_times: times,
+    };
+    assert_eq!(source.time_for_lines(1, 2), Some((1772232000, 1772232060)));
+    assert_eq!(
+        source.time_for_lines(3, 4),
+        None,
+        "a blank separator is not a date"
+    );
+    assert_eq!(source.time_for_lines(4, 4), Some((1772240000, 1772240000)));
+    assert_eq!(source.time_for_lines(0, 1), None);
+    assert_eq!(source.time_for_lines(1, 9), None);
+}
+
+#[test]
+fn an_undated_message_cannot_make_a_mixed_span_look_dated() {
+    let (text, times) =
+        render_chat_timed(r#"[{"text":"start","ts":1772232000},{"text":"agreed"}]"#).unwrap();
+    let mut source = Source::unplaced("chat", text);
+    source.line_times = times;
+    assert_eq!(source.time_for_lines(1, 2), None);
+    assert_eq!(source.time_for_lines(1, 1), Some((1772232000, 1772232000)));
+    assert_eq!(source.time_for_lines(2, 2), None);
+}
+
+#[test]
 fn the_other_export_shapes_read_too() {
     // Discord: an object with `messages`, `author.username`, `content`.
     let discord = r#"{"messages":[

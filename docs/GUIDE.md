@@ -141,6 +141,12 @@ canon draft --from ~/house-notes        # a folder, read recursively
 canon draft --from-git --since 1y       # or your commit messages
 ```
 
+When a chat export has numeric message timestamps, or the source is a git
+commit, the draft run records when each passage was said (`chunks[].said_at`,
+possibly a range). Undated passages remain undated. This is source evidence,
+not the time a rule entered the canon; accepting a rule still writes an act
+at review time.
+
 A small local model proposes worse rules and misses more conflicts — the size
 of the model is what moves quality here. Measure yours with
 `./scripts/draft-bar.sh 3`.
@@ -152,6 +158,11 @@ base, and diff the two. `canon share` prints a pasteable snapshot, `canon
 adopt --paste` forks one, and `canon rebase --onto <url>` carries your rules
 onto a different base (*model*). `canon mcp` serves the same verbs to an agent
 over MCP.
+
+For a small canon, `canon_list` shows every rule. Above fifty rules it first
+shows counts by scope. Pass `scope` and/or `query` to narrow the list; `limit`
+(1–100) and `offset` page through matches. `canon_why(id)` opens a rule's
+source and history; `canon_open` lists unanswered questions.
 
 ## Where to go next
 

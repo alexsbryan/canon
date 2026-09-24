@@ -16,6 +16,7 @@
 //! surface is five methods, and a dependency here would be most of the
 //! tool's dependency tree.
 
+use std::collections::BTreeMap;
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 
@@ -139,10 +140,15 @@ fn tool_descriptors() -> Vec<Value> {
     vec![
         json!({
             "name": "canon_list",
-            "description": "The commitments currently in force. For a small canon this is the \
-                            whole integration: read them once at the start of a task and reason \
-                            over them directly.",
-            "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+            "description": "Commitments currently in force. Small canons list in full; large \
+                            canons show counts by scope first. Filter by scope or text, or page \
+                            through results; use canon_why(id) to open a rule's history.",
+            "inputSchema": { "type": "object", "properties": {
+                "scope": { "type": "string", "description": "Room to consult, including its parent scopes and unscoped rules." },
+                "query": { "type": "string", "description": "Case-insensitive substring of the rule text." },
+                "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
+                "offset": { "type": "integer", "minimum": 0 }
+            }, "additionalProperties": false },
         }),
         json!({
             "name": "canon_why",
@@ -218,7 +224,7 @@ fn call(name: &str, args: &Value) -> Value {
         Err(e) => return content(e, true),
     };
     let rendered = match name {
-        "canon_list" => render_list(&dir),
+        "canon_list" => render_list(&dir, args),
         "canon_open" => render_open(&dir),
         "canon_why" => render_why(&dir, arg.unwrap_or_default()),
         "canon_check" => render_check(&dir, arg.unwrap_or_default()),
@@ -239,17 +245,116 @@ fn locate() -> Result<PathBuf, String> {
         .ok_or_else(|| "no canon found. Run `canon init` first, or set CANON_DIR.".to_string())
 }
 
-fn render_list(dir: &Path) -> Result<String, String> {
+fn render_list(dir: &Path, args: &Value) -> Result<String, String> {
     let canon = store::read(dir)?.derive();
+    list_of(&canon, args)
+}
+
+fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
+    let obj = args
+        .as_object()
+        .ok_or("canon_list arguments must be an object")?;
+    if let Some(key) = obj
+        .keys()
+        .find(|k| !["scope", "query", "limit", "offset"].contains(&k.as_str()))
+    {
+        return Err(format!("canon_list does not take `{key}`"));
+    }
+    let scope = match obj.get("scope") {
+        None => None,
+        Some(Value::String(raw)) => Some(
+            canon_core::Scope::new(raw)
+                .ok_or_else(|| format!("`{raw}` is not a scope: use a dotted path"))?,
+        ),
+        _ => return Err("canon_list scope must be a string".into()),
+    };
+    let query = match obj.get("query") {
+        None => None,
+        Some(Value::String(raw)) => Some(raw.to_lowercase()),
+        _ => return Err("canon_list query must be a string".into()),
+    };
+    let limit = match obj.get("limit") {
+        None => 50,
+        Some(v) => match v.as_u64() {
+            Some(n @ 1..=100) => n as usize,
+            _ => return Err("canon_list limit must be between 1 and 100".into()),
+        },
+    };
+    let offset = match obj.get("offset") {
+        None => 0,
+        Some(v) => v
+            .as_u64()
+            .and_then(|n| usize::try_from(n).ok())
+            .ok_or("canon_list offset must be a nonnegative integer")?,
+    };
     let live: Vec<_> = canon.active().collect();
     if live.is_empty() {
         return Ok("This canon has no commitments yet.".into());
     }
+    if live.len() > 50 && obj.is_empty() {
+        let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        for c in &live {
+            let key = canon
+                .scope_of(&c.id)
+                .map(|s| s.as_str())
+                .unwrap_or("(unscoped)");
+            *counts.entry(key.to_string()).or_default() += 1;
+        }
+        let mut out = format!("{} in force. By scope:\n", live.len());
+        let omitted = counts.len().saturating_sub(30);
+        for (scope, n) in counts.into_iter().take(30) {
+            out.push_str(&format!("  {scope}  {n}\n"));
+        }
+        if omitted > 0 {
+            out.push_str(&format!("  …and {omitted} more scope(s)\n"));
+        }
+        out.push_str("Use canon_list(scope, query, limit, offset) to browse rules, and canon_why(id) for history.");
+        return Ok(out);
+    }
+    let filtered: Vec<_> = live
+        .into_iter()
+        .filter(|c| {
+            scope
+                .as_ref()
+                .is_none_or(|s| canon.scope_of(&c.id).is_none_or(|here| here.covers(s)))
+                && query
+                    .as_ref()
+                    .is_none_or(|q| c.text.to_lowercase().contains(q))
+        })
+        .collect();
+    if filtered.is_empty() {
+        let mut filters = Vec::new();
+        if let Some(s) = &scope {
+            filters.push(format!("scope `{s}`"));
+        }
+        if let Some(q) = &query {
+            filters.push(format!("query `{q}`"));
+        }
+        return Ok(format!("No commitments match {}.", filters.join(" and ")));
+    }
+    if offset >= filtered.len() {
+        return Ok(format!(
+            "Offset {offset} is past the {} matching commitment(s). Start again at offset 0.",
+            filtered.len()
+        ));
+    }
     let mut out = String::new();
-    for c in &live {
+    for c in filtered.iter().skip(offset).take(limit) {
         out.push_str(&format!("{}  {}\n", c.id, c.text));
     }
-    out.push_str(&format!("\n{} in force.", live.len()));
+    if obj.is_empty() {
+        out.push_str(&format!("\n{} in force.", filtered.len()));
+    } else {
+        out.push_str(&format!(
+            "\nShowing {}-{} of {} matching commitment(s).",
+            offset.min(filtered.len()) + usize::from(offset < filtered.len()),
+            offset.saturating_add(limit).min(filtered.len()),
+            filtered.len()
+        ));
+        if offset.saturating_add(limit) < filtered.len() {
+            out.push_str(&format!(" Next: offset {}.", offset + limit));
+        }
+    }
 
     let carried = canon.tolerated().count();
     if carried > 0 {

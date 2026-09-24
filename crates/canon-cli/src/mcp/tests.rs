@@ -146,3 +146,55 @@ fn canon_why_without_an_id_is_an_error_the_agent_can_read() {
     .unwrap();
     assert_eq!(r["result"]["isError"], true, "a bad argument IS an error");
 }
+
+#[test]
+fn small_canons_still_list_their_rules_and_large_canons_show_an_index() {
+    use canon_core::{ActId, Commitment, Status};
+    let mut canon = canon_core::Canon::default();
+    for i in 0..60 {
+        let id = ActId::derive(i, "human:dana", &format!("rule {i}"));
+        canon.commitments.push(Commitment {
+            id: id.clone(),
+            text: format!("Rule {i} about the kitchen"),
+            status: Status::Active,
+            asserted_at: i,
+            actor: "human:dana".into(),
+            replaces: vec![],
+            from: None,
+            source: None,
+        });
+        if i < 30 {
+            canon
+                .scopes
+                .push((id, canon_core::Scope::new("house.kitchen").unwrap()));
+        }
+    }
+    let index = list_of(&canon, &json!({})).unwrap();
+    assert!(index.contains("60 in force. By scope:"));
+    assert!(index.contains("house.kitchen  30"));
+    assert!(index.contains("(unscoped)  30"));
+    assert!(
+        !index.contains("Rule 0 about"),
+        "the overview must not dump 60 texts"
+    );
+
+    let first = list_of(&canon, &json!({"scope": "house.kitchen", "limit": 5})).unwrap();
+    assert!(first.contains("Showing 1-5 of 60 matching"), "{first}");
+    assert!(first.contains("Next: offset 5"));
+    let second = list_of(&canon, &json!({"query": "Rule 59", "offset": 0})).unwrap();
+    assert!(second.contains("Rule 59 about the kitchen"));
+    assert!(!second.contains("Rule 58 about the kitchen"));
+    let empty = list_of(&canon, &json!({"scope": "garden", "query": "never"})).unwrap();
+    assert!(
+        empty.contains("scope `garden` and query `never`"),
+        "{empty}"
+    );
+    let past_end = list_of(&canon, &json!({"offset": 60})).unwrap();
+    assert!(past_end.contains("past the 60 matching"), "{past_end}");
+    assert!(list_of(&canon, &json!({"limit": 0})).is_err());
+    assert!(list_of(&canon, &json!({"scope": "house..kitchen"})).is_err());
+
+    canon.commitments.truncate(2);
+    let small = list_of(&canon, &json!({})).unwrap();
+    assert!(small.contains("Rule 0 about") && small.contains("Rule 1 about"));
+}

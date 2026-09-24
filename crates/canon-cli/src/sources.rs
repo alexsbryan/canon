@@ -107,6 +107,10 @@ pub struct Source {
     /// Where it came from, when it came from disk. `None` for stdin and for
     /// commit bodies, which have no path to be disambiguated by.
     pub path: Option<PathBuf>,
+    /// Source clock, never the time an act entered the canon. Git commit
+    /// bodies have one time; chat exports have one per rendered message line.
+    pub said_at: Option<i64>,
+    pub line_times: Vec<Option<i64>>,
 }
 
 impl Source {
@@ -116,7 +120,30 @@ impl Source {
             name: name.into(),
             text: text.into(),
             path: None,
+            said_at: None,
+            line_times: Vec::new(),
         }
+    }
+
+    /// Time range for a cited line span. Unknown anywhere in a chat span
+    /// makes the whole span unknown rather than inventing a precise date.
+    pub fn time_for_lines(&self, first: usize, last: usize) -> Option<(i64, i64)> {
+        if let Some(at) = self.said_at {
+            return Some((at, at));
+        }
+        if self.line_times.is_empty() || first == 0 || last < first {
+            return None;
+        }
+        let times = self.line_times.get(first - 1..last)?;
+        let mut values = times.iter().flatten().copied();
+        let first_time = values.next()?;
+        if times.iter().any(Option::is_none) {
+            return None;
+        }
+        Some((
+            times.iter().flatten().min().copied().unwrap_or(first_time),
+            times.iter().flatten().max().copied().unwrap_or(first_time),
+        ))
     }
 }
 
@@ -404,11 +431,13 @@ fn read_one(path: &Path, name: &str, limit: Option<u64>) -> Result<Source, Strin
     // reads as chat and a `.json` full of minutes does not have to be.
     let head = text.trim_start();
     if head.starts_with('{') || head.starts_with('[') {
-        if let Some(rendered) = render_chat(&text) {
+        if let Some((rendered, line_times)) = render_chat_timed(&text) {
             return Ok(Source {
                 name: name.to_string(),
                 text: rendered,
                 path: Some(path.to_path_buf()),
+                said_at: None,
+                line_times,
             });
         }
         // Structured data that holds no conversation is machine output, and
@@ -421,6 +450,8 @@ fn read_one(path: &Path, name: &str, limit: Option<u64>) -> Result<Source, Strin
         name: name.to_string(),
         text,
         path: Some(path.to_path_buf()),
+        said_at: None,
+        line_times: Vec::new(),
     })
 }
 
@@ -516,12 +547,20 @@ struct Message {
 /// or JSONL. What it is NOT tolerant about is emptiness — a file that parses
 /// but yields no message is reported as unread rather than counted as a
 /// source that contributed nothing.
+#[cfg(test)]
 pub fn render_chat(raw: &str) -> Option<String> {
+    render_chat_timed(raw).map(|(text, _)| text)
+}
+
+/// Keep timestamps alongside rendered lines; they do not enter the quoted
+/// passage or change the measured extraction prompt.
+pub fn render_chat_timed(raw: &str) -> Option<(String, Vec<Option<i64>>)> {
     let messages = parse_chat(raw)?;
     if messages.is_empty() {
         return None;
     }
     let mut out = String::new();
+    let mut line_times = Vec::new();
     let mut since_break = 0usize;
     let mut previous: Option<f64> = None;
     for m in &messages {
@@ -531,6 +570,7 @@ pub fn render_chat(raw: &str) -> Option<String> {
             // and a chunk boundary are the same thing by construction rather
             // than by a second splitter that could disagree with the first.
             out.push('\n');
+            line_times.push(None);
             since_break = 0;
         }
         // **Rendered as block quotes, and that is load-bearing.** `locate`
@@ -545,11 +585,14 @@ pub fn render_chat(raw: &str) -> Option<String> {
         // the splitter's marker rule would reach every prose corpus, and that
         // rule was deliberately narrowed after a house charter's wrapped
         // "door." read as an enumerator.
-        out.push_str(&format!("> {}: {}\n", m.who, m.text.trim()));
+        let line = format!("> {}: {}\n", m.who, m.text.trim());
+        let at = (m.at.is_finite() && m.at > 0.0 && m.at < i64::MAX as f64).then_some(m.at as i64);
+        line_times.extend(std::iter::repeat_n(at, line.lines().count()));
+        out.push_str(&line);
         since_break += 1;
         previous = Some(m.at);
     }
-    Some(out)
+    Some((out, line_times))
 }
 
 fn parse_chat(raw: &str) -> Option<Vec<Message>> {
