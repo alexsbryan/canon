@@ -129,3 +129,37 @@ The operator reviewed 153 candidates of the charter run by hand (66 accepted, 1 
 `review` takes the act from the candidate's kind and only the text from the answer (`draft.rs:2673-2691`): `[e]dit` on a `question` writes `ActKind::Question` with the edited text. The notes run phrased stated rules as questions. "What is the condition under which a data file authored FOR an instrument is landed?" cites a passage that reads "THE RULE: a data file authored FOR an instrument is not landed until that instrument has read it". Accepting that candidate records an answered question as open, editing it does the same, and rejecting it loses the rule unless someone retypes it with `add`, which drops the source (entry 23). In the notes run, 1 of the first 31 question candidates reviewed was an open question. Line numbers at 33856c6.
 
 **fix**: let `[e]dit` change the kind, or check each question against its own passage and offer one the passage answers as the rule it states.
+
+## From founding the Ersilia canon by adoption
+
+*2026-10-03. Ersilia (`~/dev/ersilia/.canon`) was founded on the code profile, given the operator's standing over `arch`, `procedure` and `default`, and forked from commonwealth-ai@881e16 with `share | adopt --paste`; an agent filed 27 Ersilia proposals and 7 questions, and the operator ratified by script. `canon` on PATH is the working tree's debug build (`~/.local/bin/canon` links to `target/debug/canon`), at 158f623 with uncommitted changes to `draft.rs`; line numbers at 158f623.*
+
+Entries 1, 3, 12 and 23 recurred and are not repeated. Entry 3: the agent set `CANON_ACTOR=agent:claude` by hand on every call. Entry 12: two fragments came down through adoption ("If it isn't, the friction is a bug…" and "It must be specific and actionable by someone who did not see the incident."). Entry 23: the operator's 27 approvals went into a generated script of `canon approve` lines.
+
+### 25. Every verb refuses `--help`
+
+`canon init --help` prints "`canon init` has no `--help` — it takes `--profile`", and `approve`, `list`, `retract` and `adopt` answer the same way (the verb table, `crates/canon-cli/src/cli.rs:74`). The refusal names a flag but not what the verb does or writes, so learning what `init` puts in a repository meant initialising a scratch directory first. **fix**: `<verb> --help` prints that verb's line from `help all` and its flags.
+
+### 26. A fresh canon makes an agent's adds law
+
+On a fresh code-profile canon with no grant, `CANON_ACTOR=agent:claude canon add "…" --scope procedure` printed `in force`: nobody held the scope, so it was open (`crates/canon-core/src/ratify.rs:557`). The only signal is the `list` warning. The first probe rule written while founding Ersilia's canon became law before any person had written anything; the founding had to grant the operator both scopes before a single proposal. This is not entry 1 (grants in the same second): here no grant exists at all. **fix**: on the code and house profiles, an agent's act in an open scope is a proposal; failing that, the add line says "in force only because nobody holds `<scope>`".
+
+### 27. The root scope is `default` in one place and "this canon" in another
+
+An agent's unscoped proposal reads "needs approval from one person who holds this canon" (`crates/canon-core/src/ratify.rs:317`), and `canon grant <actor> default` is how a person comes to hold it (`crates/canon-core/src/policy.rs:359`). Nothing on screen connects the two; `default` turned up only in `canon who default`'s hint. **fix**: one name, printed in both places, for example "holds the root scope (`default`)".
+
+### 28. Adoption is all or nothing, and retracting an inherited rule means mapping ids by hand
+
+Ersilia inherits the Commonwealth canon's general rules and not its tooling, so 17 of the 66 had to go: `svrn` and `sovereign` commands, the work atlas, `DEFAULTS_LEDGER.md`, a near-duplicate and a fragment. `adopt` takes `--paste` or a URL and nothing else (`cli.rs:74`), and each adopted commitment gets a new id, with the upstream id only in `list --json`'s `from` field, so the retraction script resolved each upstream id through `jq` before it could retract. `diff --upstream` then reported `RETRACTED (17) · ADDED (27) · UNTOUCHED (49)` cleanly: the lineage record works, and reaching it took a script. **fix**: `adopt --except <upstream-id>…`, recorded as retractions with their reasons so `diff --upstream` reads the same, and let `retract` and `why` accept an upstream id that resolves through `from`.
+
+### 29. An agent can propose a rule but not the retraction of one
+
+An agent's `add` in a held scope becomes a proposal the holder approves. An agent's `retract` prints `NOT APPLIED … on the record as can-eae1b008d37e; somebody with standing has to do it` (`crates/canon-cli/src/cmds.rs:231`), and `canon approve can-eae1b008d37e` answers `no commitment matching`. The record keeps the agent's retraction and its reason, and the holder still has to retype both; the 17 retractions in entry 28 had to be written into the operator's own script for that reason. **fix**: a NOT APPLIED retraction becomes a proposal the holder can approve or object to, as an add does.
+
+### 30. A fully ratified canon still warns that its rules were not authored by a person
+
+After the operator approved all 27 proposals, `canon list` printed `warning: 31 adjudication(s) were not authored by a person:` followed by 31 ids on one line (`crates/canon-cli/src/cmds.rs:519`, `crates/canon-core/src/fold.rs:207`). They are the 27 proposals, each approved by a person, and the founding grants and ratification rules the agent wrote on the operator's instruction while the scopes were open. Reporting authorship is right; on a canon with nothing left to ratify the line reads as a defect, and 31 ids inline cannot be read. **fix**: do not count a proposal a person approved, and report the rest grouped by kind (grants, ratification rules, questions) with a count, the ids behind `--json`.
+
+### 31. Nothing renders the canon for a reader without the CLI
+
+Ersilia's build loop runs agents in harnesses without canon, so the rules in force have to be a file in the repository. `share` is an adoption snapshot, not a reader's document, and `list --json` (`crates/canon-cli/src/cmds.rs:448`) carries neither scope nor rank on a commitment: scopes are a separate list of pairs, and rank exists only as `op: rank` acts in `acts.jsonl`. Ersilia's `scripts/principles.sh` therefore folds the log itself with `jq` to render `PRINCIPLES.md`, grouped by scope with principles first and the inherited rules last, plus a `--check` for a stale render. Every canon read by agents outside the CLI will write that script again. **fix**: carry `scope` and `rank` on each commitment in `list --json`, and add a render (`canon render --markdown`, or `share --markdown`) with a `--check` that fails when a committed render is stale.
