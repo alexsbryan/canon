@@ -7,6 +7,8 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.2.0 — 2026-10-03
+
 ### Before you upgrade
 
 Two changes alter what an existing canon says. A canon where only people
