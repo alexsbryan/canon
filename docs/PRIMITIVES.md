@@ -1015,8 +1015,10 @@ now enforces, because Ostrom's third principle is unstateable otherwise: a rule
 is a proposal until the people who live under it ratify it (see Ratification,
 under Primitive 7); a governance act by somebody without standing is recorded
 and not applied; and so is a ruling on the record — an accept, a dismiss, a
-retraction of somebody else's rule, a decision — by somebody without standing
-over what it touches. A member may speak anywhere. It decides only where it was
+decision — by somebody without standing over what it touches. A retraction of
+somebody else's rule by somebody without standing is a proposal, like their
+add would be, and takes effect when a person who could have retracted it
+approves. A member may speak anywhere. It decides only where it was
 given a say. Ostrom found that both zero enforcement and harsh
 first-strike enforcement fail; the middle chosen here is that the *record*
 enforces who may change the rules, and people enforce the rules.

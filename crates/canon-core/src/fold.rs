@@ -182,6 +182,28 @@ pub struct Ruling {
     pub act: ActId,
 }
 
+/// A retraction written by someone without standing over what it retracts.
+///
+/// Not applied when written, and not refused either: it waits, like an add by
+/// a non-holder, for a person who could have retracted the commitment
+/// themselves to approve it. Their approval is them adopting it, so it takes
+/// effect from then; their reasoned objection first refuses it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Retraction {
+    /// The `retract` act.
+    pub act: ActId,
+    /// What it would retract.
+    pub target: ActId,
+    /// The target's scope: the holders of it are who decide.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scope: Option<crate::scope::Scope>,
+    pub actor: String,
+    pub at: i64,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub rationale: String,
+    pub verdict: crate::ratify::Verdict,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Ancestry {
     pub lineage: String,
@@ -276,6 +298,11 @@ pub struct Canon {
     /// a governed canon.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bootstrap: Vec<(ActId, String)>,
+    /// Retractions of somebody else's commitment by someone without standing
+    /// over it, put to its scope as a proposal rather than refused. A
+    /// ratified one has taken effect; the rest wait. See [`Retraction`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub retractions: Vec<Retraction>,
     /// Annotations this build carried without interpreting, by op.
     ///
     /// The §4.3 mitigation, and it is required rather than a courtesy.
@@ -511,7 +538,9 @@ pub fn derive(acts: &[Act]) -> Canon {
 /// The one gate on a governance act, and its bookkeeping.
 ///
 /// Every act that takes standing — a grant, a policy, a ruling, a retraction
-/// of somebody else's — asks this and nothing else. The answer is recorded
+/// of somebody else's — asks this and nothing else. (A retraction asks
+/// [`Canon::seat`] first, and without standing is put to its scope as a
+/// [`Retraction`] rather than refused.) The answer is recorded
 /// as it is given: an act by somebody without standing lands in `ungoverned`
 /// with `refused` as the reason and is not applied; an act that took only
 /// because nothing covering the scope predated it lands in `bootstrap` and
@@ -696,6 +725,30 @@ fn may_revert(gov: &Canon, acts: &[Act], act: &Act, target: &ActId) -> bool {
     gov.may_govern(&act.actor, scope.as_ref(), act.ts_unix)
 }
 
+/// Is this act its author placing their own commitment or question in a
+/// scope?
+///
+/// **That is part of proposing it, not a ruling.** `add --scope` writes the
+/// assert and the scope as two acts, and the scope says whose approval the
+/// proposal waits for. Counting the second act as an agent adjudicating made
+/// a canon whose every agent proposal a person had approved warn that 27
+/// adjudications had no person behind them. Scoping somebody else's is still
+/// one.
+fn scopes_own(
+    act: &Act,
+    by_id: &BTreeMap<ActId, Commitment>,
+    questions: &BTreeMap<ActId, Question>,
+) -> bool {
+    let ActKind::Scoped { commitment, .. } = &act.kind else {
+        return false;
+    };
+    by_id
+        .get(commitment)
+        .map(|c| &c.actor)
+        .or_else(|| questions.get(commitment).map(|q| &q.actor))
+        .is_some_and(|author| *author == act.actor)
+}
+
 /// Derive current state as of `now`. See [`crate::Log::derive_at`].
 pub fn derive_at(acts: &[Act], now: i64) -> Canon {
     let n = acts.len();
@@ -861,6 +914,7 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
 
     // Pass 3 — effects, in time order, so a later act wins over an earlier one.
     let mut pending_rules: Vec<crate::ratify::AdoptedRatify> = Vec::new();
+    let mut pending_retractions: Vec<Retraction> = Vec::new();
     for act in live_acts() {
         // Attribution: everything except asserting and adopting is an
         // adjudication, and adjudications are expected to be human.
@@ -894,7 +948,7 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 // Announcing a draw is an adjudication and is not exempt.
                 | ActKind::DrawSecret { .. }
                 | ActKind::DrawReveal { .. }
-        );
+        ) && !scopes_own(act, &by_id, &questions);
         if adjudication && !act.is_human() {
             canon.unattended.push(act.id.clone());
         }
@@ -913,12 +967,37 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                     }
                 }
             }
-            ActKind::Retract { target, .. } => {
+            ActKind::Retract { target, rationale } => {
                 // Withdrawing your own write is yours to do. Withdrawing
                 // somebody else's takes standing over it.
                 let own = by_id.get(target).is_some_and(|c| c.actor == act.actor)
                     || questions.get(target).is_some_and(|q| q.actor == act.actor);
                 let scope = canon.scope_of(target).cloned();
+                // Without it, the retraction is put to the scope rather than
+                // refused, the way an add by a non-holder is: an agent that
+                // may propose a rule may propose taking one away, and the
+                // holder approves the act on the record instead of retyping
+                // it and its reason.
+                if !own
+                    && canon.seat(&act.actor, scope.as_ref(), act.ts_unix)
+                        == crate::ratify::Seat::Lacking
+                {
+                    // A proposal, not a ruling: the person who approves it
+                    // is the one adjudicating.
+                    canon.unattended.retain(|x| *x != act.id);
+                    pending_retractions.push(Retraction {
+                        act: act.id.clone(),
+                        target: target.clone(),
+                        scope: None,
+                        actor: act.actor.clone(),
+                        at: act.ts_unix,
+                        rationale: rationale.clone(),
+                        verdict: crate::ratify::Verdict::Proposed {
+                            needs: String::new(),
+                        },
+                    });
+                    continue;
+                }
                 if !own
                     && !gate(&mut canon, act, scope.as_ref(), || {
                         format!("{} retracted {target} without standing over it", act.actor)
@@ -1217,6 +1296,35 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
             }
             ActKind::Assert { .. } | ActKind::Revert { .. } | ActKind::Question { .. } => {}
         }
+    }
+
+    // Pass 3b — retractions written without standing, now that every
+    // position about them is folded. One that a person with standing
+    // approved takes effect from that approval, before pass 4 judges what
+    // is left.
+    for mut r in pending_retractions {
+        // The target's scope once everything is folded, the way a
+        // commitment is judged in pass 4: an `add --scope` writes its
+        // scope in the same second as the assert, and a retraction in that
+        // second can sort ahead of it.
+        r.scope = canon.scope_of(&r.target).cloned();
+        r.verdict = canon.judge_retraction(
+            &crate::ratify::Proposal {
+                id: &r.act,
+                scope: r.scope.as_ref(),
+                at: r.at,
+                actor: &r.actor,
+            },
+            now,
+        );
+        if let crate::ratify::Verdict::Ratified { since, .. } = r.verdict {
+            match (by_id.get_mut(&r.target), questions.get_mut(&r.target)) {
+                (Some(c), _) => c.status = Status::Retracted { at: since },
+                (None, Some(q)) => q.status = Status::Retracted { at: since },
+                (None, None) => canon.dangling.push((r.act.clone(), r.target.clone())),
+            }
+        }
+        canon.retractions.push(r);
     }
 
     // Pass 4a — the rules of rules, in the order they were written.

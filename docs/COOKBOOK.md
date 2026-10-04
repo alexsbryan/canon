@@ -485,11 +485,14 @@ read-only. So it can look up what bears on a thing and cite it as
 justification, which is exactly what a monitor is for.
 
 What it cannot do is decide. **An agent may propose and may object; it never
-mints a rule** — not even its own proposal, not even holding standing. Any
-adjudication written by a non-person is surfaced by name rather than hidden:
+mints a rule** — not even its own proposal, not even holding standing, not
+even in a scope nobody holds. It may propose a retraction, too, which waits
+for somebody with a say the way its add would. Any adjudication written by a
+non-person is surfaced, counted by kind, rather than hidden:
 
 ```text
-warning: 1 adjudication(s) were not authored by a person: can-a976a31ea826
+warning: 1 adjudication(s) were not authored by a person: 1 conflict ruling
+  `canon log` shows them; `canon list --json` has their ids under `unattended`
 ```
 
 That is Ostrom's fourth principle stated as a type: the monitor is answerable

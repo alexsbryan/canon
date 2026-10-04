@@ -2135,7 +2135,187 @@ fn you_may_withdraw_your_own_proposal_but_not_somebody_elses_rule() {
         canon.get(&theirs.id).unwrap().status,
         Status::Active
     ));
-    assert_eq!(canon.ungoverned.len(), 1);
+    // Not refused: put to the house as a proposal, and waiting on a holder.
+    assert!(canon.ungoverned.is_empty());
+    assert_eq!(canon.retractions.len(), 1);
+    assert!(matches!(
+        canon.retractions[0].verdict,
+        crate::ratify::Verdict::Proposed { .. }
+    ));
+}
+
+#[test]
+fn a_retraction_without_standing_waits_for_someone_who_could_have_written_it() {
+    // The agent may propose a rule; it may propose taking one away, and the
+    // holder approves the act on the record rather than retyping it.
+    let mut acts = governed_house();
+    let rule = assert_at("Recycling out on Sunday night.", 100, "human:sam");
+    let scoped = scoped_at(&rule.id, "house.kitchen", 100);
+    let retract = Act::new(
+        ActKind::Retract {
+            target: rule.id.clone(),
+            rationale: "duplicates the bins rule".into(),
+        },
+        200,
+        "agent:claude",
+    );
+    acts.extend([rule.clone(), scoped, retract.clone()]);
+
+    let waiting = Log::from_acts(acts.clone()).derive();
+    assert!(matches!(
+        waiting.get(&rule.id).unwrap().status,
+        Status::Active
+    ));
+    let crate::ratify::Verdict::Proposed { needs } = &waiting.retractions[0].verdict else {
+        panic!("a proposal until a holder speaks")
+    };
+    assert!(needs.contains("house.kitchen"), "{needs}");
+    // A proposal, not an adjudication: the person who approves it is the
+    // one ruling.
+    assert!(!waiting.unattended.contains(&retract.id));
+
+    // Another agent, or a person with no seat, agreeing changes nothing.
+    let mut others = acts.clone();
+    others.push(approve_at(&retract.id, 300, "agent:helper"));
+    others.push(approve_at(&retract.id, 300, "human:stranger"));
+    let still = Log::from_acts(others).derive();
+    assert!(matches!(
+        still.get(&rule.id).unwrap().status,
+        Status::Active
+    ));
+
+    // Theo holds the house, which covers the kitchen: he could have
+    // retracted it himself, so his approval is him doing it, from then.
+    let mut approved = acts.clone();
+    approved.push(approve_at(&retract.id, 300, "human:theo"));
+    let done = Log::from_acts(approved).derive();
+    assert!(matches!(
+        done.get(&rule.id).unwrap().status,
+        Status::Retracted { at: 300 }
+    ));
+
+    // A holder's reasoned objection first refuses it, and a later approval
+    // does not undo that.
+    let mut refused = acts;
+    refused.push(object_at(
+        &retract.id,
+        300,
+        "human:dana",
+        "we still need it",
+    ));
+    refused.push(approve_at(&retract.id, 400, "human:theo"));
+    let kept = Log::from_acts(refused).derive();
+    assert!(matches!(kept.get(&rule.id).unwrap().status, Status::Active));
+    assert!(matches!(
+        kept.retractions[0].verdict,
+        crate::ratify::Verdict::Refused { .. }
+    ));
+}
+
+#[test]
+fn an_agents_write_in_a_scope_nobody_holds_waits_for_a_person() {
+    // Sam holds the house; nobody holds `garden`. A person writing there
+    // is the bootstrap and takes; an agent's write is a proposal, because
+    // agents never mint, and with nobody holding the scope any person's
+    // word decides it.
+    let mut acts = vec![grant("human:sam", "house", None, 10)];
+    let by_agent = assert_at("Water the beds at dawn.", 100, "agent:claude");
+    let by_person = assert_at("Compost goes in the left bin.", 100, "human:priya");
+    acts.push(scoped_at(&by_agent.id, "garden", 100));
+    acts.push(scoped_at(&by_person.id, "garden", 100));
+    acts.extend([by_agent.clone(), by_person.clone()]);
+
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(matches!(
+        canon.get(&by_person.id).unwrap().status,
+        Status::Active
+    ));
+    let Status::Proposed { needs } = &canon.get(&by_agent.id).unwrap().status else {
+        panic!("an agent's write in an open scope is not law")
+    };
+    assert!(needs.contains("nobody holds garden"), "{needs}");
+
+    // An agent's approval is not a person's.
+    let mut agents = acts.clone();
+    agents.push(approve_at(&by_agent.id, 200, "agent:helper"));
+    let still = Log::from_acts(agents).derive();
+    assert!(matches!(
+        still.get(&by_agent.id).unwrap().status,
+        Status::Proposed { .. }
+    ));
+
+    let mut approved = acts.clone();
+    approved.push(approve_at(&by_agent.id, 200, "human:priya"));
+    let done = Log::from_acts(approved).derive();
+    assert!(matches!(
+        done.get(&by_agent.id).unwrap().status,
+        Status::Active
+    ));
+
+    // The same in a canon nobody has seated at all.
+    let fresh = Log::from_acts(vec![by_agent.clone()]).derive();
+    assert!(matches!(
+        fresh.get(&by_agent.id).unwrap().status,
+        Status::Proposed { .. }
+    ));
+}
+
+#[test]
+fn scoping_your_own_proposal_is_part_of_proposing_it() {
+    // `add --scope` writes the assert and its scope as two acts. The scope
+    // is the proposal's, not a ruling, so an agent's proposals a person has
+    // approved leave nothing unattended — and scoping somebody else's rule
+    // still is a ruling.
+    let mut acts = vec![grant("human:sam", "house", None, 10)];
+    let theirs = assert_at("Lights off when you leave.", 100, "human:sam");
+    let mine = assert_at("Wipe the counter.", 100, "agent:claude");
+    let own = Act::new(
+        ActKind::Scoped {
+            commitment: mine.id.clone(),
+            scope: scope("house"),
+        },
+        100,
+        "agent:claude",
+    );
+    let moved = Act::new(
+        ActKind::Scoped {
+            commitment: theirs.id.clone(),
+            scope: scope("house"),
+        },
+        100,
+        "agent:claude",
+    );
+    acts.extend([theirs, mine, own.clone(), moved.clone()]);
+    let canon = Log::from_acts(acts).derive();
+    assert!(!canon.unattended.contains(&own.id));
+    assert!(canon.unattended.contains(&moved.id));
+}
+
+#[test]
+fn the_canon_is_held_by_its_widest_held_scopes_and_says_so() {
+    // There is no scope called the canon. An unscoped proposal waits on
+    // whoever holds the widest scopes anyone holds, and its needs-line
+    // names them so the reader knows what to grant.
+    let acts = vec![
+        grant("human:sam", "arch", None, 10),
+        grant("human:sam", "procedure", None, 10),
+        grant("human:dana", "arch.store", None, 10),
+        assert_at("Prefer a test to a comment.", 100, "agent:claude"),
+    ];
+    let canon = Log::from_acts(acts).derive();
+    let held: Vec<String> = canon
+        .canon_scopes(100)
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    assert_eq!(held, ["arch", "procedure"]);
+    let Status::Proposed { needs } = &canon.proposed().next().unwrap().status else {
+        unreachable!()
+    };
+    assert!(
+        needs.contains("holds this canon by holding arch or procedure"),
+        "{needs}"
+    );
 }
 
 #[test]

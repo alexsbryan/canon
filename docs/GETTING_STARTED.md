@@ -381,7 +381,9 @@ undone — `canon replay --write-scenario questions.jsonl` writes the derived
 ones out to edit, and `--scenario questions.jsonl` uses yours instead.
 
 `canon who <scope>` answers who may decide something without anyone
-having to be asked. `canon overdue` lists what's passed a review date set
+having to be asked, and `canon who` on its own says who holds the canon as
+a whole — whoever holds its widest scopes; there is no scope named for
+it. `canon overdue` lists what's passed a review date set
 with `canon horizon` — which is also how you give a seat a term.
 
 ## If it gets something wrong
@@ -422,4 +424,5 @@ done to you, and how an agent fits in. Real commands, real output.
 | note a deliberate gap | `canon silence "<subject>" -m "<why>"` |
 | undo anything you wrote | `canon undo <act-id> -m "<why>"` |
 | share | `canon share` |
+| keep a copy for readers without canon | `canon list --markdown --out RULES.md` |
 | everything else | `canon help all` |

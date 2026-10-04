@@ -122,11 +122,12 @@ people who made it). Changing a scope's rule is itself a proposal, judged
 under the rule it replaces.
 
 An agent may propose and object under any of them. It cannot mint a rule,
-even where it holds standing. Governing out of seat — a grant, a policy,
-a ruling, a retraction or an undo by somebody with no say over what it
-touches — is kept on the record and changes nothing. A canon that has
-granted nobody standing is a notebook, and stays one until the first
-grant. The tier table is in [Getting
+even where it holds standing, and even where nobody does. Governing out of
+seat — a grant, a policy, a ruling or an undo by somebody with no say over
+what it touches — is kept on the record and changes nothing; a retraction
+out of seat is a proposal for somebody with a say to approve. A canon that
+has granted nobody standing is a notebook for its people, and stays one
+until the first grant. The tier table is in [Getting
 started](./docs/GETTING_STARTED.md#later-decide-how-you-decide).
 
 ## What needs a model, and what doesn't

@@ -656,6 +656,83 @@ pub fn rank(args: &[String]) -> i32 {
 
 // ── canon who ───────────────────────────────────────────────
 
+/// Every scope a grant or a commitment names, once each.
+fn scopes_in_use(canon: &canon_core::Canon) -> Vec<Scope> {
+    let mut used: Vec<Scope> = canon
+        .grants
+        .iter()
+        .map(|g| g.scope.clone())
+        .chain(canon.scopes.iter().map(|(_, s)| s.clone()))
+        .collect();
+    used.sort();
+    used.dedup();
+    used
+}
+
+/// `canon who` with no scope: who holds the canon as a whole.
+///
+/// **The canon has no scope of its own.** An unscoped proposal "needs
+/// approval from one person who holds this canon", and there is nothing
+/// called that to grant: the holders are whoever holds the widest scopes
+/// anyone holds. Asking for it by a guessed name — `canon who default` —
+/// used to answer "grant it", and following that made a scope called
+/// `default` that meant nothing more than any other.
+fn who_holds_the_canon(args: &[String]) -> i32 {
+    let (_, _, canon) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let now = store::now();
+    let scopes = canon.canon_scopes(now);
+    let mut holders: Vec<&canon_core::Grant> = canon
+        .grants
+        .iter()
+        .filter(|g| g.held_at(now) && scopes.contains(&&g.scope))
+        .collect();
+    holders.sort_by(|a, b| a.scope.cmp(&b.scope).then_with(|| a.actor.cmp(&b.actor)));
+    if has(args, "--json") {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&holders).unwrap_or_default()
+        );
+        return 0;
+    }
+    if holders.is_empty() {
+        println!("nobody holds this canon yet, so it is open.");
+        println!("  canon grant <actor> <scope>   the widest scopes granted hold the canon");
+        return 0;
+    }
+    println!(
+        "this canon is held by whoever holds {}:",
+        scopes
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    for g in &holders {
+        let until = match g.horizon {
+            Some(h) => format!(" until {}", store::ymd(h)),
+            None => String::new(),
+        };
+        println!("  {}  over {}{until}", g.actor, g.scope);
+    }
+    println!("\nthey approve unscoped proposals and govern the canon as a whole;");
+    println!("there is no scope named for it");
+    let made = match canon.adopted_at(None, now) {
+        Some(r) => format!(
+            "{} — set {} by {}",
+            r.rule.name(),
+            store::ymd(r.at),
+            r.actor
+        ),
+        None => "standing (shipped)".to_string(),
+    };
+    println!("rules made under: {made}");
+    println!("proposals judged under: {}", canon.policy_for(None).name());
+    0
+}
+
 /// Who may decide this?
 ///
 /// **Answerable without asking a person, and that is the whole point.**
@@ -665,7 +742,7 @@ pub fn rank(args: &[String]) -> i32 {
 pub fn who(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(raw) = pos.first() else {
-        return fail("usage: canon who <scope>   e.g. canon who house.kitchen");
+        return who_holds_the_canon(args);
     };
     let Some(scope) = Scope::new(raw) else {
         return fail(format!(
@@ -690,6 +767,27 @@ pub fn who(args: &[String]) -> i32 {
         // unheld boundary is a finding about the canon.
         println!("nobody holds standing over `{scope}`.");
         println!("  grant it:  canon grant <actor> {scope}");
+        // A scope typed as a guess at the canon's own name — `default`,
+        // `root` — gets this same answer, and the hint above turns the guess
+        // into a scope. Say when nothing is in it, and what is.
+        let used = scopes_in_use(&canon);
+        if !used.iter().any(|s| scope.covers(s) || s.covers(&scope)) {
+            println!(
+                "  nothing in this canon is in `{scope}`{}",
+                if used.is_empty() {
+                    String::new()
+                } else {
+                    format!(
+                        " — the scopes in use are {}",
+                        used.iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                }
+            );
+            println!("  `canon who` with no scope says who holds the canon as a whole");
+        }
         // Lapsed standing is remembered here even though it is not held, so
         // "it used to be Dana and nobody renewed it" is answerable.
         let lapsed: Vec<&canon_core::Grant> = canon

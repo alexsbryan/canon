@@ -28,8 +28,8 @@ pub use act::{Act, ActKind, FORMAT_VERSION};
 pub use allot::{AdoptedAllocation, Allocation, Allotment, Award, Order, PoolError, Schedule};
 pub use draw::{DrawError, Drawn};
 pub use fold::{
-    derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Ruling, Silence,
-    Stated, Status, Voice,
+    derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Retraction,
+    Ruling, Silence, Stated, Status, Voice,
 };
 pub use horizon::{Due, Horizon, Overdue};
 pub use id::{short_digest, ActId, ID_PREFIX};

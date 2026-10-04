@@ -40,7 +40,7 @@ pub const CACHE_DIR: &str = "lineages";
 /// The name this canon travels under. A file the holder can set, else the
 /// directory holding the canon — so a pasted block says where it came from
 /// without anyone configuring anything.
-fn name_of(dir: &Path) -> String {
+pub fn name_of(dir: &Path) -> String {
     std::fs::read_to_string(dir.join("name"))
         .map(|s| s.trim().to_string())
         .ok()
@@ -107,20 +107,86 @@ pub fn adopt(args: &[String]) -> i32 {
             Err(e) => return fail(e),
         }
     } else {
-        return fail("usage: canon adopt <url>[@generation]  |  canon adopt --paste");
+        return fail(
+            "usage: canon adopt <url>[@generation] | --paste  [--except <id>,… -m \"<why>\"]",
+        );
     };
 
-    match write_adoption(&dir, &snapshot, &source) {
+    // Resolved before anything is written: a typo in one id must not leave
+    // a half-adopted canon behind it.
+    let except = match excepted(&snapshot, &crate::cmds::flags(args, "--except")) {
+        Ok(e) => e,
+        Err(e) => return fail(e),
+    };
+    let why = crate::cmds::flag(args, "-m").unwrap_or_default();
+    match write_adoption(&dir, &snapshot, &source, &except, why) {
         Ok(n) => {
             println!(
                 "adopted {}@{} — {n} commitment(s), each carrying where it came from",
                 snapshot.lineage, snapshot.generation
             );
+            if !except.is_empty() {
+                println!(
+                    "  {} retracted as it arrived (--except){}",
+                    except.len(),
+                    if why.is_empty() {
+                        String::new()
+                    } else {
+                        format!(": {why}")
+                    }
+                );
+            }
             println!("  canon diff --upstream   how you have diverged, later");
             0
         }
         Err(e) => fail(e),
     }
+}
+
+/// The seed's commitments named by `--except`, by id or unique prefix, as
+/// the pasted block prints them.
+///
+/// **Adoption used to be all or nothing**, so inheriting a canon's general
+/// rules without its tooling meant adopting everything and then retracting
+/// by local ids that only `list --json` could map back to the ones in the
+/// block. These are still adopted and then retracted, in the same breath,
+/// so `diff --upstream` reads them as retracted with a reason rather than
+/// as rules that never arrived.
+fn excepted(snapshot: &Snapshot, needles: &[&str]) -> Result<Vec<canon_core::ActId>, String> {
+    let mut out: Vec<canon_core::ActId> = Vec::new();
+    for needle in needles
+        .iter()
+        .flat_map(|n| n.split(','))
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+    {
+        let hits: Vec<&canon_core::ActId> = snapshot
+            .commitments
+            .iter()
+            .map(|c| &c.id)
+            .filter(|id| id.as_str() == needle || id.as_str().starts_with(needle))
+            .collect();
+        match hits.len() {
+            1 => {
+                if !out.contains(hits[0]) {
+                    out.push(hits[0].clone());
+                }
+            }
+            0 => {
+                return Err(format!(
+                    "`{needle}` is not in {}@{} — nothing was adopted",
+                    snapshot.lineage, snapshot.generation
+                ))
+            }
+            n => {
+                return Err(format!(
+                    "`{needle}` matches {n} of its commitments — use more characters; nothing \
+                     was adopted"
+                ))
+            }
+        }
+    }
+    Ok(out)
 }
 
 /// `url@generation` — the generation is optional and is a git tag.
@@ -255,8 +321,15 @@ pub fn fetch(
 }
 
 /// Record the adoption: one `Adopt` act, then one inherited `Assert` per
-/// commitment, then the seed for later diffing.
-fn write_adoption(dir: &Path, snapshot: &Snapshot, source: &str) -> Result<usize, String> {
+/// commitment, a `Retract` for each one `except` names, then the seed for
+/// later diffing.
+fn write_adoption(
+    dir: &Path,
+    snapshot: &Snapshot,
+    source: &str,
+    except: &[canon_core::ActId],
+    why: &str,
+) -> Result<usize, String> {
     crate::cmds::write(
         dir,
         ActKind::Adopt {
@@ -266,7 +339,7 @@ fn write_adoption(dir: &Path, snapshot: &Snapshot, source: &str) -> Result<usize
         },
     )?;
     for c in &snapshot.commitments {
-        crate::cmds::write(
+        let local = crate::cmds::write(
             dir,
             ActKind::Assert {
                 text: c.text.clone(),
@@ -277,6 +350,15 @@ fn write_adoption(dir: &Path, snapshot: &Snapshot, source: &str) -> Result<usize
                 source: None,
             },
         )?;
+        if except.contains(&c.id) {
+            crate::cmds::write(
+                dir,
+                ActKind::Retract {
+                    target: local.id,
+                    rationale: why.to_string(),
+                },
+            )?;
+        }
     }
     save_seed(dir, snapshot)?;
     Ok(snapshot.commitments.len())

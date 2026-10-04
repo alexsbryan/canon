@@ -80,19 +80,12 @@ impl Explanation {
 /// An ambiguous prefix is an error rather than a guess: silently picking the
 /// first match would attribute a decision to the wrong rule.
 pub fn resolve(canon: &Canon, needle: &str) -> Result<ActId, String> {
-    let hits: Vec<&ActId> = canon
-        .commitments
-        .iter()
-        .map(|c| &c.id)
-        .filter(|id| id.as_str() == needle || id.as_str().starts_with(needle))
-        .collect();
-    match hits.len() {
-        1 => Ok(hits[0].clone()),
-        0 => Err(format!("no commitment matching `{needle}`")),
-        n => Err(format!(
-            "`{needle}` matches {n} commitments — use more characters"
-        )),
-    }
+    pick(
+        canon,
+        canon.commitments.iter().map(|c| &c.id),
+        needle,
+        "commitment",
+    )
 }
 
 /// Resolve a commitment OR a question by id or unique prefix.
@@ -101,18 +94,61 @@ pub fn resolve(canon: &Canon, needle: &str) -> Result<ActId, String> {
 /// superseding it and withdrawing one is retracting it — the same two acts,
 /// not a second vocabulary.
 pub fn resolve_any(canon: &Canon, needle: &str) -> Result<ActId, String> {
-    let hits: Vec<&ActId> = canon
+    let ids = canon
         .commitments
         .iter()
         .map(|c| &c.id)
-        .chain(canon.questions.iter().map(|q| &q.id))
-        .filter(|id| id.as_str() == needle || id.as_str().starts_with(needle))
-        .collect();
+        .chain(canon.questions.iter().map(|q| &q.id));
+    pick(canon, ids, needle, "record")
+}
+
+/// Resolve anything a person can approve or object to: a commitment, a
+/// change to how a scope decides, or a retraction written without standing.
+///
+/// `list` and every write print `canon approve <id>` under each of the
+/// three, so all three have to resolve here — a ratification change used to
+/// answer its own hint with "no commitment matching".
+pub fn resolve_proposal(canon: &Canon, needle: &str) -> Result<ActId, String> {
+    let ids = canon
+        .commitments
+        .iter()
+        .map(|c| &c.id)
+        .chain(canon.ratifications.iter().map(|r| &r.act))
+        .chain(canon.retractions.iter().map(|r| &r.act));
+    pick(canon, ids, needle, "proposal")
+}
+
+/// One id out of `ids` by id or unique prefix, else the commitment inherited
+/// from the upstream id `needle` names.
+///
+/// **An adopted canon is read in its seed's ids.** Each inherited commitment
+/// gets a local id and keeps the upstream one only in `from`, so retracting
+/// the seed's rules by the ids its maintainers use meant resolving each one
+/// through `list --json` first. Upstream is tried only when nothing local
+/// matches, so a local id always means itself.
+fn pick<'a>(
+    canon: &'a Canon,
+    ids: impl Iterator<Item = &'a ActId>,
+    needle: &str,
+    noun: &str,
+) -> Result<ActId, String> {
+    let matches = |id: &ActId| id.as_str() == needle || id.as_str().starts_with(needle);
+    let hits: Vec<&ActId> = ids.filter(|id| matches(id)).collect();
+    let hits = if hits.is_empty() {
+        canon
+            .commitments
+            .iter()
+            .filter(|c| c.from.as_ref().is_some_and(matches))
+            .map(|c| &c.id)
+            .collect()
+    } else {
+        hits
+    };
     match hits.len() {
         1 => Ok(hits[0].clone()),
-        0 => Err(format!("nothing matching `{needle}`")),
+        0 => Err(format!("no {noun} matching `{needle}`")),
         n => Err(format!(
-            "`{needle}` matches {n} records — use more characters"
+            "`{needle}` matches {n} {noun}s — use more characters"
         )),
     }
 }
@@ -190,8 +226,54 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
             {
                 lines.push(format!("reason it was replaced: {rationale}"))
             }
-            ActKind::Retract { target, rationale } if target == id && !rationale.is_empty() => {
-                lines.push(format!("reason it was retracted: {rationale}"))
+            // A retraction written without standing is a proposal until a
+            // holder approves it, and reads as one: "reason it was
+            // retracted" over a rule still in force would be untrue.
+            ActKind::Retract { target, rationale } if target == id => {
+                use canon_core::Verdict;
+                let put = canon.retractions.iter().find(|r| r.act == act.id);
+                match put.map(|r| &r.verdict) {
+                    Some(Verdict::Proposed { needs }) => {
+                        lines.push(format!(
+                            "{} proposed retracting it, {}{}",
+                            person(&act.actor),
+                            store::ymd(act.ts_unix),
+                            said(rationale)
+                        ));
+                        lines.push(format!(
+                            "  needs {} — canon approve {}",
+                            person_in(needs),
+                            act.id
+                        ));
+                    }
+                    Some(Verdict::Refused { at, by, why }) => {
+                        lines.push(format!(
+                            "{} proposed retracting it, {}{}",
+                            person(&act.actor),
+                            store::ymd(act.ts_unix),
+                            said(rationale)
+                        ));
+                        lines.push(format!(
+                            "  refused by {}, {}: {why}",
+                            person(by),
+                            store::ymd(*at)
+                        ));
+                    }
+                    Some(Verdict::Ratified { how, .. }) => {
+                        lines.push(format!(
+                            "{} proposed retracting it{}",
+                            person(&act.actor),
+                            said(rationale)
+                        ));
+                        lines.push(format!("  {}", person_in(how)));
+                    }
+                    None if !rationale.is_empty()
+                        && !canon.ungoverned.iter().any(|(x, _)| *x == act.id) =>
+                    {
+                        lines.push(format!("reason it was retracted: {rationale}"))
+                    }
+                    None => {}
+                }
             }
             _ => {}
         }
@@ -297,6 +379,15 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     }
 
     Ok(Explanation { headline, lines })
+}
+
+/// A reason, as the tail of a sentence, or nothing.
+fn said(rationale: &str) -> String {
+    if rationale.trim().is_empty() {
+        String::new()
+    } else {
+        format!(": {rationale}")
+    }
 }
 
 /// `human:` stripped inside a sentence the fold wrote, such as a verdict's

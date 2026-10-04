@@ -31,6 +31,7 @@ const VALUED: &[&str] = &[
     "--count",
     "--endpoint",
     "--entrench",
+    "--except",
     "--from",
     "--from-proposal",
     "--graduated",
@@ -73,6 +74,16 @@ pub fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
         .position(|a| a == name)
         .and_then(|i| args.get(i + 1))
         .map(|s| s.as_str())
+}
+
+/// Every value given for a flag that may be repeated, in order.
+pub fn flags<'a>(args: &'a [String], name: &str) -> Vec<&'a str> {
+    args.iter()
+        .enumerate()
+        .filter(|(_, a)| *a == name)
+        .filter_map(|(i, _)| args.get(i + 1))
+        .map(String::as_str)
+        .collect()
 }
 
 pub fn has(args: &[String], name: &str) -> bool {
@@ -128,6 +139,10 @@ pub fn report_status(d: &Path, id: &ActId) {
         // the rule it is changing, and the person who set it hears so here.
         if let Some(r) = canon.ratifications.iter().find(|r| r.act == *id) {
             report_verdict(id, &r.verdict);
+        }
+        // So is a retraction written without standing.
+        if let Some(r) = canon.retractions.iter().find(|r| r.act == *id) {
+            report_retraction(r);
         }
         return;
     };
@@ -185,6 +200,35 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
     }
 }
 
+/// Where a retraction written without standing stands, in the words `list`
+/// uses.
+pub fn report_retraction(r: &canon_core::Retraction) {
+    use canon_core::Verdict;
+    match &r.verdict {
+        Verdict::Ratified { since, how } => println!(
+            "{}",
+            crate::wrap::hang(
+                &format!("  retracted {} since {} — ", r.target, store::ymd(*since)),
+                &crate::explain::person_in(how)
+            )
+        ),
+        Verdict::Proposed { needs } => {
+            println!(
+                "{}",
+                crate::wrap::hang("  PROPOSED, not yet retracted — needs ", needs)
+            );
+            println!("  approve it:  canon approve {}", r.act);
+            println!("  object:      canon object {} -m \"<why>\"", r.act);
+        }
+        Verdict::Refused { by, why, .. } => {
+            println!(
+                "{}",
+                crate::wrap::hang(&format!("  REFUSED by {by}: "), why)
+            );
+        }
+    }
+}
+
 /// How the fold judged a governance act, read back after the write.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Took {
@@ -195,6 +239,9 @@ pub enum Took {
     Open(String),
     /// Written, on the record, and not applied. The reason.
     Refused(String),
+    /// Written without standing and put to the scope instead of refused —
+    /// a retraction, waiting on a holder. What it needs.
+    Proposed(String),
 }
 
 /// Did a governance act take, and how? The fold refuses a grant, a policy,
@@ -212,6 +259,11 @@ pub fn took(d: &Path, id: &ActId) -> Took {
     }
     if let Some((_, why)) = canon.bootstrap.iter().find(|(x, _)| x == id) {
         return Took::Open(why.clone());
+    }
+    if let Some(r) = canon.retractions.iter().find(|r| r.act == *id) {
+        if let canon_core::Verdict::Proposed { needs } = &r.verdict {
+            return Took::Proposed(needs.clone());
+        }
     }
     Took::Applied
 }
@@ -234,6 +286,17 @@ pub fn announce(t: &Took, id: &ActId, headline: impl FnOnce()) -> i32 {
         Took::Open(why) => {
             headline();
             println!("{}", crate::wrap::hang("  applied while open: ", why));
+            0
+        }
+        // A proposal, the way an add by a non-holder is one: not applied,
+        // so no success line, and not refused, so it exits as an add does.
+        Took::Proposed(needs) => {
+            println!(
+                "{}",
+                crate::wrap::hang("PROPOSED, not yet applied — needs ", needs)
+            );
+            println!("  approve it:  canon approve {id}");
+            println!("  object:      canon object {id} -m \"<why>\"");
             0
         }
         Took::Applied => {
@@ -387,7 +450,7 @@ pub fn approve(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let target = match crate::explain::resolve(&st, needle) {
+    let target = match crate::explain::resolve_proposal(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -423,7 +486,7 @@ pub fn object(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let target = match crate::explain::resolve(&st, needle) {
+    let target = match crate::explain::resolve_proposal(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -446,7 +509,7 @@ pub fn object(args: &[String]) -> i32 {
 }
 
 pub fn list(args: &[String]) -> i32 {
-    let (d, _, st) = match load() {
+    let (d, log, st) = match load() {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
@@ -456,10 +519,46 @@ pub fn list(args: &[String]) -> i32 {
         // status. Emitting an array of live commitments made the human
         // output's own hint — "canon list --json for detail" about carried
         // contradictions — untrue, because the conflicts were not in it.
-        println!("{}", serde_json::to_string_pretty(&st).unwrap_or_default());
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&crate::render::with_scope_and_rank(&st))
+                .unwrap_or_default()
+        );
         return 0;
     }
     let profile = Profile::load(&d).unwrap_or_default();
+    if has(args, "--markdown") {
+        let doc = crate::render::markdown(&st, &crate::lineage::name_of(&d), profile);
+        return match (flag(args, "--out"), has(args, "--check")) {
+            (None, false) => {
+                print!("{doc}");
+                0
+            }
+            (None, true) => fail(
+                "`--check` compares against a file — `canon list --markdown --out <file> --check`",
+            ),
+            (Some(out), true) => match std::fs::read_to_string(out) {
+                Ok(had) if had == doc => {
+                    println!("{out} is current");
+                    0
+                }
+                // Stale is exit 1, the way a conflict is: a finding about the
+                // file, not a usage error.
+                Ok(_) => {
+                    eprintln!("{out} is stale — `canon list --markdown --out {out}` renders it");
+                    1
+                }
+                Err(e) => fail(format!("{out}: {e}")),
+            },
+            (Some(out), false) => match std::fs::write(out, &doc) {
+                Ok(()) => {
+                    println!("wrote {out}");
+                    0
+                }
+                Err(e) => fail(format!("{out}: {e}")),
+            },
+        };
+    }
     let live: Vec<_> = st.active().collect();
     if live.is_empty() && st.proposed().next().is_none() {
         println!(
@@ -476,11 +575,34 @@ pub fn list(args: &[String]) -> i32 {
     // name, and not yet in force. What each one is waiting for is the line
     // that tells the room who has to act.
     let proposed: Vec<_> = st.proposed().collect();
-    if !proposed.is_empty() {
-        println!("\n{} proposed, not yet in force:", proposed.len());
+    let retractions: Vec<_> = st
+        .retractions
+        .iter()
+        .filter(|r| matches!(r.verdict, canon_core::Verdict::Proposed { .. }))
+        .collect();
+    if !proposed.is_empty() || !retractions.is_empty() {
+        println!(
+            "\n{} proposed, not yet in force:",
+            proposed.len() + retractions.len()
+        );
         for c in &proposed {
             println!("{}", crate::wrap::hang(&format!("{}  ", c.id), &c.text));
             if let Status::Proposed { needs } = &c.status {
+                println!("{}", crate::wrap::hang("                  needs ", needs));
+            }
+        }
+        for r in &retractions {
+            let what = format!(
+                "retract {}{}",
+                crate::explain::named(&st, &r.target),
+                if r.rationale.trim().is_empty() {
+                    String::new()
+                } else {
+                    format!(" — {}", r.rationale)
+                }
+            );
+            println!("{}", crate::wrap::hang(&format!("{}  ", r.act), &what));
+            if let canon_core::Verdict::Proposed { needs } = &r.verdict {
                 println!("{}", crate::wrap::hang("                  needs ", needs));
             }
         }
@@ -513,17 +635,16 @@ pub fn list(args: &[String]) -> i32 {
             eprintln!("  {act} -> {missing}");
         }
     }
-    // Absence of attribution is reported, never defaulted.
+    // Absence of attribution is reported, never defaulted — counted by
+    // kind, because thirty ids on one line is reported and not readable.
+    // The ids are in `--json`, and `canon log` names each one's actor.
     if !st.unattended.is_empty() {
         eprintln!(
             "\nwarning: {} adjudication(s) were not authored by a person: {}",
             st.unattended.len(),
-            st.unattended
-                .iter()
-                .map(|i| i.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
+            by_kind(&log, &st.unattended)
         );
+        eprintln!("  `canon log` shows them; `canon list --json` has their ids under `unattended`");
     }
     if let Some(note) = carried_note(&st) {
         eprintln!("\n{note}");
@@ -532,6 +653,50 @@ pub fn list(args: &[String]) -> i32 {
         eprintln!("\n{note}");
     }
     0
+}
+
+/// `2 grants, 1 ratification rule` — acts counted by what they are, most
+/// first.
+fn by_kind(log: &Log, ids: &[ActId]) -> String {
+    let mut counts: std::collections::BTreeMap<&str, usize> = std::collections::BTreeMap::new();
+    for act in log.acts().iter().filter(|a| ids.contains(&a.id)) {
+        *counts.entry(kind_noun(&act.kind)).or_default() += 1;
+    }
+    let mut counts: Vec<(&str, usize)> = counts.into_iter().collect();
+    counts.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
+    counts
+        .iter()
+        .map(|(noun, n)| format!("{n} {noun}{}", if *n == 1 { "" } else { "s" }))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// What an act is, as a noun a person would count.
+fn kind_noun(kind: &ActKind) -> &'static str {
+    match kind {
+        ActKind::Assert { .. } => "assertion",
+        ActKind::Supersede { .. } => "supersession",
+        ActKind::Retract { .. } => "retraction",
+        ActKind::Accept { .. } | ActKind::Dismiss { .. } => "conflict ruling",
+        ActKind::Revert { .. } => "undo",
+        ActKind::Question { .. } => "question",
+        ActKind::Grant { .. } => "grant",
+        ActKind::Withdraw { .. } => "withdrawal",
+        ActKind::Scoped { .. } => "scope placement",
+        ActKind::Position { .. } => "position",
+        ActKind::Adopt { .. } => "adoption",
+        ActKind::Policy { .. } => "policy",
+        ActKind::Ratification { .. } => "ratification rule",
+        ActKind::Allot { .. } => "allotment",
+        ActKind::Allocation { .. } => "allocation rule",
+        ActKind::Decided { .. } => "decision",
+        ActKind::Silence { .. } => "silence",
+        ActKind::DrawCommit { .. } => "draw",
+        ActKind::DrawSecret { .. } | ActKind::DrawReveal { .. } => "draw secret",
+        ActKind::Horizon { .. } => "horizon",
+        ActKind::Rank { .. } => "rank",
+        ActKind::Annotation { .. } => "annotation",
+    }
 }
 
 pub fn why(args: &[String]) -> i32 {
@@ -902,6 +1067,18 @@ pub fn log(args: &[String]) -> i32 {
         // has to say which.
         if let Some((_, why)) = st.ungoverned.iter().find(|(x, _)| *x == act.id) {
             println!("{}", crate::wrap::hang("    NOT APPLIED: ", why));
+        }
+        // A retraction written without standing is neither applied nor
+        // refused when written; say which it has since become.
+        if let Some(r) = st.retractions.iter().find(|r| r.act == act.id) {
+            let said = match &r.verdict {
+                canon_core::Verdict::Proposed { needs } => format!("PROPOSED: needs {needs}"),
+                canon_core::Verdict::Ratified { since, how } => {
+                    format!("applied {}: {how}", store::ymd(*since))
+                }
+                canon_core::Verdict::Refused { by, why, .. } => format!("REFUSED by {by}: {why}"),
+            };
+            println!("{}", crate::wrap::hang("    ", &said));
         }
     }
     println!("\n{} acts", log.len());

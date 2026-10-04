@@ -243,7 +243,10 @@ exist already mean the right thing, and a second vocabulary for the same
 two transitions is how a format grows a dialect.
 
 A `question` is not an adjudication. An implementation MUST NOT flag one
-authored by a non-human actor — noticing a gap decides nothing.
+authored by a non-human actor — noticing a gap decides nothing. Nor is a
+`scoped` act placing its author's own commitment or question in a scope,
+which is part of proposing it, or a `retract` put to its scope as a
+proposal (§7): the person who approves it is the one deciding.
 
 **6. A commitment is a proposal until its scope ratifies it.** Every
 commitment introduced by `assert` or `supersede` derives to `proposed`
@@ -252,7 +255,9 @@ is. The rule is the deepest `ratification` act covering the commitment's
 scope, else the canon-wide one, else `standing`. Five rules ship:
 
 - `standing` — a holder of the scope writes a rule directly; anyone
-  else's write takes one holder's approval; a scope nobody holds is open.
+  else's write takes one holder's approval; a scope nobody holds is open
+  to people, and a non-human actor's write there takes any person's
+  approval. Agents never mint, open or not.
 - `joint{holders}` — every named person must approve; one of them
   objecting refuses it.
 - `threshold{approve, block}` — this many holders approving carries it,
@@ -296,17 +301,24 @@ A `supersede` retires its targets only once the new commitment is
 `active`. A proposed replacement leaves the rule it would replace standing.
 
 A canon with no `grant` act before a commitment was written has no
-holders and no gate: that commitment is `active` on arrival. This is every
-canon that predates this rule, and they MUST keep deriving the same way.
+holders and no gate: a commitment a person wrote is `active` on arrival,
+and one a non-human actor wrote waits for any person's approval. Every
+canon that predates this rule and whose commitments people wrote MUST keep
+deriving the same way.
 
 **7. Governing takes standing.** A `grant`, `withdraw` of somebody else,
 `policy` or `ratification` act whose actor does not hold standing over the
 scope it names — or over the scope above it — is recorded and NOT applied.
 So is a ruling on the record by somebody without standing over what it
-touches: `accept` or `dismiss` over a pair, `retract` of somebody else's
-commitment (withdrawing your own is always yours), or `decided` by somebody
-with no standing in the canon at all. The act stays in the log, flagged,
-and has no effect on the derived state. An agent with a seat over the
+touches: `accept` or `dismiss` over a pair, or `decided` by somebody with
+no standing in the canon at all. The act stays in the log, flagged, and
+has no effect on the derived state. A `retract` of somebody else's
+commitment by somebody without standing over its scope is put to that
+scope instead, the way a non-holder's `assert` is: it takes effect from
+the first approval (a `position` toward the retract act) by a person who
+could have retracted the commitment themselves, and a reasoned objection
+from such a person before then refuses it. Withdrawing your own is always
+yours. An agent with a seat over the
 kitchen that dismisses a pair of hall rules has spoken, and the record
 keeps that it did; nothing changed. Implementations MUST surface such acts rather
 than drop them. Only grants made strictly before the act count, for and

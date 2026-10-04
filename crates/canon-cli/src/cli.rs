@@ -38,7 +38,7 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("add", &["--scope"], &[]),
     ("approve", &["-m"], &[]),
     ("object", &["-m"], &[]),
-    ("list", &[], &["--json"]),
+    ("list", &["--out"], &["--check", "--json", "--markdown"]),
     ("why", &[], &["--json"]),
     ("supersede", &["--scope", "-m"], &[]),
     ("retract", &["-m"], &[]),
@@ -71,7 +71,7 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("guard", &["--check", "--slack"], &["--apply"]),
     ("mcp", &[], &[]),
     ("share", &[], &[]),
-    ("adopt", &[], &["--paste"]),
+    ("adopt", &["--except", "-m"], &["--paste"]),
     ("diff", &[], &["--json", "--propose", "--upstream"]),
     ("upgrade", &[], &[]),
     ("rebase", &["--onto"], &["--allow-remote", "--json"]),
@@ -82,16 +82,79 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("check", &["--about", "--amends", "--scope"], &["--allow-remote", "--irreversible", "--json"]),
 ];
 
+/// Did somebody ask a verb what it does? `main` answers before dispatch, so
+/// the handler never sees the flag.
+pub fn wants_help(rest: &[String]) -> bool {
+    rest.iter().any(|a| a == "--help" || a == "-h")
+}
+
+/// What one verb does and takes: its lines from `canon help all`, the flags
+/// this table declares for it, and for `init`, what it writes.
+///
+/// **Every verb used to refuse `--help`** with "has no `--help` — it takes
+/// `--profile`", which names a flag and not what the verb does, so finding
+/// out what `init` puts in a repository meant initialising a scratch
+/// directory. The text is cut from the long help rather than written beside
+/// it, so the two cannot disagree. `None` for a verb this table does not
+/// know.
+pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
+    let (name, valued, switches) = VERBS.iter().find(|(v, _, _)| *v == verb)?;
+    // A verb's entry is a line at two spaces that opens with its name, and
+    // every deeper-indented line under it.
+    let mut out = String::new();
+    let mut inside = false;
+    for line in help_all.lines() {
+        let indent = line.len() - line.trim_start().len();
+        if indent == 2 {
+            let head = line.trim_start();
+            inside = head == *name || head.starts_with(&format!("{name} "));
+        } else if indent < 2 {
+            inside = false;
+        }
+        if inside {
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    out.push('\n');
+    let mut flags: Vec<String> = valued
+        .iter()
+        .map(|f| format!("{f} <{}>", value_name(f)))
+        .chain(switches.iter().map(|f| f.to_string()))
+        .collect();
+    flags.sort_unstable();
+    if flags.is_empty() {
+        out.push_str("  takes no flags\n");
+    } else {
+        out.push_str(&format!("  flags: {}\n", flags.join("  ")));
+    }
+    if *name == "init" {
+        out.push_str(
+            "  writes .canon/acts.jsonl, the canon itself, one act per line and empty to\n  \
+             start; .canon/profile, which says how `check` answers; and .canon/.gitignore,\n  \
+             which keeps this machine's model config and draft runs out of git. Commit\n  \
+             the rest.\n",
+        );
+    }
+    out.push_str("\n  `canon help all` lists every verb.\n");
+    Some(out)
+}
+
 /// Check `rest` against what `verb` declares, and hand back the arguments
 /// with any `--flag=value` split into two, which is the form the handlers
 /// read.
 ///
 /// A verb this table does not know — `--version`, or a typo — passes through
-/// untouched, because `main` already has an answer for those.
+/// untouched, because `main` already has an answer for those. So does a
+/// request for help, which `main` answers with [`help_for`] instead of
+/// dispatching.
 pub fn check(verb: &str, rest: &[String]) -> Result<Vec<String>, String> {
     let Some((name, valued, switches)) = VERBS.iter().find(|(v, _, _)| *v == verb) else {
         return Ok(rest.to_vec());
     };
+    if wants_help(rest) {
+        return Ok(rest.to_vec());
+    }
     let args = split_equals(rest, valued);
     match command(name, valued, switches).try_get_matches_from(&args) {
         Ok(_) => Ok(args),
@@ -174,6 +237,7 @@ fn wants(flag: &str) -> &'static str {
             "why" => "a reason after it, in quotes",
             "path" => "a path after it",
             "scope" => "a scope after it",
+            "id" => "an id after it, as the pasted block prints it",
             _ => "a value after it",
         },
     }
@@ -238,6 +302,7 @@ fn value_name(flag: &str) -> &'static str {
         "--continue" | "--from" | "--out" | "--onto" | "--refold" | "--replay" => "path",
         "-m" | "--why" => "why",
         "--scope" | "--of" => "scope",
+        "--except" => "id",
         "--after" | "--horizon" | "--revisit" | "--at" | "--since" => "date",
         "--count" | "--k" | "--samples" | "--max-chunks" | "--step" => "n",
         _ => "value",

@@ -24,6 +24,7 @@ mod model;
 mod profile;
 mod quantify;
 mod rebase;
+mod render;
 mod replay;
 mod resolver;
 mod seen;
@@ -77,9 +78,13 @@ RECORD                                        (no model needed)
   approve <id> [-m \"<why>\"]             approve a proposal, by name
   object <id> -m \"<why>\"                object to one; the reason is required
   list                                   what is live now, and what is proposed
+       --markdown [--out <f> [--check]]  the same, as a document for readers without
+                                         canon; --check fails when <f> is stale
   why <id>                               what this replaced, when, and why
   supersede <id> \"<text>\" -m \"<reason>\"  replace a commitment
-  retract <id> -m \"<reason>\"             withdraw one, no replacement
+  retract <id> -m \"<reason>\"             withdraw one, no replacement; an upstream id
+                                         names what was inherited from it. Without
+                                         standing, a proposal for a holder to approve
   accept <a> <b> -m \"<reason>\"           carry a contradiction knowingly
   dismiss <a> <b> [-m \"<reason>\"]        not actually a conflict
   undo <act-id> [-m \"<reason>\"]          revert an act — yours, or one you hold
@@ -89,7 +94,8 @@ RECORD                                        (no model needed)
   mcp                                    serve the agent surface on stdio
 
 GOVERN                                        (no model needed)
-  who <scope>                            who may decide this, and under what
+  who [<scope>]                          who may decide this, and under what;
+                                         no scope: who holds the canon as a whole
   grant <actor> <scope> [--horizon <d>]  give someone standing
   withdraw <actor> <scope>               step back from a scope, or stand down
   scope <id> <scope>                     put a commitment in a scope
@@ -126,6 +132,7 @@ GOVERN                                        (no model needed)
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
   adopt <url>[@gen] | --paste            fork someone else's canon
+        [--except <id>,… -m \"<why>\"]       retract these as they arrive
   diff --upstream [--propose]            how you have diverged from your seed
   upgrade <gen>                          take a newer generation
   rebase --onto <url>@<gen>              carry your law onto a different base
@@ -180,6 +187,11 @@ ON THE PERSONAL PROFILE
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
+        // `canon help <verb>` is the same answer as `canon <verb> --help`.
+        if let Some(verb) = args.get(1).and_then(|v| cli::help_for(v, HELP_ALL)) {
+            print!("{verb}");
+            std::process::exit(0);
+        }
         // `canon help all` is the only way to the long form. Somebody who
         // typed `canon` by accident gets seven verbs, not forty-nine.
         let all = args.iter().skip(1).any(|a| a == "all" || a == "--all");
@@ -187,6 +199,14 @@ fn main() {
         std::process::exit(if args.is_empty() { 2 } else { 0 });
     }
     let (cmd, rest) = args.split_first().unwrap();
+    // Before the parser, which would refuse it, and before dispatch, which
+    // would act on the rest of the line.
+    if cli::wants_help(rest) {
+        if let Some(verb) = cli::help_for(cmd, HELP_ALL) {
+            print!("{verb}");
+            std::process::exit(0);
+        }
+    }
     // **Before dispatch, because after it the act is written.** An argument
     // nobody recognised used to be passed over in silence — including
     // `--dry-runn`, which made the flag meaning "write nothing" fail open.

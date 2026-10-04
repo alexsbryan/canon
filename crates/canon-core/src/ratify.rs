@@ -43,9 +43,12 @@
 //! rules, unmake everything decided under it.
 //!
 //! **What the default is.** [`Ratify::Standing`]: whoever holds the scope may
-//! write into it directly, and a scope nobody holds is open. That is exactly
-//! the behaviour every canon had before this module existed, now chosen
-//! rather than assumed, and a house can raise it with one act.
+//! write into it directly, and a scope nobody holds is open to people. That
+//! is the behaviour every canon had before this module existed, now chosen
+//! rather than assumed, and a house can raise it with one act. The one
+//! exception is an agent's write into a scope nobody holds: it waits for a
+//! person's approval, because the open scope is there so founders are not
+//! locked out of their own charter, not so a machine's first write is law.
 
 use std::collections::BTreeSet;
 
@@ -75,7 +78,8 @@ pub enum Between {
 #[serde(tag = "rule", rename_all = "snake_case")]
 pub enum Ratify {
     /// A holder of the scope may write a rule directly. A non-holder's
-    /// proposal takes one holder's approval. A scope nobody holds is open.
+    /// proposal takes one holder's approval. A scope nobody holds is open to
+    /// people; an agent's write there takes any person's approval.
     Standing,
     /// Every one of these named people must approve. One of them objecting
     /// refuses it.
@@ -464,6 +468,42 @@ impl Canon {
             .collect()
     }
 
+    /// The scopes that hold the whole canon at a moment: the widest level
+    /// anyone holds, which is who [`Canon::holders_at`] counts for an
+    /// unscoped proposal. The canon has no scope of its own to grant.
+    pub fn canon_scopes(&self, at: i64) -> Vec<&Scope> {
+        let held = || self.grants.iter().filter(|g| g.held_at(at));
+        let Some(level) = held().map(|g| g.scope.depth()).min() else {
+            return Vec::new();
+        };
+        let mut scopes: Vec<&Scope> = held()
+            .filter(|g| g.scope.depth() == level)
+            .map(|g| &g.scope)
+            .collect();
+        scopes.sort();
+        scopes.dedup();
+        scopes
+    }
+
+    /// What holding a scope means, said so the reader can act on it. A
+    /// scope is its own name; "this canon" is not a scope anyone can be
+    /// granted, so it is said as the scopes that hold it.
+    fn held_as(&self, scope: Option<&Scope>, at: i64) -> String {
+        if scope.is_some() {
+            return where_(scope);
+        }
+        let scopes: Vec<String> = self
+            .canon_scopes(at)
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        match scopes.split_last() {
+            None => where_(None),
+            Some((only, [])) => format!("this canon by holding {only}"),
+            Some((last, rest)) => format!("this canon by holding {} or {last}", rest.join(", ")),
+        }
+    }
+
     fn holder_at(&self, scope: Option<&Scope>, actor: &str, at: i64) -> bool {
         is_human(actor) && self.holders_at(scope, at).contains(actor)
     }
@@ -539,6 +579,36 @@ impl Canon {
         t
     }
 
+    /// What any person said about a proposal, at or after `from`. What
+    /// decides an agent's proposal in a scope nobody holds, where there are
+    /// no holders to count.
+    fn people_said<'a>(&'a self, p: &Proposal, from: i64) -> Tally<'a> {
+        let mut said: Vec<&crate::fold::Stated> = self
+            .positions
+            .iter()
+            .filter(|s| s.about == p.id.as_str() && s.at >= from && is_human(&s.by))
+            .collect();
+        said.sort_by_key(|s| s.at);
+        let mut t = Tally {
+            approved: Vec::new(),
+            objections: Vec::new(),
+            against: Vec::new(),
+        };
+        for s in said {
+            match s.position.pull {
+                Pull::Toward => t.approved.push((s.by.as_str(), s.at)),
+                Pull::Against => {
+                    t.against.push((s.at, s.by.as_str()));
+                    if !s.position.because.trim().is_empty() {
+                        t.objections
+                            .push((s.at, s.by.as_str(), s.position.because.as_str()));
+                    }
+                }
+            }
+        }
+        t
+    }
+
     /// One rule, one tally. `from` is when the clock starts for `consent`
     /// and the moment a holder's own write lands under `standing`.
     fn judge_once(&self, rule: &Ratify, p: &Proposal, t: &Tally, from: i64, now: i64) -> Outcome {
@@ -548,6 +618,25 @@ impl Canon {
         };
         match rule {
             Ratify::Standing => {
+                // **Agents never mint, open or not.** An open scope lets a
+                // founder write without being locked out of their own
+                // charter; it is not a reason for a machine's write to be
+                // law before any person has read it. With nobody holding the
+                // scope there is nobody narrower to ask, so any person's
+                // word decides.
+                if !is_human(p.actor) && self.nobody_holds_before(p.scope, from) {
+                    let people = self.people_said(p, from);
+                    return Outcome {
+                        completed: people.approved.first().map(|(who, at)| {
+                            (*at, format!("approved by {who}; nobody held {here}"))
+                        }),
+                        refused: objection(people.first_objection()),
+                        needs: format!(
+                            "a person's approval — nobody holds {here} yet, and the proposer is \
+                             not a person"
+                        ),
+                    };
+                }
                 if self.nobody_holds_before(p.scope, from) {
                     return Outcome {
                         // "Held before", not "holds": in a founding script
@@ -575,7 +664,8 @@ impl Canon {
                     completed,
                     refused: objection(t.first_objection()),
                     needs: format!(
-                        "approval from one person who holds {here}{}",
+                        "approval from one person who holds {}{}",
+                        self.held_as(p.scope, now),
                         if is_human(p.actor) {
                             ""
                         } else {
@@ -748,6 +838,45 @@ impl Canon {
     pub fn ratify_proposal(&self, p: &Proposal, now: i64) -> Verdict {
         let rule = self.ratification_for_at(p.scope, p.at).clone();
         self.ratify_under(&rule, p, now)
+    }
+
+    /// Where a retraction written without standing stands. See
+    /// [`crate::fold::Retraction`].
+    ///
+    /// **Not the scope's ratification rule.** Retracting somebody else's
+    /// commitment directly takes standing over its scope and nothing more,
+    /// under any rule, so the people whose word counts here are exactly the
+    /// people who could have written it themselves: a person whose seat is
+    /// not [`Seat::Lacking`] when they speak. Judging it under `consent`
+    /// instead would let a stranger's retraction take effect by waiting.
+    pub fn judge_retraction(&self, p: &Proposal, now: i64) -> Verdict {
+        let here = where_(p.scope);
+        let mut said: Vec<&crate::fold::Stated> = self
+            .positions
+            .iter()
+            .filter(|s| {
+                s.about == p.id.as_str()
+                    && is_human(&s.by)
+                    && self.seat(&s.by, p.scope, s.at) != Seat::Lacking
+            })
+            .collect();
+        said.sort_by_key(|s| s.at);
+        let completed = said
+            .iter()
+            .find(|s| s.position.pull == Pull::Toward)
+            .map(|s| (s.at, format!("approved by {}, who holds {here}", s.by)));
+        let refused = said
+            .iter()
+            .find(|s| s.position.pull == Pull::Against && !s.position.because.trim().is_empty())
+            .map(|s| (s.at, s.by.clone(), s.position.because.clone()));
+        settle(Outcome {
+            completed,
+            refused,
+            needs: format!(
+                "approval from a person who holds {}",
+                self.held_as(p.scope, now)
+            ),
+        })
     }
 
     /// A commitment, as something put to its scope.

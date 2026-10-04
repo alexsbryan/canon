@@ -80,7 +80,6 @@ fn a_refused_act_leads_with_not_applied_on_every_gated_verb() {
         vec!["withdraw", "human:sam", "house"],
         vec!["policy", "set", "consent", "--scope", "house"],
         vec!["ratification", "set", "consent:7d", "--scope", "house"],
-        vec!["retract", &a, "-m", "no"],
         vec!["accept", &a, &b, "-m", "both"],
         vec!["dismiss", &a, &b],
         vec![
@@ -120,6 +119,81 @@ fn a_refused_act_leads_with_not_applied_on_every_gated_verb() {
             v.join(" ")
         );
     }
+}
+
+#[test]
+fn a_retraction_without_standing_is_a_proposal_the_holder_approves() {
+    // An agent may propose a rule but used to be refused a retraction, and
+    // `canon approve` on the refused act answered "no commitment matching",
+    // so the holder retyped every one and its reason.
+    let dir = fresh("retract");
+    canon_as(&dir, "human:sam", &["grant", "human:sam", "house"]);
+    let (_, a) = canon_as(
+        &dir,
+        "human:sam",
+        &["add", "Quiet after eleven.", "--scope", "house"],
+    );
+    let a = id_of(&a);
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+
+    let (code, out) = canon_as(&dir, "agent:claude", &["retract", &a, "-m", "a duplicate"]);
+    assert_eq!(code, 0, "{out}");
+    let first = out.lines().next().unwrap_or_default();
+    assert!(
+        first.starts_with("PROPOSED, not yet applied — needs"),
+        "led with `{first}`:\n{out}"
+    );
+    assert!(!out.contains("retracted can-"), "no success line:\n{out}");
+    let proposal = out
+        .lines()
+        .find(|l| l.contains("canon approve"))
+        .and_then(|l| l.split_whitespace().last())
+        .expect("names the act to approve")
+        .to_string();
+
+    let (_, listed) = canon_as(&dir, "human:sam", &["list"]);
+    assert!(listed.contains(&format!("{proposal}  retract")), "{listed}");
+    assert!(listed.contains("a duplicate"), "{listed}");
+
+    let (code, out) = canon_as(&dir, "human:sam", &["approve", &proposal]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains(&format!("retracted {a} since")), "{out}");
+    let (_, why) = canon_as(&dir, "human:sam", &["why", &a]);
+    assert!(why.contains("retracted"), "{why}");
+    assert!(
+        why.contains("agent:claude proposed retracting it: a duplicate"),
+        "{why}"
+    );
+}
+
+#[test]
+fn a_change_to_how_a_scope_decides_can_be_approved_by_name() {
+    // Its own hint said `canon approve <id>`, and approve resolved only
+    // commitments.
+    let dir = fresh("ratify");
+    canon_as(&dir, "human:sam", &["grant", "human:sam", "house"]);
+    canon_as(&dir, "human:sam", &["grant", "human:dana", "house"]);
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    canon_as(
+        &dir,
+        "human:sam",
+        &["ratification", "set", "threshold:2/1", "--scope", "house"],
+    );
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (_, out) = canon_as(
+        &dir,
+        "human:sam",
+        &["ratification", "set", "consent:7d", "--scope", "house"],
+    );
+    let proposal = out
+        .lines()
+        .find(|l| l.contains("canon approve"))
+        .and_then(|l| l.split_whitespace().last())
+        .unwrap_or_else(|| panic!("a change under threshold:2/1 waits:\n{out}"))
+        .to_string();
+    let (code, out) = canon_as(&dir, "human:dana", &["approve", &proposal]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("in force since"), "{out}");
 }
 
 #[test]
