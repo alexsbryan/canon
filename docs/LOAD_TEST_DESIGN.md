@@ -141,6 +141,80 @@ Two parts, one model-free.
 
 **Turned down.** A third model stage that judges self-containment per rule. It costs `ceil(N / 10)` calls to answer a question the first call should already answer, and it would be a second reading of every rule beside `support`'s.
 
+**Trial 2026-09-23: the prompt addition did not earn promotion.** The original
+twenty-note pilot's labeled before/after artifacts are not here, so this is a
+new, pinned sample: `scripts/subject-pilot.py` selected the shortest notes
+with an extracted rule from the Commonwealth export (8 invariants, 6 attempts,
+6 memories). Both readings used the same 25 chunks and the endpoint reported
+`Qwen3.6-35B-A3B-UD-MTP-IQ4_NL`. The first dry-run checkpoint is
+`commonwealth-ai/.canon/draft-runs/1790221432.partial.json` (50 candidates,
+0 bad citations; checkpointed after dedupe). The second is
+`1790222345.partial.json` (51 candidates, 1 bad citation; stopped after
+extraction). Those run files are local evidence, not shipped fixtures. Exactly
+28 of the first 50 candidate texts reappeared at the same chunk. The weak
+"Do not use `arms/lab/build_estate.py` for this purpose" still said "this
+purpose". An unrelated candidate gained "the inference stack", but another
+subjectless "Either wider output limit or different tiebreaker" remained.
+The new prompt also classified the field-census join and SCIP trait-declaration
+guidance as records instead of rules, and called an answered validation
+procedure a question. One newly proposed candidate cited five sentences and
+was refused. This single paired run cannot assign every wording difference to
+the prompt rather than model variance, but it does not clear the named subject
+or coverage bar. The prompt was restored; no subject field or third reader was
+added. The original ~13/49 pilot score was not reused as this sample's score.
+
+**Source-topic review-card spike (same day).** `scripts/subject-spike.py` reads
+an existing draft run and the exported note files. It resolves each candidate's
+cited span to a unique source, checks that the cut quote still occurs there,
+and gives the reviewer the source's first heading with its actual `file:line`
+and text digest. It never treats the heading as an established subject: every
+card says `human_confirm_subject`; an ambiguous file, missing quote or changed
+source is blocked. A deictic-word signal is advisory only.
+
+On the 20-note baseline: **48/48** rule quotes verified, **48/48** had a source
+heading, **25/48** headings ended in the export's truncation mark, and **19/48**
+rules triggered the advisory word signal. On the recorded full Commonwealth
+load: **1,460/1,460** rule quotes verified; **1,152/1,460** headings were
+truncated and **510/1,460** rules triggered the signal. The source heading for
+"Do not re-open it as a threshold question" describes Arm A, whereas the
+specific referent is the FaithBench recalibration hypothesis in the cited
+line. "RE-MINTING IS OWED" does not trigger the word signal at all; its subject
+is the stale baselines after a stack-fingerprint change in the source body.
+"Neither end of this curve" points to the same broad Arm A heading as other
+rules from that note. A verified heading therefore supplies context, but does
+not structurally resolve the referent. Do not add it as a commitment subject
+or use the word signal to suppress a candidate. The next proof target is
+*per-candidate referent evidence* in the source text (possibly more than one
+span for a curve comparing two operating points), cut and validated by code;
+the person confirms or writes the subject during the existing one-at-a-time
+review. Promote only if it fixes these three cases without hiding rules or
+adding a second mandatory model stage.
+
+**Local referent-evidence proof (2026-09-23).** `scripts/subject-spike.py`
+also tried source-cut, at-most-320-character context beside each quote. Strict
+same-line prefix/suffix or an immediately adjacent line gave context for
+**1,176/1,460** full-load rules and **401/510** rules containing a possible
+deictic reference; **246** snippets were clipped. The original three examples
+all had same-line preceding context: FaithBench's falsified recalibration,
+the stale quality-check baselines, and the shipped operating point on Arm A's
+curve. The last names only ONE end of that curve, so it is not a resolved
+subject. An extended arm that crossed one blank line reached **1,355/1,460**
+and **483/510**, but its sampled snippets included unrelated recommendations,
+run results and caveats from a previous paragraph. Even a snippet whose exact
+bytes and coordinates code can prove is not necessarily the referent. These
+two bounded local-window strategies are exhausted as AUTOMATIC subject
+selectors, not as evidence a reviewer can choose to read.
+
+**Small useful promotion:** `[c]ontext` in `draft` and `draft --resume` now
+opens the ORIGINAL recorded chunk (with a source label and a separately named,
+non-citable section title), then re-prompts the same candidate. It refuses
+context when the recorded chunk id, source or quote does not match. No new
+model call, act field, hard gate or unsolicited prompt payload; a reviewer can
+inspect the full passage before editing an ambiguous rule, including both ends
+of Arm A's curve when one short window is insufficient. The integration test
+opens a fixture passage, quits and checks that no act was written. A canonical
+subject still awaits a human-reviewed per-candidate source-backed proposal.
+
 ## 13. A description is not a standard
 
 **Disposition stands: filter sources on the Commonwealth side first.** The prompt change if it is still needed at full scale, so it is on the shelf: *a description of how something currently is, what a file contains or what a setting is, is neither a rule nor a record unless the passage says it must stay so; return nothing for it.* Not a record: a record is what happened, and a description is what is. The code voice's "a standard the code is held to" keeps its sentence but gains "a rule says what must be so, not what is so." Measured the same way as 12.

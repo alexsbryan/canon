@@ -141,6 +141,10 @@ canon draft --from ~/house-notes        # a folder, read recursively
 canon draft --from-git --since 1y       # or your commit messages
 ```
 
+During the one-at-a-time review, `[c]ontext` shows the recorded passage behind
+the quote, then offers the same candidate again. Use `[e]dit` when its wording
+does not say what it is about. Looking at context writes no act or `seen` entry.
+
 When a chat export has numeric message timestamps, or the source is a git
 commit, the draft run records when each passage was said (`chunks[].said_at`,
 possibly a range). Undated passages remain undated. This is source evidence,

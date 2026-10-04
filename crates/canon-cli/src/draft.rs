@@ -1968,7 +1968,7 @@ fn resume(dir: &Path, profile: Profile, seen: &mut Seen, pick: Option<&str>) -> 
             remaining.len(),
             run.kept.len()
         );
-        match review(dir, &run.candidates, &remaining, seen) {
+        match review(dir, &run.candidates, &run.chunks, &remaining, seen) {
             Ok((a, quit)) => {
                 accepted += a.len();
                 if quit {
@@ -2585,7 +2585,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     }
 
     // ── one at a time ───────────────────────────────────────
-    let accepted = match review(dir, &candidates, &kept, seen).map(|(a, _)| a) {
+    let accepted = match review(dir, &candidates, &chunks, &kept, seen).map(|(a, _)| a) {
         Ok(a) => a,
         Err(e) => return crate::cmds::fail(e),
     };
@@ -2625,7 +2625,33 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     0
 }
 
-/// Interactive review. `[a]ccept [e]dit [r]eject [s]kip [q]uit`, one at a
+/// The extra context must come from the same recorded chunk as the quotation.
+/// An older or altered run without that chunk cannot silently borrow another
+/// passage merely because it has the same words.
+fn recorded_context<'a>(candidate: &Candidate, chunks: &'a [Chunk]) -> Option<&'a Chunk> {
+    chunks.get(candidate.chunk).filter(|chunk| {
+        chunk.id == candidate.chunk
+            && chunk.source == candidate.source
+            && !candidate.quote.is_empty()
+            && chunk.text.contains(&candidate.quote)
+    })
+}
+
+fn render_recorded_context(candidate: &Candidate, chunks: &[Chunk]) -> String {
+    let Some(chunk) = recorded_context(candidate, chunks) else {
+        return "  recorded passage unavailable for this citation\n".into();
+    };
+    let mut out = format!("  recorded passage — {}:\n", chunk.source);
+    if let Some(title) = &chunk.heading {
+        out.push_str(&format!("    section title, for context only: {title}\n"));
+    }
+    for line in chunk.text.lines() {
+        out.push_str(&format!("    {line}\n"));
+    }
+    out
+}
+
+/// Interactive review. `[a]ccept [e]dit [c]ontext [r]eject [s]kip [q]uit`, one at a
 /// time, no bulk verb.
 ///
 /// Returns what was accepted and whether the person quit — which ends the
@@ -2633,6 +2659,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
 fn review(
     dir: &Path,
     candidates: &[Candidate],
+    chunks: &[Chunk],
     kept: &[usize],
     seen: &mut Seen,
 ) -> Result<(Vec<canon_core::ActId>, bool), String> {
@@ -2656,6 +2683,11 @@ fn review(
             "{held} record(s) of what happened are not offered — nothing in one can be kept or broken."
         );
     }
+    enum Choice {
+        Text(String),
+        Skip,
+        Quit,
+    }
     for (n, i) in offered.iter().enumerate() {
         let c = &candidates[*i];
         println!("\nCandidate {} of {}", n + 1, offered.len());
@@ -2676,43 +2708,51 @@ fn review(
         for l in c.quote.lines() {
             println!("    {l}");
         }
-        print!("\n  [a]ccept  [e]dit  [r]eject  [s]kip  [q]uit: ");
-        let _ = std::io::stdout().flush();
-        let Some(Ok(answer)) = lines.next() else {
-            println!("\n(end of input)");
-            quit = true;
-            break;
-        };
-        // Piped input echoes nothing, so the prompt and the reply would run
-        // together in a transcript. A terminal supplies this newline itself.
-        println!();
-        let text = match answer.trim() {
-            "a" | "accept" => c.text.clone(),
-            "e" | "edit" => {
-                print!("  text: ");
-                let _ = std::io::stdout().flush();
-                match lines.next() {
-                    Some(Ok(t)) if !t.trim().is_empty() => t.trim().to_string(),
-                    _ => {
-                        println!("  (nothing entered — skipped)");
-                        continue;
+        let answer = loop {
+            print!("\n  [a]ccept  [e]dit  [c]ontext  [r]eject  [s]kip  [q]uit: ");
+            let _ = std::io::stdout().flush();
+            let Some(Ok(answer)) = lines.next() else {
+                println!("\n(end of input)");
+                break Choice::Quit;
+            };
+            // Piped input echoes nothing, so the prompt and the reply would
+            // run together in a transcript. A terminal supplies this newline.
+            println!();
+            match answer.trim() {
+                "c" | "context" => {
+                    print!("{}", render_recorded_context(c, chunks));
+                    continue;
+                }
+                "a" | "accept" => break Choice::Text(c.text.clone()),
+                "e" | "edit" => {
+                    print!("  text: ");
+                    let _ = std::io::stdout().flush();
+                    break match lines.next() {
+                        Some(Ok(t)) if !t.trim().is_empty() => Choice::Text(t.trim().to_string()),
+                        _ => {
+                            println!("  (nothing entered — skipped)");
+                            Choice::Skip
+                        }
+                    };
+                }
+                "r" | "reject" => {
+                    // Only rejection, not skip, records a declined candidate.
+                    if let Err(e) = seen.record(&c.text, Why::Rejected) {
+                        eprintln!("  warning: {e}");
                     }
+                    break Choice::Skip;
                 }
+                "q" | "quit" => break Choice::Quit,
+                _ => break Choice::Skip,
             }
-            "r" | "reject" => {
-                // Recorded, so the same feed does not ask again tomorrow.
-                // `[s]kip` deliberately records nothing: skip means not now,
-                // and only reject means no.
-                if let Err(e) = seen.record(&c.text, Why::Rejected) {
-                    eprintln!("  warning: {e}");
-                }
-                continue;
-            }
-            "q" | "quit" => {
+        };
+        let text = match answer {
+            Choice::Text(text) => text,
+            Choice::Skip => continue,
+            Choice::Quit => {
                 quit = true;
                 break;
             }
-            _ => continue,
         };
         let kind = match c.kind {
             Kind::Rule => ActKind::Assert {

@@ -47,6 +47,32 @@ fn a_chunk_cites_the_lines_it_came_from() {
 }
 
 #[test]
+fn review_context_is_the_recorded_passage_only_when_the_quote_still_fits() {
+    let passage = "# Arm A\n\nFAITHBENCH COROLLARY — the recalibration hypothesis failed. \
+                   Do not re-open it as a threshold question.\n";
+    let chunks = chunk_text("source.md", passage);
+    let mut candidate = candidate_citing(
+        "Do not re-open it as a threshold question.",
+        "Do not re-open it as a threshold question.",
+    );
+    candidate.chunk = chunks[0].id;
+    candidate.source = chunks[0].source.clone();
+    let context = render_recorded_context(&candidate, &chunks);
+    assert!(context.contains("FAITHBENCH COROLLARY"), "{context}");
+    assert!(
+        context.contains("title, for context only: Arm A"),
+        "{context}"
+    );
+    assert!(context.contains(&candidate.source), "{context}");
+
+    candidate.source = "another.md:3-3".into();
+    assert!(render_recorded_context(&candidate, &chunks).contains("unavailable"));
+    candidate.source = chunks[0].source.clone();
+    candidate.quote = "a quote the recorded passage does not have".into();
+    assert!(render_recorded_context(&candidate, &chunks).contains("unavailable"));
+}
+
+#[test]
 fn a_chat_passage_keeps_its_source_clock_in_the_run_not_the_quote() {
     let chat = format!(
         r#"[{{"text":"{}","ts":1772232000}},{{"text":"This rule was revised later and applies now.","ts":1772240000}}]"#,
