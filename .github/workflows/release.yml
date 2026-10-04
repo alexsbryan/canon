@@ -12,6 +12,10 @@
 #   canon-<target>.zip        the same                          (Windows)
 #   SHA256SUMS                one line per archive
 #
+# The release's notes are the tag's section of CHANGELOG.md, printed by
+# scripts/release-notes.sh. A tag whose version has no section there is
+# refused before anything builds, the same way a version mismatch is.
+#
 # `install.sh` at the repository root downloads the archive for the caller's
 # platform from here and checks it against SHA256SUMS. The "latest" it
 # resolves is GitHub's own /releases/latest, which is safe because this repo
@@ -85,6 +89,10 @@ jobs:
                 echo "::error::tag v$want but Cargo.toml [workspace.package] says $have" >&2
                 exit 1
               fi
+              if ! ./scripts/release-notes.sh "$have" > /dev/null; then
+                echo "::error::CHANGELOG.md has no notes for $have" >&2
+                exit 1
+              fi
               echo "version $have" ;;
             *) echo "not a tag ($GITHUB_REF): build only" ;;
           esac
@@ -146,6 +154,13 @@ jobs:
     permissions:
       contents: write
     steps:
+      # For CHANGELOG.md and the script that reads it.
+      - uses: actions/checkout@v7
+
+      - name: Release notes from CHANGELOG.md
+        shell: bash
+        run: ./scripts/release-notes.sh "${GITHUB_REF_NAME#v}" > release-notes.md
+
       - uses: actions/download-artifact@v8
         with:
           path: dist
@@ -164,7 +179,7 @@ jobs:
       - uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}
-          generate_release_notes: true
+          body_path: release-notes.md
           files: |
             dist/canon-*.tar.gz
             dist/canon-*.zip

@@ -294,6 +294,8 @@ get detected, and a stale number is worse than none. Measure your own:
   primitives, the line between mechanism and policy, and eighteen
   technologies of political economy tested against them.
 - [DEMO_PLAN.md](./docs/DEMO_PLAN.md) — the founding-documents ledger.
+- [CHANGELOG.md](./CHANGELOG.md) — what changed in each release, and what is
+  waiting for the next one.
 - [Contributing](./docs/CONTRIBUTING.md) — every path is open; the fastest way
   in is a fixture. [Governance](./docs/GOVERNANCE.md), [security](./docs/SECURITY.md),
   and [where to get help](./docs/SUPPORT.md).

@@ -196,6 +196,11 @@ canon are `PROPOSED, not yet a rule` — mine, waiting out my own window.
 
 - Imperative mood is appreciated; `type(scope): summary` runs through the
   history where it fits. Don't overthink it.
+- A change someone using canon would notice adds a line under `## Unreleased`
+  in [CHANGELOG.md](../CHANGELOG.md), in the same commit. Say what they will
+  see, in their words: the verb, the flag, the output that changed. A change
+  to what an existing canon derives goes under "Before you upgrade". Tests,
+  refactors and internal docs don't need a line.
 - The PR template is short on purpose. CI does the mechanical checking, so
   it just asks what changed and how you looked at it.
 - Rebasing on `main` keeps history readable but isn't a blocker.
@@ -206,7 +211,9 @@ canon are `PROPOSED, not yet a rule` — mine, waiting out my own window.
 ## Releasing
 
 A release is a tag. Bump `version` in the root `Cargo.toml` (every crate
-inherits it), let `cargo build` refresh `Cargo.lock`, commit, then:
+inherits it), let `cargo build` refresh `Cargo.lock`, rename `## Unreleased`
+in [CHANGELOG.md](../CHANGELOG.md) to `## <version> — <YYYY-MM-DD>` with a
+fresh empty `## Unreleased` above it, commit, then:
 
 ```sh
 git tag v$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
@@ -214,9 +221,10 @@ git push origin main --tags
 ```
 
 [`release.yml`](../.github/workflows/release.yml) refuses a tag that
-disagrees with `Cargo.toml`, builds the binary for macOS, Linux and
-Windows on hosted runners, and publishes a GitHub Release with the
-archives and a `SHA256SUMS`. [`install.sh`](../install.sh) at the root is
+disagrees with `Cargo.toml` or has no section in the changelog, builds the
+binary for macOS, Linux and Windows on hosted runners, and publishes a
+GitHub Release with the archives, a `SHA256SUMS`, and that section as its
+notes. `./scripts/release-notes.sh <version>` prints what it will publish. [`install.sh`](../install.sh) at the root is
 what users run; it fetches from that release and verifies against those
 sums. To check a new runner image or target without spending a tag, run
 the workflow by hand from the Actions tab: every leg builds, nothing is
