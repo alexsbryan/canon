@@ -3,6 +3,10 @@
 //! property rather than the mechanism.
 
 use crate::*;
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 
 fn assert_c(text: &str, ts: i64) -> Act {
     Act::new(

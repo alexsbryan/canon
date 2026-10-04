@@ -19,6 +19,7 @@
 //! A replay whose answer depends on when it ran is not a replay, and
 //! `canon replay` leans on this completely.
 
+use alloc::{string::String, vec::Vec};
 use serde::{Deserialize, Serialize};
 
 use crate::fold::Canon;

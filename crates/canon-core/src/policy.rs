@@ -37,6 +37,11 @@
 //! names: two deciders that agree today, diverge in a month, and produce a
 //! plausible answer with nothing red anywhere.
 
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+    vec::Vec,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::fold::Canon;
@@ -116,8 +121,8 @@ impl Authority {
     }
 }
 
-impl std::fmt::Display for Authority {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Authority {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(self.as_str())
     }
 }

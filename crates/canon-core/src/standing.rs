@@ -19,6 +19,7 @@
 //! agrees on. `Standing` says the same thing — how a proposal stands — and
 //! is not already taken.
 
+use alloc::{string::String, vec::Vec};
 use serde::{Deserialize, Serialize};
 
 use crate::fold::Canon;

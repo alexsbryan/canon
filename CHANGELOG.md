@@ -7,6 +7,13 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- The core compiles with `no_std` + `alloc`. Local and CI gates check its
+  isolated runtime dependencies and features, alongside the workspace checks.
+- [The contract](./docs/CONTRACT.md) names the guarantees, executable checks,
+  and assumptions. Generated replay, merge, and ratification checks shrink
+  failures and preserve regression seeds. Contributions declare whether they
+  preserve, extend, or break the contract.
+
 ## 0.2.0 — 2026-10-03
 
 ### Before you upgrade

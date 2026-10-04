@@ -11,6 +11,8 @@
 //! the format, and the staleness query has to read it. Two implementations of
 //! the civil calendar would be two answers to "is this overdue" (§10.6).
 
+use alloc::string::String;
+
 /// Howard Hinnant's civil-from-days.
 pub fn ymd(ts: i64) -> String {
     let days = ts.div_euclid(86_400);

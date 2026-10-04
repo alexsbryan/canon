@@ -14,6 +14,11 @@
 //! **adopt**, not enough to **audit**, which is the right trade for a block
 //! of text pasted into a chat thread.
 
+use alloc::{
+    collections::BTreeSet,
+    string::{String, ToString},
+    vec::Vec,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -282,7 +287,7 @@ impl Divergence {
         // no `from` of its own, and counting that as an addition would report
         // every rewrite twice — once as a supersession and once as new law
         // the adopter invented.
-        let mut descends: std::collections::BTreeSet<ActId> = canon
+        let mut descends: BTreeSet<ActId> = canon
             .commitments
             .iter()
             .filter(|c| {

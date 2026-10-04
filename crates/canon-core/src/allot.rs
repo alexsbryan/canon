@@ -23,6 +23,10 @@
 //! monitor by mutual visibility — you can see whose boat is on your site —
 //! not by ledger. Nothing here records what anybody did.
 
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::fold::Canon;
@@ -148,8 +152,8 @@ pub enum PoolError {
     Draw(String),
 }
 
-impl std::fmt::Display for PoolError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for PoolError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::NoAllotment => write!(f, "nothing is allotted here — `canon allot <scope> …`"),
             Self::NoRule => write!(

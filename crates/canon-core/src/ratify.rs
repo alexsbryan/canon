@@ -50,7 +50,12 @@
 //! person's approval, because the open scope is there so founders are not
 //! locked out of their own charter, not so a machine's first write is law.
 
-use std::collections::BTreeSet;
+use alloc::{
+    boxed::Box,
+    collections::BTreeSet,
+    string::{String, ToString},
+    vec::Vec,
+};
 
 use serde::{Deserialize, Serialize};
 

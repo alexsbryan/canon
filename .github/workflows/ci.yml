@@ -70,6 +70,10 @@ jobs:
               - 'rust-toolchain.toml'
               - 'rustfmt.toml'
               - 'fixtures/**'
+              - 'docs/CONTRACT.md'
+              - 'docs/PRIMITIVES.md'
+              - 'scripts/core-boundary.sh'
+              - 'scripts/pre-push.sh'
               - '.github/workflows/ci.yml'
             ledger:
               - '.canon/**'
@@ -118,6 +122,9 @@ jobs:
 
       # Before the tests, because a warning is faster to read than a failure
       # and this is the check most likely to be what a contributor tripped on.
+      - name: Core boundary (isolated no_std)
+        run: ./scripts/core-boundary.sh
+
       - name: Clippy (no warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
 

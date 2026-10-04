@@ -15,6 +15,16 @@ seconds. ./scripts/install-git-hooks.sh wires it to `git push`.
 
 <!-- However you convinced yourself it works — a test you added, a command you ran, output you pasted. Rough is fine. -->
 
+## Contract effect
+
+Effect: unchanged / extended / breaking
+Affected laws or vocabulary:
+Existing records and consumers:
+
+<!-- docs/CONTRACT.md names the laws and assumptions. For a breaking change,
+link an old-record-to-new-interpretation test and the migration or explicit
+reinterpretation plan. Changes to meaning count even when fields stay the same. -->
+
 ## Notes for reviewers
 
 <!-- Optional: trade-offs, things you're unsure about, follow-ups you're leaving. -->

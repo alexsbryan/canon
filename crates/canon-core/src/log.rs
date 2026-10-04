@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Parsing and rendering the log — over strings, never files.
 //!
-//! `canon-core` has no filesystem dependency by design (see the crate's
-//! `Cargo.toml`). The CLI owns IO; this module owns the format.
+//! `canon-core` compiles with `no_std` + `alloc`. The CLI owns IO; this module
+//! owns the format.
+
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 
 use crate::act::{Act, FORMAT_VERSION};
 
@@ -21,8 +26,8 @@ pub enum ParseError {
     },
 }
 
-impl std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::UnknownVersion { line, found } => write!(
                 f,
@@ -33,7 +38,7 @@ impl std::fmt::Display for ParseError {
     }
 }
 
-impl std::error::Error for ParseError {}
+impl core::error::Error for ParseError {}
 
 /// An ordered set of acts.
 #[derive(Debug, Clone, Default)]

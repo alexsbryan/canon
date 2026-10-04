@@ -19,6 +19,7 @@
 //! under it, and a policy that prefers the deepest grant is subsidiarity —
 //! decisions at the lowest competent level — with no extra machinery.
 
+use alloc::string::{String, ToString};
 use serde::{Deserialize, Serialize};
 
 use crate::id::ActId;
@@ -90,8 +91,8 @@ impl From<Scope> for String {
     }
 }
 
-impl std::fmt::Display for Scope {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Scope {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(&self.0)
     }
 }

@@ -115,7 +115,8 @@ What both of them check:
 |---|---|
 | `cargo fmt --all --check` | rustfmt, on the pinned toolchain |
 | `cargo clippy --all-targets -- -D warnings` | no warnings, not a ratchet — the tree is small enough to keep at zero |
-| `cargo test --workspace` | 436 tests, ~6 seconds |
+| `cargo test --workspace` | example, regression, fixture, and generated law checks |
+| `./scripts/core-boundary.sh` | isolated `no_std` core compilation and approved runtime dependencies/features |
 | `./scripts/docs-gate.sh` | every repository path a narrative document links to still resolves |
 
 Two of those tests are worth calling out, because they gate the *design*
@@ -127,10 +128,14 @@ rather than the code:
   reach it. **A new op fails the suite until somebody writes down why it
   exists.** If you're adding one, that third column is the work; the code
   is the easy part.
-- **`governance_bar`** checks that the decision layer stays pure — no
-  filesystem, no network, no model under `canon-core`. Its purity is the
-  dependency list, not discipline, so the way to break it is to add a
-  dependency.
+- **`governance_bar`** exercises the governance mechanisms in a house and a
+  codebase without a model. The core boundary is checked separately:
+  `canon-core` compiles with `no_std` + `alloc`, and `core-boundary.sh`
+  checks its isolated dependencies so the CLI's features cannot mask a leak.
+
+[The contract](./CONTRACT.md) names the laws, their checks, and what they
+assume. Generated replay, merge, and ratification checks run with the ordinary
+suite; failures shrink and carry reproducible regression seeds.
 
 **What CI does not check: ingest accuracy.** It needs an endpoint and a
 model whose numbers move between runs, and a gate that goes red for the
@@ -139,6 +144,13 @@ weather teaches people to ignore gates. That's a
 bars run by hand.
 
 ## What makes a change easy to merge
+
+Declare the **contract effect**: unchanged, extended, or breaking. Name the
+affected laws or vocabulary and what happens to existing records and consumers.
+For a breaking change, include an old-record-to-new-interpretation test and
+the migration or explicit reinterpretation plan. A behavior change can break
+the contract without changing the format; [the contract](./CONTRACT.md#changing-the-contract)
+explains the distinction. Review determines the classification.
 
 Not a checklist — just what tends to earn a quick yes.
 

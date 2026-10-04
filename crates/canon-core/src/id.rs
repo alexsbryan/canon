@@ -13,6 +13,7 @@
 //! Two byte-identical acts by the same actor in the same second collide by
 //! design; appending happens in real time, so it does not arise in practice.
 
+use alloc::string::String;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -66,8 +67,8 @@ pub fn short_digest(input: &str) -> String {
     digest_hex(input.as_bytes()).chars().take(8).collect()
 }
 
-impl std::fmt::Display for ActId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for ActId {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(&self.0)
     }
 }

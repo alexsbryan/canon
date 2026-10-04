@@ -7,10 +7,12 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# DELIBERATE: no tokio, no reqwest, no filesystem access.
-# The fold's purity is enforced by this dependency list, not by discipline.
-# canon-core parses a &str and folds it. The CLI owns all IO.
+# The core compiles with no_std + alloc. The gate also checks its isolated
+# dependency features: the CLI's std features must not mask a dependency here.
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
+
+[dev-dependencies]
+proptest = { version = "1", default-features = false, features = ["std"] }

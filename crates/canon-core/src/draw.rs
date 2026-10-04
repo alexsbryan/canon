@@ -26,6 +26,10 @@
 //! standard result for commit-reveal without an external beacon, and it does
 //! not close with a ledger alone.
 
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::fold::Canon;
@@ -113,8 +117,8 @@ pub enum DrawError {
     NoSeats,
 }
 
-impl std::fmt::Display for DrawError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for DrawError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::NoSuchDraw { commit } => write!(f, "no draw announced as {commit}"),
             Self::BoundaryNotInFuture {
@@ -144,7 +148,7 @@ impl std::fmt::Display for DrawError {
     }
 }
 
-impl std::error::Error for DrawError {}
+impl core::error::Error for DrawError {}
 
 impl Canon {
     /// The draw announced by this act, computed from the log.

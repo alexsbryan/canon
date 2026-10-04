@@ -23,6 +23,10 @@
 //! the fold, and every surface that could have been affected by one says how
 //! many it is carrying rather than quietly rendering a shorter answer.
 
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::id::ActId;

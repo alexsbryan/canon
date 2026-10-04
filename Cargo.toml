@@ -10,12 +10,12 @@ license = "AGPL-3.0-or-later"
 repository = "https://github.com/alexsbryan/canon"
 
 [workspace.dependencies]
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1", default-features = false, features = ["alloc", "derive"] }
 # `raw_value` so a schema is sent as its author wrote it (canon-cli
 # `model::Schema`). Never `preserve_order`: canon-core's annotations re-render
 # to identical bytes because a `Map` sorts its keys.
-serde_json = { version = "1", features = ["raw_value"] }
-sha2 = "0.10"
+serde_json = { version = "1", default-features = false, features = ["alloc", "raw_value"] }
+sha2 = { version = "0.10", default-features = false }
 # The only network dependency in the tree. Blocking, so no async runtime
 # enters a CLI that spends its life folding a file.
 ureq = "2.12"

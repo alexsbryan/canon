@@ -5,7 +5,11 @@
 //! what is live, what replaced what and why, which contradictions are carried
 //! knowingly — comes from replaying the log.
 
-use std::collections::{BTreeMap, BTreeSet};
+use alloc::{
+    collections::{BTreeMap, BTreeSet},
+    string::{String, ToString},
+    vec::Vec,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -359,7 +363,7 @@ impl Canon {
         // Somebody who holds both `house` and `house.kitchen` is one decider,
         // not two, and listing them twice makes the answer to "who decides
         // this?" read as a longer group than the house actually has.
-        let mut seen = std::collections::BTreeSet::new();
+        let mut seen = BTreeSet::new();
         found.retain(|g| seen.insert(g.actor.clone()));
         found
     }

@@ -2,13 +2,21 @@
 //! `canon-core` — the acts, their content-addressed ids, and the fold that
 //! derives current state from them.
 //!
-//! **This crate does no IO and makes no network calls, and that is enforced by
-//! its dependency list rather than by discipline.** It parses a `&str` and
-//! folds it. The CLI owns the filesystem; a model, when one is involved at all,
-//! is reached from higher layers.
+//! This crate compiles with `no_std` + `alloc`: history, time and evidence are
+//! inputs, rather than things it obtains from the outside world. The gate
+//! checks its isolated dependency features as well as the workspace build.
 //!
-//! Three verbs in the CLI need a model (`check`, `tensions`, `draft`).
-//! Everything else is this crate.
+//! The CLI owns IO and model calls (`check`, `tensions`, `draft`, `rebase`).
+//! See `docs/CONTRACT.md` for the laws and their assumptions.
+
+#![no_std]
+#![forbid(unsafe_code)]
+
+#[macro_use]
+extern crate alloc;
+
+#[cfg(test)]
+extern crate std;
 
 pub mod act;
 pub mod allot;

@@ -49,6 +49,7 @@ gate() {
 
 echo "pre-push:"
 gate "rustfmt"          cargo fmt --all --check
+gate "core boundary"    ./scripts/core-boundary.sh
 gate "clippy"           cargo clippy --workspace --all-targets -- -D warnings
 gate "tests"            cargo test --workspace
 gate "docs links"       ./scripts/docs-gate.sh

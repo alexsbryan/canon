@@ -47,6 +47,9 @@ Companion to `SPEC.md`, which fixes the wire format. This fixes the *shape* —
 which questions the library answers and which it refuses to answer on a
 community's behalf.
 
+[The contract](./CONTRACT.md) indexes the guarantees, executable checks, and
+assumptions behind that shape.
+
 ## The thesis
 
 A governance tool cannot make people good, brave, or fair. What it can do is
