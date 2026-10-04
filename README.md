@@ -1,345 +1,97 @@
 # canon
 
-Your house already has rules. They're spread across two years of chat, a
-handbook nobody's opened since 2023, and someone's memory. When a rule
-changes, no one can remember why the old one existed.
+canon helps your group find its rules in old notes and chat, and keep the
+reason when they change.
 
-canon reads what you already wrote and proposes the rules it finds. Each
-one quotes the passage it came from, so you can check it. You go through
-them together and keep the ones that are real.
+Whether you share a house or work on a project, your agreements can be
+scattered across documents and people's memories. canon proposes what it
+finds, quoting the source. You review each proposal and keep the ones that
+reflect what you agreed.
 
-```sh
-canon init --profile house
-canon draft --from ~/house-stuff     # a folder. anything text in it.
-```
+It's early. The only group using it so far is ours.
 
-You review one at a time. There's no `--accept-all` — a set of rules
-nobody read isn't worth having.
+## Why this exists
 
-## Install
+We think the people living with a rule should have a say in making it, and
+changing your mind should leave a reason, not erase the past. Your group
+chooses who decides what and how proposals become rules. The tool keeps
+that record; it cannot make a group fair.
+
+Open questions and things you deliberately leave unwritten belong in the
+record too.
+
+## Get started
+
+Install on macOS or Linux:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh | sh
 ```
 
-One binary, about 5 MB, into `~/.local/bin`. macOS and Linux, Intel and
-Arm; Windows gets a zip on the [releases
-page](https://github.com/alexsbryan/canon/releases/latest). The script is
-short and checks what it downloads against the release's checksums —
-[read it](./install.sh) before you pipe it. Prefer to build from source?
-[Below](#build).
+The [installer](./install.sh) puts one binary in `~/.local/bin`. On Windows,
+download the zip from
+[releases](https://github.com/alexsbryan/canon/releases/latest).
 
-**New here? [Getting started](./docs/GETTING_STARTED.md) walks a house through
-its first hour.**
-
-It's a house tool, and it's also a bet: that how a group decides things
-can live in software as mechanism, not as a page in a wiki. Standing,
-objections, scopes, deliberate silences and drawn lots are data
-structures. *What would a different rule have done to us?* is a question
-with an answer. [Skip to the experiments](#can-software-hold-governance)
-if that's what you came for.
-
-This project is governed that way too. `.canon/` is committed, and the
-rules this repository runs on are held in the tool's own format — the
-argument had better survive its author using it. [How that
-works](#contributing).
-
-## Point it at the mess
-
-Don't tidy anything first. There's no format list — anything under that
-folder that's text gets read, whatever it's called: `.org`, `.eml`, a
-`NOTES` file with no extension, a Slack export. Chat is read as chat, so a
-rule found in a channel cites the exchange it was decided in. It counts
-and names whatever it skipped. Read the same channel twice and it won't
-ask twice.
+In the folder where you want to keep your group's record:
 
 ```sh
-canon draft --from ~/house-docs                      # a folder, recursively
-canon draft --from-git --since 1y                    # or your commit messages
-cat transcript | canon draft --from - --as '#house'  # stdin: the whole integration surface
-canon draft --resume                                 # finish a long review later
+canon init --profile house
+canon add "Quiet hours are 10pm to 7am."
+canon list
 ```
 
-And it finds three things, not one:
+Use one of your own agreements. These commands need no model; the `house`
+profile just calls agreements “rules”.
 
-- A **rule** is a rule.
-- *"Nobody's ever said who looks after the allotment"* is a **question**.
-- *"We decided not to make a rotation — it'd turn a kindness into a duty"*
-  is a **silence**: something you decided *not* to have.
-
-Silences are the ones houses lose, and losing them is why the same
-proposal comes back every spring. Every proposal carries the passage it
-came from — cut out of your own file, so a citation that isn't in your
-document can't happen. If a proposed rule has no source you recognise,
-reject it.
-
-## Then it keeps the reason
-
-The everyday half needs no model at all. Don't edit a rule — supersede it:
+To read existing notes or chat exports, first run a local
+OpenAI-compatible model server. Set its address and model name, then point
+canon at your folder of text:
 
 ```sh
-canon supersede can-ffc1 "Guests up to three nights; longer needs a house chat." \
-  -m "Sam's cousin stayed two weeks in June and nobody knew how to raise it."
-
-canon why can-e7ab     # six months later: why is this rule like this?
+canon config set endpoint http://localhost:8080/v1
+canon config set model YOUR_MODEL_NAME
+canon draft --from ~/group-notes
 ```
 
-Nothing is destroyed and everything is revertible, including a revert. A
-contradiction you're carrying on purpose is something you can record
-(`canon accept`), not a bug to clean up.
+Replace the address, model name, and folder with yours. Review each proposal
+against its source passage. Models miss agreements and misread them;
+smaller models tend to do worse.
 
-Everything lives in `.canon/acts.jsonl` — one line per decision,
-append-only. It diffs, so git gives you history for free. It greps.
-Leaving is deleting a directory. No account, no server, nothing leaves
-your machine.
+[Getting started](./docs/GETTING_STARTED.md) covers model setup, changing a
+rule with a reason, and sharing the record.
 
-## A rule is a proposal until the people it governs say so
+## How it works
 
-Give people standing over a scope, say how that scope makes rules, and a
-write from anyone else stays visible and not in force until the rule is
-met:
+canon has two halves. The record is `.canon/acts.jsonl`, a text file.
+Changes and undos add entries rather than rewriting history. You can keep
+it in git, share it, and read it without canon. No account is needed.
 
-```sh
-canon grant human:dana house.kitchen
-canon grant human:sam house.kitchen
-canon ratification set joint:human:dana,human:sam --scope house.kitchen \
-  -m "Both cooks agree, or it is not a kitchen rule."
+Code reads that history to work out what's in force and who may decide,
+under your group's chosen rules. This needs no model. You can replay past
+decisions under a different policy to see what would change.
 
-canon add "Wash your own pan before you sit down." --scope house.kitchen
-#   PROPOSED, not yet a rule — needs approval from human:dana, human:sam
-canon approve can-9b31       # as dana; then as sam, and it is in force
-canon object can-9b31 -m "…" # one named holder's reason refuses it
-```
+Only `draft`, `check`, `tensions`, and `rebase` call a language model, to
+help read documents or compare rules. A model offers evidence and
+proposals; it cannot make a rule. canon refuses remote endpoints unless
+you pass `--allow-remote`.
 
-That is Ostrom's three tiers in one log: the rules, the rules for making
-rules, and who may change *those* — the same acts, aimed one scope up.
-Five ratification rules ship: `standing` (holders write, others propose),
-`joint` (named people, all of them), `threshold` (so many for, so many
-against), `consent` (a rule after N days unless a holder objects with a
-reason) and `twice` (carried twice, with days or a change of holders in
-between — the Nordic amendment rule, for a rule that should outlast the
-people who made it). Changing a scope's rule is itself a proposal, judged
-under the rule it replaces.
+The record trusts whoever can write the file. Protect shared copies with
+permissions and review; [the security guide](./docs/SECURITY.md) explains
+the boundary.
 
-An agent may propose and object under any of them. It cannot mint a rule,
-even where it holds standing, and even where nobody does. Governing out of
-seat — a grant, a policy, a ruling or an undo by somebody with no say over
-what it touches — is kept on the record and changes nothing; a retraction
-out of seat is a proposal for somebody with a say to approve. A canon that
-has granted nobody standing is a notebook for its people, and stays one
-until the first grant. The tier table is in [Getting
-started](./docs/GETTING_STARTED.md#later-decide-how-you-decide).
+## Go further
 
-## What needs a model, and what doesn't
+- [Everyday questions](./docs/COOKBOOK.md) — who decides, how to object,
+  and what to do when the rules don't cover something.
+- [The guide](./docs/GUIDE.md) — the ideas and commands, in plain words.
+- [The design](./docs/PRIMITIVES.md) — what the tool fixes and what it
+  leaves to your group, informed by Elinor Ostrom's work on shared resources.
+- [The evidence](./docs/DEMO_PLAN.md) — experiments, measurements, and
+  their limits.
 
-**Needs one:** `draft`, `check`, `tensions`, `rebase`.
+To build from source or contribute, start with
+[Contributing](./docs/CONTRIBUTING.md). This project's own rules live in
+`.canon/` too; [Governance](./docs/GOVERNANCE.md) says who decides here.
 
-**Needs nothing:** everything else — the ledger, standing, scopes,
-ratification, `replay`, and every other verb. That's most of the tool and
-all of the daily use. In a house, one person runs the model half and
-everyone else needs nothing.
-
-A model call is refused unless the endpoint is on this machine, unless
-you pass `--allow-remote`. Every call prints which endpoint it used.
-
-### The endpoint, and a shout to Commonwealth
-
-canon was built against
-**[Commonwealth](https://github.com/alexsbryan/commonwealth-ai)**, and
-every accuracy figure and bench script here was measured on it. It's a
-sister project worth knowing about on its own, because it solves the
-problem a house hits ten minutes after deciding to run its own model:
-**the good model doesn't fit on anybody's laptop.** Commonwealth pools
-machines — yours, and ones belonging to people you trust — splitting a
-model's layers across them so three 64 GB machines hold a model none of
-them could, with no master node. And **its trust model is social rather
-than cryptographic**: you join a mesh because someone you know invited
-you, with no token and no central registry. That's the same bet canon
-makes about rules, made about hardware. A house that already pools a
-kitchen can pool GPUs. Start with [Run a model bigger than your
-machine](https://github.com/alexsbryan/commonwealth-ai/blob/main/docs/RUN_A_BIGGER_MODEL.md).
-
-Any OpenAI-compatible server will also run canon, which speaks plain chat
-completions and carries no vendor anything. Two caveats: if your server
-can't enforce a JSON schema, canon retries once in plain JSON mode and
-says so — it never parses prose; and model size is what actually moves
-quality here, so a small local model proposes worse rules and misses more
-conflicts than anything measured in this repo.
-`./scripts/draft-bar.sh 3` tells you where yours lands.
-
-## Can software hold governance?
-
-That's the real question, and canon takes three swings at it.
-
-### The bar is Ostrom's eight principles
-
-Elinor Ostrom spent a career on what commons that *don't* collapse have in
-common, and got it down to eight design principles. Those are the
-acceptance test here, and the same eight marks have to clear in a
-twelve-person house and in a codebase.
-
-The decision layer is pure — `Log → Canon → policy → Decision`, no
-filesystem, no network, no model — so a whole history of governance
-replays instantly, and *what would a different rule have done to the last
-six months?* stops being unanswerable and becomes a flag:
-
-```sh
-canon replay                                    # your own canon, no setup, no files
-canon replay --policy consent --brief           # what consent would have done to it
-canon replay fixtures/fernwood-commons --policy default --brief    # or a worked one
-```
-
-```text
-Under `default` instead of the rules this canon adopted, 9 of 12 decisions land somewhere else.
-6 would be easier to do; 3 harder.
-
-  EASIER
-    dig two more beds at the allotment
-        not under this policy → ask one person with standing
-    keep the bikes where they are
-        not under this policy → ask one person with standing
-
-  HARDER
-    put a Wednesday cook on a rotation
-        act, and say that you did → ask one person with standing
-```
-
-Nine decisions in this house's real history land somewhere else under a
-rule it didn't adopt — six of them easier to do and three harder, each
-named, with the reason on both sides, in under a tenth of a second and
-with no model.
-
-On your own canon it takes no arguments and no setup: the questions come
-from what the record already holds, every subject somebody took a position
-on and everything the group decided. The whole policy vocabulary can be
-forced, so the rule you are actually weighing — `--policy threshold
---objections 2` — is one you can ask about.
-
-### What about the USA?
-
-`fixtures/founding/` is the Declaration, the Articles of Confederation and
-the Constitution with all twenty-seven amendments — 91 sections, 12,672
-words. We didn't write the answer key: the National Archives prints a note
-under each amendment naming what it superseded, and `build.py` parses
-those out of the same HTML the corpus is built from. Out falls eleven
-supersessions nobody planted.
-
-Shown the two commitments alone, canon finds **9 of the 11** and calls
-none of the four testable decoys a conflict — on
-`Qwen3.6-35B-A3B-UD-MTP-IQ4_NL`, served from `http://localhost:9741/v1`.
-The alias that endpoint answers to moved from a 27B on 2026-08-30, so the
-run is named by what actually served it rather than by what it was called. **Then we
-checked whether it was reading or remembering** — every model has read the
-Constitution. We took the nine, removed the fact each contradiction turns
-on, and asked again. Five dropped, as a reader should. **Four survived the
-removal of the thing they turn on.** A control arm that changed an
-irrelevant word left all nine standing, so it isn't that editing confuses
-it.
-
-So the honest reading of 9 of 11 is that at least five are the model
-reading the passage in front of it and up to four are recall, and neither
-number is quoted without the other. [DEMO_PLAN.md](./docs/DEMO_PLAN.md) is the
-ledger of what's measured and what isn't, including the bars written down
-before the data that tests them.
-
-## Before you rely on it
-
-It's early. Another group hasn't used this yet. You'd be among the first,
-which is worth knowing before your house puts its rules somewhere. Every
-verb is implemented and tested — 436 tests.
-
-The fold trusts its log. `ts_unix` and `actor` are strings somebody wrote,
-and whoever can append to `acts.jsonl` writes the derived state — two
-hand-written lines can unseat a house with every rule satisfied. Nothing
-inside the format closes that, and canon says so rather than pretending.
-Where the ledger lives in git, `canon guard git` is the opt-in defense:
-every commit that touched it must have added lines and nothing else, none
-dated before what the ledger already held, as a hook, a CI step and the
-branch settings. `canon guard show` says what is guarding yours, and what
-it cannot see.
-
-The ingest is the good part and the imperfect part. It calls a language
-model, and a language model misses real rules and proposes things that
-aren't rules. That's why review is one at a time and why every proposal
-has to cite its source: the design assumes the model is wrong sometimes
-and makes that cheap to catch.
-
-Accuracy is measured against two vendored documents — a house charter
-(`fixtures/maple-house`) and municipal code
-(`fixtures/des-moines-noise`) — always naming the model and endpoint that
-produced a run. No ingest accuracy figures are quoted in this README on
-purpose: the last published ones predate a change to how contradictions
-get detected, and a stale number is worse than none. Measure your own:
-
-```sh
-./scripts/draft-bar.sh 3                        # runs against your endpoint
-./scripts/score-bar.sh maple-house <runs-dir>   # score them
-```
-
-## More
-
-- [One page](./docs/ONE_PAGER.md) — why you'd use it, the ideas that carry it,
-  and exactly where a model is called.
-- [Getting started](./docs/GETTING_STARTED.md) — a house's first hour.
-- [The pieces and the verbs](./docs/GUIDE.md) — every verb and the ten ideas
-  underneath it, in plain words.
-- [Cookbook](./docs/COOKBOOK.md) — the questions groups actually ask, and the acts
-  that answer them, with real output.
-- `canon --help` is seven verbs. `canon help all` is all of them.
-- [SPEC.md](./docs/SPEC.md) — the file format, CC0. Adopting the format isn't
-  a lock-in decision.
-- [STUDY.md](./docs/STUDY.md) — the CPR transfer study, and what it does not
-  establish.
-- [PRIMITIVES.md](./docs/PRIMITIVES.md) — the design argument: nine
-  primitives, the line between mechanism and policy, and eighteen
-  technologies of political economy tested against them.
-- [DEMO_PLAN.md](./docs/DEMO_PLAN.md) — the founding-documents ledger.
-- [CHANGELOG.md](./CHANGELOG.md) — what changed in each release, and what is
-  waiting for the next one.
-- [Contributing](./docs/CONTRIBUTING.md) — every path is open; the fastest way
-  in is a fixture. [Governance](./docs/GOVERNANCE.md), [security](./docs/SECURITY.md),
-  and [where to get help](./docs/SUPPORT.md).
-- [Commonwealth](https://github.com/alexsbryan/commonwealth-ai) — pool
-  your machines with people you trust and run a model none of them could
-  hold alone. What canon was built and measured against.
-
-## Build
-
-```sh
-cargo build --release      # binary at target/release/canon
-cargo test                 # 436 tests, about six seconds
-```
-
-Two crates, no native dependencies. `rust-toolchain.toml` pins the
-version, so `rustup` fetches the right one by itself. If you only want
-the binary, [Install](#install) above is the shorter path: the releases
-it draws on are built from tagged commits of this tree by
-[`release.yml`](./.github/workflows/release.yml).
-
-## Contributing
-
-Every path in this repository is open to pull requests. What gates a
-change is the suite, not a list of permitted directories, and
-`./scripts/pre-push.sh` runs the same set CI does in about ten seconds.
-
-The most useful thing you can send isn't a patch — it's a **fixture**, or
-what happened when you pointed `canon draft` at your own mess. Another
-group hasn't used this yet. [CONTRIBUTING.md](./docs/CONTRIBUTING.md) has the
-rest.
-
-canon governs itself, in canon. `.canon/acts.jsonl` is committed and holds
-this project's own rules — three questions nobody has answered, three
-things decided against on purpose with the reason attached, and a
-fourteen-day consent rule on documentation that binds the steward rather
-than you:
-
-```sh
-canon list        # what's in force here, and what's still proposed
-canon open        # what nobody has decided
-canon why <id>    # where any one of them came from
-```
-
-[GOVERNANCE.md](./docs/GOVERNANCE.md) says who decides today and what would
-change that.
-
-AGPL-3.0-or-later. The format specification is CC0.
+The tool is AGPL-3.0-or-later. The [record format](./docs/SPEC.md) is CC0;
+you can implement it independently.
