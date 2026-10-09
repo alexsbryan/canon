@@ -2,8 +2,9 @@
 //! The endpoint client — the only place `canon` talks to a model.
 //!
 //! One transport (`ureq`, blocking, no async runtime) and one shape of call:
-//! an OpenAI-compatible `/chat/completions` that must come back as JSON
-//! matching a schema the caller supplies.
+//! a system and a user message that must come back as JSON matching a schema
+//! the caller supplies. It goes out as an OpenAI-compatible
+//! `/chat/completions`, or as `/messages` to Anthropic's own host ([`Wire`]).
 //!
 //! **The structured-output ladder, and why it has exactly two rungs.**
 //! Endpoints differ in what they accept. `json_schema` is the rung that makes
@@ -24,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use serde_json::Value;
 
-use crate::config::Config;
+use crate::config::{ApiKey, Config};
 
 /// How long to wait for a completion. Local models on modest hardware take
 /// tens of seconds for a tensions call over thirty commitments; the default
@@ -266,6 +267,11 @@ pub struct Client {
     agent: ureq::Agent,
     endpoint: String,
     model: String,
+    wire: Wire,
+    /// Sent when set — as a bearer token, or as `x-api-key` on the Messages
+    /// wire. A local server usually needs none; a hosted one refuses every
+    /// call without it.
+    api_key: Option<ApiKey>,
     /// Shared, not owned: `with_model` hands a leg its own client, and a leg
     /// with its own tape would drop its calls from the run's recording — the
     /// extract leg, which is 24 of ~36 calls, first.
@@ -321,8 +327,9 @@ const BACKPRESSURE_GIVE_UP_AFTER: usize = 3;
 /// "over capacity right now"; a 400 or a 404 will say the same thing however
 /// long we wait, and retrying one burns a call to learn nothing (§18.3).
 pub fn is_backpressure(status: u16, detail: &str) -> bool {
-    // 429 is the protocol's own unambiguous "come back later".
-    if status == 429 {
+    // 429 is the protocol's own unambiguous "come back later". 529 is
+    // Anthropic's "overloaded": the same request, in its own words.
+    if status == 429 || status == 529 {
         return true;
     }
     // 503 is NOT unambiguous, and treating it as if it were broke two
@@ -359,6 +366,66 @@ pub fn backoff(attempt: usize, waited: Duration) -> Option<Duration> {
     }
 }
 
+/// An endpoint's host, parsed without a URL crate — locality and the wire
+/// are the only URL questions the tool asks, and they do not justify a
+/// dependency.
+fn host_of(endpoint: &str) -> String {
+    let rest = endpoint
+        .split_once("://")
+        .map(|(_, r)| r)
+        .unwrap_or(endpoint);
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or(rest);
+    let authority = authority
+        .rsplit_once('@')
+        .map(|(_, h)| h)
+        .unwrap_or(authority);
+    // `[::1]:8080` — the brackets are what make a v6 literal parseable.
+    if let Some(v6) = authority.strip_prefix('[') {
+        return v6.split(']').next().unwrap_or(v6).to_string();
+    }
+    authority
+        .rsplit_once(':')
+        .map(|(h, _)| h)
+        .unwrap_or(authority)
+        .to_string()
+}
+
+/// Which protocol a call goes out in.
+///
+/// **Decided by host, not configured.** Anthropic's API lives at one host,
+/// and the OpenAI-compatible layer it also serves there ignores the schema
+/// canon asks for and refuses the temperature canon pins. An endpoint at
+/// that host is a request for Claude, so canon speaks Claude's protocol to
+/// it rather than asking the user to name one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Wire {
+    /// `/chat/completions`: llama.cpp, vllm, OpenAI and the rest.
+    Chat,
+    /// `/messages`: Anthropic's own API.
+    Messages,
+}
+
+impl Wire {
+    fn of(endpoint: &str) -> Self {
+        let host = host_of(endpoint).to_ascii_lowercase();
+        if host.strip_suffix('.').unwrap_or(&host) == "api.anthropic.com" {
+            Self::Messages
+        } else {
+            Self::Chat
+        }
+    }
+}
+
+/// The API version every Messages call must name.
+const MESSAGES_VERSION: &str = "2023-06-01";
+
+/// `max_tokens` on the Messages wire, where it is required.
+///
+/// Thinking counts against it, and not every Claude model can turn thinking
+/// off. A leg's ceiling is sized for the answer alone — quantify allows 256
+/// tokens a text — so here it is raised to this floor and never lowered.
+const MESSAGES_MAX_TOKENS: u32 = 16_000;
+
 impl Client {
     /// Build a client from config. `Err(NoEndpoint)` when none is set —
     /// absence is reported rather than defaulted to somebody's localhost.
@@ -378,7 +445,9 @@ impl Client {
             busy_streak: Default::default(),
             served: Default::default(),
             max_tokens: None,
+            wire: Wire::of(&endpoint),
             endpoint,
+            api_key: cfg.api_key.clone(),
             // Most local servers serve one model and ignore this field, but
             // the OpenAI schema requires it, so something must be sent.
             model: cfg.model.clone().unwrap_or_else(|| "local".to_string()),
@@ -419,6 +488,8 @@ impl Client {
             agent: self.agent.clone(),
             endpoint: self.endpoint.clone(),
             model: model.to_string(),
+            wire: self.wire,
+            api_key: self.api_key.clone(),
             // One tape per RUN, shared by every leg's client.
             tape: self.tape.clone(),
             busy_streak: self.busy_streak.clone(),
@@ -427,28 +498,17 @@ impl Client {
         }
     }
 
-    /// The host, parsed without a URL crate — this is the only URL question
-    /// the tool asks, and it does not justify a dependency.
+    /// The host this client calls.
     pub fn host(&self) -> String {
-        let rest = self
-            .endpoint
-            .split_once("://")
-            .map(|(_, r)| r)
-            .unwrap_or(&self.endpoint);
-        let authority = rest.split(['/', '?', '#']).next().unwrap_or(rest);
-        let authority = authority
-            .rsplit_once('@')
-            .map(|(_, h)| h)
-            .unwrap_or(authority);
-        // `[::1]:8080` — the brackets are what make a v6 literal parseable.
-        if let Some(v6) = authority.strip_prefix('[') {
-            return v6.split(']').next().unwrap_or(v6).to_string();
-        }
-        authority
-            .rsplit_once(':')
-            .map(|(h, _)| h)
-            .unwrap_or(authority)
-            .to_string()
+        host_of(&self.endpoint)
+    }
+
+    /// The same client speaking `wire`, so a local mock can answer as
+    /// Anthropic's host does.
+    #[cfg(test)]
+    pub(crate) fn speaking(mut self, wire: Wire) -> Self {
+        self.wire = wire;
+        self
     }
 
     /// Is this endpoint on this machine?
@@ -611,6 +671,10 @@ impl Client {
             agent: ureq::AgentBuilder::new().build(),
             endpoint: endpoint.to_string(),
             model: model.to_string(),
+            // From the recorded endpoint, so a replay reads each reply in the
+            // shape it was recorded in.
+            wire: Wire::of(endpoint),
+            api_key: None,
             tape: Some(std::rc::Rc::new(Tape::play(entries, None))),
             busy_streak: Default::default(),
             served: Default::default(),
@@ -733,14 +797,25 @@ impl Client {
         let mut waited = Duration::ZERO;
         let mut attempt = 0usize;
         let response = loop {
-            match self
+            let mut request = self
                 .agent
                 .post(&url)
-                .set("content-type", "application/json")
-                // `send_string` rather than `send_json`: the reply is parsed by
-                // hand anyway, so ureq's `json` feature would buy nothing.
-                .send_string(body)
-            {
+                .set("content-type", "application/json");
+            match (self.wire, &self.api_key) {
+                (Wire::Chat, Some(key)) => {
+                    request = request.set("authorization", &format!("Bearer {}", key.expose()));
+                }
+                (Wire::Chat, None) => {}
+                (Wire::Messages, key) => {
+                    request = request.set("anthropic-version", MESSAGES_VERSION);
+                    if let Some(key) = key {
+                        request = request.set("x-api-key", key.expose());
+                    }
+                }
+            }
+            // `send_string` rather than `send_json`: the reply is parsed by
+            // hand anyway, so ureq's `json` feature would buy nothing.
+            match request.send_string(body) {
                 Ok(r) => {
                     self.busy_streak.set(0);
                     break r;
@@ -820,8 +895,12 @@ impl Client {
 
     /// POST once; return the assistant's content string.
     fn post(&self, stage: &str, body: &Request) -> Result<String, ModelError> {
-        let body = serde_json::to_string(body).expect("a request is strings, numbers and JSON");
-        let (parsed, raw) = self.post_json("chat/completions", stage, &body)?;
+        let (path, body) = match self.wire {
+            Wire::Chat => ("chat/completions", serde_json::to_string(body)),
+            Wire::Messages => ("messages", serde_json::to_string(&self.messages(body))),
+        };
+        let body = body.expect("a request is strings, numbers and JSON");
+        let (parsed, raw) = self.post_json(path, stage, &body)?;
         // First reply that names a model wins. Later calls cannot change it:
         // a run whose model changed underneath it is one instrument in the
         // artifact and two in fact, and the honest record is the first.
@@ -840,6 +919,84 @@ impl Client {
                 *self.served.borrow_mut() = Some(m.to_string());
             }
         }
+        match self.wire {
+            Wire::Chat => self.chat_reply(&parsed, &raw),
+            Wire::Messages => self.messages_reply(&parsed, &raw),
+        }
+    }
+
+    /// The same call as a Messages body. Built FROM the chat request, so the
+    /// two wires cannot drift apart in what they ask.
+    fn messages<'a>(&self, chat: &Request<'a>) -> Messages<'a> {
+        Messages {
+            model: chat.model,
+            max_tokens: self.messages_max_tokens(),
+            system: chat.messages[0].content,
+            messages: [Message {
+                role: "user",
+                content: chat.messages[1].content,
+            }],
+            output_config: match &chat.response_format {
+                Format::JsonSchema { json_schema } => Some(OutputConfig {
+                    format: OutputFormat::JsonSchema {
+                        schema: json_schema.schema,
+                    },
+                }),
+                // The second rung: the schema is already in the prompt.
+                Format::JsonObject => None,
+            },
+        }
+    }
+
+    /// This leg's ceiling, raised to [`MESSAGES_MAX_TOKENS`].
+    fn messages_max_tokens(&self) -> u32 {
+        self.max_tokens.unwrap_or(0).max(MESSAGES_MAX_TOKENS)
+    }
+
+    /// The answer in a Messages reply: the text block, found by type because
+    /// a thinking block may come first.
+    fn messages_reply(&self, parsed: &Value, raw: &str) -> Result<String, ModelError> {
+        match parsed.get("stop_reason").and_then(Value::as_str) {
+            Some("refusal") => {
+                let why = parsed
+                    .pointer("/stop_details/explanation")
+                    .and_then(Value::as_str)
+                    .unwrap_or("no reason given");
+                return Err(ModelError::Refused {
+                    status: 200,
+                    detail: format!("the model declined: {}", cap(why)),
+                });
+            }
+            Some("max_tokens") => {
+                return Err(ModelError::Malformed {
+                    detail: format!(
+                        "the reply was cut at max_tokens {} before it finished",
+                        self.messages_max_tokens()
+                    ),
+                    raw: cap(raw),
+                });
+            }
+            _ => {}
+        }
+        parsed
+            .get("content")
+            .and_then(Value::as_array)
+            .and_then(|blocks| {
+                blocks
+                    .iter()
+                    .find(|b| b.get("type").and_then(Value::as_str) == Some("text"))
+            })
+            .and_then(|b| b.get("text"))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .ok_or_else(|| ModelError::Malformed {
+                detail: "no text block in the response's `content`".into(),
+                raw: cap(raw),
+            })
+    }
+
+    /// The answer in a chat completion.
+    fn chat_reply(&self, parsed: &Value, raw: &str) -> Result<String, ModelError> {
         let message = parsed
             .get("choices")
             .and_then(|c| c.get(0))
@@ -867,7 +1024,7 @@ impl Client {
         if let (Some("length"), Some(n)) = (finish, self.max_tokens) {
             return Err(ModelError::Malformed {
                 detail: format!("the reply was cut at max_tokens {n} before it finished"),
-                raw: cap(&raw),
+                raw: cap(raw),
             });
         }
         message
@@ -876,7 +1033,7 @@ impl Client {
             .map(str::to_string)
             .ok_or_else(|| ModelError::Malformed {
                 detail: "no `choices[0].message.content` in the response".into(),
-                raw: cap(&raw),
+                raw: cap(raw),
             })
     }
 }
@@ -942,6 +1099,32 @@ struct Named<'a> {
     name: &'a str,
     strict: bool,
     schema: &'a RawValue,
+}
+
+/// One `/messages` body, for Anthropic's host.
+///
+/// **No `temperature`.** Current Claude models refuse any value but their
+/// default, so pinning it would fail every call. Adjudication there gives up
+/// the same answer twice; the schema still holds the shape.
+#[derive(Serialize)]
+struct Messages<'a> {
+    model: &'a str,
+    max_tokens: u32,
+    system: &'a str,
+    messages: [Message<'a>; 1],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    output_config: Option<OutputConfig<'a>>,
+}
+
+#[derive(Serialize)]
+struct OutputConfig<'a> {
+    format: OutputFormat<'a>,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum OutputFormat<'a> {
+    JsonSchema { schema: &'a RawValue },
 }
 
 /// Was this 4xx specifically about the structured-output request?

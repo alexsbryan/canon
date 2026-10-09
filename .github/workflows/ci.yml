@@ -71,8 +71,13 @@ jobs:
               - 'rustfmt.toml'
               - 'fixtures/**'
               - 'docs/CONTRACT.md'
+              - 'docs/SPEC.md'
               - 'docs/PRIMITIVES.md'
               - 'scripts/core-boundary.sh'
+              - 'scripts/contract-check.py'
+              - 'scripts/tests/test_contract_check.py'
+              - '.github/contract-baseline'
+              - '.github/workflows/contract.yml'
               - 'scripts/pre-push.sh'
               - '.github/workflows/ci.yml'
             ledger:
@@ -130,6 +135,9 @@ jobs:
 
       - name: Test
         run: cargo test --workspace
+
+      - name: Contract evaluator regression checks
+        run: python3 -m unittest discover -s scripts/tests -p 'test_contract_check.py'
 
       # The six `#[ignore]`d tests need a model endpoint and are not run here
       # (see the header). This proves the shipped binary works on a clean

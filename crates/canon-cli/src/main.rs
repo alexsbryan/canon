@@ -175,6 +175,7 @@ ENVIRONMENT
   CANON_DIR        use this canon instead of searching upward
   CANON_ENDPOINT   override the configured endpoint for one run
   CANON_MODEL      override the configured model for one run
+  CANON_API_KEY    sent as a bearer token, for an endpoint that needs one
 
 ON THE PERSONAL PROFILE
   This is a structured journal, not a clinician. It does not diagnose and

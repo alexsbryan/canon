@@ -64,6 +64,22 @@ canon config set endpoint http://localhost:8080/v1   # llama.cpp, vllm, …
 canon config set model <the name that server expects>
 ```
 
+A hosted endpoint wants a key. canon reads it from the environment, never
+from the config file, and sends it as a bearer token:
+
+```sh
+canon config set endpoint https://<provider>/v1
+canon config set model <the provider's model name>
+export CANON_API_KEY=<your key>
+```
+
+`canon config show` says whether a key is set and never prints it. A hosted
+endpoint isn't on this machine, so every command that sends your documents
+needs `--allow-remote`. For Claude, use `https://api.anthropic.com/v1`: canon
+recognises that host and speaks Anthropic's own API there, which enforces
+the schema. Claude won't take a pinned temperature, so two runs over the
+same text can come back differently.
+
 Two things before you assume that's equivalent. canon asks the server to
 enforce a JSON schema; if yours can't, it retries once in plain JSON mode
 with the schema in the prompt and tells you it did. It never parses

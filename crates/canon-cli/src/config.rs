@@ -68,11 +68,46 @@ impl Key {
 
 pub const FILE: &str = "config";
 
+/// The environment variable holding the endpoint's API key.
+pub const API_KEY_ENV: &str = "CANON_API_KEY";
+
+/// A credential for the endpoint, sent as a bearer token.
+///
+/// **Not a [`Key`], on purpose.** Every key is a line in the file, and the
+/// file is what `config show` prints and what gets copied to the next
+/// machine. A secret belongs in neither, so this is read from the
+/// environment only and there is no `config set` for it.
+///
+/// `Debug` is written by hand so a `{:?}` of a client or a config — in a
+/// panic, a test failure, a bug report — cannot carry the key with it.
+#[derive(Clone, PartialEq, Eq)]
+pub struct ApiKey(String);
+
+impl ApiKey {
+    pub fn new(key: &str) -> Option<Self> {
+        let key = key.trim();
+        (!key.is_empty()).then(|| Self(key.to_string()))
+    }
+
+    /// The key itself. The only way to it, so a use is easy to find.
+    pub fn expose(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::fmt::Debug for ApiKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("ApiKey(<redacted>)")
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Config {
     pub endpoint: Option<String>,
     pub model: Option<String>,
     pub extract_model: Option<String>,
+    /// From [`API_KEY_ENV`] only — never parsed from the file, never rendered.
+    pub api_key: Option<ApiKey>,
 }
 
 impl Config {
@@ -129,6 +164,9 @@ impl Config {
                 }
             }
         }
+        cfg.api_key = std::env::var(API_KEY_ENV)
+            .ok()
+            .and_then(|v| ApiKey::new(&v));
         Ok(cfg)
     }
 
@@ -159,7 +197,7 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, Key};
+    use super::{ApiKey, Config, Key};
 
     #[test]
     fn every_key_round_trips_through_its_string() {
@@ -189,5 +227,26 @@ mod tests {
     #[test]
     fn a_line_without_an_equals_is_an_error() {
         assert!(Config::parse("endpoint http://x\n").is_err());
+    }
+
+    #[test]
+    fn an_api_key_is_not_a_line_in_the_file() {
+        // A key written into the file would be printed by `config show` and
+        // copied with the file. Refusing the line says where it goes instead
+        // of keeping it quietly.
+        assert!(Config::parse("api_key = sk-secret\n").is_err());
+        let cfg = Config {
+            endpoint: Some("https://api.example.com/v1".into()),
+            api_key: ApiKey::new("sk-secret"),
+            ..Config::default()
+        };
+        assert!(!cfg.render().contains("sk-secret"));
+        assert!(!format!("{cfg:?}").contains("sk-secret"));
+    }
+
+    #[test]
+    fn a_blank_api_key_is_no_key() {
+        assert_eq!(ApiKey::new("  \n"), None);
+        assert_eq!(ApiKey::new(" sk-x ").unwrap().expose(), "sk-x");
     }
 }

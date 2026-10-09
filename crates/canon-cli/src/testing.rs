@@ -15,13 +15,14 @@ use std::sync::{Arc, Mutex};
 
 use serde_json::{json, Value};
 
-use crate::config::Config;
+use crate::config::{ApiKey, Config};
 use crate::model::Client;
 
 pub struct Mock {
     pub base: String,
     recorded: Arc<Mutex<Vec<Value>>>,
     raw: Arc<Mutex<Vec<String>>>,
+    heads: Arc<Mutex<Vec<String>>>,
 }
 
 impl Mock {
@@ -31,8 +32,10 @@ impl Mock {
         let port = listener.local_addr().unwrap().port();
         let recorded: Arc<Mutex<Vec<Value>>> = Arc::new(Mutex::new(Vec::new()));
         let raw: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+        let heads: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
         let rec = Arc::clone(&recorded);
         let raw_rec = Arc::clone(&raw);
+        let heads_rec = Arc::clone(&heads);
         std::thread::spawn(move || {
             for (status, body) in script {
                 let Ok((mut sock, _)) = listener.accept() else {
@@ -43,6 +46,7 @@ impl Mock {
                 let request_body = loop {
                     if let Some(pos) = buf.windows(4).position(|w| w == b"\r\n\r\n") {
                         let header = String::from_utf8_lossy(&buf[..pos]).to_string();
+                        heads_rec.lock().unwrap().push(header.clone());
                         let len = header
                             .lines()
                             .find_map(|l| {
@@ -89,16 +93,31 @@ impl Mock {
             base: format!("http://127.0.0.1:{port}/v1"),
             recorded,
             raw,
+            heads,
         }
     }
 
     pub fn client(&self) -> Client {
         Client::new(&Config {
             endpoint: Some(self.base.clone()),
-            model: None,
-            extract_model: None,
+            ..Config::default()
         })
         .expect("client")
+    }
+
+    /// A client that sends `key` as its bearer token.
+    pub fn client_with_key(&self, key: &str) -> Client {
+        Client::new(&Config {
+            endpoint: Some(self.base.clone()),
+            api_key: ApiKey::new(key),
+            ..Config::default()
+        })
+        .expect("client")
+    }
+
+    /// The request line and headers of each request, in order.
+    pub fn request_heads(&self) -> Vec<String> {
+        self.heads.lock().unwrap().clone()
     }
 
     /// The request bodies the mock received, in order.

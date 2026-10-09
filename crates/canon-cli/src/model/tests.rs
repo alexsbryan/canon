@@ -123,6 +123,7 @@ fn an_unreachable_endpoint_is_a_transport_error_naming_the_url() {
         endpoint: Some("http://127.0.0.1:1/v1".into()),
         model: None,
         extract_model: None,
+        api_key: None,
     })
     .unwrap();
     let err = ask(&client).expect_err("nothing is listening");
@@ -135,6 +136,167 @@ fn a_missing_endpoint_is_reported_not_guessed_at() {
     let err = Client::new(&Config::default()).expect_err("no endpoint");
     assert!(matches!(err, ModelError::NoEndpoint));
     assert_eq!(err.exit_code(), 3);
+}
+
+fn header<'a>(head: &'a str, name: &str) -> Option<&'a str> {
+    head.lines().find_map(|l| {
+        let (k, v) = l.split_once(':')?;
+        k.eq_ignore_ascii_case(name).then(|| v.trim())
+    })
+}
+
+#[test]
+fn a_key_goes_over_the_wire_as_a_bearer_token_on_every_call() {
+    // Both rungs and a leg's client: a key only the first call carried would
+    // fail on the climb down, and one a leg dropped would fail on extraction.
+    let mock = Mock::spawn(vec![
+        (
+            400,
+            json!({ "error": { "message": "response_format is not supported" } }).to_string(),
+        ),
+        (200, completion(r#"{"pairs":[]}"#)),
+        (200, completion(r#"{"pairs":[]}"#)),
+    ]);
+    let client = mock.client_with_key("sk-test");
+    ask(&client).expect("answer after degrading");
+    ask(&client.with_model("other")).expect("a leg's answer");
+
+    let heads = mock.request_heads();
+    assert_eq!(heads.len(), 3);
+    for head in &heads {
+        assert_eq!(
+            header(head, "authorization"),
+            Some("Bearer sk-test"),
+            "{head}"
+        );
+    }
+    assert!(!format!("{client:?}").contains("sk-test"));
+}
+
+#[test]
+fn no_key_sends_no_authorization_header() {
+    // No key is no header, not an empty one: the request a local server
+    // sees is the one it saw before keys existed.
+    let mock = Mock::spawn(vec![(200, completion(r#"{"pairs":[]}"#))]);
+    ask(&mock.client()).expect("answer");
+    assert_eq!(header(&mock.request_heads()[0], "authorization"), None);
+}
+
+// ── the Messages wire ───────────────────────────────────────
+
+/// A Messages reply carrying `text`, after the empty thinking block current
+/// Claude models put first.
+fn message(text: &str) -> String {
+    json!({
+        "model": "claude-test",
+        "stop_reason": "end_turn",
+        "content": [{ "type": "thinking", "thinking": "" }, { "type": "text", "text": text }]
+    })
+    .to_string()
+}
+
+#[test]
+fn anthropics_host_and_only_it_is_spoken_to_in_messages() {
+    for e in [
+        "https://api.anthropic.com/v1",
+        "https://API.Anthropic.com./v1/",
+    ] {
+        assert_eq!(Wire::of(e), Wire::Messages, "{e}");
+    }
+    for e in [
+        "http://localhost:8080/v1",
+        "https://api.openai.com/v1",
+        "https://api.anthropic.com.example.net/v1",
+        "http://litellm:4000/v1",
+    ] {
+        assert_eq!(Wire::of(e), Wire::Chat, "{e}");
+    }
+}
+
+#[test]
+fn a_messages_call_carries_the_schema_its_key_and_no_temperature() {
+    let mock = Mock::spawn(vec![(200, message(r#"{"pairs":["a"]}"#))]);
+    let client = mock.client_with_key("sk-ant").speaking(Wire::Messages);
+    assert_eq!(ask(&client).unwrap().pairs, vec!["a".to_string()]);
+
+    let head = &mock.request_heads()[0];
+    assert!(head.starts_with("POST /v1/messages "), "{head}");
+    assert_eq!(header(head, "x-api-key"), Some("sk-ant"));
+    assert_eq!(header(head, "anthropic-version"), Some(MESSAGES_VERSION));
+    assert_eq!(header(head, "authorization"), None);
+
+    let req = &mock.requests()[0];
+    assert_eq!(req["system"], "system");
+    assert_eq!(
+        req["messages"],
+        json!([{ "role": "user", "content": "user" }])
+    );
+    assert_eq!(req["output_config"]["format"]["type"], "json_schema");
+    assert_eq!(
+        req["output_config"]["format"]["schema"],
+        serde_json::from_str::<Value>(SCHEMA.written()).unwrap()
+    );
+    assert_eq!(req["max_tokens"], MESSAGES_MAX_TOKENS);
+    assert!(
+        req.get("temperature").is_none(),
+        "Claude refuses a pinned temperature"
+    );
+}
+
+#[test]
+fn a_messages_schema_refusal_climbs_down_to_the_schema_in_the_prompt() {
+    let mock = Mock::spawn(vec![
+        (
+            400,
+            json!({ "type": "error", "error": { "type": "invalid_request_error",
+                "message": "output_config.format.schema: `minimum` is not supported" } })
+            .to_string(),
+        ),
+        (200, message(r#"{"pairs":[]}"#)),
+    ]);
+    ask(&mock.client().speaking(Wire::Messages)).expect("answer after degrading");
+
+    let reqs = mock.requests();
+    assert!(reqs[1].get("output_config").is_none());
+    let user = reqs[1]["messages"][0]["content"].as_str().unwrap();
+    assert!(
+        user.contains("\"pairs\""),
+        "rung 2 must state the schema: {user}"
+    );
+}
+
+#[test]
+fn a_messages_refusal_and_a_cut_reply_are_named_for_what_they_are() {
+    let declined = json!({ "stop_reason": "refusal", "content": [],
+        "stop_details": { "type": "refusal", "explanation": "not this" } });
+    let cut = json!({ "stop_reason": "max_tokens",
+        "content": [{ "type": "text", "text": "{\"pairs\":[" }] });
+    let mock = Mock::spawn(vec![(200, declined.to_string()), (200, cut.to_string())]);
+    // A leg's small ceiling is raised, never sent: thinking would spend it.
+    let client = mock.client().speaking(Wire::Messages).capped(512);
+
+    let err = ask(&client).expect_err("declined");
+    assert!(
+        matches!(err, ModelError::Refused { status: 200, .. }),
+        "{err:?}"
+    );
+    assert!(err.to_string().contains("not this"));
+
+    let err = ask(&client).expect_err("cut");
+    assert!(err.to_string().contains("max_tokens 16000"), "{err}");
+    assert_eq!(mock.requests()[1]["max_tokens"], MESSAGES_MAX_TOKENS);
+}
+
+#[test]
+fn a_messages_tape_replays_in_the_shape_it_was_recorded_in() {
+    let tape = vec![TapeEntry {
+        path: "messages".into(),
+        stage: "pairs".into(),
+        raw: message(r#"{"pairs":["r"]}"#),
+        status: 200,
+    }];
+    let client = Client::replaying("https://api.anthropic.com/v1", "claude-test", tape);
+    assert_eq!(ask(&client).unwrap().pairs, vec!["r".to_string()]);
 }
 
 #[test]
@@ -171,6 +333,7 @@ fn locality_is_decided_conservatively() {
             endpoint: Some(e.into()),
             model: None,
             extract_model: None,
+            api_key: None,
         })
         .unwrap();
         assert!(c.is_local(), "{e} should be local (host {})", c.host());
@@ -181,6 +344,7 @@ fn locality_is_decided_conservatively() {
             endpoint: Some(e.into()),
             model: None,
             extract_model: None,
+            api_key: None,
         })
         .unwrap();
         assert!(!c.is_local(), "{e} should be remote (host {})", c.host());
@@ -416,6 +580,7 @@ fn a_busy_host_is_told_apart_from_one_that_declined() {
     // cannot help one that has refused the request itself. Retrying the
     // second burns a call to learn what it already knows (§18.3).
     assert!(is_backpressure(429, ""), "rate limited, unambiguously");
+    assert!(is_backpressure(529, ""), "Anthropic's overloaded");
     assert!(
         is_backpressure(
             503,
@@ -595,5 +760,14 @@ fn every_schema_is_json() {
     ] {
         serde_json::from_str::<Value>(schema.written())
             .unwrap_or_else(|e| panic!("the `{stage}` schema is not JSON: {e}"));
+        // Anthropic refuses these, which drops every call at that stage to
+        // the unenforced rung. A range belongs in the reader, which already
+        // refuses a position it was not shown.
+        for keyword in ["minimum", "maximum", "multipleOf", "minLength", "maxLength"] {
+            assert!(
+                !schema.written().contains(&format!("\"{keyword}\"")),
+                "the `{stage}` schema uses `{keyword}`, which Anthropic refuses"
+            );
+        }
     }
 }
