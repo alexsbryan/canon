@@ -15,15 +15,16 @@ seconds. ./scripts/install-git-hooks.sh wires it to `git push`.
 
 <!-- However you convinced yourself it works — a test you added, a command you ran, output you pasted. Rough is fine. -->
 
-## Contract effect
+## Contract evidence
 
-Effect: unchanged / extended / breaking
-Affected laws or vocabulary:
-Existing records and consumers:
+<!-- Link the Contract compatibility result or target/contract-report.json.
+The gate computes the outcome against its pinned baseline; no author-selected
+classification is needed. If proposing a new contract, explain the changed
+promises and link the old-record migration/reinterpretation tests. -->
 
-<!-- docs/CONTRACT.md names the laws and assumptions. For a breaking change,
-link an old-record-to-new-interpretation test and the migration or explicit
-reinterpretation plan. Changes to meaning count even when fields stay the same. -->
+Evidence:
+Proposed contract changes, if any:
+Migration or reinterpretation tests, if needed:
 
 ## Notes for reviewers
 

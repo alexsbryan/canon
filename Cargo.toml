@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/canon-core", "crates/canon-cli"]
+members = ["crates/canon-core", "crates/canon-cli", "crates/canon-contract"]
 resolver = "2"
 
 [workspace.package]

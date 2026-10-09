@@ -82,17 +82,45 @@ probabilistic conformance guarantee is claimed.
 
 ## Changing the contract
 
-Declare the effect in the [pull request template](../.github/PULL_REQUEST_TEMPLATE.md):
+The gate computes compatibility; the author links its evidence in the
+[pull request template](../.github/PULL_REQUEST_TEMPLATE.md).
 
-- **Unchanged:** another implementation of the same promised behavior.
-- **Extended:** new vocabulary or behavior that preserves the promises to
-  existing records and consumers. An extra enum variant is not automatically
-  compatible with an exhaustive caller.
-- **Breaking:** existing records or consumers lose a promised meaning. Name
-  the affected laws and include an old-record-to-new-interpretation test, plus
-  the migration or explicit reinterpretation plan.
+```sh
+python3 scripts/contract-check.py
+```
 
-Meaning can change without changing a field or format version. The
-[0.2.0 release](../CHANGELOG.md#020--2026-10-03), which made old agent writes
-in open scopes read as proposals, is one example. Review determines the
-classification; passing the same tests alone does not determine it.
+The standard is a full commit ID in [contract-baseline](../.github/contract-baseline).
+The gate reads it from git, keeps its tests, fixtures, expectations, and test
+dependencies, and substitutes the candidate implementation. Candidate edits to
+those checks cannot redefine a pass. A Rust syntax inspector derives old consumers
+with exhaustive enum matches and typed public-field accesses. Both the reference
+and candidate must compile those consumers. Fixture decisions, minted record
+bytes (including IDs), and readings of the reference's old records are compared.
+
+| Computed result | Evidence |
+|---|---|
+| `preserves_checked_contract` | Existing inspected declarations and law statements remain intact; the baseline suite, consumers, boundary, and record comparisons pass. |
+| `extends_checked_contract` | New inspected public items are added while that existing evidence remains intact. |
+| `breaks_checked_contract` | An inspected item or law disappears, an old consumer is rejected, a baseline law has a counterexample, or an observed record meaning changes. |
+| `not_established` | A declaration, law, or format specification changes without sufficient compatibility evidence, a new law lacks baseline-owned checks, checks cannot run/pass, or the inspector encounters unsupported syntax. |
+
+Only preservation and extension pass. The report and logs live under `target/`;
+`target/contract-report.json` names the baseline, candidate fingerprint, and
+observed differences. This is a checked subset of source and record compatibility,
+not a semantic-equivalence proof. An added enum variant can reject an old exhaustive
+consumer; a private implementation change can alter record identity.
+
+[Contract CI](../.github/workflows/contract.yml) uses the PR base branch's workflow,
+evaluator, and inspector. Its one-time installation uses the new evaluator against
+the pre-existing `d65a6f1` standard; subsequent PRs cannot replace that evaluator.
+The local gate uses your checkout's evaluator. Make **Contract compatibility** a
+required branch check to enforce the independent CI result at merge time. A
+separate publisher attaches the verdict to the candidate commit; it does not
+execute candidate code or consume candidate-authored result labels.
+
+Adopting a new contract is a separate governance decision. The repository-level
+`CANON_CONTRACT_BASELINE` Actions variable can select an independently adopted
+commit; the candidate's pin must match it. A candidate cannot move the default
+base-owned pin to make its own checks pass. A breaking adoption needs old-record
+migration or reinterpretation tests in the new standard. Its desirability is a
+human decision; its observed compatibility result is not.

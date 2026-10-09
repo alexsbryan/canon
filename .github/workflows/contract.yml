@@ -1,0 +1,99 @@
+# pull_request_target uses the BASE branch's workflow. The evaluator and Rust
+# inspector also come from that checkout; candidate edits cannot replace them.
+name: Contract
+
+on:
+  pull_request_target:
+    branches: [main]
+  push:
+    branches: [main]
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    name: Contract evidence
+    runs-on: ubuntu-latest
+    steps:
+      - name: Select evaluator revision
+        id: evaluator
+        env:
+          PREVIOUS: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          CURRENT: ${{ github.sha }}
+        run: |
+          case "$PREVIOUS" in
+            ""|0000000000000000000000000000000000000000) PREVIOUS="$CURRENT" ;;
+          esac
+          echo "revision=$PREVIOUS" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.evaluator.outputs.revision }}
+          path: base
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            base -> ../candidate/target/contract-tools
+            candidate -> target/contract-build
+          save-if: ${{ github.event_name == 'push' }}
+      - name: Evaluate against the independently pinned standard
+        env:
+          EVALUATOR_REVISION: ${{ steps.evaluator.outputs.revision }}
+          CANON_CONTRACT_BASELINE: ${{ vars.CANON_CONTRACT_BASELINE }}
+        run: |
+          if [ -z "$CANON_CONTRACT_BASELINE" ]; then unset CANON_CONTRACT_BASELINE; fi
+          if [ -f base/scripts/contract-check.py ]; then
+            python3 base/scripts/contract-check.py --candidate "$PWD/candidate"
+          elif [ "$EVALUATOR_REVISION" = d65a6f1900eb66b5e245f8648355d9fe224c8edc ]; then
+            # One-time installation: this revision owns the pre-existing
+            # standard, but predates the evaluator introduced by this change.
+            python3 candidate/scripts/contract-check.py --candidate "$PWD/candidate"
+          else
+            echo "contract: not_established — base revision has no evaluator"
+            exit 1
+          fi
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-evidence
+          path: |
+            candidate/target/contract-report.json
+            candidate/target/contract-*.log
+
+  publish:
+    # pull_request_target runs on the base SHA. Publish the verdict explicitly
+    # on the candidate SHA so branch protection can require the right result.
+    name: Publish contract verdict
+    needs: compatibility
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+    steps:
+      - name: Attach the computed verdict to the candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          RESULT: ${{ needs.compatibility.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          CONCLUSION=failure
+          if [ "$RESULT" = success ]; then CONCLUSION=success; fi
+          gh api --method POST "repos/$REPOSITORY/check-runs" \
+            -f name='Contract compatibility' -f head_sha="$HEAD_SHA" \
+            -f status=completed -f conclusion="$CONCLUSION" \
+            -f details_url="$RUN_URL" \
+            -f 'output[title]=Computed contract compatibility' \
+            -f "output[summary]=Evaluator job: $RESULT. Evidence is attached to the workflow run."

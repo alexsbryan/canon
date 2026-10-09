@@ -117,6 +117,7 @@ What both of them check:
 | `cargo clippy --all-targets -- -D warnings` | no warnings, not a ratchet — the tree is small enough to keep at zero |
 | `cargo test --workspace` | example, regression, fixture, and generated law checks |
 | `./scripts/core-boundary.sh` | isolated `no_std` core compilation and approved runtime dependencies/features |
+| `python3 scripts/contract-check.py` | compatibility evidence against a pinned, independently preserved standard |
 | `./scripts/docs-gate.sh` | every repository path a narrative document links to still resolves |
 
 Two of those tests are worth calling out, because they gate the *design*
@@ -145,12 +146,14 @@ bars run by hand.
 
 ## What makes a change easy to merge
 
-Declare the **contract effect**: unchanged, extended, or breaking. Name the
-affected laws or vocabulary and what happens to existing records and consumers.
-For a breaking change, include an old-record-to-new-interpretation test and
-the migration or explicit reinterpretation plan. A behavior change can break
-the contract without changing the format; [the contract](./CONTRACT.md#changing-the-contract)
-explains the distinction. Review determines the classification.
+Link the **contract evidence** from `target/contract-report.json` or the
+**Contract compatibility** CI check. The gate computes preservation, extension,
+breaking, or not-established against its pinned standard; you do not choose a
+label. It runs baseline-owned checks against your implementation, compares old
+record behavior, and compiles old consumers. For a proposed contract adoption,
+name the changed promises and include migration or reinterpretation tests.
+[The contract](./CONTRACT.md#changing-the-contract) explains the coverage and
+how an independently selected baseline is adopted.
 
 Not a checklist — just what tends to earn a quick yes.
 

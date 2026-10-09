@@ -7,12 +7,22 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- `CANON_API_KEY` is sent as a bearer token, so canon can use a hosted
+  endpoint that requires a key. It's read from the environment only; `config
+  show` says whether it's set without printing it.
+- Claude works: an endpoint at `api.anthropic.com` is spoken to in
+  Anthropic's own API, which enforces the schema. Anthropic's "overloaded"
+  (529) is waited out like a 429.
 - The core compiles with `no_std` + `alloc`. Local and CI gates check its
   isolated runtime dependencies and features, alongside the workspace checks.
 - [The contract](./docs/CONTRACT.md) names the guarantees, executable checks,
   and assumptions. Generated replay, merge, and ratification checks shrink
-  failures and preserve regression seeds. Contributions declare whether they
-  preserve, extend, or break the contract.
+  failures and preserve regression seeds.
+- Compatibility is computed against a pinned git baseline using its tests,
+  fixtures, expectations, generated old consumers, and old-record comparisons.
+  CI runs the evaluator from the PR base branch. Reports distinguish preservation,
+  extension, observed breaks, and evidence that is not established; contributors
+  link the report rather than choose a classification.
 
 ## 0.2.0 — 2026-10-03
 

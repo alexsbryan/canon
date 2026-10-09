@@ -73,7 +73,7 @@ pub(crate) const SCHEMA: Schema = Schema::new(
         "type": "object",
         "properties": {
           "n": { "type": "integer" },
-          "same_as": { "type": "integer", "minimum": 1 }
+          "same_as": { "type": "integer" }
         },
         "required": ["n", "same_as"],
         "additionalProperties": false

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use canon_core::{Act, ActId, ActKind, Canon, Log, Policy as _, Status};
 
-use crate::config::{Config, Key};
+use crate::config::{self, Config, Key, API_KEY_ENV};
 use crate::profile::Profile;
 use crate::store;
 
@@ -1214,6 +1214,12 @@ pub fn config(args: &[String]) -> i32 {
                 );
             } else {
                 print!("{rendered}");
+            }
+            // Whether a key is set is the first question when a hosted
+            // endpoint answers 401; the key itself is never printed. A
+            // comment, so the output still reads as a config file.
+            if config::api_key().is_some() {
+                println!("# {API_KEY_ENV} is set (not shown)");
             }
             0
         }
