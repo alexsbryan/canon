@@ -10,6 +10,6 @@ publish = false
 
 [dependencies]
 serde_json = { workspace = true, features = ["std"] }
-syn = { version = "2", features = ["full", "visit-mut"] }
+syn = { version = "3", features = ["full", "visit-mut"] }
 quote = "1"
 proc-macro2 = { version = "1", features = ["span-locations"] }
