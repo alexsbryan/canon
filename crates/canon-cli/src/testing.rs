@@ -107,12 +107,7 @@ impl Mock {
 
     /// A client that sends `key` as its bearer token.
     pub fn client_with_key(&self, key: &str) -> Client {
-        Client::new(&Config {
-            endpoint: Some(self.base.clone()),
-            api_key: ApiKey::new(key),
-            ..Config::default()
-        })
-        .expect("client")
+        self.client().with_api_key(ApiKey::new(key))
     }
 
     /// The request line and headers of each request, in order.

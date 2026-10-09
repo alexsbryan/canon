@@ -76,10 +76,11 @@ pub const API_KEY_ENV: &str = "CANON_API_KEY";
 /// **Not a [`Key`], on purpose.** Every key is a line in the file, and the
 /// file is what `config show` prints and what gets copied to the next
 /// machine. A secret belongs in neither, so this is read from the
-/// environment only and there is no `config set` for it.
+/// environment only and there is no `config set` for it. Nor is it a field
+/// of [`Config`]: a config that cannot hold the key cannot render it.
 ///
-/// `Debug` is written by hand so a `{:?}` of a client or a config — in a
-/// panic, a test failure, a bug report — cannot carry the key with it.
+/// `Debug` is written by hand so a `{:?}` of a client — in a panic, a test
+/// failure, a bug report — cannot carry the key with it.
 #[derive(Clone, PartialEq, Eq)]
 pub struct ApiKey(String);
 
@@ -101,13 +102,18 @@ impl std::fmt::Debug for ApiKey {
     }
 }
 
+/// The endpoint's key, from [`API_KEY_ENV`] only.
+pub fn api_key() -> Option<ApiKey> {
+    std::env::var(API_KEY_ENV)
+        .ok()
+        .and_then(|v| ApiKey::new(&v))
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Config {
     pub endpoint: Option<String>,
     pub model: Option<String>,
     pub extract_model: Option<String>,
-    /// From [`API_KEY_ENV`] only — never parsed from the file, never rendered.
-    pub api_key: Option<ApiKey>,
 }
 
 impl Config {
@@ -164,9 +170,6 @@ impl Config {
                 }
             }
         }
-        cfg.api_key = std::env::var(API_KEY_ENV)
-            .ok()
-            .and_then(|v| ApiKey::new(&v));
         Ok(cfg)
     }
 
@@ -235,13 +238,8 @@ mod tests {
         // copied with the file. Refusing the line says where it goes instead
         // of keeping it quietly.
         assert!(Config::parse("api_key = sk-secret\n").is_err());
-        let cfg = Config {
-            endpoint: Some("https://api.example.com/v1".into()),
-            api_key: ApiKey::new("sk-secret"),
-            ..Config::default()
-        };
-        assert!(!cfg.render().contains("sk-secret"));
-        assert!(!format!("{cfg:?}").contains("sk-secret"));
+        let key = ApiKey::new("sk-secret").unwrap();
+        assert!(!format!("{key:?}").contains("sk-secret"));
     }
 
     #[test]

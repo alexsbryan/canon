@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use serde_json::Value;
 
-use crate::config::{ApiKey, Config};
+use crate::config::{self, ApiKey, Config};
 
 /// How long to wait for a completion. Local models on modest hardware take
 /// tens of seconds for a tensions call over thirty commitments; the default
@@ -133,7 +133,7 @@ impl ModelError {
 /// otherwise on the command line.
 pub fn client_for(dir: &Path, allow_remote: bool) -> Result<Client, ModelError> {
     let cfg = Config::load(dir).map_err(ModelError::Config)?;
-    let client = Client::new(&cfg)?;
+    let client = Client::new(&cfg)?.with_api_key(config::api_key());
     if !allow_remote {
         client.require_local()?;
     }
@@ -447,7 +447,7 @@ impl Client {
             max_tokens: None,
             wire: Wire::of(&endpoint),
             endpoint,
-            api_key: cfg.api_key.clone(),
+            api_key: None,
             // Most local servers serve one model and ignore this field, but
             // the OpenAI schema requires it, so something must be sent.
             model: cfg.model.clone().unwrap_or_else(|| "local".to_string()),
@@ -508,6 +508,13 @@ impl Client {
     #[cfg(test)]
     pub(crate) fn speaking(mut self, wire: Wire) -> Self {
         self.wire = wire;
+        self
+    }
+
+    /// The same client sending `key`. Kept off [`Config`] so the key is
+    /// never part of what `config show` renders.
+    pub fn with_api_key(mut self, key: Option<ApiKey>) -> Self {
+        self.api_key = key;
         self
     }
 

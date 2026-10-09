@@ -123,7 +123,6 @@ fn an_unreachable_endpoint_is_a_transport_error_naming_the_url() {
         endpoint: Some("http://127.0.0.1:1/v1".into()),
         model: None,
         extract_model: None,
-        api_key: None,
     })
     .unwrap();
     let err = ask(&client).expect_err("nothing is listening");
@@ -333,7 +332,6 @@ fn locality_is_decided_conservatively() {
             endpoint: Some(e.into()),
             model: None,
             extract_model: None,
-            api_key: None,
         })
         .unwrap();
         assert!(c.is_local(), "{e} should be local (host {})", c.host());
@@ -344,7 +342,6 @@ fn locality_is_decided_conservatively() {
             endpoint: Some(e.into()),
             model: None,
             extract_model: None,
-            api_key: None,
         })
         .unwrap();
         assert!(!c.is_local(), "{e} should be remote (host {})", c.host());
