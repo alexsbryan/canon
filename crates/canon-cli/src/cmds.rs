@@ -420,32 +420,78 @@ pub fn add(args: &[String]) -> i32 {
         Ok(d) => d,
         Err(e) => return fail(e),
     };
-    match write(
-        &d,
-        ActKind::Assert {
-            text: (*text).to_string(),
-            from: None,
-            source: None,
-        },
-    ) {
+    match propose(&d, &store::actor(), text, scope) {
         Ok(act) => {
-            if let Some(s) = scope {
-                if let Err(e) = write(
-                    &d,
-                    ActKind::Scoped {
-                        commitment: act.id.clone(),
-                        scope: s,
-                    },
-                ) {
-                    return fail(e);
-                }
-            }
             println!("{}  {}", act.id, text);
             report_status(&d, &act.id);
             0
         }
         Err(e) => fail(e),
     }
+}
+
+/// Write a commitment, and its scope when it has one: what `add` writes,
+/// for `add` and for the page.
+pub fn propose(
+    d: &Path,
+    actor: &str,
+    text: &str,
+    scope: Option<canon_core::Scope>,
+) -> Result<Act, String> {
+    let act = write_as(
+        d,
+        ActKind::Assert {
+            text: text.to_string(),
+            from: None,
+            source: None,
+        },
+        actor,
+    )?;
+    if let Some(s) = scope {
+        write_as(
+            d,
+            ActKind::Scoped {
+                commitment: act.id.clone(),
+                scope: s,
+            },
+            actor,
+        )?;
+    }
+    Ok(act)
+}
+
+/// Replace `old` with `text`, keeping the reason: what `supersede` writes,
+/// for `supersede` and for the page. The replacement lives where the old
+/// rule lived unless `scope` says otherwise, so the same people who
+/// ratified the rule ratify its replacement.
+pub fn replace(
+    d: &Path,
+    actor: &str,
+    old: &ActId,
+    text: &str,
+    why: &str,
+    scope: Option<canon_core::Scope>,
+) -> Result<Act, String> {
+    let act = write_as(
+        d,
+        ActKind::Supersede {
+            text: text.to_string(),
+            old: vec![old.clone()],
+            rationale: why.to_string(),
+        },
+        actor,
+    )?;
+    if let Some(s) = scope {
+        write_as(
+            d,
+            ActKind::Scoped {
+                commitment: act.id.clone(),
+                scope: s,
+            },
+            actor,
+        )?;
+    }
+    Ok(act)
 }
 
 /// Approve a proposal: a position toward it, by name. Whether that makes it
@@ -788,26 +834,15 @@ pub fn supersede(args: &[String]) -> i32 {
         Ok(None) => st.scope_of(&old).cloned(),
         Err(e) => return fail(e),
     };
-    match write(
+    match replace(
         &d,
-        ActKind::Supersede {
-            text: pos[1].to_string(),
-            old: vec![old.clone()],
-            rationale: flag(args, "-m").unwrap_or_default().to_string(),
-        },
+        &store::actor(),
+        &old,
+        pos[1],
+        flag(args, "-m").unwrap_or_default(),
+        scope,
     ) {
         Ok(act) => {
-            if let Some(s) = scope {
-                if let Err(e) = write(
-                    &d,
-                    ActKind::Scoped {
-                        commitment: act.id.clone(),
-                        scope: s,
-                    },
-                ) {
-                    return fail(e);
-                }
-            }
             println!("{}  {}", act.id, pos[1]);
             println!("  replaces {old}");
             report_status(&d, &act.id);

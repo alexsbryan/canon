@@ -293,30 +293,11 @@ fn bind(d: &Path, log: &Log, actor: &str, pos: &[&str]) -> Result<i32, String> {
             }
         },
     };
-    let mut keys = vec![first.key.clone()];
+    let mut extras = Vec::new();
     for extra in pos.iter().skip(1) {
-        let k = load_key(extra)?.key.clone();
-        if !keys.contains(&k) {
-            keys.push(k);
-        }
+        extras.push(load_key(extra)?.key.clone());
     }
-    let prior: Vec<String> = log
-        .acts()
-        .iter()
-        .filter(|a| a.actor == actor)
-        .map(sign::digest)
-        .collect();
-    let vouched = prior.len();
-    let act = Act::new(
-        ActKind::Key {
-            keys: keys.iter().map(Key::openssh).collect(),
-            prior,
-        },
-        store::now(),
-        actor,
-    );
-    let act = seal(log, act, &first)?;
-    store::append(d, &act)?;
+    let (keys, vouched) = bind_with(d, log, actor, &first, &extras)?;
     println!("{actor} is bound to {}", fingerprints(&keys));
     if vouched > 0 {
         println!("  and vouches for the {vouched} act(s) already written under it");
@@ -335,6 +316,124 @@ fn bind(d: &Path, log: &Log, actor: &str, pos: &[&str]) -> Result<i32, String> {
         );
     }
     Ok(0)
+}
+
+/// Bind `signing` (and `extras`) to `actor`: the key act, vouching for
+/// everything already written under the name, signed and appended. The keys
+/// bound and how many acts were vouched for. The one way both the terminal
+/// and the page identify.
+fn bind_with(
+    d: &Path,
+    log: &Log,
+    actor: &str,
+    signing: &Signing,
+    extras: &[Key],
+) -> Result<(Vec<Key>, usize), String> {
+    let mut keys = vec![signing.key.clone()];
+    for k in extras {
+        if !keys.contains(k) {
+            keys.push(k.clone());
+        }
+    }
+    let prior: Vec<String> = log
+        .acts()
+        .iter()
+        .filter(|a| a.actor == actor)
+        .map(sign::digest)
+        .collect();
+    let vouched = prior.len();
+    let act = Act::new(
+        ActKind::Key {
+            keys: keys.iter().map(Key::openssh).collect(),
+            prior,
+        },
+        store::now(),
+        actor,
+    );
+    let act = seal(log, act, signing)?;
+    store::append(d, &act)?;
+    Ok((keys, vouched))
+}
+
+/// A key this person could identify with, as the page offers it.
+pub struct Offer {
+    pub fingerprint: String,
+    /// Where it was found: a file in `~/.ssh`, or the ssh-agent.
+    pub found: String,
+    pub touch: bool,
+}
+
+/// The keys this person could identify with: Ed25519 public keys in
+/// `~/.ssh`, then whatever else the ssh-agent holds. Offered by
+/// fingerprint, so the page never takes a path from a form.
+pub fn offers() -> Vec<Offer> {
+    let mut out: Vec<Offer> = in_dot_ssh()
+        .iter()
+        .map(|s| Offer {
+            fingerprint: s.key.fingerprint(),
+            found: s.file.display().to_string(),
+            touch: s.key.touch_required(),
+        })
+        .collect();
+    for k in in_agent() {
+        if !out.iter().any(|o| o.fingerprint == k.fingerprint()) {
+            out.push(Offer {
+                fingerprint: k.fingerprint(),
+                found: "your ssh-agent".into(),
+                touch: k.touch_required(),
+            });
+        }
+    }
+    out
+}
+
+/// Identify `actor` with the offered key whose fingerprint is
+/// `fingerprint`. What the page says afterwards.
+pub fn identify_by_fingerprint(d: &Path, actor: &str, fingerprint: &str) -> Result<String, String> {
+    let log = store::read(d)?;
+    if sign::verify(log.acts()).bindings.contains_key(actor) {
+        return Err(format!(
+            "{actor} is already identified, and a name binds once"
+        ));
+    }
+    let signing = match in_dot_ssh()
+        .into_iter()
+        .find(|s| s.key.fingerprint() == fingerprint)
+    {
+        Some(s) => s,
+        None => {
+            let key = in_agent()
+                .into_iter()
+                .find(|k| k.fingerprint() == fingerprint)
+                .ok_or("that key is no longer in ~/.ssh or your ssh-agent")?;
+            let file =
+                std::env::temp_dir().join(format!("canon-signing-{}.pub", std::process::id()));
+            std::fs::write(&file, format!("{}\n", key.openssh()))
+                .map_err(|e| format!("writing {}: {e}", file.display()))?;
+            Signing {
+                file,
+                key,
+                temporary: true,
+            }
+        }
+    };
+    let (keys, vouched) = bind_with(d, &log, actor, &signing, &[])?;
+    let mut said = format!(
+        "You are identified with {}{}. Tell the group this fingerprint some other way than this file.",
+        fingerprints(&keys),
+        if vouched > 0 {
+            format!(", vouching for the {vouched} acts already written under your name")
+        } else {
+            String::new()
+        }
+    );
+    if !keys.iter().any(Key::touch_required) {
+        said.push_str(
+            " This key needs no touch, so a program running as you could sign with it; \
+             a key made with ssh-keygen -t ed25519-sk closes that.",
+        );
+    }
+    Ok(said)
 }
 
 fn show(log: &Log, checked: &sign::Verified, bound: &Binding) -> i32 {

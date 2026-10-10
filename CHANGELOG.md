@@ -25,8 +25,10 @@ renames that heading to the version, and its section becomes the release notes
   came from, what they'd replace and why, and who has to decide. Approve,
   object with a reason, or skip. It only shows what your approval or
   objection would actually change.
-- `canon ui` is the same as a page in your browser, with what's in force
-  and how each rule got there. A proposed change is shown marked up against
+- `canon ui` is canon as a page in your browser. Decide what's waiting on
+  you, propose a rule, change a rule's wording or take it away, leave
+  something unwritten on purpose or lift it, and identify yourself, all
+  without the command line. A proposed change is shown marked up against
   the wording it replaces. It runs on this machine only, for as long as you
   leave it open, and loads nothing from the internet.
 - You can make it so only your key writes as you. `canon identify

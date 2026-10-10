@@ -202,3 +202,188 @@ fn a_request_larger_than_a_form_is_refused() {
     assert_eq!((r.method.as_str(), r.path.as_str()), ("GET", "/why/can-1"));
     assert_eq!(r.param("x"), Some("a b!"));
 }
+
+fn origin() -> String {
+    format!("http://127.0.0.1:{PORT}")
+}
+
+fn at(path: &str, body: &str) -> Request {
+    let mut r = post(body, Some(&origin()));
+    r.path = path.into();
+    r
+}
+
+#[test]
+fn every_write_goes_through_the_same_door() {
+    let (log, _, _) = crate::review::tests::house();
+    let c = ctx("door", &log);
+    let before = acts(&c);
+    for path in [
+        "/propose",
+        "/replace",
+        "/retract",
+        "/silence",
+        "/lift",
+        "/identify",
+    ] {
+        let mut r = at(path, "text=x&about=x&because=x");
+        assert_eq!(respond(&r, &c).status, 403, "{path} without the token");
+        r.body = format!("token={TOKEN}&text=x&about=x&because=x").into_bytes();
+        r.headers
+            .push(("Origin".into(), "https://evil.example".into()));
+        r.headers
+            .retain(|(k, v)| k != "Origin" || v == "https://evil.example");
+        assert_eq!(respond(&r, &c).status, 403, "{path} from another site");
+    }
+    assert_eq!(acts(&c), before);
+}
+
+#[test]
+fn a_rule_can_be_proposed_changed_and_taken_away_from_the_page() {
+    let (log, _, _) = crate::review::tests::house();
+    let c = ctx("rules", &log);
+    let r = respond(
+        &at(
+            "/propose",
+            &format!("token={TOKEN}&text=Bins+go+out+on+Tuesday.&scope=house"),
+        ),
+        &c,
+    );
+    assert_eq!(r.status, 303);
+    let (_, st) = load(&c).unwrap();
+    let bins = st
+        .commitments
+        .iter()
+        .find(|x| x.text == "Bins go out on Tuesday.")
+        .unwrap();
+    assert_eq!(st.scope_of(&bins.id).map(|s| s.as_str()), Some("house"));
+    assert!(
+        matches!(bins.status, canon_core::Status::Active),
+        "alex holds house"
+    );
+
+    // A change needs its reason, and the reason is kept.
+    let id = bins.id.as_str().to_string();
+    let bare = respond(
+        &at(
+            "/replace",
+            &format!("token={TOKEN}&id={id}&text=Bins+go+out+on+Monday."),
+        ),
+        &c,
+    );
+    assert!(bare.body.contains("Nothing was written"), "{}", bare.body);
+    let r = respond(
+        &at(
+            "/replace",
+            &format!("token={TOKEN}&id={id}&text=Bins+go+out+on+Monday.&because=Collection+moved"),
+        ),
+        &c,
+    );
+    assert_eq!(r.status, 303);
+    let (_, st) = load(&c).unwrap();
+    let monday = st
+        .commitments
+        .iter()
+        .find(|x| x.text == "Bins go out on Monday.")
+        .unwrap();
+    assert_eq!(
+        st.scope_of(&monday.id).map(|s| s.as_str()),
+        Some("house"),
+        "the room carries over"
+    );
+    assert!(acts(&c).contains("Collection moved"));
+
+    // The old wording is not in force, so it cannot be changed again.
+    let stale = respond(
+        &at("/retract", &format!("token={TOKEN}&id={id}&because=x")),
+        &c,
+    );
+    assert!(
+        stale.body.contains("not in force any more"),
+        "{}",
+        stale.body
+    );
+    let gone = respond(
+        &at(
+            "/retract",
+            &format!(
+                "token={TOKEN}&id={}&because=No+collection",
+                monday.id.as_str()
+            ),
+        ),
+        &c,
+    );
+    assert_eq!(gone.status, 303);
+    let (_, st) = load(&c).unwrap();
+    assert!(matches!(
+        st.get(&monday.id).unwrap().status,
+        canon_core::Status::Retracted { .. }
+    ));
+}
+
+#[test]
+fn something_left_unwritten_needs_its_reason_and_can_be_lifted() {
+    let (log, _, _) = crate::review::tests::house();
+    let c = ctx("silence", &log);
+    let before = acts(&c);
+    let bare = respond(&at("/silence", &format!("token={TOKEN}&about=guests")), &c);
+    assert!(bare.body.contains("Nothing was written"));
+    assert_eq!(acts(&c), before);
+    assert_eq!(
+        respond(
+            &at(
+                "/silence",
+                &format!("token={TOKEN}&about=guests&because=We+trust+each+other")
+            ),
+            &c
+        )
+        .status,
+        303
+    );
+    let (_, st) = load(&c).unwrap();
+    let s = st
+        .silences
+        .iter()
+        .find(|s| s.about == "guests")
+        .unwrap()
+        .act
+        .clone();
+    // Only a silence that stands can be lifted: the form is not `undo`.
+    let grant = log.acts()[0].id.as_str().to_string();
+    let not = respond(&at("/lift", &format!("token={TOKEN}&id={grant}")), &c);
+    assert!(not.body.contains("not left unwritten"), "{}", not.body);
+    assert_eq!(
+        respond(
+            &at("/lift", &format!("token={TOKEN}&id={}", s.as_str())),
+            &c
+        )
+        .status,
+        303
+    );
+    assert!(load(&c)
+        .unwrap()
+        .1
+        .silences
+        .iter()
+        .all(|x| x.about != "guests"));
+}
+
+#[test]
+fn identify_takes_only_a_key_the_page_offered() {
+    let (log, _, _) = crate::review::tests::house();
+    let c = ctx("identify", &log);
+    let before = acts(&c);
+    let r = respond(
+        &at(
+            "/identify",
+            &format!("token={TOKEN}&key=SHA256:not-one-of-yours"),
+        ),
+        &c,
+    );
+    assert!(
+        r.body.contains("Choose one of the keys listed"),
+        "{}",
+        r.body
+    );
+    assert_eq!(acts(&c), before);
+}

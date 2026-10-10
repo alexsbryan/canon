@@ -67,12 +67,15 @@ something guessable rather than refusing — breaks the property the draw
 exists for.
 
 **The local page reaching past its door.** `canon ui` serves a page that
-can approve and object as the person who started it. It listens on
+writes as the person who started it: it approves and objects, proposes,
+changes and retracts rules, records and lifts what is left unwritten, and
+identifies — the last only with a key it found in `~/.ssh` or the
+ssh-agent and offered by fingerprint, never a path from a form. It listens on
 `127.0.0.1` on a port the OS picks; the address it prints carries a random
 token, traded on first visit for a `SameSite=Strict`, `HttpOnly` cookie; it
-answers only to a `Host` naming that address, which stops DNS rebinding; a
-decision must be a `POST` from the page itself, carry the token again, and
-concern something waiting on that person; and the page loads nothing and
+answers only to a `Host` naming that address, which stops DNS rebinding; every
+write must be a `POST` from the page itself and carry the token again, and
+a decision must concern something waiting on that person; and the page loads nothing and
 runs no script. Another website driving it, another machine reaching it,
 a rule's text running as markup, or a decision about something the person
 has no say in, is the report to send. A program already running as you is

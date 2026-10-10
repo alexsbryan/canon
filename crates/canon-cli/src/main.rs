@@ -81,8 +81,9 @@ RECORD                                        (no model needed)
                                          again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
   review [--json]                        what is waiting on you, one at a time
-  ui                                     the same as a page on this machine, with
-                                         what is in force and how each rule got there
+  ui                                     canon as a page on this machine: decide, propose,
+                                         change or take away a rule, leave something
+                                         unwritten, identify yourself
   approve <id> [-m \"<why>\"]             approve a proposal, by name
   object <id> -m \"<why>\"                object to one; the reason is required
   list                                   what is live now, and what is proposed
