@@ -7,6 +7,19 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Before you upgrade
+
+- Nothing changes for a canon in which nobody runs `canon identify`: it
+  keeps writing format version 2 and reads exactly as before. Once someone
+  identifies, the file holds version 3 lines, which older canon refuses.
+  Upgrade everyone who reads a canon before anyone in it identifies.
+- For code built on `canon-core`: `ActKind` has a `Key` variant, so an
+  exhaustive `match` on it needs an arm. `Act` carries `refs` and `sig`,
+  and `Canon` carries `unverified`: acts under a name that has bound a key
+  which its key did not sign, kept and not applied.
+
+### Changes
+
 - `canon review` walks you through what's waiting on you, one proposal at
   a time: the words, who proposed them and when, the source passage they
   came from, what they'd replace and why, and who has to decide. Approve,

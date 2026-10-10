@@ -144,7 +144,15 @@ The pre-pass depends only on `key` acts, digests and signatures, never on standi
 - The baseline's `a_version_beyond_this_build_is_still_refused` asserts that a `v: 3` line is refused, and v3 is now read. The candidate's copy of that test moves to v4.
 - The generated old consumer matches `ActKind` exhaustively, and `key` is a new variant.
 
-The generated consumer only reads `Act`'s fields and never builds one, so `refs` and `sig` on `Act` are a surface change, not a break. Record bytes for unbound canons don't change: `Act::new` still writes `v: 2` and the new fields are skipped when empty. Checked by running the gate's own `observations` and `read_old_records` against the baseline binary and this one. All six observations are identical: decisions, minted bytes with ids, and old-record readings, for both fixtures. CONTRACT.md allows adopting a breaking change as a governance decision, provided old records are shown to read the same, and that comparison is the evidence. The new baseline is adopted through `CANON_CONTRACT_BASELINE`.
+The generated consumer only reads `Act`'s fields and never builds one, so `refs` and `sig` on `Act` are a surface change, not a break. Record bytes for unbound canons don't change: `Act::new` still writes `v: 2` and the new fields are skipped when empty. Checked by running the gate's own `observations` and `read_old_records` against the baseline binary and this one. All six observations are identical: decisions, minted bytes with ids, and old-record readings, for both fixtures. CONTRACT.md requires a breaking adoption to carry "old-record migration or reinterpretation tests in the new standard". That is `crates/canon-cli/tests/reinterpretation_bar.rs`. Every record written before signing — this repository's own `.canon/acts.jsonl`, v1 lines included, and a record minted from each of the 17 replayable fixtures — parses, has nothing set aside, and remints to its own bytes. There is no migration because nothing is reinterpreted.
+
+**Adopting it** is the holder's act, not a PR's, and the gate is built so that it cannot be otherwise:
+
+1. Review the branch and decide that its head, call it `X`, is the new standard.
+2. Set the repository's `CANON_CONTRACT_BASELINE` Actions variable to `X`'s full SHA.
+3. Add one commit on top of `X` that changes `.github/contract-baseline` to the same SHA. The evaluator from `main` requires a candidate's pin to equal the selected baseline. The candidate then differs from `X` by the pin file alone and classifies as `preserves_checked_contract`.
+
+After the merge, `main`'s own pin is `X`, so the variable can be cleared and later PRs are held to the new standard.
 
 ## What it stops, and what it can't
 
