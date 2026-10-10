@@ -28,6 +28,7 @@ mod rebase;
 mod render;
 mod replay;
 mod resolver;
+mod review;
 mod seen;
 mod sources;
 mod store;
@@ -36,6 +37,7 @@ mod tensions;
 mod term;
 #[cfg(test)]
 mod testing;
+mod ui;
 mod wrap;
 
 /// What a new person is shown.
@@ -78,6 +80,9 @@ RECORD                                        (no model needed)
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
+  review [--json]                        what is waiting on you, one at a time
+  ui                                     the same as a page on this machine, with
+                                         what is in force and how each rule got there
   approve <id> [-m \"<why>\"]             approve a proposal, by name
   object <id> -m \"<why>\"                object to one; the reason is required
   list                                   what is live now, and what is proposed
@@ -228,6 +233,8 @@ fn main() {
         "add" => cmds::add(rest),
         "approve" => cmds::approve(rest),
         "object" => cmds::object(rest),
+        "review" => review::run(rest),
+        "ui" => ui::run(rest),
         "list" => cmds::list(rest),
         "why" => cmds::why(rest),
         "supersede" => cmds::supersede(rest),

@@ -70,6 +70,10 @@ Code reads that history to work out what's in force and who may decide,
 under your group's chosen rules. This needs no model. You can replay past
 decisions under a different policy to see what would change.
 
+When an agent or a housemate proposes something, `canon review` walks you
+through what's waiting on you, and `canon ui` shows the same as a page on
+your machine.
+
 Only `draft`, `check`, `tensions`, and `rebase` call a language model, to
 help read documents or compare rules. A model offers evidence and
 proposals; it cannot make a rule. canon refuses remote endpoints unless

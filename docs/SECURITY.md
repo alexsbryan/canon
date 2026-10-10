@@ -3,7 +3,9 @@
 canon's promise is narrow and worth stating exactly: **there is no account,
 no server, and nothing leaves your machine.** The record is a file in a
 directory you own, leaving is deleting that directory, and the only network
-call the tool can make is to a model endpoint you configured.
+call the tool can make is to a model endpoint you configured. The one thing
+that listens is `canon ui`, on `127.0.0.1` only, for as long as you leave it
+running.
 
 A security issue here is anything that breaks that promise, or that puts a
 record, a key, or a sealed lot at risk. Reports are taken seriously,
@@ -63,6 +65,19 @@ the log. Secrets live in `.canon/secrets/`, which writes its own
 read early, or committed — or that lets `fresh_secret` fall back to
 something guessable rather than refusing — breaks the property the draw
 exists for.
+
+**The local page reaching past its door.** `canon ui` serves a page that
+can approve and object as the person who started it. It listens on
+`127.0.0.1` on a port the OS picks; the address it prints carries a random
+token, traded on first visit for a `SameSite=Strict`, `HttpOnly` cookie; it
+answers only to a `Host` naming that address, which stops DNS rebinding; a
+decision must be a `POST` from the page itself, carry the token again, and
+concern something waiting on that person; and the page loads nothing and
+runs no script. Another website driving it, another machine reaching it,
+a rule's text running as markup, or a decision about something the person
+has no say in, is the report to send. A program already running as you is
+not, since it could run `canon approve` as you anyway; `canon identify`
+with a key that needs a touch is the answer to that.
 
 **An act counting under a name that has bound a key, without that key.**
 Once someone runs `canon identify`, an act under their name counts only if

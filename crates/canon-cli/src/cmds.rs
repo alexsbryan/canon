@@ -328,7 +328,13 @@ pub fn fail(e: impl std::fmt::Display) -> i32 {
 }
 
 pub fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
-    let act = Act::new(kind, store::now(), store::actor());
+    write_as(d, kind, &store::actor())
+}
+
+/// [`write`], for a caller that already knows who is acting — `canon ui`
+/// decided whose queue to show when it started, and writes as that person.
+pub fn write_as(d: &Path, kind: ActKind, actor: &str) -> Result<Act, String> {
+    let act = Act::new(kind, store::now(), actor);
     // Signed if its actor has bound a key, refused if it cannot be. A write
     // that would not count is never appended.
     let act = crate::identify::sign_if_bound(&store::read(d)?, act)?;
