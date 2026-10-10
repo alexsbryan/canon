@@ -387,3 +387,20 @@ fn identify_takes_only_a_key_the_page_offered() {
     );
     assert_eq!(acts(&c), before);
 }
+
+#[test]
+fn a_form_from_the_page_keeps_its_origin_and_a_null_one_is_refused() {
+    // Under `Referrer-Policy: no-referrer` a browser sends `Origin: null`
+    // on the page's own forms, and every button on the page was refused.
+    let policy = SECURITY_HEADERS
+        .iter()
+        .find(|(k, _)| *k == "Referrer-Policy")
+        .unwrap()
+        .1;
+    assert_eq!(policy, "same-origin");
+    // A sandboxed frame or a data: page sends `null` too, so it stays shut.
+    let (log, quiet, _) = crate::review::tests::house();
+    let c = ctx("null-origin", &log);
+    let body = format!("token={TOKEN}&id={}&decision=approve", quiet.as_str());
+    assert_eq!(respond(&post(&body, Some("null")), &c).status, 403);
+}

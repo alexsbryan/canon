@@ -220,7 +220,12 @@ const SECURITY_HEADERS: [(&str, &str); 5] = [
     ),
     ("X-Content-Type-Options", "nosniff"),
     ("X-Frame-Options", "DENY"),
-    ("Referrer-Policy", "no-referrer"),
+    // Not `no-referrer`: under it a browser sends `Origin: null` on the
+    // page's own forms, and the origin check then refuses every one of
+    // them. `same-origin` keeps the real origin on this page's requests and
+    // still sends nothing to anywhere else — and a cross-site request still
+    // arrives as `null`, which is refused.
+    ("Referrer-Policy", "same-origin"),
     ("Cache-Control", "no-store"),
 ];
 
@@ -377,7 +382,8 @@ fn posted(req: &Request, ctx: &Ctx) -> Result<Form, Response> {
             403,
             page(
                 "Not from this page",
-                "<p>A change has to come from this page. Nothing was written.</p>",
+                "<p>A change has to come from this page. Nothing was written.</p>\
+                 <p><a href=\"/\">Back to the page</a></p>",
             ),
         ));
     }
@@ -673,10 +679,17 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
                     .map(|r| r.text.clone())
             })
             .unwrap_or_else(|| id.as_str().to_string());
+        // The outcome can end in somebody's own reason, full stop included.
+        let outcome = review::outcome(&st, &id);
+        let stop = if outcome.ends_with(['.', '!', '?']) {
+            ""
+        } else {
+            "."
+        };
         b.push_str(&format!(
-            "<p class=\"note\" role=\"status\">Recorded. <q>{}</q> is {}.</p>",
+            "<p class=\"note\" role=\"status\">Recorded. <q>{}</q> is {}{stop}</p>",
             esc(&crate::explain::one_line(&what)),
-            esc(&review::outcome(&st, &id))
+            esc(&outcome)
         ));
     }
 
