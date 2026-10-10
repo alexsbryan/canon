@@ -7,8 +7,9 @@
 //! so this is that test. There is no migration, because there is nothing to
 //! migrate: a record with no `key` act is not reinterpreted at all.
 //!
-//! Two bodies of old records. This repository's own `.canon/acts.jsonl`,
-//! written by builds that predate signing, read as they are. And every
+//! Two bodies of old records. This repository's own `.canon/acts.jsonl` as
+//! it stood before signing, frozen in `fixtures/pre-signing/` because the
+//! live one will carry signed lines once its holder identifies. And every
 //! replayable fixture, minted by this build, which pins the other half:
 //! somebody who never identifies writes the bytes an older canon wrote.
 
@@ -76,8 +77,8 @@ fn reads_as_before(name: &str, text: &str) {
 
 #[test]
 fn this_repositorys_own_record_reads_as_it_did_before_signing() {
-    let text = std::fs::read_to_string(repo().join(".canon/acts.jsonl")).unwrap();
-    reads_as_before(".canon/acts.jsonl", &text);
+    let text = std::fs::read_to_string(repo().join("fixtures/pre-signing/acts.jsonl")).unwrap();
+    reads_as_before("fixtures/pre-signing/acts.jsonl", &text);
 }
 
 #[test]
