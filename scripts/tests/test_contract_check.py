@@ -57,6 +57,15 @@ class Classification(unittest.TestCase):
         with self.assertRaises(ValueError):
             contract.laws("| `identity` | stable | test |\n| `identity` | different | test |")
 
+    def test_both_sides_are_judged_over_the_same_crates(self):
+        # A standard that includes the inspector must not list its tests as
+        # missing from a candidate that cannot carry them.
+        manifest = '[workspace]\nmembers = ["crates/canon-core", "crates/canon-cli", "crates/canon-contract"]\nresolver = "2"\n'
+        judged = contract.judged_only(manifest)
+        self.assertIn('members = ["crates/canon-core", "crates/canon-cli"]', judged)
+        self.assertNotIn("canon-contract", judged)
+        self.assertIn('resolver = "2"', judged)
+
     def test_dev_dependencies_come_from_the_baseline(self):
         candidate = '[package]\nname="x"\n[dev-dependencies]\nproptest="99"\n[features]\none=[]\n'
         baseline = '[package]\nname="x"\n[dev-dependencies]\nproptest="1"\n'
