@@ -329,6 +329,9 @@ pub fn fail(e: impl std::fmt::Display) -> i32 {
 
 pub fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
     let act = Act::new(kind, store::now(), store::actor());
+    // Signed if its actor has bound a key, refused if it cannot be. A write
+    // that would not count is never appended.
+    let act = crate::identify::sign_if_bound(&store::read(d)?, act)?;
     store::append(d, &act)?;
     Ok(act)
 }
@@ -646,6 +649,23 @@ pub fn list(args: &[String]) -> i32 {
         );
         eprintln!("  `canon log` shows them; `canon list --json` has their ids under `unattended`");
     }
+    // A forgery is louder than an unsigned agent: somebody wrote as
+    // somebody else.
+    if !st.unverified.is_empty() {
+        eprintln!(
+            "\nwarning: {} act(s) under a name that has bound a key were not signed by it, and \
+             do not count: {}",
+            st.unverified.len(),
+            by_kind(
+                &log,
+                &st.unverified
+                    .iter()
+                    .map(|(id, _)| id.clone())
+                    .collect::<Vec<_>>()
+            )
+        );
+        eprintln!("  `canon log` says why for each; `canon identify` says who you are");
+    }
     if let Some(note) = carried_note(&st) {
         eprintln!("\n{note}");
     }
@@ -695,6 +715,7 @@ fn kind_noun(kind: &ActKind) -> &'static str {
         ActKind::DrawSecret { .. } | ActKind::DrawReveal { .. } => "draw secret",
         ActKind::Horizon { .. } => "horizon",
         ActKind::Rank { .. } => "rank",
+        ActKind::Key { .. } => "key binding",
         ActKind::Annotation { .. } => "annotation",
     }
 }
@@ -1043,6 +1064,20 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Rank { commitment, rank } => {
                 format!("rank       {commitment} is a {rank}")
             }
+            ActKind::Key { keys, prior, .. } => {
+                let fps: Vec<String> = keys
+                    .iter()
+                    .map(|k| {
+                        canon_core::Key::parse(k)
+                            .map(|k| k.fingerprint())
+                            .unwrap_or_else(|e| format!("(unreadable: {e})"))
+                    })
+                    .collect();
+                match prior.len() {
+                    0 => format!("key        {}", fps.join(", ")),
+                    n => format!("key        {}, vouching for {n}", fps.join(", ")),
+                }
+            }
             // Shown, and shown as unread. The whole point of carrying an
             // annotation this build does not understand is that nothing is
             // lost; rendering it as though it were nothing would lose it
@@ -1067,6 +1102,11 @@ pub fn log(args: &[String]) -> i32 {
         // has to say which.
         if let Some((_, why)) = st.ungoverned.iter().find(|(x, _)| *x == act.id) {
             println!("{}", crate::wrap::hang("    NOT APPLIED: ", why));
+        }
+        // Under a name that has bound a key, and not signed by it: carried,
+        // and the fold never saw it.
+        if let Some((_, why)) = st.unverified.iter().find(|(x, _)| *x == act.id) {
+            println!("{}", crate::wrap::hang("    DOES NOT COUNT: ", why));
         }
         // A retraction written without standing is neither applied nor
         // refused when written; say which it has since become.

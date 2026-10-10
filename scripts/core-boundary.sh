@@ -16,8 +16,12 @@ APPROVED = {
     "canon-core", "serde", "serde_core", "serde_json", "sha2", "digest",
     "block-buffer", "crypto-common", "generic-array", "typenum", "cpufeatures",
     "libc", "cfg-if", "itoa", "memchr", "zmij",
+    # A signed act is checked by the fold itself, so "what is in force" has
+    # one answer whichever front end asks. Verification only: no key, no
+    # file, no randomness, and no dependencies of its own.
+    "ed25519-compact",
 }
-DIRECT = {"serde", "serde_json", "sha2"}
+DIRECT = {"serde", "serde_json", "sha2", "ed25519-compact"}
 
 def violations(tree):
     errors = []
@@ -58,7 +62,7 @@ for path in source_dir.rglob("*.rs"):
     if re.search(r"\bextern\s+crate\s+std\b", source):
         errors.append(f"{path.name} imports std outside the test-harness exception")
 if {d["name"] for d in deps} != DIRECT:
-    errors.append("core normal dependencies must remain serde, serde_json, and sha2")
+    errors.append("core normal dependencies must remain serde, serde_json, sha2, and ed25519-compact")
 for dep in deps:
     if dep["uses_default_features"]:
         errors.append(f"{dep['name']} must explicitly disable default features")

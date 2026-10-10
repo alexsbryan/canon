@@ -36,7 +36,11 @@ still have their intended effects.
 ## What the checks assume
 
 Act IDs are not forged or reused for different payloads. The core trusts the
-record's identity and timestamps; `human:` is a label, not authentication.
+record's identity and timestamps; `human:` is a label, not authentication,
+until a name binds a key. Then an act under that name reaches the fold only
+if a bound key signed it or its binding vouched for it by full digest, and a
+signed act pins what it names by full digest too, so a reused ID cannot
+carry its approval onto other text. Timestamps stay trusted either way.
 Authority checks therefore establish who may act **under the supplied record**.
 They do not establish who really wrote it.
 

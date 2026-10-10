@@ -317,6 +317,11 @@ pub struct Canon {
     /// answer with no note (§18.3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub carried: Vec<(ActId, String)>,
+    /// Acts under a name that has bound a key, which no bound key signed and
+    /// the name never vouched for. Carried and not applied, with why — the
+    /// fold never saw them. See [`crate::sign`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unverified: Vec<(ActId, String)>,
 }
 
 impl Canon {
@@ -536,7 +541,34 @@ impl Voice<'_> {
 /// on parse, so the result is identical regardless of how lines interleaved
 /// during a merge.
 pub fn derive(acts: &[Act]) -> Canon {
-    derive_at(acts, acts.iter().map(|a| a.ts_unix).max().unwrap_or(0))
+    checked(acts, None)
+}
+
+/// Set aside what a bound key did not sign, then fold the rest.
+///
+/// The one place signatures bite (see [`crate::sign`]). It runs before every
+/// pass, so a forgery under a bound name never reaches a gate — not even the
+/// ones that do not ask whether an actor is a person — and none of the fold's
+/// rules had to learn about keys. `derive`'s clock is the latest act that
+/// counts: a forged line dated a century ahead must not fold the canon at a
+/// moment when every consent window has run out.
+fn checked(acts: &[Act], now: Option<i64>) -> Canon {
+    let verified = crate::sign::verify(acts);
+    let kept: alloc::borrow::Cow<'_, [Act]> = if verified.unverified.is_empty() {
+        alloc::borrow::Cow::Borrowed(acts)
+    } else {
+        let out: BTreeSet<&ActId> = verified.unverified.iter().map(|(id, _)| id).collect();
+        alloc::borrow::Cow::Owned(
+            acts.iter()
+                .filter(|a| !out.contains(&a.id))
+                .cloned()
+                .collect(),
+        )
+    };
+    let now = now.unwrap_or_else(|| kept.iter().map(|a| a.ts_unix).max().unwrap_or(0));
+    let mut canon = fold(&kept, now);
+    canon.unverified = verified.unverified;
+    canon
 }
 
 /// The one gate on a governance act, and its bookkeeping.
@@ -755,6 +787,10 @@ fn scopes_own(
 
 /// Derive current state as of `now`. See [`crate::Log::derive_at`].
 pub fn derive_at(acts: &[Act], now: i64) -> Canon {
+    checked(acts, Some(now))
+}
+
+fn fold(acts: &[Act], now: i64) -> Canon {
     let n = acts.len();
 
     // Pass 1a — standing to revert.
@@ -952,6 +988,8 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 // Announcing a draw is an adjudication and is not exempt.
                 | ActKind::DrawSecret { .. }
                 | ActKind::DrawReveal { .. }
+                // Binding your own key decides nothing about anybody else.
+                | ActKind::Key { .. }
         ) && !scopes_own(act, &by_id, &questions);
         if adjudication && !act.is_human() {
             canon.unattended.push(act.id.clone());
@@ -1295,6 +1333,10 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
                 canon.ranks.push((commitment.clone(), rank.clone()));
             }
             // Recorded, never acted on. This arm IS "not interpreted".
+            // Read before the fold began, by `crate::sign::verify`: a key
+            // act decides which of its actor's acts reach this loop, and
+            // nothing inside it.
+            ActKind::Key { .. } => {}
             ActKind::Annotation { kind, .. } => {
                 canon.carried.push((act.id.clone(), kind.clone()));
             }

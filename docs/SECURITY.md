@@ -64,6 +64,15 @@ read early, or committed — or that lets `fresh_secret` fall back to
 something guessable rather than refusing — breaks the property the draw
 exists for.
 
+**An act counting under a name that has bound a key, without that key.**
+Once someone runs `canon identify`, an act under their name counts only if
+one of their keys signed it or their binding vouched for it. A line that reaches the
+derived state under a bound name any other way — a parsing gap, a
+verification bug, a way to make `refs` match text that changed — is a break
+of the one promise signing makes. So is a write path that appends an act
+under a bound name unsigned instead of refusing. canon never holds a private
+key; `ssh-keygen` signs.
+
 **The record itself.** `acts.jsonl` is append-only and everything is
 revertible, including a revert. A path that rewrites or drops a line rather
 than appending is a correctness bug with the shape of a security one:
@@ -79,8 +88,18 @@ whether it deletes on purpose or by accident, the reason is gone.
   flag doing what it says. A remote endpoint reached *without* it is the
   bug.
 - **Anything reachable only by someone who already has write access to your
-  `.canon/` directory.** They can edit the file. The record's integrity
-  story is git history and review, not a lock.
+  `.canon/` directory**, with one exception. They can edit the file, and the
+  record's integrity story is git history and review, not a lock. The
+  exception is a name that has bound a key: an act under it that its key
+  did not sign must not count, write access or not.
+- **A program running as you signing as you.** If your key is unencrypted
+  or loaded in an agent that doesn't ask, anything you run can use it. A
+  FIDO key that needs a touch, a passphrase that isn't cached, or
+  `ssh-add -c` is what stops that; canon says so when you bind a key that
+  needs no touch.
+- **Someone binding your name before you do.** The first key bound to a name
+  wins. Bind before your first act, and compare fingerprints with your
+  group some other way than the file.
 
 ## Supported versions
 

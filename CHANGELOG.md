@@ -7,6 +7,17 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- You can make it so only your key writes as you. `canon identify
+  <key.pub>` binds an SSH key to your name; after that, an act under your
+  name counts only if your key signed it, and anything else under it, such
+  as a line written with `CANON_ACTOR` set to you, is kept and marked as not
+  counting in `list` and `log`. Run it again to see who you are. canon finds
+  your key in `~/.ssh` or your ssh-agent, so there is nothing to configure,
+  and it never holds a private key: `ssh-keygen` signs. A name binds once.
+  Nothing changes for anyone who doesn't identify.
+- Signed lines and key bindings are format version 3. Older canon refuses a
+  file that has any, so upgrade everyone who reads a canon before anyone in
+  it binds a key. A canon where nobody binds keeps writing version 2.
 - `CANON_API_KEY` is sent as a bearer token, so canon can use a hosted
   endpoint that requires a key. It's read from the environment only; `config
   show` says whether it's set without printing it.

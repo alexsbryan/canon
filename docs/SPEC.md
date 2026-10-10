@@ -8,11 +8,16 @@ format is not.
 The point of that split: adopting this format must not be a lock-in
 decision. A record you cannot leave is not a record you own.
 
-Version: **2**. Status: draft, pre-1.0. Breaking changes bump `v`.
+Version: **3**. Status: draft, pre-1.0. Breaking changes bump `v`.
 
 v2 split the `op` namespace so that a community can add a governance move
 without every other implementation having to change. See "The acts" below —
 the two halves have deliberately opposite rules.
+
+v3 added signed acts: the `refs` and `sig` envelope fields and the `key`
+act. Only a line that carries one of them is written as `v: 3`; every other
+line is still written as `v: 2`, so a canon in which nobody binds a key stays
+readable by v2 readers. See "Signed acts".
 
 ## The file
 
@@ -31,6 +36,8 @@ Every line carries four envelope fields plus a **flattened** act body, so
 | `ts_unix` | integer | When the act happened, Unix **seconds** |
 | `actor` | string | Who performed it. `human:<name>` for a person |
 | `op` | string | Discriminates the act body |
+| `refs` | object, optional | Act id → full SHA-256 of that act's canonical bytes. Signed acts only |
+| `sig` | string, optional | An SSHSIG blob, base64. Signed acts only |
 
 ```json
 {"id":"can-4c1a9f0e2b71","v":1,"ts_unix":1787341438,"actor":"human:dana","op":"assert","text":"Quiet hours run 11pm to 7am."}
@@ -105,6 +112,7 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `allot` | `text`, `unit`, `units[]`, `scope` | What a scope has to share |
 | `allocation` | `text`, `rule`, `scope` | How that pool goes round |
 | `silence` | `about`, `rationale` | Unwritten on purpose, not by neglect |
+| `key` | `keys[]`, `prior[]?` | These keys sign for this act's actor |
 
 `accept.rationale` is **required**: a tolerated contradiction must say
 what it protects. Every other rationale is optional, and `dismiss` is
@@ -382,6 +390,64 @@ are machine work and are not flagged.
 
 This is how *agents propose, humans dispose* becomes a property of the
 record rather than a rule someone has to remember.
+
+## Signed acts
+
+Without signatures an `actor` is whatever its writer typed, and anyone who
+can append to the file can write as anyone. A name can opt out of that by
+binding keys to itself. Names that never bind derive exactly as before.
+
+**Canonical bytes.** What a signature covers is the act's JSON object
+without `sig`: keys sorted by their UTF-8 bytes, no whitespace, strings
+escaping only `"`, `\` and U+0000–U+001F (as `\b \f \n \r \t`, otherwise
+`\u00xx` lowercase), integers in shortest decimal. The format writes no
+other kind of number. A reader MAY compute these bytes from its parsed act
+rather than the raw line, because a merge re-renders lines; a field the
+reader does not know is then lost and the signature fails, which is the
+safe direction.
+
+**`sig`** is an SSHSIG signature (OpenSSH `PROTOCOL.sshsig`) in namespace
+`canon`, from an `ssh-ed25519` or `sk-ssh-ed25519@openssh.com` key, with
+its armour lines and line breaks removed. A FIDO signature MUST have its
+user-presence flag set to verify. To check a line without canon: remove
+`sig`, render the rest as above, wrap `sig` at 70 columns between
+`-----BEGIN SSH SIGNATURE-----` and `-----END SSH SIGNATURE-----`, write an
+`allowed_signers` line `<actor> namespaces="canon" <key>` from the
+actor's `key` act, and run
+`ssh-keygen -Y verify -n canon -I <actor> -f allowed_signers -s <sig>` with
+the canonical bytes on standard input.
+
+**`refs`** pins what a signed act names. An id is 48 bits, short enough to
+collide on purpose, so a signature over an approval that named its proposal
+by id alone could be moved onto other text. A writer puts in `refs` the
+canon's earliest act and every act whose id appears as a string anywhere in
+the body, each mapped to the full SHA-256 (hex) of that act's canonical
+bytes. A signed act verifies only if every listed act present in the log
+has that digest, and — unless it is a `key` act — at least one listed act
+is present, so a signed line pasted into an unrelated canon does not verify
+there.
+
+**`key`** binds keys to the act's own `actor`; nobody binds a key to
+somebody else. `keys` are OpenSSH public keys, `<type> <base64>`. A key act
+**binds** when it is signed by one of its own `keys`. Unlike other signed
+acts it need not name an act that is present, because it may found the
+canon. `prior` lists the full digests of everything written under the name
+before binding, which is how that history keeps counting. A name binds
+once:
+
+- One binding: an act under the name **counts** if its digest is in the
+  binding's `prior` or it verifies under one of the binding's `keys`.
+- Two or more bindings: the name is **contested**. No ordering picks a
+  winner, because a timestamp is whatever its writer wrote. Only digests in
+  every binding's `prior` still count, and nothing signed does.
+- `revert` has no effect on a binding.
+
+Validity is decided by content and never by `ts_unix`, because a forgery
+can claim any time. Under a bound name, any act that does not count, and any
+`key` act that does not bind, is **carried and not applied**: it stays in the
+log, is never given to the derivation, and implementations MUST surface it
+with the reason rather than drop it. A `key` act has no other effect on the
+derivation.
 
 ## Merging
 

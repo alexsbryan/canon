@@ -247,7 +247,16 @@ fn locate() -> Result<PathBuf, String> {
 
 fn render_list(dir: &Path, args: &Value) -> Result<String, String> {
     let canon = store::read(dir)?.derive();
-    list_of(&canon, args)
+    let mut out = list_of(&canon, args)?;
+    // An agent reading the rules should know some lines were set aside, and
+    // that they were set aside because they were not who they said.
+    if !canon.unverified.is_empty() {
+        out.push_str(&format!(
+            "\n{} act(s) under a name that has bound a key were not signed by it and do not count.",
+            canon.unverified.len()
+        ));
+    }
+    Ok(out)
 }
 
 fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {

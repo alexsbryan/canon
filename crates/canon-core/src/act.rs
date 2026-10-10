@@ -24,6 +24,7 @@
 //! many it is carrying rather than quietly rendering a shorter answer.
 
 use alloc::{
+    collections::BTreeMap,
     string::{String, ToString},
     vec::Vec,
 };
@@ -38,7 +39,16 @@ use crate::id::ActId;
 /// is correct: a v1 reader would reject a `position` or a `grant` outright,
 /// and folding a governance log while dropping its governance is worse than
 /// declining to read it.
-pub const FORMAT_VERSION: u32 = 2;
+///
+/// **v3** added signed acts: the `refs` and `sig` envelope fields and the
+/// `key` act (see [`crate::sign`]). Only a line that carries them is written
+/// as v3. A v2 reader would fold a forgery under a bound name as genuine, and
+/// that is the same reason v2 gave for refusing.
+pub const FORMAT_VERSION: u32 = 3;
+
+/// The version an unsigned line is written at. A canon in which nobody has
+/// bound a key writes nothing a v2 reader cannot read.
+pub const UNSIGNED_VERSION: u32 = 2;
 
 /// The ops that change what is live. Unknown or malformed here refuses the
 /// line; see the module note.
@@ -46,7 +56,7 @@ pub const STRUCTURAL: [&str; 4] = ["assert", "supersede", "retract", "revert"];
 
 /// The annotations this build understands. Anything outside these two lists
 /// is carried as [`ActKind::Annotation`].
-pub const KNOWN_ANNOTATIONS: [&str; 19] = [
+pub const KNOWN_ANNOTATIONS: [&str; 20] = [
     "ratification",
     "allot",
     "allocation",
@@ -66,6 +76,7 @@ pub const KNOWN_ANNOTATIONS: [&str; 19] = [
     "draw_secret",
     "draw_reveal",
     "silence",
+    "key",
 ];
 
 /// The acts. A commitment is *introduced* by `Assert` or `Supersede`; its id
@@ -348,6 +359,26 @@ pub enum ActKind {
     DrawSecret { commit: ActId, digest: String },
     /// The secret, after the boundary. Checked against the digest.
     DrawReveal { commit: ActId, secret: String },
+    /// From here on, these keys sign for this act's actor.
+    ///
+    /// **The actor is the act's own `actor`, never a field here** — a key act
+    /// binds the name that wrote it, the way a position is the position of
+    /// the name that took it. Nobody binds a key to somebody else.
+    ///
+    /// Signed by one of its own keys. `prior` vouches, by full digest, for
+    /// everything the actor wrote before binding, so their history keeps
+    /// counting. Validity is decided by that content and never by `ts_unix`,
+    /// because a forgery can claim any time it likes. A second key act for the
+    /// same name contests it rather than replacing the first. See
+    /// [`crate::sign`].
+    ///
+    /// It has no effect on the fold. It decides which of the actor's other
+    /// acts the fold is given.
+    Key {
+        keys: Vec<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        prior: Vec<String>,
+    },
     /// An annotation this build does not interpret.
     ///
     /// Carried verbatim so a log written by a community with governance moves
@@ -423,6 +454,16 @@ pub struct Act {
     pub actor: String,
     #[serde(flatten)]
     pub kind: ActKind,
+    /// What a signature also pins: every act this one names, and the canon's
+    /// earliest act, by the full SHA-256 of their canonical bytes. An id is
+    /// 48 bits, which is short enough to collide on purpose, so an approval
+    /// that named its proposal by id alone could be moved onto other text.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub refs: BTreeMap<ActId, String>,
+    /// An SSHSIG blob over [`crate::sign::canonical`], base64, armour off.
+    /// Written only for an actor who has bound a key.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sig: Option<String>,
 }
 
 impl Act {
@@ -432,12 +473,22 @@ impl Act {
         // serde_json writes fields in declaration order, so the body string —
         // and therefore the id — is deterministic across runs and builds.
         let body = serde_json::to_string(&kind).unwrap_or_default();
+        // A key act is new in v3 and says so; anything else is written at
+        // v2 until it is signed, so an unsigned canon stays readable by the
+        // builds that came before signing.
+        let v = if matches!(kind, ActKind::Key { .. }) {
+            FORMAT_VERSION
+        } else {
+            UNSIGNED_VERSION
+        };
         Self {
             id: ActId::derive(ts_unix, &actor, &body),
-            v: FORMAT_VERSION,
+            v,
             ts_unix,
             actor,
             kind,
+            refs: BTreeMap::new(),
+            sig: None,
         }
     }
 

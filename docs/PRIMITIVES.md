@@ -220,8 +220,9 @@ that diverges quietly (§10.6).
 
 ## Primitive 6 — Boundaries: who holds standing, over what
 
-`BUILT` (`scope.rs`: `Scope`, `Grant`; `act.rs`: the `grant`, `withdraw` and
-`scoped` ops; `fold.rs`: `Canon::{who_decides, standing_of, scope_of}`)
+`BUILT` (`scope.rs`: `Scope`, `Grant`; `act.rs`: the `grant`, `withdraw`,
+`scoped` and `key` ops; `fold.rs`: `Canon::{who_decides, standing_of, scope_of}`;
+`sign.rs`: `verify`)
 
 Ostrom's first design principle, from the study of common-pool-resource
 institutions that endured for centuries, is clearly defined boundaries: who
@@ -240,6 +241,17 @@ Ostrom's eighth principle for free**, and a policy preferring the deepest grant
 is subsidiarity with no extra machinery. `covers` requires the boundary to be a
 dot: `house` does not cover `household`, and a bare prefix test would hand
 someone authority over a scope that merely spells similarly.
+
+**A boundary is only as firm as the name it draws around.** Standing attaches
+to a name, and the name on a line is whatever its writer typed, so on a shared
+file a seat was as strong as an environment variable. A person can bind SSH
+keys to their own name with `key`; from then on only what those keys sign, or
+what the person vouched for by digest, reaches the fold, and the rest is
+carried and not applied. It is opt-in per name, it decides by content rather
+than by `ts_unix`, and canon never holds a private key. A grant cannot do this
+job: it says what a name may decide, never which writer is the name. The
+argument, and what it still cannot stop, is in
+[SIGNING_DESIGN.md](./SIGNING_DESIGN.md).
 
 Standing is **held, not remembered**: a lapsed grant stays in the record as a
 fact and stops answering `who_decides`. Rotation is therefore the default shape
@@ -606,6 +618,7 @@ sortition onto what it already does the way one adds a dependency.
 | Term limits, rotation of office | `op:grant` + `op:horizon` + `query:overdue` | built |
 | Sunset clauses, trial periods | `op:horizon` + `query:overdue` | built |
 | Recall, impeachment | `op:withdraw` | built |
+| A name only its holder can write under | `op:key` | built |
 | Appeal, escalation | `op:decided` + `op:policy` + `policy:graduated` | built |
 | Entrenchment | `op:rank` + `op:policy` + `policy:entrenched` | built |
 | Precedent, distinguishing, overruling | `op:assert` + `op:supersede` + `op:retract` + `op:accept` + `op:dismiss` | built |

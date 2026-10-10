@@ -69,6 +69,7 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("open", &[], &["--json"]),
     ("witness", &["--base", "--slack"], &["--gate", "--json"]),
     ("guard", &["--check", "--slack"], &["--apply"]),
+    ("identify", &[], &[]),
     ("mcp", &[], &[]),
     ("share", &[], &[]),
     ("adopt", &["--except", "-m"], &["--paste"]),

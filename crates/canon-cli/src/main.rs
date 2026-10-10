@@ -17,6 +17,7 @@ mod draw_cmd;
 mod explain;
 mod govern;
 mod guard;
+mod identify;
 mod lineage;
 mod locate;
 mod mcp;
@@ -74,6 +75,8 @@ USAGE
 
 RECORD                                        (no model needed)
   init [--profile personal|code|house]  start a canon here
+  identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
+                                         again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
   approve <id> [-m \"<why>\"]             approve a proposal, by name
   object <id> -m \"<why>\"                object to one; the reason is required
@@ -171,7 +174,10 @@ FLAGS
   --allow-remote  permit an endpoint that is not on this machine
 
 ENVIRONMENT
-  CANON_ACTOR      who is acting (default: git user.name, prefixed human:)
+  CANON_ACTOR      who is acting (default: git user.name, prefixed human:);
+                   a name that has bound a key also needs that key to sign
+  CANON_SIGNING_KEY  the key you sign with, when it is not in ~/.ssh
+                   or your ssh-agent
   CANON_DIR        use this canon instead of searching upward
   CANON_ENDPOINT   override the configured endpoint for one run
   CANON_MODEL      override the configured model for one run
@@ -252,6 +258,7 @@ fn main() {
         "replay" => replay::run(rest),
         "witness" => guard::witness(rest),
         "guard" => guard::guard(rest),
+        "identify" => identify::run(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),

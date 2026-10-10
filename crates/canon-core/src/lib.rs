@@ -30,9 +30,10 @@ pub mod log;
 pub mod policy;
 pub mod ratify;
 pub mod scope;
+pub mod sign;
 pub mod standing;
 
-pub use act::{Act, ActKind, FORMAT_VERSION};
+pub use act::{Act, ActKind, FORMAT_VERSION, UNSIGNED_VERSION};
 pub use allot::{AdoptedAllocation, Allocation, Allotment, Award, Order, PoolError, Schedule};
 pub use draw::{DrawError, Drawn};
 pub use fold::{
@@ -46,6 +47,7 @@ pub use log::{Log, ParseError};
 pub use policy::{default_outcome, Attributes, Authority, Decision, Policy, Rule};
 pub use ratify::{AdoptedRatify, Between, Proposal, Ratify, Seat, Verdict};
 pub use scope::{Grant, Scope};
+pub use sign::{Binding, Key, Verified};
 pub use standing::{Outcome, Position, Pull, Source, Standing};
 
 #[cfg(test)]
