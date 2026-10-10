@@ -88,16 +88,25 @@ def replace_dev_dependencies(candidate, baseline):
     return without_dev(candidate).rstrip() + "\n" + (old.group() if old else "")
 
 
+# The crates a contract is judged over. The workspace also holds the
+# evaluator's own inspector (canon-contract), which is tooling, not contract:
+# CI runs the base branch's copy of it whatever a candidate says.
+JUDGED = ("canon-core", "canon-cli")
+
+
+def judged_only(manifest):
+    """The workspace manifest with its members cut to the judged crates."""
+    members = ", ".join(f'"crates/{crate}"' for crate in JUDGED)
+    return re.sub(r"(?ms)^members\s*=\s*\[.*?\]", f"members = [{members}]", manifest, count=1)
+
+
 def prepare_candidate(root, baseline, destination, inspector):
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(baseline, destination)
-    manifest = (root / "Cargo.toml").read_text()
-    manifest = re.sub(r"(?ms)^members\s*=\s*\[.*?\]",
-                      'members = ["crates/canon-core", "crates/canon-cli"]', manifest, count=1)
-    (destination / "Cargo.toml").write_text(manifest)
+    (destination / "Cargo.toml").write_text(judged_only((root / "Cargo.toml").read_text()))
     shutil.copy2(root / "Cargo.lock", destination / "Cargo.lock")
-    for crate in ("canon-core", "canon-cli"):
+    for crate in JUDGED:
         relative = Path("crates") / crate
         candidate_manifest = (root / relative / "Cargo.toml").read_text()
         parsed = tomllib.loads(candidate_manifest)
@@ -225,6 +234,12 @@ def run(root):
         if baseline.exists():
             shutil.rmtree(baseline)
         archive(root, revision, baseline)
+        # Both sides over the same crates. The candidate is assembled from
+        # the judged crates only, so a baseline that ran its whole workspace
+        # listed the inspector's own tests as missing from every candidate,
+        # and no standard newer than the inspector could ever be adopted.
+        manifest = baseline / "Cargo.toml"
+        manifest.write_text(judged_only(manifest.read_text()))
         with tempfile.TemporaryDirectory(prefix="contract-", dir=target) as temporary:
             work = Path(temporary)
             old_api = json.loads(checked([str(inspector), "inspect", str(baseline / "crates/canon-core/src")], root))
