@@ -70,12 +70,17 @@ Code reads that history to work out what's in force and who may decide,
 under your group's chosen rules. This needs no model. You can replay past
 decisions under a different policy to see what would change.
 
+When an agent or a housemate proposes something, `canon review` walks you
+through what's waiting on you, and `canon ui` lets you do that and the
+rest of the everyday work from a page on your machine.
+
 Only `draft`, `check`, `tensions`, and `rebase` call a language model, to
 help read documents or compare rules. A model offers evidence and
 proposals; it cannot make a rule. canon refuses remote endpoints unless
 you pass `--allow-remote`.
 
-The record trusts whoever can write the file. Protect shared copies with
+The record trusts whoever can write the file, unless a person binds a key
+to their name: then only what their key signs counts as theirs. Protect shared copies with
 permissions and review; [the security guide](./docs/SECURITY.md) explains
 the boundary.
 

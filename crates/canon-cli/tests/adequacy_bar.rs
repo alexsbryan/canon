@@ -91,6 +91,11 @@ const CENSUS: &[(&str, &str, &str)] = &[
         "which boundary a commitment sits in is not in its text",
     ),
     (
+        "key",
+        "6",
+        "a grant says what a name may decide; nothing said which writer is that name",
+    ),
+    (
         "policy",
         "7",
         "the rule a canon decides under has to be citable and supersedable",

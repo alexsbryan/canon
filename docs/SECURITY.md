@@ -3,7 +3,9 @@
 canon's promise is narrow and worth stating exactly: **there is no account,
 no server, and nothing leaves your machine.** The record is a file in a
 directory you own, leaving is deleting that directory, and the only network
-call the tool can make is to a model endpoint you configured.
+call the tool can make is to a model endpoint you configured. The one thing
+that listens is `canon ui`, on `127.0.0.1` only, for as long as you leave it
+running.
 
 A security issue here is anything that breaks that promise, or that puts a
 record, a key, or a sealed lot at risk. Reports are taken seriously,
@@ -64,6 +66,31 @@ read early, or committed — or that lets `fresh_secret` fall back to
 something guessable rather than refusing — breaks the property the draw
 exists for.
 
+**The local page reaching past its door.** `canon ui` serves a page that
+writes as the person who started it: it approves and objects, proposes,
+changes and retracts rules, records and lifts what is left unwritten, and
+identifies — the last only with a key it found in `~/.ssh` or the
+ssh-agent and offered by fingerprint, never a path from a form. It listens on
+`127.0.0.1` on a port the OS picks; the address it prints carries a random
+token, traded on first visit for a `SameSite=Strict`, `HttpOnly` cookie; it
+answers only to a `Host` naming that address, which stops DNS rebinding; every
+write must be a `POST` from the page itself and carry the token again, and
+a decision must concern something waiting on that person; and the page loads nothing and
+runs no script. Another website driving it, another machine reaching it,
+a rule's text running as markup, or a decision about something the person
+has no say in, is the report to send. A program already running as you is
+not, since it could run `canon approve` as you anyway; `canon identify`
+with a key that needs a touch is the answer to that.
+
+**An act counting under a name that has bound a key, without that key.**
+Once someone runs `canon identify`, an act under their name counts only if
+one of their keys signed it or their binding vouched for it. A line that reaches the
+derived state under a bound name any other way — a parsing gap, a
+verification bug, a way to make `refs` match text that changed — is a break
+of the one promise signing makes. So is a write path that appends an act
+under a bound name unsigned instead of refusing. canon never holds a private
+key; `ssh-keygen` signs.
+
 **The record itself.** `acts.jsonl` is append-only and everything is
 revertible, including a revert. A path that rewrites or drops a line rather
 than appending is a correctness bug with the shape of a security one:
@@ -79,8 +106,18 @@ whether it deletes on purpose or by accident, the reason is gone.
   flag doing what it says. A remote endpoint reached *without* it is the
   bug.
 - **Anything reachable only by someone who already has write access to your
-  `.canon/` directory.** They can edit the file. The record's integrity
-  story is git history and review, not a lock.
+  `.canon/` directory**, with one exception. They can edit the file, and the
+  record's integrity story is git history and review, not a lock. The
+  exception is a name that has bound a key: an act under it that its key
+  did not sign must not count, write access or not.
+- **A program running as you signing as you.** If your key is unencrypted
+  or loaded in an agent that doesn't ask, anything you run can use it. A
+  FIDO key that needs a touch, a passphrase that isn't cached, or
+  `ssh-add -c` is what stops that; canon says so when you bind a key that
+  needs no touch.
+- **Someone binding your name before you do.** The first key bound to a name
+  wins. Bind before your first act, and compare fingerprints with your
+  group some other way than the file.
 
 ## Supported versions
 

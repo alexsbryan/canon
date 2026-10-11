@@ -328,7 +328,16 @@ pub fn fail(e: impl std::fmt::Display) -> i32 {
 }
 
 pub fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
-    let act = Act::new(kind, store::now(), store::actor());
+    write_as(d, kind, &store::actor())
+}
+
+/// [`write`], for a caller that already knows who is acting — `canon ui`
+/// decided whose queue to show when it started, and writes as that person.
+pub fn write_as(d: &Path, kind: ActKind, actor: &str) -> Result<Act, String> {
+    let act = Act::new(kind, store::now(), actor);
+    // Signed if its actor has bound a key, refused if it cannot be. A write
+    // that would not count is never appended.
+    let act = crate::identify::sign_if_bound(&store::read(d)?, act)?;
     store::append(d, &act)?;
     Ok(act)
 }
@@ -411,32 +420,78 @@ pub fn add(args: &[String]) -> i32 {
         Ok(d) => d,
         Err(e) => return fail(e),
     };
-    match write(
-        &d,
-        ActKind::Assert {
-            text: (*text).to_string(),
-            from: None,
-            source: None,
-        },
-    ) {
+    match propose(&d, &store::actor(), text, scope) {
         Ok(act) => {
-            if let Some(s) = scope {
-                if let Err(e) = write(
-                    &d,
-                    ActKind::Scoped {
-                        commitment: act.id.clone(),
-                        scope: s,
-                    },
-                ) {
-                    return fail(e);
-                }
-            }
             println!("{}  {}", act.id, text);
             report_status(&d, &act.id);
             0
         }
         Err(e) => fail(e),
     }
+}
+
+/// Write a commitment, and its scope when it has one: what `add` writes,
+/// for `add` and for the page.
+pub fn propose(
+    d: &Path,
+    actor: &str,
+    text: &str,
+    scope: Option<canon_core::Scope>,
+) -> Result<Act, String> {
+    let act = write_as(
+        d,
+        ActKind::Assert {
+            text: text.to_string(),
+            from: None,
+            source: None,
+        },
+        actor,
+    )?;
+    if let Some(s) = scope {
+        write_as(
+            d,
+            ActKind::Scoped {
+                commitment: act.id.clone(),
+                scope: s,
+            },
+            actor,
+        )?;
+    }
+    Ok(act)
+}
+
+/// Replace `old` with `text`, keeping the reason: what `supersede` writes,
+/// for `supersede` and for the page. The replacement lives where the old
+/// rule lived unless `scope` says otherwise, so the same people who
+/// ratified the rule ratify its replacement.
+pub fn replace(
+    d: &Path,
+    actor: &str,
+    old: &ActId,
+    text: &str,
+    why: &str,
+    scope: Option<canon_core::Scope>,
+) -> Result<Act, String> {
+    let act = write_as(
+        d,
+        ActKind::Supersede {
+            text: text.to_string(),
+            old: vec![old.clone()],
+            rationale: why.to_string(),
+        },
+        actor,
+    )?;
+    if let Some(s) = scope {
+        write_as(
+            d,
+            ActKind::Scoped {
+                commitment: act.id.clone(),
+                scope: s,
+            },
+            actor,
+        )?;
+    }
+    Ok(act)
 }
 
 /// Approve a proposal: a position toward it, by name. Whether that makes it
@@ -646,6 +701,23 @@ pub fn list(args: &[String]) -> i32 {
         );
         eprintln!("  `canon log` shows them; `canon list --json` has their ids under `unattended`");
     }
+    // A forgery is louder than an unsigned agent: somebody wrote as
+    // somebody else.
+    if !st.unverified.is_empty() {
+        eprintln!(
+            "\nwarning: {} act(s) under a name that has bound a key were not signed by it, and \
+             do not count: {}",
+            st.unverified.len(),
+            by_kind(
+                &log,
+                &st.unverified
+                    .iter()
+                    .map(|(id, _)| id.clone())
+                    .collect::<Vec<_>>()
+            )
+        );
+        eprintln!("  `canon log` says why for each; `canon identify` says who you are");
+    }
     if let Some(note) = carried_note(&st) {
         eprintln!("\n{note}");
     }
@@ -695,6 +767,7 @@ fn kind_noun(kind: &ActKind) -> &'static str {
         ActKind::DrawSecret { .. } | ActKind::DrawReveal { .. } => "draw secret",
         ActKind::Horizon { .. } => "horizon",
         ActKind::Rank { .. } => "rank",
+        ActKind::Key { .. } => "key binding",
         ActKind::Annotation { .. } => "annotation",
     }
 }
@@ -761,26 +834,15 @@ pub fn supersede(args: &[String]) -> i32 {
         Ok(None) => st.scope_of(&old).cloned(),
         Err(e) => return fail(e),
     };
-    match write(
+    match replace(
         &d,
-        ActKind::Supersede {
-            text: pos[1].to_string(),
-            old: vec![old.clone()],
-            rationale: flag(args, "-m").unwrap_or_default().to_string(),
-        },
+        &store::actor(),
+        &old,
+        pos[1],
+        flag(args, "-m").unwrap_or_default(),
+        scope,
     ) {
         Ok(act) => {
-            if let Some(s) = scope {
-                if let Err(e) = write(
-                    &d,
-                    ActKind::Scoped {
-                        commitment: act.id.clone(),
-                        scope: s,
-                    },
-                ) {
-                    return fail(e);
-                }
-            }
             println!("{}  {}", act.id, pos[1]);
             println!("  replaces {old}");
             report_status(&d, &act.id);
@@ -1043,6 +1105,20 @@ pub fn log(args: &[String]) -> i32 {
             ActKind::Rank { commitment, rank } => {
                 format!("rank       {commitment} is a {rank}")
             }
+            ActKind::Key { keys, prior, .. } => {
+                let fps: Vec<String> = keys
+                    .iter()
+                    .map(|k| {
+                        canon_core::Key::parse(k)
+                            .map(|k| k.fingerprint())
+                            .unwrap_or_else(|e| format!("(unreadable: {e})"))
+                    })
+                    .collect();
+                match prior.len() {
+                    0 => format!("key        {}", fps.join(", ")),
+                    n => format!("key        {}, vouching for {n}", fps.join(", ")),
+                }
+            }
             // Shown, and shown as unread. The whole point of carrying an
             // annotation this build does not understand is that nothing is
             // lost; rendering it as though it were nothing would lose it
@@ -1067,6 +1143,11 @@ pub fn log(args: &[String]) -> i32 {
         // has to say which.
         if let Some((_, why)) = st.ungoverned.iter().find(|(x, _)| *x == act.id) {
             println!("{}", crate::wrap::hang("    NOT APPLIED: ", why));
+        }
+        // Under a name that has bound a key, and not signed by it: carried,
+        // and the fold never saw it.
+        if let Some((_, why)) = st.unverified.iter().find(|(x, _)| *x == act.id) {
+            println!("{}", crate::wrap::hang("    DOES NOT COUNT: ", why));
         }
         // A retraction written without standing is neither applied nor
         // refused when written; say which it has since become.

@@ -729,11 +729,12 @@ fn a_carried_annotation_changes_nothing_and_is_reported() {
 
 #[test]
 fn a_version_beyond_this_build_is_still_refused() {
-    // v2 widened what ops mean, not what versions mean.
-    let ahead = line("assert", r#","text":"x""#).replace(r#""v":2"#, r#""v":3"#);
+    // v2 widened what ops mean, not what versions mean. v3 is signing, and
+    // the next one is refused the same way.
+    let ahead = line("assert", r#","text":"x""#).replace(r#""v":2"#, r#""v":4"#);
     assert!(matches!(
         Log::parse(&ahead),
-        Err(ParseError::UnknownVersion { found: 3, .. })
+        Err(ParseError::UnknownVersion { found: 4, .. })
     ));
 }
 
@@ -1129,6 +1130,13 @@ fn every_kind() -> Vec<ActKind> {
             commit: id.clone(),
             secret: "s".into(),
         },
+        ActKind::Key {
+            keys: vec![
+                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIlizSIN3DQV78VPNjVvvwjgf+P5HqbPYCYu3BOMdjAE"
+                    .into(),
+            ],
+            prior: vec![crate::id::digest_hex(b"p")],
+        },
         ActKind::Rank {
             commitment: id,
             rank: "principle".into(),
@@ -1191,6 +1199,7 @@ fn op_of(kind: &ActKind) -> &'static str {
         ActKind::Ratification { .. } => "ratification",
         ActKind::Allot { .. } => "allot",
         ActKind::Allocation { .. } => "allocation",
+        ActKind::Key { .. } => "key",
         ActKind::Annotation { kind, .. } => {
             assert_eq!(kind, "from-the-future");
             "(carried)"

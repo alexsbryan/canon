@@ -70,6 +70,8 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 
 | What it does | Example |
 |---|---|
+| What's waiting on you, one at a time: approve, object, or skip | `canon review` |
+| All of this as a page in your browser: decide, propose, change a rule, identify | `canon ui` |
 | Propose a rule; it's a proposal until its room ratifies it | `canon add "Quiet hours run 11pm to 7am." --scope house.quiet` |
 | What's in force now, and what's still proposed | `canon list` |
 | Where a rule came from, and what it replaced | `canon why can-ffc1` |
@@ -107,6 +109,18 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | Mark a rule as a principle, not a convention | `canon rank can-ffc1 principle` |
 | What someone raised, and what came of it | `canon voice human:dana` |
 | Leave a room, and leave a question behind | `canon leave house.kitchen -m "Who waters the plants while I'm gone?"` |
+| Make it so only your key can write as you | `canon identify ~/.ssh/id_ed25519_sk.pub` |
+| Who you are here, and what doesn't count | `canon identify` |
+
+Anyone who can write the file can write under your name until you run
+`canon identify` with your SSH key. After that, only what that key signs
+counts as yours, and anything else under your name is kept and marked as
+not counting. There is nothing to configure: canon finds the key in
+`~/.ssh` or your ssh-agent. Tell the group your key's fingerprint in person
+or some other channel, since the file can't prove who identified first. A
+key you have to touch (`ssh-keygen -t ed25519-sk`) also stops programs
+running as you from signing. A name binds once, so losing your key means a
+new name; name a backup key too if that would hurt.
 
 ### Sharing a thing
 

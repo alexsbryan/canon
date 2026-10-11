@@ -217,7 +217,7 @@ def run(root):
             raise ValueError("candidate changed the independently selected baseline")
         checked(["git", "cat-file", "-e", f"{revision}^{{commit}}"], root)
         env = os.environ.copy()
-        for key in ("CANON_DIR", "CANON_ACTOR", "CANON_ENDPOINT", "CANON_MODEL", "CANON_EXTRACT_MODEL", "CANON_API_KEY"):
+        for key in ("CANON_DIR", "CANON_ACTOR", "CANON_ENDPOINT", "CANON_MODEL", "CANON_EXTRACT_MODEL", "CANON_API_KEY", "CANON_SIGNING_KEY"):
             env.pop(key, None)
         tool_env = dict(env, CARGO_TARGET_DIR=str(target / "contract-tools"))
         # Build the inspector owned by the evaluator checkout, not the candidate.

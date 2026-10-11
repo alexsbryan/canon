@@ -7,6 +7,41 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Before you upgrade
+
+- Nothing changes for a canon in which nobody runs `canon identify`: it
+  keeps writing format version 2 and reads exactly as before. Once someone
+  identifies, the file holds version 3 lines, which older canon refuses.
+  Upgrade everyone who reads a canon before anyone in it identifies.
+- For code built on `canon-core`: `ActKind` has a `Key` variant, so an
+  exhaustive `match` on it needs an arm. `Act` carries `refs` and `sig`,
+  and `Canon` carries `unverified`: acts under a name that has bound a key
+  which its key did not sign, kept and not applied.
+
+### Changes
+
+- `canon review` walks you through what's waiting on you, one proposal at
+  a time: the words, who proposed them and when, the source passage they
+  came from, what they'd replace and why, and who has to decide. Approve,
+  object with a reason, or skip. It only shows what your approval or
+  objection would actually change.
+- `canon ui` is canon as a page in your browser. Decide what's waiting on
+  you, propose a rule, change a rule's wording or take it away, leave
+  something unwritten on purpose or lift it, and identify yourself, all
+  without the command line. A proposed change is shown marked up against
+  the wording it replaces. It runs on this machine only, for as long as you
+  leave it open, and loads nothing from the internet.
+- You can make it so only your key writes as you. `canon identify
+  <key.pub>` binds an SSH key to your name; after that, an act under your
+  name counts only if your key signed it, and anything else under it, such
+  as a line written with `CANON_ACTOR` set to you, is kept and marked as not
+  counting in `list` and `log`. Run it again to see who you are. canon finds
+  your key in `~/.ssh` or your ssh-agent, so there is nothing to configure,
+  and it never holds a private key: `ssh-keygen` signs. A name binds once.
+  Nothing changes for anyone who doesn't identify.
+- Signed lines and key bindings are format version 3. Older canon refuses a
+  file that has any, so upgrade everyone who reads a canon before anyone in
+  it binds a key. A canon where nobody binds keeps writing version 2.
 - `CANON_API_KEY` is sent as a bearer token, so canon can use a hosted
   endpoint that requires a key. It's read from the environment only; `config
   show` says whether it's set without printing it.

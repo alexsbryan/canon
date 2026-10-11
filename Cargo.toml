@@ -16,6 +16,10 @@ serde = { version = "1", default-features = false, features = ["alloc", "derive"
 # to identical bytes because a `Map` sorts its keys.
 serde_json = { version = "1", default-features = false, features = ["alloc", "raw_value"] }
 sha2 = { version = "0.10", default-features = false }
+# Verifies a signed act's Ed25519 signature inside the fold. No dependencies
+# of its own and no_std, so the core still reads no file and opens no socket.
+# Signing stays outside canon entirely: `ssh-keygen -Y sign` holds the key.
+ed25519-compact = { version = "2.6", default-features = false }
 # The only network dependency in the tree. Blocking, so no async runtime
 # enters a CLI that spends its life folding a file.
 ureq = "2.12"

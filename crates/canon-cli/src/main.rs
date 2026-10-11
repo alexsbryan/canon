@@ -17,6 +17,7 @@ mod draw_cmd;
 mod explain;
 mod govern;
 mod guard;
+mod identify;
 mod lineage;
 mod locate;
 mod mcp;
@@ -27,6 +28,7 @@ mod rebase;
 mod render;
 mod replay;
 mod resolver;
+mod review;
 mod seen;
 mod sources;
 mod store;
@@ -35,6 +37,7 @@ mod tensions;
 mod term;
 #[cfg(test)]
 mod testing;
+mod ui;
 mod wrap;
 
 /// What a new person is shown.
@@ -74,7 +77,13 @@ USAGE
 
 RECORD                                        (no model needed)
   init [--profile personal|code|house]  start a canon here
+  identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
+                                         again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
+  review [--json]                        what is waiting on you, one at a time
+  ui                                     canon as a page on this machine: decide, propose,
+                                         change or take away a rule, leave something
+                                         unwritten, identify yourself
   approve <id> [-m \"<why>\"]             approve a proposal, by name
   object <id> -m \"<why>\"                object to one; the reason is required
   list                                   what is live now, and what is proposed
@@ -171,7 +180,10 @@ FLAGS
   --allow-remote  permit an endpoint that is not on this machine
 
 ENVIRONMENT
-  CANON_ACTOR      who is acting (default: git user.name, prefixed human:)
+  CANON_ACTOR      who is acting (default: git user.name, prefixed human:);
+                   a name that has bound a key also needs that key to sign
+  CANON_SIGNING_KEY  the key you sign with, when it is not in ~/.ssh
+                   or your ssh-agent
   CANON_DIR        use this canon instead of searching upward
   CANON_ENDPOINT   override the configured endpoint for one run
   CANON_MODEL      override the configured model for one run
@@ -222,6 +234,8 @@ fn main() {
         "add" => cmds::add(rest),
         "approve" => cmds::approve(rest),
         "object" => cmds::object(rest),
+        "review" => review::run(rest),
+        "ui" => ui::run(rest),
         "list" => cmds::list(rest),
         "why" => cmds::why(rest),
         "supersede" => cmds::supersede(rest),
@@ -252,6 +266,7 @@ fn main() {
         "replay" => replay::run(rest),
         "witness" => guard::witness(rest),
         "guard" => guard::guard(rest),
+        "identify" => identify::run(rest),
         "open" => cmds::open(rest),
         "mcp" => mcp::serve(),
         "share" => lineage::share(rest),
