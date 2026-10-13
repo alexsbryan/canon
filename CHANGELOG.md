@@ -23,7 +23,9 @@ renames that heading to the version, and its section becomes the release notes
 - `canon review` walks you through what's waiting on you, one proposal at
   a time and one room at a time: the words, who proposed them and when, the
   source passage they came from, what they'd replace and why, and who has
-  to decide. Approve, object with a reason, or skip. It shows what your
+  to decide. A long proposal shows its first 20 lines and how many there
+  are, and `v` reads all of it in your `$PAGER` (`less` if unset).
+  Approve, object with a reason, or skip. It shows what your
   approval or objection would actually change. When nobody holds a room
   yet, it asks once whether you'll take it on: yes is the same grant
   `canon grant <you> <room>` writes, and no skips that room's proposals.

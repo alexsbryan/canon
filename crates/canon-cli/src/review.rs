@@ -299,6 +299,8 @@ pub trait Prompt {
     fn say(&mut self, text: &str);
     /// One line typed in answer, trimmed; `None` at the end of input.
     fn ask(&mut self, question: &str) -> Option<String>;
+    /// All of `text`, for reading at the person's pace. Why not, when not.
+    fn page(&mut self, text: &str) -> Result<(), String>;
 }
 
 /// Standard input and output, once [`door`] has found both a terminal.
@@ -318,6 +320,38 @@ impl Prompt for Terminal {
         match self.input.read_line(&mut line) {
             Ok(0) | Err(_) => None,
             Ok(_) => Some(line.trim().to_string()),
+        }
+    }
+
+    /// Through `$PAGER`, else `less`: the program and its arguments split on
+    /// whitespace and run directly, no shell, so it works where there is
+    /// none.
+    fn page(&mut self, text: &str) -> Result<(), String> {
+        let pager = std::env::var("PAGER")
+            .ok()
+            .filter(|p| !p.trim().is_empty())
+            .unwrap_or_else(|| "less".into());
+        let mut words = pager.split_whitespace();
+        let program = words.next().unwrap_or("less");
+        let mut child = std::process::Command::new(program)
+            .args(words)
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("could not run the pager `{pager}` ({e}); set PAGER"))?;
+        if let Some(mut input) = child.stdin.take() {
+            // Quitting the pager before the end closes the pipe: read enough.
+            match input.write_all(text.as_bytes()) {
+                Err(e) if e.kind() != std::io::ErrorKind::BrokenPipe => {
+                    return Err(format!("writing to `{pager}`: {e}"));
+                }
+                _ => {}
+            }
+        }
+        let status = child.wait().map_err(|e| format!("`{pager}`: {e}"))?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!("the pager `{pager}` exited with {status}"))
         }
     }
 }
@@ -618,7 +652,8 @@ fn walk(
 /// or input ended before answering it, so nothing after it is asked.
 fn one(d: &Path, actor: &str, item: &Item, prompt: &mut dyn Prompt, tally: &mut Tally) -> bool {
     loop {
-        let Some(answer) = prompt.ask("\n  [a]pprove  [o]bject  [s]kip  [q]uit  › ") else {
+        let Some(answer) = prompt.ask("\n  [a]pprove  [o]bject  [s]kip  [v]iew  [q]uit  › ")
+        else {
             return false;
         };
         let (approve, why) = match answer.to_lowercase().as_str() {
@@ -638,6 +673,14 @@ fn one(d: &Path, actor: &str, item: &Item, prompt: &mut dyn Prompt, tally: &mut 
                 return true;
             }
             "q" | "quit" => return false,
+            "v" | "view" => {
+                if let Err(why) = prompt.page(&whole(item)) {
+                    // Unread is worse than unpaged: say why, then all of it.
+                    prompt.say(&format!("  {why}; here it is in full:\n"));
+                    prompt.say(&whole(item));
+                }
+                continue;
+            }
             _ => continue,
         };
         match decide(d, actor, &item.id, approve, &why) {
@@ -675,6 +718,46 @@ pub fn whoami(log: &Log, actor: &str, from: &str) -> String {
     }
 }
 
+/// How much of a proposal's text the card shows before [v]iew. A rule is a
+/// sentence; a proposal can be a whole charter (23 KB, the day this was
+/// written), and a card that scrolls it past is one nobody reads.
+const EXCERPT: usize = 20;
+
+/// `text` as the terminal shows it: each of its own lines wrapped under
+/// `lead`, so a document keeps its paragraphs. The first line carries
+/// `lead`, the rest are indented to match.
+fn rendered(lead: &str, text: &str) -> Vec<String> {
+    let pad = " ".repeat(lead.chars().count());
+    let mut out = Vec::new();
+    for (i, line) in text.trim().lines().enumerate() {
+        if line.trim().is_empty() {
+            out.push(String::new());
+            continue;
+        }
+        let prefix = if i == 0 { lead } else { &pad };
+        out.extend(crate::wrap::hang(prefix, line).lines().map(String::from));
+    }
+    if out.is_empty() {
+        out.push(lead.trim_end().to_string());
+    }
+    out
+}
+
+/// All of a proposal, for the pager: what it is and who proposed it, then
+/// its text exactly as written.
+fn whole(item: &Item) -> String {
+    format!(
+        "{} · {}{} · proposed by {}\n\n{}\n",
+        item.id,
+        item.kind.noun(),
+        item.scope
+            .as_ref()
+            .map_or_else(String::new, |s| format!(" in {s}")),
+        item.by,
+        item.text.trim_end()
+    )
+}
+
 /// One proposal as the terminal shows it.
 fn card(d: &Path, item: &Item, now: i64) -> String {
     let mut out = format!(
@@ -691,8 +774,17 @@ fn card(d: &Path, item: &Item, now: i64) -> String {
     } else {
         "  "
     };
-    out.push_str(&crate::wrap::hang(lead, &item.text));
+    let lines = rendered(lead, &item.text);
+    out.push_str(&lines[..lines.len().min(EXCERPT)].join("\n"));
     out.push('\n');
+    if lines.len() > EXCERPT {
+        out.push_str(&format!(
+            "  … the first {EXCERPT} of {} lines; [v]iew reads it all\n",
+            lines.len()
+        ));
+    } else if lines.len() > 1 {
+        out.push_str(&format!("  ({} lines)\n", lines.len()));
+    }
     if item.kind != Kind::Retraction {
         for (old, text) in &item.replaces {
             out.push('\n');

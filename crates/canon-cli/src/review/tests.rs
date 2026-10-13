@@ -152,6 +152,9 @@ pub(crate) struct Script {
     answers: std::collections::VecDeque<String>,
     pub said: Vec<String>,
     pub asked: Vec<String>,
+    pub paged: Vec<String>,
+    /// What the pager fails with, when it should.
+    pub pager_fails: Option<String>,
 }
 
 impl Script {
@@ -160,6 +163,8 @@ impl Script {
             answers: answers.iter().map(|a| a.to_string()).collect(),
             said: Vec::new(),
             asked: Vec::new(),
+            paged: Vec::new(),
+            pager_fails: None,
         }
     }
 
@@ -176,6 +181,16 @@ impl Prompt for Script {
     fn ask(&mut self, question: &str) -> Option<String> {
         self.asked.push(question.to_string());
         self.answers.pop_front()
+    }
+
+    fn page(&mut self, text: &str) -> Result<(), String> {
+        match &self.pager_fails {
+            Some(why) => Err(why.clone()),
+            None => {
+                self.paged.push(text.to_string());
+                Ok(())
+            }
+        }
     }
 }
 
@@ -521,5 +536,71 @@ fn scopes_are_walked_one_at_a_time_and_scope_narrows_the_walk() {
     assert_eq!(
         script.said.last().unwrap().trim(),
         "approved 0, objected 0, skipped 2"
+    );
+}
+
+/// A charter-sized proposal: 45 numbered lines.
+fn charter() -> String {
+    (1..=45)
+        .map(|n| format!("Clause {n}: something the house agreed."))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[test]
+fn a_long_proposal_shows_twenty_lines_and_a_count_and_view_pages_all_of_it() {
+    let text = charter();
+    let (d, ids) = scratch("view", &[text.as_str()]);
+    let (code, script) = alex(&d, &["v", "s"]);
+    assert_eq!(code, 0, "{}", script.heard());
+    let heard = script.heard();
+    assert!(heard.contains("Clause 20:"), "{heard}");
+    assert!(
+        !heard.contains("Clause 21:"),
+        "the card stops at twenty: {heard}"
+    );
+    assert!(
+        heard.contains("the first 20 of 45 lines; [v]iew reads it all"),
+        "{heard}"
+    );
+    assert!(
+        heard.contains(ids[0].as_str()) && heard.contains("in house"),
+        "{heard}"
+    );
+    assert!(heard.contains("agent:euphemia"), "{heard}");
+    // The pager got every line, and the id, scope and proposer above them.
+    assert_eq!(script.paged.len(), 1);
+    assert!(script.paged[0].contains(&text), "{}", script.paged[0]);
+    assert!(script.paged[0].starts_with(ids[0].as_str()));
+    // Viewing is not answering: it asks again, and skip is the answer.
+    assert_eq!(script.asked.len(), 2);
+    assert!(script.asked[0].contains("[v]iew"));
+    assert_eq!(
+        script.said.last().unwrap().trim(),
+        "approved 0, objected 0, skipped 1"
+    );
+}
+
+#[test]
+fn a_pager_that_cannot_run_says_why_and_shows_it_all_anyway() {
+    let text = charter();
+    let (d, _) = scratch("nopager", &[text.as_str()]);
+    let mut script = Script::new(&["v", "a"]);
+    script.pager_fails = Some("could not run the pager `nope`".into());
+    let code = session(&d, "human:alex", "CANON_ACTOR", true, None, &mut script);
+    assert_eq!(code, 0);
+    let heard = script.heard();
+    assert!(heard.contains("could not run the pager `nope`"), "{heard}");
+    assert!(heard.contains("Clause 45:"), "{heard}");
+    assert_eq!(positions(&d).len(), 1);
+}
+
+#[test]
+fn a_short_rule_reads_as_it_always_did() {
+    let rule = "Quiet hours are 10pm to 7am.";
+    assert_eq!(rendered("  ", rule), vec![format!("  {rule}")]);
+    assert_eq!(
+        rendered("  take away: ", "one\n\ntwo"),
+        vec!["  take away: one", "", "             two"]
     );
 }
