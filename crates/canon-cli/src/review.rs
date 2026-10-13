@@ -24,7 +24,7 @@ use std::path::{Path, PathBuf};
 use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Status, Verdict};
 use serde::Serialize;
 
-use crate::cmds::{fail, has, load, write_as};
+use crate::cmds::{answer, fail, has, load};
 use crate::explain::{one_line, person};
 use crate::store;
 
@@ -240,7 +240,8 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
 }
 
 /// Approve or object, and say where it stands afterwards. The one way both
-/// faces write, so a decision from the page is the same act as one typed.
+/// faces write, so a decision from the page is the same act as one typed —
+/// and the same act `canon approve` and `canon object` write.
 pub fn decide(
     d: &Path,
     actor: &str,
@@ -248,24 +249,7 @@ pub fn decide(
     approve: bool,
     because: &str,
 ) -> Result<String, String> {
-    let because = because.trim();
-    if !approve && because.is_empty() {
-        return Err("an objection needs a reason — a bare no does not count".into());
-    }
-    write_as(
-        d,
-        ActKind::Position {
-            about: id.as_str().into(),
-            citing: None,
-            pull: if approve { Pull::Toward } else { Pull::Against },
-            because: if because.is_empty() {
-                "approved".into()
-            } else {
-                because.into()
-            },
-        },
-        actor,
-    )?;
+    answer(d, actor, id, approve, because)?;
     let st = store::read(d)?.derive_at(store::now());
     Ok(outcome(&st, id))
 }
