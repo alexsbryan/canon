@@ -21,10 +21,12 @@
 use std::io::{BufRead, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
-use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Status, Verdict};
+use std::collections::BTreeMap;
+
+use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Scope, Status, Verdict};
 use serde::Serialize;
 
-use crate::cmds::{answer, fail, has, load};
+use crate::cmds::{answer, fail, flag, has, load};
 use crate::explain::{one_line, person};
 use crate::store;
 
@@ -351,13 +353,24 @@ pub fn door(terminal: bool, actor: &str, from: &str) -> Result<(), String> {
 }
 
 pub fn run(args: &[String]) -> i32 {
+    let only = match flag(args, "--scope").map(|raw| Scope::new(raw).ok_or(raw)) {
+        None => None,
+        Some(Ok(s)) => Some(s),
+        Some(Err(raw)) => return fail(format!("`{raw}` is not a scope")),
+    };
     if has(args, "--json") {
         let (_, log, st) = match load() {
             Ok(v) => v,
             Err(e) => return fail(e),
         };
         let actor = store::actor();
-        let items = queue(&log, &st, &actor, store::now());
+        let items: Vec<Item> = queue(&log, &st, &actor, store::now())
+            .into_iter()
+            .filter(|i| {
+                only.as_ref()
+                    .is_none_or(|o| scope_of(i).is_some_and(|s| o.covers(&s)))
+            })
+            .collect();
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({ "actor": actor, "items": items }))
@@ -378,7 +391,7 @@ pub fn run(args: &[String]) -> i32 {
     let mut terminal = Terminal {
         input: std::io::stdin().lock(),
     };
-    session(&d, &actor, from, true, &mut terminal)
+    session(&d, &actor, from, true, only.as_ref(), &mut terminal)
 }
 
 /// What a session decided. Counted from what was written, not what was
@@ -412,13 +425,20 @@ impl Tally {
 }
 
 /// `canon review` at a terminal, over the canon in `d`, deciding as
-/// `actor`. The door is checked again here, so a caller that forgot it is
+/// `actor`, in `only` and the scopes under it when it is given. The door is checked again here, so a caller that forgot it is
 /// refused too. Exits 0 unless an act it was asked to write failed.
-pub fn session(d: &Path, actor: &str, from: &str, terminal: bool, prompt: &mut dyn Prompt) -> i32 {
+pub fn session(
+    d: &Path,
+    actor: &str,
+    from: &str,
+    terminal: bool,
+    only: Option<&Scope>,
+    prompt: &mut dyn Prompt,
+) -> i32 {
     if let Err(why) = door(terminal, actor, from) {
         return fail(why);
     }
-    let tally = match walk(d, actor, from, prompt) {
+    let tally = match walk(d, actor, from, only, prompt) {
         Ok(t) => t,
         Err(e) => return fail(e),
     };
@@ -426,45 +446,169 @@ pub fn session(d: &Path, actor: &str, from: &str, terminal: bool, prompt: &mut d
     i32::from(tally.failed > 0)
 }
 
-/// Every proposal waiting on `actor`, one at a time.
-fn walk(d: &Path, actor: &str, from: &str, prompt: &mut dyn Prompt) -> Result<Tally, String> {
+/// The scope an item is in, when it names one.
+fn scope_of(item: &Item) -> Option<Scope> {
+    item.scope.as_deref().and_then(Scope::new)
+}
+
+/// `scope`, when nobody holds standing over it now: the fold read fresh,
+/// because an earlier answer in this session may have changed it.
+fn unheld(d: &Path, scope: Option<&Scope>) -> Result<Option<Scope>, String> {
+    let Some(scope) = scope else { return Ok(None) };
+    let now = store::now();
+    let st = store::read(d)?.derive_at(now);
+    Ok(st.who_decides(scope, now).is_empty().then(|| scope.clone()))
+}
+
+/// What came of offering somebody standing over a scope nobody holds.
+enum Stand {
+    Took,
+    Declined,
+    /// Written, and the fold did not apply it. Why.
+    Refused(String),
+    /// Input ended, or the grant could not be written.
+    Quit,
+    Failed(String),
+}
+
+/// "nobody holds `scope`; take standing?" — and on yes, the grant `canon
+/// grant <actor> <scope>` writes, through the same [`crate::govern::give`].
+/// Whether it took is the fold's answer, never assumed.
+fn stand(d: &Path, actor: &str, scope: &Scope, prompt: &mut dyn Prompt) -> Stand {
+    let Some(answer) = prompt.ask(&format!("nobody holds {scope}; take standing? [y/N] › "))
+    else {
+        return Stand::Quit;
+    };
+    if !matches!(answer.to_lowercase().as_str(), "y" | "yes") {
+        return Stand::Declined;
+    }
+    let act = match crate::govern::give(d, actor, actor, scope, None, "") {
+        Ok(a) => a,
+        Err(e) => return Stand::Failed(e),
+    };
+    match crate::cmds::took(d, &act.id) {
+        crate::cmds::Took::Applied | crate::cmds::Took::Open(_) => Stand::Took,
+        crate::cmds::Took::Refused(why) | crate::cmds::Took::Proposed(why) => Stand::Refused(why),
+    }
+}
+
+/// Every proposal waiting on `actor`, a scope at a time, one at a time.
+///
+/// What waits is the fold's answer ([`queue`]), with one addition: a
+/// proposal in a scope nobody holds waits on whoever is willing to take
+/// that scope on, so it is shown after asking once whether they will. On
+/// yes the fold is asked again, so whether it waits on them now is still
+/// its answer.
+fn walk(
+    d: &Path,
+    actor: &str,
+    from: &str,
+    only: Option<&Scope>,
+    prompt: &mut dyn Prompt,
+) -> Result<Tally, String> {
     let log = store::read(d)?;
     let now = store::now();
     let st = log.derive_at(now);
-    let items = queue(&log, &st, actor, now);
-    let (mine, others): (Vec<&Item>, Vec<&Item>) = items.iter().partition(|i| i.yours);
+    let answered: std::collections::BTreeSet<&str> = st
+        .positions
+        .iter()
+        .filter(|p| p.by == actor)
+        .map(|p| p.about.as_str())
+        .collect();
+    let mut mine: BTreeMap<Option<String>, Vec<Item>> = BTreeMap::new();
+    let mut others = 0;
+    for item in queue(&log, &st, actor, now) {
+        let scope = scope_of(&item);
+        if only.is_some_and(|o| !scope.as_ref().is_some_and(|s| o.covers(s))) {
+            continue;
+        }
+        let open = scope
+            .as_ref()
+            .is_some_and(|s| st.who_decides(s, now).is_empty())
+            && !answered.contains(item.id.as_str());
+        if item.yours || open {
+            mine.entry(item.scope.clone()).or_default().push(item);
+        } else {
+            others += 1;
+        }
+    }
     prompt.say(&whoami(&log, actor, from));
     let mut tally = Tally::default();
-    if mine.is_empty() {
-        prompt.say("Nothing is waiting on you.");
-        if !others.is_empty() {
-            prompt.say(&format!(
-                "{} waiting on someone else — `canon list` shows what each needs.",
-                others.len()
-            ));
-        }
+    let total: usize = mine.values().map(Vec::len).sum();
+    let elsewhere = if others == 0 {
+        String::new()
+    } else {
+        format!(", {others} on someone else")
+    };
+    if total == 0 {
+        prompt.say(&format!("Nothing is waiting on you{elsewhere}."));
         return Ok(tally);
     }
-    prompt.say(&format!(
-        "{} waiting on you{}.",
-        mine.len(),
-        if others.is_empty() {
-            String::new()
-        } else {
-            format!(", {} on someone else", others.len())
+    prompt.say(&format!("{total} waiting on you{elsewhere}."));
+    let mut n = 0;
+    for (scope, mut items) in mine {
+        items.sort_by_key(|i| i.at);
+        let label = scope.as_deref().unwrap_or("the canon as a whole");
+        prompt.say(&format!("\n━━ {label}: {} ━━", items.len()));
+        if let Some(s) = unheld(d, scope.as_deref().and_then(Scope::new).as_ref())? {
+            match stand(d, actor, &s, prompt) {
+                Stand::Took => {
+                    prompt.say(&format!("  you hold {s} now"));
+                    // Asked again: the grant is on the record, and what
+                    // waits on you is still the fold's call.
+                    let log = store::read(d)?;
+                    let now = store::now();
+                    let fresh = queue(&log, &log.derive_at(now), actor, now);
+                    items = items
+                        .into_iter()
+                        .filter_map(|i| {
+                            let now_yours = fresh.iter().find(|f| f.id == i.id && f.yours);
+                            if now_yours.is_none() {
+                                prompt.say(&format!("  {} does not wait on you even so", i.id));
+                                tally.skipped += 1;
+                                n += 1;
+                            }
+                            now_yours.cloned()
+                        })
+                        .collect();
+                }
+                Stand::Declined => {
+                    prompt.say(&format!("  skipped {} in {s}", items.len()));
+                    tally.skipped += items.len();
+                    n += items.len();
+                    continue;
+                }
+                Stand::Refused(why) => {
+                    prompt.say(&crate::wrap::hang("  not granted: ", &why));
+                    tally.failed += 1;
+                    tally.skipped += items.len();
+                    n += items.len();
+                    continue;
+                }
+                Stand::Failed(why) => {
+                    prompt.say(&crate::wrap::hang("  not written: ", &why));
+                    tally.failed += 1;
+                    tally.skipped += items.len();
+                    n += items.len();
+                    continue;
+                }
+                Stand::Quit => {
+                    tally.unreached = total - n;
+                    return Ok(tally);
+                }
+            }
         }
-    ));
-    let total = mine.len();
-    for (n, item) in mine.into_iter().enumerate() {
-        prompt.say(&format!(
-            "\n── {} of {total} ─────────────────────────────",
-            n + 1
-        ));
-        prompt.say(&card(d, item, now));
-        if !one(d, actor, item, prompt, &mut tally) {
-            // This one was not answered either, so it is left with the rest.
-            tally.unreached = total - n;
-            break;
+        for item in &items {
+            n += 1;
+            prompt.say(&format!(
+                "\n── {n} of {total} ─────────────────────────────"
+            ));
+            prompt.say(&card(d, item, now));
+            if !one(d, actor, item, prompt, &mut tally) {
+                // This one was not answered either, so it is left with the rest.
+                tally.unreached = total - n + 1;
+                return Ok(tally);
+            }
         }
     }
     Ok(tally)

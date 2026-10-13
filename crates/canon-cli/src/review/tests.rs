@@ -183,6 +183,12 @@ impl Prompt for Script {
 /// `texts` in it, an hour ago, a second apart. The `.canon` dir and the
 /// proposals' ids, oldest first.
 fn scratch(name: &str, texts: &[&str]) -> (PathBuf, Vec<ActId>) {
+    let scoped: Vec<(&str, &str)> = texts.iter().map(|t| ("house", *t)).collect();
+    scratch_in(name, &scoped)
+}
+
+/// [`scratch`], each proposal in the scope named beside it.
+fn scratch_in(name: &str, proposals: &[(&str, &str)]) -> (PathBuf, Vec<ActId>) {
     let root =
         std::env::temp_dir().join(format!("canon-review-walk-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
@@ -205,7 +211,7 @@ fn scratch(name: &str, texts: &[&str]) -> (PathBuf, Vec<ActId>) {
     )
     .unwrap();
     let mut ids = Vec::new();
-    for (i, text) in texts.iter().enumerate() {
+    for (i, (scope, text)) in proposals.iter().enumerate() {
         let at = then + 10 + i as i64;
         let a = Act::new(
             ActKind::Assert {
@@ -219,7 +225,7 @@ fn scratch(name: &str, texts: &[&str]) -> (PathBuf, Vec<ActId>) {
         let s = Act::new(
             ActKind::Scoped {
                 commitment: a.id.clone(),
-                scope: Scope::new("house").unwrap(),
+                scope: Scope::new(scope).unwrap(),
             },
             at,
             "agent:euphemia",
@@ -255,7 +261,7 @@ fn status(d: &Path, id: &ActId) -> String {
 
 fn alex(d: &Path, answers: &[&str]) -> (i32, Script) {
     let mut script = Script::new(answers);
-    let code = session(d, "human:alex", "CANON_ACTOR", true, &mut script);
+    let code = session(d, "human:alex", "CANON_ACTOR", true, None, &mut script);
     (code, script)
 }
 
@@ -352,7 +358,7 @@ fn an_agent_is_refused_before_anything_is_shown_or_written() {
     let (d, _) = scratch("agent", &["Quiet after ten."]);
     let before = std::fs::read_to_string(d.join(store::FILE)).unwrap();
     let mut script = Script::new(&["a"]);
-    let code = session(&d, "agent:euphemia", "CANON_ACTOR", true, &mut script);
+    let code = session(&d, "agent:euphemia", "CANON_ACTOR", true, None, &mut script);
     assert_eq!(code, 2);
     assert!(script.said.is_empty() && script.asked.is_empty());
     assert_eq!(
@@ -371,7 +377,7 @@ fn without_a_terminal_it_is_refused_before_anything_is_shown_or_written() {
     let (d, _) = scratch("tty", &["Quiet after ten."]);
     let before = std::fs::read_to_string(d.join(store::FILE)).unwrap();
     let mut script = Script::new(&["a"]);
-    let code = session(&d, "human:alex", "git user.name", false, &mut script);
+    let code = session(&d, "human:alex", "git user.name", false, None, &mut script);
     assert_eq!(code, 2);
     assert!(script.said.is_empty() && script.asked.is_empty());
     assert_eq!(
@@ -401,4 +407,119 @@ fn an_act_that_cannot_be_written_is_counted_and_exits_one() {
             "approved 0, objected 0, skipped 0, 1 not written"
         );
     }
+}
+
+/// Every grant in the canon: the act's kind and who wrote it.
+fn grants(d: &Path) -> Vec<(ActKind, String)> {
+    store::read(d)
+        .unwrap()
+        .acts()
+        .iter()
+        .filter(|a| matches!(a.kind, ActKind::Grant { .. }))
+        .map(|a| (a.kind.clone(), a.actor.clone()))
+        .collect()
+}
+
+#[test]
+fn taking_standing_over_a_scope_nobody_holds_is_the_grant_and_then_the_question() {
+    let (d, ids) = scratch_in("take", &[("garden", "Compost goes in the left bin.")]);
+    let (code, script) = alex(&d, &["y", "a"]);
+    assert_eq!(code, 0, "{}", script.heard());
+    assert_eq!(
+        script.asked[0],
+        "nobody holds garden; take standing? [y/N] › "
+    );
+    // The act `canon grant human:alex garden` writes, by alex.
+    assert_eq!(
+        grants(&d).last().unwrap(),
+        &(
+            ActKind::Grant {
+                holder: "human:alex".into(),
+                scope: Scope::new("garden").unwrap(),
+                horizon: None,
+                rationale: String::new(),
+            },
+            "human:alex".to_string()
+        )
+    );
+    let st = store::read(&d).unwrap().derive_at(store::now());
+    let garden = Scope::new("garden").unwrap();
+    assert!(st
+        .who_decides(&garden, store::now())
+        .iter()
+        .any(|g| g.actor == "human:alex"));
+    assert_eq!(positions(&d).len(), 1);
+    assert_eq!(status(&d, &ids[0]), "in force");
+    assert_eq!(
+        script.said.last().unwrap().trim(),
+        "approved 1, objected 0, skipped 0"
+    );
+}
+
+#[test]
+fn declining_standing_skips_that_scope_and_writes_nothing() {
+    let (d, ids) = scratch_in(
+        "decline",
+        &[
+            ("garden", "Compost goes in the left bin."),
+            ("garden", "Hoses coiled."),
+        ],
+    );
+    let (code, script) = alex(&d, &["n", "a"]);
+    assert_eq!(code, 0, "{}", script.heard());
+    assert_eq!(grants(&d).len(), 1, "only the founding grant");
+    assert!(positions(&d).is_empty());
+    assert_eq!(script.asked.len(), 1, "nothing in garden is asked about");
+    assert!(status(&d, &ids[0]).starts_with("still waiting"));
+    assert_eq!(
+        script.said.last().unwrap().trim(),
+        "approved 0, objected 0, skipped 2"
+    );
+}
+
+#[test]
+fn scopes_are_walked_one_at_a_time_and_scope_narrows_the_walk() {
+    let proposals = [
+        ("house", "Quiet after ten."),
+        ("garden", "Compost goes in the left bin."),
+        ("house", "Bins out on Tuesday."),
+    ];
+    // Grouped by scope: garden (asked first, declined), then both in house.
+    let (d, ids) = scratch_in("grouped", &proposals);
+    let (_, script) = alex(&d, &["n", "a", "a"]);
+    let mut decided: Vec<String> = positions(&d).into_iter().map(|p| p.1).collect();
+    decided.sort();
+    let mut house = vec![ids[0].to_string(), ids[2].to_string()];
+    house.sort();
+    assert_eq!(decided, house);
+    // Shown in that order: the garden heading, then house's two, oldest first.
+    let heard = script.heard();
+    let at = |s: &str| {
+        heard
+            .find(s)
+            .unwrap_or_else(|| panic!("{s} not in {heard}"))
+    };
+    assert!(at("garden: 1") < at("house: 2"));
+    assert!(at("house: 2") < at(ids[0].as_str()));
+    assert!(at(ids[0].as_str()) < at(ids[2].as_str()));
+
+    // `--scope house`: garden is never mentioned.
+    let (d, _) = scratch_in("only", &proposals);
+    let mut script = Script::new(&["s", "s"]);
+    let house = Scope::new("house").unwrap();
+    let code = session(
+        &d,
+        "human:alex",
+        "CANON_ACTOR",
+        true,
+        Some(&house),
+        &mut script,
+    );
+    assert_eq!(code, 0);
+    assert!(!script.heard().contains("garden"), "{}", script.heard());
+    assert!(script.asked.iter().all(|q| !q.contains("standing")));
+    assert_eq!(
+        script.said.last().unwrap().trim(),
+        "approved 0, objected 0, skipped 2"
+    );
 }
