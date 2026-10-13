@@ -260,3 +260,38 @@ fn who_names_both_rules_by_name() {
     assert!(out.contains("proposals judged under: default"), "{out}");
     assert!(!out.contains("decided under:"), "{out}");
 }
+
+/// `canon review` decides as a person at a terminal. Run from a pipe (as
+/// every test, script and agent shell runs it) or as an agent, it refuses
+/// in one line and writes nothing; `--json` still reads.
+#[test]
+fn review_refuses_without_a_terminal_and_for_an_agent() {
+    let dir = fresh("review");
+    let (c, out) = canon_as(&dir, "human:sam", &["grant", "human:sam", "house"]);
+    assert_eq!(c, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (c, out) = canon_as(
+        &dir,
+        "agent:x",
+        &["add", "Quiet after eleven.", "--scope", "house"],
+    );
+    assert_eq!(c, 0, "{out}");
+    let before = std::fs::read_to_string(dir.join("acts.jsonl")).unwrap();
+
+    let (code, out) = canon_as(&dir, "human:sam", &["review"]);
+    assert_eq!(code, 2, "{out}");
+    assert!(out.contains("terminal"), "{out}");
+    assert_eq!(out.trim().lines().count(), 1, "one line: {out}");
+
+    let (code, out) = canon_as(&dir, "agent:x", &["review"]);
+    assert_eq!(code, 2, "{out}");
+    assert!(out.contains("agent:x") && out.contains("not one"), "{out}");
+
+    assert_eq!(
+        std::fs::read_to_string(dir.join("acts.jsonl")).unwrap(),
+        before
+    );
+    let (code, out) = canon_as(&dir, "human:sam", &["review", "--json"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("Quiet after eleven."), "{out}");
+}

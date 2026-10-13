@@ -292,14 +292,72 @@ pub fn ago(then: i64, now: i64) -> String {
 
 // ── the terminal ────────────────────────────────────────────
 
+/// Where `review` asks and says: the terminal in use, a script in tests.
+pub trait Prompt {
+    fn say(&mut self, text: &str);
+    /// One line typed in answer, trimmed; `None` at the end of input.
+    fn ask(&mut self, question: &str) -> Option<String>;
+}
+
+/// Standard input and output, once [`door`] has found both a terminal.
+struct Terminal {
+    input: std::io::StdinLock<'static>,
+}
+
+impl Prompt for Terminal {
+    fn say(&mut self, text: &str) {
+        println!("{text}");
+    }
+
+    fn ask(&mut self, question: &str) -> Option<String> {
+        print!("{question}");
+        std::io::stdout().flush().ok()?;
+        let mut line = String::new();
+        match self.input.read_line(&mut line) {
+            Ok(0) | Err(_) => None,
+            Ok(_) => Some(line.trim().to_string()),
+        }
+    }
+}
+
+/// Whether this process may walk somebody through decisions, and if not,
+/// why, in one line.
+///
+/// **A person's verb, never an agent's by accident.** `review` writes
+/// approvals and objections as `actor`, so it runs only with a terminal on
+/// both stdin and stdout and only for an actor canon counts as a person
+/// (`human:`; the fold never counts anyone else's approval). An agent's
+/// shell has no terminal, and an agent is told to set `CANON_ACTOR` to
+/// `agent:<name>`, so either stops one that runs `canon review` by mistake.
+/// It is a speed bump, not a defence: a process can allocate a pty, and
+/// whoever can set `CANON_ACTOR` can name themselves a person. What stops
+/// somebody deciding as you is `canon identify`. `--json` reads and decides
+/// nothing, so it is not behind this door.
+pub fn door(terminal: bool, actor: &str, from: &str) -> Result<(), String> {
+    if !actor.starts_with("human:") {
+        return Err(format!(
+            "`canon review` decides as a person, and {actor} (from {from}) is not one; \
+             `canon review --json` lists what is waiting"
+        ));
+    }
+    if !terminal {
+        return Err(
+            "`canon review` asks a person at a terminal, and stdin or stdout is not one; \
+             `canon review --json` lists what is waiting"
+                .into(),
+        );
+    }
+    Ok(())
+}
+
 pub fn run(args: &[String]) -> i32 {
-    let (d, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let actor = store::actor();
-    let items = queue(&log, &st, &actor, store::now());
     if has(args, "--json") {
+        let (_, log, st) = match load() {
+            Ok(v) => v,
+            Err(e) => return fail(e),
+        };
+        let actor = store::actor();
+        let items = queue(&log, &st, &actor, store::now());
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({ "actor": actor, "items": items }))
@@ -307,19 +365,87 @@ pub fn run(args: &[String]) -> i32 {
         );
         return 0;
     }
+    let (actor, from) = store::actor_from();
+    let terminal = std::io::stdin().is_terminal() && std::io::stdout().is_terminal();
+    // The door before the canon is even looked for: refused means nothing ran.
+    if let Err(why) = door(terminal, &actor, from) {
+        return fail(why);
+    }
+    let d = match crate::cmds::dir() {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
+    let mut terminal = Terminal {
+        input: std::io::stdin().lock(),
+    };
+    session(&d, &actor, from, true, &mut terminal)
+}
+
+/// What a session decided. Counted from what was written, not what was
+/// typed: an approval that could not be written is `failed`, not approved.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct Tally {
+    pub approved: usize,
+    pub objected: usize,
+    pub skipped: usize,
+    /// Not answered, because the person quit (or input ended) first.
+    pub unreached: usize,
+    /// Acts that were asked for and not written.
+    pub failed: usize,
+}
+
+impl Tally {
+    /// The last line a session prints.
+    pub fn line(&self) -> String {
+        let mut out = format!(
+            "approved {}, objected {}, skipped {}",
+            self.approved, self.objected, self.skipped
+        );
+        if self.unreached > 0 {
+            out.push_str(&format!(", {} left for later", self.unreached));
+        }
+        if self.failed > 0 {
+            out.push_str(&format!(", {} not written", self.failed));
+        }
+        out
+    }
+}
+
+/// `canon review` at a terminal, over the canon in `d`, deciding as
+/// `actor`. The door is checked again here, so a caller that forgot it is
+/// refused too. Exits 0 unless an act it was asked to write failed.
+pub fn session(d: &Path, actor: &str, from: &str, terminal: bool, prompt: &mut dyn Prompt) -> i32 {
+    if let Err(why) = door(terminal, actor, from) {
+        return fail(why);
+    }
+    let tally = match walk(d, actor, from, prompt) {
+        Ok(t) => t,
+        Err(e) => return fail(e),
+    };
+    prompt.say(&format!("\n{}", tally.line()));
+    i32::from(tally.failed > 0)
+}
+
+/// Every proposal waiting on `actor`, one at a time.
+fn walk(d: &Path, actor: &str, from: &str, prompt: &mut dyn Prompt) -> Result<Tally, String> {
+    let log = store::read(d)?;
+    let now = store::now();
+    let st = log.derive_at(now);
+    let items = queue(&log, &st, actor, now);
     let (mine, others): (Vec<&Item>, Vec<&Item>) = items.iter().partition(|i| i.yours);
-    println!("{}", whoami(&log, &actor));
+    prompt.say(&whoami(&log, actor, from));
+    let mut tally = Tally::default();
     if mine.is_empty() {
-        println!("Nothing is waiting on you.");
+        prompt.say("Nothing is waiting on you.");
         if !others.is_empty() {
-            println!(
+            prompt.say(&format!(
                 "{} waiting on someone else — `canon list` shows what each needs.",
                 others.len()
-            );
+            ));
         }
-        return 0;
+        return Ok(tally);
     }
-    println!(
+    prompt.say(&format!(
         "{} waiting on you{}.",
         mine.len(),
         if others.is_empty() {
@@ -327,89 +453,80 @@ pub fn run(args: &[String]) -> i32 {
         } else {
             format!(", {} on someone else", others.len())
         }
-    );
-    if !std::io::stdin().is_terminal() {
-        // Somebody piping this, or an agent: the list, and the commands a
-        // person would type. Deciding needs the person.
-        for item in &mine {
-            println!("\n{}", card(&d, item, store::now()));
-            println!("  canon approve {}", item.id);
-            println!("  canon object {} -m \"<why>\"", item.id);
-        }
-        return 0;
-    }
-    let mut input = std::io::stdin().lock();
-    let (mut approved, mut objected, mut skipped) = (0, 0, 0);
+    ));
     let total = mine.len();
-    'items: for (n, item) in mine.into_iter().enumerate() {
-        println!("\n── {} of {total} ─────────────────────────────", n + 1);
-        println!("{}", card(&d, item, store::now()));
-        loop {
-            let Some(answer) = ask(&mut input, "\n  (a)pprove  (o)bject  (s)kip  (q)uit  › ")
-            else {
-                break 'items;
-            };
-            let decision = match answer.to_lowercase().as_str() {
-                "a" | "approve" | "y" => Some((true, String::new())),
-                "o" | "object" => {
-                    let Some(why) = ask(
-                        &mut input,
-                        "  why? (a reason is required; empty goes back)  › ",
-                    ) else {
-                        break 'items;
-                    };
-                    if why.is_empty() {
-                        continue;
-                    }
-                    Some((false, why))
-                }
-                "s" | "skip" | "" => None,
-                "q" | "quit" => break 'items,
-                _ => continue,
-            };
-            match decision {
-                None => skipped += 1,
-                Some((approve, why)) => match decide(&d, &actor, &item.id, approve, &why) {
-                    Ok(now) => {
-                        if approve {
-                            approved += 1;
-                        } else {
-                            objected += 1;
-                        }
-                        println!("{}", crate::wrap::hang("  → ", &now));
-                    }
-                    Err(e) => println!("{}", crate::wrap::hang("  not written: ", &e)),
-                },
-            }
+    for (n, item) in mine.into_iter().enumerate() {
+        prompt.say(&format!(
+            "\n── {} of {total} ─────────────────────────────",
+            n + 1
+        ));
+        prompt.say(&card(d, item, now));
+        if !one(d, actor, item, prompt, &mut tally) {
+            // This one was not answered either, so it is left with the rest.
+            tally.unreached = total - n;
             break;
         }
     }
-    println!("\napproved {approved}, objected {objected}, skipped {skipped}");
-    0
+    Ok(tally)
 }
 
-fn ask(input: &mut impl BufRead, prompt: &str) -> Option<String> {
-    print!("{prompt}");
-    std::io::stdout().flush().ok();
-    let mut line = String::new();
-    match input.read_line(&mut line) {
-        Ok(0) | Err(_) => None,
-        Ok(_) => Some(line.trim().to_string()),
+/// Ask about one proposal until it is answered. False when the person quit
+/// or input ended before answering it, so nothing after it is asked.
+fn one(d: &Path, actor: &str, item: &Item, prompt: &mut dyn Prompt, tally: &mut Tally) -> bool {
+    loop {
+        let Some(answer) = prompt.ask("\n  [a]pprove  [o]bject  [s]kip  [q]uit  › ") else {
+            return false;
+        };
+        let (approve, why) = match answer.to_lowercase().as_str() {
+            "a" | "approve" | "y" => (true, String::new()),
+            "o" | "object" => {
+                let Some(why) = prompt.ask("  why? (a reason is required; empty goes back)  › ")
+                else {
+                    return false;
+                };
+                if why.is_empty() {
+                    continue;
+                }
+                (false, why)
+            }
+            "s" | "skip" | "" => {
+                tally.skipped += 1;
+                return true;
+            }
+            "q" | "quit" => return false,
+            _ => continue,
+        };
+        match decide(d, actor, &item.id, approve, &why) {
+            Ok(now) => {
+                if approve {
+                    tally.approved += 1;
+                } else {
+                    tally.objected += 1;
+                }
+                prompt.say(&crate::wrap::hang("  → ", &now));
+            }
+            Err(e) => {
+                tally.failed += 1;
+                prompt.say(&crate::wrap::hang("  not written: ", &e));
+            }
+        }
+        return true;
     }
 }
 
-/// Who is deciding, and whether the record can tell it was them.
-pub fn whoami(log: &Log, actor: &str) -> String {
+/// Who is deciding, where that name came from, and whether the record can
+/// tell it was them.
+pub fn whoami(log: &Log, actor: &str, from: &str) -> String {
     if canon_core::sign::verify(log.acts())
         .bindings
         .get(actor)
         .is_some_and(|b| !b.contested)
     {
-        format!("You are {actor}, identified: what you decide is signed.")
+        format!("Acting as {actor} (from {from}), identified: what you decide is signed.")
     } else {
         format!(
-            "You are {actor}. Anyone who can write this file could decide as you — \
-             `canon identify` makes it so only your key can."
+            "Acting as {actor} (from {from}). Anyone who can write this file could decide \
+             as you — `canon identify` makes it so only your key can."
         )
     }
 }

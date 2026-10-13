@@ -24,7 +24,12 @@ renames that heading to the version, and its section becomes the release notes
   a time: the words, who proposed them and when, the source passage they
   came from, what they'd replace and why, and who has to decide. Approve,
   object with a reason, or skip. It only shows what your approval or
-  objection would actually change.
+  objection would actually change. It says first who you are acting as and
+  where that name came from (`CANON_ACTOR`, or your git name), ends with how
+  many you approved, objected to and skipped, and exits 1 if a decision
+  could not be written. It is a person's verb: without a terminal, or with
+  an actor that is not `human:`, it refuses in one line and writes nothing.
+  `canon review --json` lists what is waiting for anyone.
 - `canon ui` is canon as a page in your browser. Decide what's waiting on
   you, propose a rule, change a rule's wording or take it away, leave
   something unwritten on purpose or lift it, and identify yourself, all

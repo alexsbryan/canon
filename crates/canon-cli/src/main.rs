@@ -80,7 +80,9 @@ RECORD                                        (no model needed)
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
-  review [--json]                        what is waiting on you, one at a time
+  review [--json]                        what is waiting on you, one at a time. A
+                                         person's verb: it needs a terminal and a
+                                         human: actor; --json only reads
   ui                                     canon as a page on this machine: decide, propose,
                                          change or take away a rule, leave something
                                          unwritten, identify yourself
