@@ -77,6 +77,8 @@ USAGE
 
 RECORD                                        (no model needed)
   init [--profile personal|code|house]  start a canon here
+       [--plain]                         without the v4 knobs (policy changes that
+                                         wait, personal scopes), for older readers
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
@@ -115,6 +117,8 @@ GOVERN                                        (no model needed)
   ratification show | set <rule>         how a proposal becomes a rule, per scope:
                                          standing, joint:a,b, threshold:n/m, consent:Nd,
                                          twice:turnover:<rule> or twice:Nd:<rule>
+       [--governs all|commitments]       whether a change of policy waits too
+       [--personal on|off]               canon-wide: a person's own scope is theirs
   allot <scope> --named a,b,c            what this commons has to share
   allocation set rotation --scope s      how it goes round: --step, --per, --order
                                          or --from-draw <id> for a lot nobody steers
@@ -122,6 +126,7 @@ GOVERN                                        (no model needed)
                                          `pool` is appropriation
   position \"<about>\" --against|--toward  a vote, an objection, a second
   decide \"<about>\" --outcome --authority record what the group decided
+         [--citing <id>,…]               the rules it turned on; a ladder counts by them
   rank <id> <rank>                       a principle, not a convention
   horizon <act-id> <YYYY-MM-DD>          look at this again by then
   overdue                                what has gone past its date
@@ -135,11 +140,13 @@ GOVERN                                        (no model needed)
                                          fold, and what each guard cannot see
   voice [<actor>]                        what someone raised, and what came of it
   leave <scope> [-m \"<question>\"]        step out, and leave the question behind
+  second <question-id>                   add your weight to a question, without your name
   replay [<dir>] [--policy <rule>]       re-decide this canon\'s own record;
                                          --policy asks what another rule
                                          would have done to it
          [--scenario <f>]                ask your own questions instead
          [--write-scenario <f>]          write out the derived ones to edit
+         [--expect <f>]                  check the answers against this file
 
 LINEAGE                             (git optional; only rebase needs a model)
   share                                  a pasteable snapshot
@@ -266,6 +273,7 @@ fn main() {
         "silence" => govern::silence(rest),
         "voice" => govern::voice(rest),
         "leave" => govern::leave(rest),
+        "second" => govern::second(rest),
         "replay" => replay::run(rest),
         "witness" => guard::witness(rest),
         "guard" => guard::guard(rest),
@@ -376,6 +384,7 @@ mod tests {
             "silence",
             "voice",
             "leave",
+            "second",
             "replay",
             "share",
             "adopt",

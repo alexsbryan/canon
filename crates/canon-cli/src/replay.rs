@@ -270,6 +270,36 @@ pub fn run_scenario(
                 let id = id_of(&body, "commitment", &labels).map_err(at)?;
                 status_step(&canon, &id, now, override_ratify.as_ref()).map_err(at)?
             }
+            // The open questions in the order they were asked, with how many
+            // seconded each. What `canon open` shows, as data.
+            "open" => {
+                let mut open: Vec<&canon_core::Question> = canon.open().collect();
+                open.sort_by_key(|q| q.asked_at);
+                json!({
+                    "questions": open
+                        .iter()
+                        .map(|q| json!({ "id": q.id.to_string(), "seconds": canon.seconds(&q.id) }))
+                        .collect::<Vec<_>>(),
+                })
+            }
+            // Whose turn it is in a pool, at the scenario's clock. A pool
+            // that cannot answer says why, as the step's result, rather than
+            // ending the run: "nobody holds this" is a finding to assert.
+            "pool" => {
+                let scope = scope_of(&body, "scope").map_err(at)?;
+                match canon.pool_at(&scope, now) {
+                    Ok(s) => json!({
+                        "period": s.period,
+                        "turns": s
+                            .awards
+                            .iter()
+                            .map(|a| json!([a.unit, a.actor]))
+                            .collect::<Vec<_>>(),
+                        "idle": s.idle.len(),
+                    }),
+                    Err(e) => json!({ "error": e.to_string() }),
+                }
+            }
             "unattended" => json!({
                 "unattended": canon
                     .unattended
@@ -419,7 +449,51 @@ fn status_step(
             "sets": r.rule.name(),
         }));
     }
-    Err(format!("no commitment {id}"))
+    // Not a commitment and not a ratification rule: a policy, or nothing
+    // this canon recognises. Either is an answer for the step to assert, not
+    // a reason to stop the whole run — a label typo is already refused when
+    // the label is resolved.
+    Ok(policy_status(canon, id).unwrap_or_else(|| {
+        json!({
+            "status": "not-found",
+            "detail": format!("no commitment, ratification rule or policy {id} in this canon"),
+        })
+    }))
+}
+
+/// Where a `policy` act stands, or `None` when the id is not one the fold
+/// recorded. A policy in `canon.policies` is the one in force for its scope;
+/// one written without standing is in `ungoverned` with the reason.
+fn policy_status(canon: &Canon, id: &ActId) -> Option<Value> {
+    if let Some(p) = canon.policies.iter().find(|p| p.act == *id) {
+        return Some(json!({
+            "status": "in-force",
+            "detail": "",
+            "by": p.actor,
+            "sets": p.rule.name(),
+        }));
+    }
+    // Waiting on the group, or refused by it, under `governs: all`.
+    if let Some(p) = canon.pending_policies.iter().find(|p| p.act == *id) {
+        let (status, detail) = match &p.verdict {
+            Some(canon_core::Verdict::Proposed { needs }) => ("proposed", needs.clone()),
+            Some(canon_core::Verdict::Refused { by, why, .. }) => {
+                ("refused", format!("{by}: {why}"))
+            }
+            Some(canon_core::Verdict::Ratified { .. }) | None => ("superseded", String::new()),
+        };
+        return Some(json!({
+            "status": status,
+            "detail": detail,
+            "by": p.actor,
+            "sets": p.rule.name(),
+        }));
+    }
+    canon
+        .ungoverned
+        .iter()
+        .find(|(act, _)| act == id)
+        .map(|(_, why)| json!({ "status": "ungoverned", "detail": why }))
 }
 
 fn check_step(
@@ -905,6 +979,12 @@ fn derive_scenario(canon: &Canon, now: i64, last: i64) -> (String, usize) {
         if about.trim().is_empty() || seen.contains(&about) {
             continue;
         }
+        // A position on a question is a second or a stance on what was
+        // asked, not an argument over a proposal. Asking a policy to decide
+        // it would invent a decision nobody faced.
+        if canon.question(&ActId::from_raw(&about)).is_some() {
+            continue;
+        }
         seen.push(about.clone());
         // The record keeps what a subject was CALLED, never a sentence
         // proposing it. A named subject is its own honest stand-in and a
@@ -1187,7 +1267,17 @@ pub fn run(args: &[String]) -> i32 {
     // The expectations are optional: a replay is also a counterfactual, and
     // "what would consent have done to the last six months" has nothing to
     // compare against.
-    let Ok(raw) = read("expected.json") else {
+    // `--expect` names the file; without it, the one beside the acts. A
+    // fixture directory can then carry more than one scenario.
+    let expect = flag(args, "--expect");
+    let raw = match expect {
+        Some(p) => match std::fs::read_to_string(p) {
+            Ok(s) => Ok(s),
+            Err(e) => return fail(format!("reading {p}: {e}")),
+        },
+        None => read("expected.json"),
+    };
+    let Ok(raw) = raw else {
         // A derived run says what it just did and what the next question is.
         // Somebody who typed one word should not have to read the manual to
         // find out that the interesting flag exists.
@@ -1206,10 +1296,25 @@ pub fn run(args: &[String]) -> i32 {
         return 0;
     };
     let Ok(Value::Object(expected)) = serde_json::from_str::<Value>(&raw) else {
-        return fail("expected.json is not a JSON object");
+        return fail(format!(
+            "{} is not a JSON object",
+            expect.unwrap_or("expected.json")
+        ));
     };
     let bad = compare(&replay, &expected);
-    if bad.is_empty() {
+    // A named file is a bar somebody wrote for this scenario, so a name in
+    // it that matches no step is a typo, and a typo silently asserts nothing.
+    let strays: Vec<&String> = match expect {
+        Some(_) => expected
+            .keys()
+            .filter(|name| !replay.steps.iter().any(|s| &s.name == *name))
+            .collect(),
+        None => Vec::new(),
+    };
+    for name in &strays {
+        eprintln!("{name}: expected, and no step in the scenario has that name");
+    }
+    if bad.is_empty() && strays.is_empty() {
         println!(
             "\n{} step(s), all as expected, in {}",
             replay.steps.len(),
@@ -1226,7 +1331,7 @@ pub fn run(args: &[String]) -> i32 {
     for (step, key, want, got) in &bad {
         eprintln!("{step}.{key}: expected {want}, got {got}");
     }
-    eprintln!("\n{} mismatch(es)", bad.len());
+    eprintln!("\n{} mismatch(es)", bad.len() + strays.len());
     // A COUNTERFACTUAL HAS NO PASS. `expected.json` records what the rules
     // this canon adopted produce; a forced run answers a different question,
     // so differing from that file is the point rather than a failure. The
@@ -1507,5 +1612,124 @@ mod tests {
         let canon = Log::from_acts(vec![a]).derive_at(ts);
         let (_, checks) = derive_scenario(&canon, ts, ts);
         assert_eq!(checks, 0);
+    }
+
+    #[test]
+    fn a_second_on_a_question_never_becomes_a_derived_decision() {
+        // Three people seconding a question argued about nothing: there is no
+        // proposal for a policy to decide, and a `check` step would invent one.
+        let ts = 1_700_000_000;
+        let q = Act::new(
+            ActKind::Question {
+                text: "A second drying rack?".into(),
+                proposal: None,
+            },
+            ts,
+            "human:ola",
+        );
+        let second = Act::new(
+            ActKind::Position {
+                about: q.id.to_string(),
+                citing: None,
+                pull: Pull::Toward,
+                because: "seconded".into(),
+            },
+            ts + 1,
+            canon_core::ANONYMOUS,
+        );
+        let canon = Log::from_acts(vec![q, second]).derive_at(ts + 1);
+        assert_eq!(canon.seconds(&canon.questions[0].id), 1);
+        let (text, checks) = derive_scenario(&canon, ts + 1, ts + 1);
+        assert_eq!(checks, 0, "{text}");
+    }
+
+    /// Every ledger this repository carries: the fixtures, the CPR set, and
+    /// the project's own canon.
+    fn every_ledger() -> Vec<std::path::PathBuf> {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut dirs = vec![root.join(".canon")];
+        let mut stack = vec![root.join("fixtures")];
+        while let Some(d) = stack.pop() {
+            for e in std::fs::read_dir(&d).expect("fixtures").flatten() {
+                if e.path().is_dir() {
+                    stack.push(e.path());
+                }
+            }
+            dirs.push(d);
+        }
+        let mut files: Vec<_> = dirs
+            .into_iter()
+            .map(|d| d.join(crate::store::FILE))
+            .filter(|f| f.is_file())
+            .collect();
+        files.sort();
+        files
+    }
+
+    #[test]
+    fn every_ledger_here_reads_and_renders_as_it_did_before_v4() {
+        // An absent knob is today's behaviour, and the proof is the record
+        // itself: nothing anybody has written comes back with a new id, a new
+        // version, or a byte out of place. A minted line must re-render
+        // exactly; a seed line's body must be exactly what the act serialises,
+        // since that string is what its id is derived from.
+        let files = every_ledger();
+        assert!(files.len() > 10, "found only {files:?}");
+        for f in files {
+            let raw = std::fs::read_to_string(&f).expect("ledger");
+            let (acts, labels) = load_acts(&raw).unwrap_or_else(|e| panic!("{}: {e}", f.display()));
+            for a in &acts {
+                assert!(
+                    a.v < canon_core::FORMAT_VERSION,
+                    "{}: {} is v{} and sets no knob",
+                    f.display(),
+                    a.id,
+                    a.v
+                );
+                // Older lines (v1) stay at the version they were written at;
+                // no unsigned line is ever above what its body needs.
+                if a.sig.is_none() {
+                    assert!(a.v <= a.kind.min_version(), "{}: {}", f.display(), a.id);
+                }
+            }
+            let lines = raw
+                .lines()
+                .map(str::trim)
+                .filter(|l| !l.is_empty() && !l.starts_with("//"));
+            if labels.is_empty() && raw.contains("\"id\"") {
+                for line in lines {
+                    let act: Act = serde_json::from_str(line).expect("a minted line");
+                    assert_eq!(
+                        serde_json::to_string(&act).expect("renders"),
+                        line,
+                        "{} re-renders differently",
+                        f.display()
+                    );
+                    let body = serde_json::to_string(&act.kind).expect("body");
+                    assert_eq!(
+                        ActId::derive(act.ts_unix, &act.actor, &body),
+                        act.id,
+                        "{}: the id no longer derives from its own body",
+                        f.display()
+                    );
+                }
+            } else {
+                for line in lines {
+                    let mut body: Value = serde_json::from_str(line).expect("a seed line");
+                    let obj = body.as_object_mut().expect("object");
+                    for k in ["at", "by", "as"] {
+                        obj.remove(k);
+                    }
+                    resolve(&mut body, &labels).expect("labels resolve");
+                    let kind: ActKind = serde_json::from_value(body.clone()).expect("an act");
+                    assert_eq!(
+                        serde_json::to_value(&kind).expect("serialises"),
+                        body,
+                        "{}: a body reads back with fields it did not have",
+                        f.display()
+                    );
+                }
+            }
+        }
     }
 }

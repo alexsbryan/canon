@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "canon-cli"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "canon-core",
  "clap",
@@ -75,7 +75,7 @@ dependencies = [
 
 [[package]]
 name = "canon-contract"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -85,7 +85,7 @@ dependencies = [
 
 [[package]]
 name = "canon-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ed25519-compact",
  "proptest",

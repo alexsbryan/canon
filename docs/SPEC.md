@@ -8,7 +8,7 @@ format is not.
 The point of that split: adopting this format must not be a lock-in
 decision. A record you cannot leave is not a record you own.
 
-Version: **3**. Status: draft, pre-1.0. Breaking changes bump `v`.
+Version: **4**. Status: draft, pre-1.0. Breaking changes bump `v`.
 
 v2 split the `op` namespace so that a community can add a governance move
 without every other implementation having to change. See "The acts" below —
@@ -18,6 +18,16 @@ v3 added signed acts: the `refs` and `sig` envelope fields and the `key`
 act. Only a line that carries one of them is written as `v: 3`; every other
 line is still written as `v: 2`, so a canon in which nobody binds a key stays
 readable by v2 readers. See "Signed acts".
+
+v4 added the fields a group sets to say how its own governance binds:
+`governs` and `personal` on `ratification`, `key` and `repair` on a
+`graduated` policy rule (at any depth of nesting), and `citing` on
+`decided`. Only a line that sets one of them is written as `v: 4`, signed or
+not. Every other line keeps the version it had: `v: 3` if it is signed or is
+a `key` act, `v: 2` otherwise. An absent field means what the act meant
+before v4, so every earlier canon derives exactly as it did. A v3 reader
+refuses a v4 line rather than fold it under the old meaning, which for these
+fields would be a different decision with nothing to say so.
 
 ## The file
 
@@ -102,8 +112,8 @@ recognise MUST carry the line unchanged and MUST NOT interpret it.
 | `withdraw` | `holder`, `scope`, `rationale?` | Standing given up, or stood down |
 | `scoped` | `commitment`, `scope` | A commitment belongs to a scope |
 | `policy` | `text`, `rule`, `scope?` | What this canon decides under |
-| `ratification` | `text`, `rule`, `scope?` | How a proposal in a scope becomes a rule |
-| `decided` | `about`, `outcome`, `authority`, `rationale?` | The group decided something |
+| `ratification` | `text`, `rule`, `scope?`, `governs?`, `personal?` | How a proposal in a scope becomes a rule |
+| `decided` | `about`, `outcome`, `authority`, `rationale?`, `citing[]?` | The group decided something |
 | `rank` | `commitment`, `rank` | A principle rather than a convention |
 | `horizon` | `target`, `at`, `rationale?` | Look at this again by then |
 | `draw_commit` | `scope`, `count`, `after_ts`, `rationale?` | A lot is announced |
@@ -183,7 +193,33 @@ threat model is in `PRIMITIVES.md` under Primitive 9.
 `decided` records an **adjudication**, never an observation. It says the
 group decided something about a subject; there is no act in this format
 that records what a person was seen doing, and adding one would be a
-different format.
+different format. `decided.citing` (v4) lists the commitments the decision
+turned on; absent is none. A citation of an id the log does not carry is
+reported as dangling, like any other reference.
+
+A `graduated` policy rule escalates through `ladder` as decisions on the
+same subject accumulate. Two optional fields (v4) say what counts:
+
+- `key` — `about` (the default when absent) counts decisions whose `about`
+  is exactly the proposal's; `cited` counts decisions whose `citing` shares
+  a commitment with those cited **against** the proposal. When nothing is
+  cited against, a `cited` ladder falls back to `about`, and the reason a
+  reader gives MUST say it did.
+- `repair` — `false` (the default when absent) counts every such decision.
+  `true` counts only decisions with outcome `conflicts` made after the most
+  recent one with outcome `supported`: a decision that went for the thing is
+  a repair, and it closes the episode.
+
+`key: about` without `repair` is the ladder every pre-v4 canon carries, and
+MUST count exactly as before.
+
+A `position` whose actor is `anonymous`, whose `about` is the id of a
+question, which cites nothing and pulls `toward`, is a **second**: weight
+added to a question without a name. A second gates attention only. A
+question is not a proposal, so no ratification rule or policy reads it, and
+an implementation MUST NOT count one toward any outcome. Any other position
+by `anonymous` — against, citing, or about anything but a question — is not
+a second.
 
 An annotation the reader *does* recognise is read strictly, for the same
 reason as a structural op: a malformed `accept` is a defect in the writer,
@@ -314,6 +350,21 @@ and one a non-human actor wrote waits for any person's approval. Every
 canon that predates this rule and whose commitments people wrote MUST keep
 deriving the same way.
 
+**A change of policy waits when the rule says so (v4).** A `ratification`
+act may carry `governs`: `commitments` or `all`. Absent is `commitments`,
+and every canon written before v4 has it absent: a `policy` act takes effect
+when its writer has standing, as rule 7 says. Under `all`, when the
+ratification rule in force for the policy's scope at the moment the policy
+was written is anything other than `standing`, the `policy` act is itself a
+proposal — judged by that rule, the same holders and the same positions a
+commitment would be, `toward` approving and `against` with a reason
+objecting — and takes effect only from the moment it is ratified. One policy
+is in force per scope: the one that took effect latest, a waiting policy
+counting from its ratified moment and not from when it was written. A policy
+proposed or refused decides nothing. `governs` resolves like the rule it
+sits on, deepest scope first, so a scope's own ratification act can set it
+for that scope alone.
+
 **7. Governing takes standing.** A `grant`, `withdraw` of somebody else,
 `policy` or `ratification` act whose actor does not hold standing over the
 scope it names — or over the scope above it — is recorded and NOT applied.
@@ -337,6 +388,30 @@ able to say which acts applied only because no grant predated them, the
 same way it surfaces the acts it refused: a founding script writes its
 grants and its first rules in one second, and every one of those took while
 open. Withdrawing your own standing is always yours to do.
+
+**A person's own scope is theirs (v4).** A scope whose first segment is a
+`human:` actor id — `human:phylla.glasses` — is that person's own. While
+the canon-wide ratification rule in force has `personal: true` (canon-wide
+only; absent is off, and every canon written before v4 has it absent):
+
+- standing over a personal scope is held by its owner and nobody else,
+  whatever anyone holds above it, and it is never open. A governance act
+  there by anyone else is recorded and NOT applied, like any act without
+  standing;
+- the owner holds their own root from the moment the knob took effect,
+  without a `grant`; implementations attribute that standing to the
+  `ratification` act that switched the knob on;
+- no ratification rule from outside the personal root applies inside it, so
+  with none of the owner's own a commitment the owner writes there is
+  `active` on arrival and anyone else's waits for the owner's approval,
+  which is `standing` with the owner as the one holder;
+- a grant over somebody's personal root never counts toward who holds the
+  canon as a whole, from the moment any `ratification` act in the log sets
+  `personal: true`. A personal corner is not a seat in the house.
+
+The knob is a proposal like the rule it sits on and is honoured only from
+its ratified moment. Actor ids with a `.` in them cannot own a personal
+scope, because the first segment of the path is the owner.
 
 **A `revert` is gated the same way, and this one is load-bearing.** A
 tomb-stone is as much a governance move as the act it covers: gating who may
@@ -387,6 +462,12 @@ Adjudications — everything except `assert` and `adopt` — are expected to
 carry an actor beginning `human:`. Implementations MUST surface acts that
 do not, rather than dropping or rejecting them. Extraction and drafting
 are machine work and are not flagged.
+
+A second — an `anonymous` position toward a question, defined under "The
+acts" — is exempt: it decides nothing, and an
+unsigned name is the point of it. The exemption is that shape exactly. An
+agent's position on a question, or an anonymous position on a proposal, is
+still an adjudication and is still surfaced.
 
 This is how *agents propose, humans dispose* becomes a property of the
 record rather than a rule someone has to remember.

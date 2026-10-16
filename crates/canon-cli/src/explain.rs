@@ -102,19 +102,35 @@ pub fn resolve_any(canon: &Canon, needle: &str) -> Result<ActId, String> {
     pick(canon, ids, needle, "record")
 }
 
+/// Resolve a question by id or unique prefix.
+///
+/// `second` takes only a question: weight added to a commitment would be a
+/// position on a proposal, which ratification counts, and an unattributed one
+/// must never be.
+pub fn resolve_question(canon: &Canon, needle: &str) -> Result<ActId, String> {
+    pick(
+        canon,
+        canon.questions.iter().map(|q| &q.id),
+        needle,
+        "question",
+    )
+}
+
 /// Resolve anything a person can approve or object to: a commitment, a
 /// change to how a scope decides, or a retraction written without standing.
 ///
 /// `list` and every write print `canon approve <id>` under each of the
 /// three, so all three have to resolve here — a ratification change used to
-/// answer its own hint with "no commitment matching".
+/// answer its own hint with "no commitment matching". A change of policy
+/// waiting under `governs: all` prints the same hint and resolves here too.
 pub fn resolve_proposal(canon: &Canon, needle: &str) -> Result<ActId, String> {
     let ids = canon
         .commitments
         .iter()
         .map(|c| &c.id)
         .chain(canon.ratifications.iter().map(|r| &r.act))
-        .chain(canon.retractions.iter().map(|r| &r.act));
+        .chain(canon.retractions.iter().map(|r| &r.act))
+        .chain(canon.pending_policies.iter().map(|p| &p.act));
     pick(canon, ids, needle, "proposal")
 }
 
@@ -394,7 +410,24 @@ fn said(rationale: &str) -> String {
 /// `how` or `needs`. The fold names actors as the format does; this surface
 /// names them as people do.
 pub fn person_in(text: &str) -> String {
-    text.replace("human:", "")
+    // A name reads without its prefix; a personal SCOPE keeps it, because
+    // there the prefix is part of the path — "holds phylla.glasses" would
+    // name a scope that does not exist.
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(i) = rest.find("human:") {
+        out.push_str(&rest[..i]);
+        let after = &rest[i + "human:".len()..];
+        let word = after
+            .find(|c: char| c.is_whitespace() || matches!(c, ',' | ';' | ')' | '`'))
+            .map_or(after, |end| &after[..end]);
+        if word.trim_end_matches('.').contains('.') {
+            out.push_str("human:");
+        }
+        rest = after;
+    }
+    out.push_str(rest);
+    out
 }
 
 fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
@@ -426,6 +459,14 @@ fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_name_loses_its_prefix_and_a_personal_scope_keeps_it() {
+        assert_eq!(
+            super::person_in("human:phylla holds human:phylla.glasses, ask human:sam."),
+            "phylla holds human:phylla.glasses, ask sam."
+        );
+    }
+
     use super::*;
     use canon_core::Act;
 

@@ -273,7 +273,11 @@ fn a_signed_act_survives_render_parse_and_a_merge() {
     let key = bind("human:alex", 200, core::slice::from_ref(&a), &[&alex]);
     let log = vec![a.clone(), key.clone()];
     let signed = alex.seal(assert_by("guests two nights", 300, "human:alex"), &log);
-    assert_eq!(signed.v, FORMAT_VERSION);
+    assert_eq!(
+        signed.v,
+        crate::SIGNED_VERSION,
+        "signing alone stays readable by v3"
+    );
     assert_eq!(
         a.v,
         crate::UNSIGNED_VERSION,
@@ -293,10 +297,10 @@ fn a_signed_act_survives_render_parse_and_a_merge() {
 
 #[test]
 fn a_version_past_signing_is_still_refused() {
-    let line = r#"{"id":"can-deadbeef0000","v":4,"ts_unix":1,"actor":"human:x","op":"assert","text":"hi"}"#;
+    let line = r#"{"id":"can-deadbeef0000","v":5,"ts_unix":1,"actor":"human:x","op":"assert","text":"hi"}"#;
     assert!(matches!(
         Log::parse(line),
-        Err(crate::ParseError::UnknownVersion { found: 4, .. })
+        Err(crate::ParseError::UnknownVersion { found: 5, .. })
     ));
 }
 

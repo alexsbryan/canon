@@ -7,6 +7,8 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.3.0 — 2026-10-16
+
 ### Before you upgrade
 
 - Nothing changes for a canon in which nobody runs `canon identify`: it
@@ -17,8 +19,44 @@ renames that heading to the version, and its section becomes the release notes
   exhaustive `match` on it needs an arm. `Act` carries `refs` and `sig`,
   and `Canon` carries `unverified`: acts under a name that has bound a key
   which its key did not sign, kept and not applied.
+- **A canon founded by this release needs this release to read it.**
+  `canon init` now writes a first act that turns on two governance knobs,
+  and that line is format version 4, which older canon refuses with "upgrade
+  canon rather than reading it partially". So does any `ratification set`,
+  any `policy set --graduated`, and any `decide --citing`. Every canon
+  written before reads exactly as it did. `canon init --plain` founds one an
+  older build can still open. Upgrade everyone who reads a canon before
+  anyone founds or changes one with this release.
+- For code built on `canon-core`: `ActKind::Ratification` gains `governs`
+  and `personal`, `ActKind::Decided` gains `citing`, and
+  `Rule::Graduated` gains `key` and `repair`, so an exhaustive pattern on
+  any of them needs `..` or the new fields. `Canon` carries
+  `pending_policies`.
 
 ### Changes
+
+- A change of policy can wait for the group. Under a ratification rule with
+  `governs: all` — what `ratification set` and `canon init` now write — one
+  holder can no longer switch a house that decides by consent to something
+  else alone: `policy set` says PROPOSED, and `approve` and `object` take
+  the policy's id. `--governs commitments` keeps the old shape.
+- A person's own scope is theirs. With `personal: on` on the canon-wide
+  rule, `human:phylla.glasses` is Phylla's alone: her rule there is in force
+  on her word, anyone else's waits for her, and nobody else can take
+  standing over it. A personal corner never counts as a seat in the house.
+- A graduated ladder forgets on repair. `decide --citing <rule>` records the
+  rule a decision turned on; a ladder keyed on it is not restarted by
+  rewording, and a decision that went for closes the episode, so the next
+  person does not inherit a resolved one. `policy set --graduated` writes
+  both; `--by-about --no-repair` keeps the old ladder.
+- `canon second <question>` adds your weight to a question without your
+  name. `canon open` shows the count. Seconds decide nothing; only a person
+  can second.
+- A house can run canon through Slack without anyone installing it:
+  `integrations/slack/` is one rootless podman container, and
+  [docs/SELF_HOST.md](./docs/SELF_HOST.md) walks through it. Housemates
+  propose, approve and object with `/canon` and buttons; acts from Slack
+  are not signed yet.
 
 - `canon review` walks you through what's waiting on you, one proposal at
   a time and one room at a time: the words, who proposed them and when, the

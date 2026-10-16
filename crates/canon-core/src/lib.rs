@@ -33,22 +33,24 @@ pub mod scope;
 pub mod sign;
 pub mod standing;
 
-pub use act::{Act, ActKind, FORMAT_VERSION, UNSIGNED_VERSION};
+pub use act::{Act, ActKind, ANONYMOUS, FORMAT_VERSION, SIGNED_VERSION, UNSIGNED_VERSION};
 pub use allot::{AdoptedAllocation, Allocation, Allotment, Award, Order, PoolError, Schedule};
 pub use draw::{DrawError, Drawn};
 pub use fold::{
-    derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Question, Retraction,
-    Ruling, Silence, Stated, Status, Voice,
+    derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Keyed, Question,
+    Retraction, Ruling, Silence, Stated, Status, Voice,
 };
 pub use horizon::{Due, Horizon, Overdue};
 pub use id::{short_digest, ActId, ID_PREFIX};
 pub use lineage::{Divergence, Fate, Inherited, Snapshot, SnapshotCommitment};
 pub use log::{Log, ParseError};
-pub use policy::{default_outcome, Attributes, Authority, Decision, Policy, Rule};
-pub use ratify::{AdoptedRatify, Between, Proposal, Ratify, Seat, Verdict};
+pub use policy::{default_outcome, Attributes, Authority, Decision, LadderKey, Policy, Rule};
+pub use ratify::{AdoptedRatify, Between, Governs, Proposal, Ratify, Seat, Verdict};
 pub use scope::{Grant, Scope};
 pub use sign::{Binding, Key, Verified};
 pub use standing::{Outcome, Position, Pull, Source, Standing};
 
+#[cfg(test)]
+mod knob_tests;
 #[cfg(test)]
 mod tests;

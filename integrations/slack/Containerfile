@@ -1,0 +1,19 @@
+FROM docker.io/library/python:3.12-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates git \
+ && rm -rf /var/lib/apt/lists/*
+
+# The same installer the README uses. Pin a release with
+# --build-arg CANON_VERSION=v0.2.0.
+ARG CANON_VERSION=latest
+RUN curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh \
+    | CANON_VERSION=$CANON_VERSION CANON_INSTALL_DIR=/usr/local/bin sh
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY gateway.py canon_slack.py ./
+
+ENV CANON_DIR=/data/house/.canon
+CMD ["python", "canon_slack.py"]

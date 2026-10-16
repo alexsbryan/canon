@@ -32,8 +32,10 @@ const VALUED: &[&str] = &[
     "--endpoint",
     "--entrench",
     "--except",
+    "--expect",
     "--from",
     "--from-proposal",
+    "--governs",
     "--graduated",
     "--horizon",
     "--k",
@@ -61,6 +63,7 @@ const VALUED: &[&str] = &[
     "--from-draw",
     "--step",
     "--per",
+    "--personal",
     "--at",
     "--since",
     "--base",
@@ -143,6 +146,16 @@ pub fn report_status(d: &Path, id: &ActId) {
         // So is a retraction written without standing.
         if let Some(r) = canon.retractions.iter().find(|r| r.act == *id) {
             report_retraction(r);
+        }
+        // And a change of policy, where the scope's rule reaches policy.
+        if let Some(v) = canon
+            .pending_policies
+            .iter()
+            .chain(&canon.policies)
+            .find(|p| p.act == *id)
+            .and_then(|p| p.verdict.as_ref())
+        {
+            report_verdict(id, v);
         }
         return;
     };
@@ -369,6 +382,28 @@ pub fn init(args: &[String]) -> i32 {
         return fail(e);
     }
     store::ignore_local(&base);
+    // **The batteries, written as the canon's first act.** A change of
+    // policy waits like any other change, and a person's own scope is
+    // theirs. `standing` keeps the founding sitting what it always was; the
+    // knobs bite once the group picks a rule that waits. The act is v4, so
+    // a build from before the knobs cannot open this canon and says so;
+    // `--plain` founds one it can, with neither knob, which is how every
+    // canon before 0.3 began.
+    let plain = has(args, "--plain");
+    if !plain {
+        let kind = ActKind::Ratification {
+            text: "A holder's word is a rule at once. A change of policy waits like any \
+                   other change, and a person's own scope is theirs."
+                .to_string(),
+            rule: canon_core::Ratify::Standing,
+            scope: None,
+            governs: Some(canon_core::Governs::All),
+            personal: Some(true),
+        };
+        if let Err(e) = write(&base, kind) {
+            return fail(e);
+        }
+    }
     // **The whole tool, in three lines, at the moment somebody needs it.**
     // This is the n+1 explanation: if the next person cannot be handed the
     // thing in two sentences it does not spread, and `canon --help` is
@@ -378,6 +413,17 @@ pub fn init(args: &[String]) -> i32 {
         base.display(),
         profile.as_str()
     );
+    if !plain {
+        // Said on the way in, because it is the one thing init decides for
+        // the group, and the group can change it with `ratification set`.
+        println!("  policy changes wait like rules do, and human:<you>.… is yours alone");
+        if !store::actor().starts_with("human:") {
+            println!(
+                "  written by {}, so it waits for a person to approve it",
+                store::actor()
+            );
+        }
+    }
     // Padded to a common column, computed rather than typed: the noun
     // changes width by profile, and three lines that almost line up read as
     // sloppier than three that do not try.
@@ -1244,9 +1290,24 @@ pub fn open(args: &[String]) -> i32 {
     };
     let open: Vec<_> = st.open().collect();
     if has(args, "--json") {
+        // Each question as it always rendered, in its field order, plus how
+        // many seconded it.
+        #[derive(serde::Serialize)]
+        struct Row<'a> {
+            #[serde(flatten)]
+            question: &'a canon_core::Question,
+            seconds: usize,
+        }
+        let rows: Vec<Row> = open
+            .iter()
+            .map(|q| Row {
+                question: q,
+                seconds: st.seconds(&q.id),
+            })
+            .collect();
         println!(
             "{}",
-            serde_json::to_string_pretty(&open).unwrap_or_default()
+            serde_json::to_string_pretty(&rows).unwrap_or_default()
         );
         return 0;
     }
@@ -1258,6 +1319,10 @@ pub fn open(args: &[String]) -> i32 {
         println!("{}  ? {}", q.id, q.text);
         if let Some(p) = &q.proposal {
             println!("      from: \"{p}\"");
+        }
+        let n = st.seconds(&q.id);
+        if n > 0 {
+            println!("      {n} second(s)");
         }
     }
     println!("\n{} open", open.len());

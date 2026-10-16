@@ -90,7 +90,7 @@ fn every_verb_says_what_it_does_when_asked() {
         "{out}"
     );
     assert!(out.contains(".canon/acts.jsonl"), "{out}");
-    assert!(out.contains("flags: --profile <value>"), "{out}");
+    assert!(out.contains("flags: --plain  --profile <value>"), "{out}");
     assert!(!nowhere.exists(), "asking wrote nothing");
 
     let (_, same) = canon_as(&nowhere, "human:alex", &["help", "init"]);
@@ -204,7 +204,8 @@ fn adoption_can_leave_rules_behind_and_name_them_by_upstream_id() {
     assert_eq!(code, 2, "{out}");
     assert!(out.contains("nothing was adopted"), "{out}");
     let (_, log) = canon_as(&down, "human:alex", &["log"]);
-    assert!(log.contains("0 acts"), "{log}");
+    // Only the founding act `init` writes: the refused adoption added none.
+    assert!(log.contains("1 acts"), "{log}");
 
     let (code, out) = canon_in(
         &down,

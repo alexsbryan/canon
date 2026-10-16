@@ -398,6 +398,10 @@ fn render_open(dir: &Path) -> Result<String, String> {
         if let Some(p) = &q.proposal {
             out.push_str(&format!("    surfaced by: \"{p}\"\n"));
         }
+        let n = canon.seconds(&q.id);
+        if n > 0 {
+            out.push_str(&format!("    {n} second(s)\n"));
+        }
     }
     out.push_str(&format!("\n{} open question(s).", open.len()));
     Ok(out)

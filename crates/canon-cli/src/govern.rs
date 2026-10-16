@@ -5,7 +5,7 @@
 //! of them touches an endpoint, which is what makes a governance replay
 //! possible and is the single most important fact about this layer.
 
-use canon_core::{Act, ActKind, Authority, Outcome, Policy as _, Rule, Scope};
+use canon_core::{Act, ActKind, Authority, LadderKey, Outcome, Policy as _, Rule, Scope};
 
 use crate::cmds::{fail, flag, has, load, positionals, write};
 use crate::store;
@@ -68,9 +68,19 @@ pub(crate) fn rule_from(args: &[String], base: &str) -> Result<Rule, String> {
         if rungs.is_empty() {
             return Err("--graduated takes rungs, e.g. ask-one,ask-panel,refuse".into());
         }
+        // Keyed on the cited rule and reset by a repair unless asked
+        // otherwise: a paraphrase climbing a fresh ladder and a house meeting
+        // a solved problem on the top rung are the two ways a ladder keyed on
+        // words goes wrong. Each opt-out writes the field absent rather than
+        // spelled out, so `--by-about --no-repair` is the body a ladder had
+        // before these knobs, at the version it had.
+        let key = (!has(args, "--by-about")).then_some(LadderKey::Cited);
+        let repair = (!has(args, "--no-repair")).then_some(true);
         rule = Rule::Graduated {
             ladder: rungs,
             base: Box::new(rule),
+            key,
+            repair,
         };
     }
     if let Some(ranks) = flag(args, "--entrench") {
@@ -122,8 +132,8 @@ pub fn policy(args: &[String]) -> i32 {
             let Some(base) = pos.get(1) else {
                 return fail(
                     "usage: canon policy set <default|consent|threshold|supermajority|subsidiarity> \
-                     [--objections n] [--of n/d] [--graduated a,b,c] [--entrench rank] [--cautious] \
-                     [--scope s] [-m \"<how it reads>\"]",
+                     [--objections n] [--of n/d] [--graduated a,b,c [--by-about] [--no-repair]] \
+                     [--entrench rank] [--cautious] [--scope s] [-m \"<how it reads>\"]",
                 );
             };
             let rule = match rule_from(args, base) {
@@ -161,6 +171,10 @@ pub fn policy(args: &[String]) -> i32 {
                         Some(s) => println!("  governs {s} and everything under it"),
                         None => println!("  governs this canon"),
                     }
+                    // Under `governs: all` this is a proposal, and the person
+                    // who typed it hears so here, the way `ratification set`
+                    // says it.
+                    crate::cmds::report_status(&d, &act.id);
                 }),
                 Err(e) => fail(e),
             }
@@ -171,13 +185,20 @@ pub fn policy(args: &[String]) -> i32 {
                 Err(e) => return fail(e),
             };
             if has(args, "--json") {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&canon.policies).unwrap_or_default()
-                );
+                // The bare array when nothing waits, which is what every
+                // canon without the knob has always printed.
+                let out = if canon.pending_policies.is_empty() {
+                    serde_json::to_string_pretty(&canon.policies)
+                } else {
+                    serde_json::to_string_pretty(&serde_json::json!({
+                        "policies": canon.policies,
+                        "pending": canon.pending_policies,
+                    }))
+                };
+                println!("{}", out.unwrap_or_default());
                 return 0;
             }
-            if canon.policies.is_empty() {
+            if canon.policies.is_empty() && canon.pending_policies.is_empty() {
                 // Absence reported as absence. A canon that adopted nothing
                 // is still governed by something, and it should know which.
                 println!("no policy adopted. this canon decides by what shipped:");
@@ -193,6 +214,20 @@ pub fn policy(args: &[String]) -> i32 {
                 }
                 println!("  {}", p.text);
                 println!("  adopted {} by {}", store::ymd(p.at), p.actor);
+                if let Some(v) = &p.verdict {
+                    crate::cmds::report_verdict(&p.act, v);
+                }
+            }
+            for p in &canon.pending_policies {
+                match &p.scope {
+                    Some(s) => println!("{}  {}  over {s}", p.act, p.rule.name()),
+                    None => println!("{}  {}  (whole canon)", p.act, p.rule.name()),
+                }
+                println!("  {}", p.text);
+                println!("  set {} by {}", store::ymd(p.at), p.actor);
+                if let Some(v) = &p.verdict {
+                    crate::cmds::report_verdict(&p.act, v);
+                }
             }
             println!("\n{} policy act(s)", canon.policies.len());
             0
@@ -210,6 +245,59 @@ pub fn policy(args: &[String]) -> i32 {
 /// Setting it is gated in the fold by standing over the scope — the level
 /// above decides how a level makes rules — so a `set` by somebody without
 /// standing is written, not applied, and says so.
+/// The two v4 knobs a new ratification rule is written with.
+///
+/// **Carried forward, then batteries.** A flag says it outright. Without
+/// one, the value the scope already lives under is written again, so
+/// `ratification set consent:7d --scope house.kitchen` cannot quietly reopen
+/// one level down what the house closed. With nothing to carry, the default
+/// is the recommended one: a change of policy waits like any other change,
+/// and a person's own scope is theirs. Writing the value explicitly, rather
+/// than leaving it absent, is what keeps the meaning in the ledger instead of
+/// in whichever build reads it.
+fn knobs(
+    args: &[String],
+    canon: &canon_core::Canon,
+    scope: Option<&canon_core::Scope>,
+) -> Result<(canon_core::Governs, Option<bool>), String> {
+    let now = store::now();
+    let in_force = canon.adopted_at(scope, now);
+    let governs = match flag(args, "--governs") {
+        Some("all") => canon_core::Governs::All,
+        Some("commitments") => canon_core::Governs::Commitments,
+        Some(other) => {
+            return Err(format!(
+                "`--governs {other}` — expected `all` (a change of policy waits like a rule) \
+                 or `commitments` (a policy applies on its writer's standing)"
+            ))
+        }
+        None => in_force
+            .and_then(|r| r.governs)
+            .unwrap_or(canon_core::Governs::All),
+    };
+    let personal = match (flag(args, "--personal"), scope) {
+        (Some(_), Some(s)) => {
+            return Err(format!(
+                "`--personal` is canon-wide; it cannot be set for {s}. \
+                 Drop --scope, or drop --personal"
+            ))
+        }
+        (Some("on"), None) => Some(true),
+        (Some("off"), None) => Some(false),
+        (Some(other), None) => {
+            return Err(format!("`--personal {other}` — expected `on` or `off`"))
+        }
+        (None, Some(_)) => None,
+        (None, None) => Some(
+            canon
+                .adopted_at(None, now)
+                .and_then(|r| r.personal)
+                .unwrap_or(true),
+        ),
+    };
+    Ok((governs, personal))
+}
+
 pub fn ratification(args: &[String]) -> i32 {
     let pos = positionals(args);
     match pos.first().copied() {
@@ -218,7 +306,8 @@ pub fn ratification(args: &[String]) -> i32 {
                 return fail(
                     "usage: canon ratification set \
                      <standing|joint:a,b|threshold:n/m|consent:Nd|twice:<turnover|Nd>:<rule>> \
-                     [--scope s] [-m \"<how it reads>\"]",
+                     [--scope s] [--governs all|commitments] [--personal on|off] \
+                     [-m \"<how it reads>\"]",
                 );
             };
             let Some(rule) = canon_core::Ratify::parse(raw) else {
@@ -231,8 +320,12 @@ pub fn ratification(args: &[String]) -> i32 {
                 Ok(s) => s,
                 Err(e) => return fail(e),
             };
-            let (d, _, _) = match load() {
+            let (d, _, canon) = match load() {
                 Ok(v) => v,
+                Err(e) => return fail(e),
+            };
+            let (governs, personal) = match knobs(args, &canon, scope.as_ref()) {
+                Ok(k) => k,
                 Err(e) => return fail(e),
             };
             let own = flag(args, "-m").filter(|m| !m.trim().is_empty());
@@ -243,6 +336,8 @@ pub fn ratification(args: &[String]) -> i32 {
                     text: text.clone(),
                     rule: rule.clone(),
                     scope: scope.clone(),
+                    governs: Some(governs),
+                    personal,
                 },
             ) {
                 Ok(act) => crate::cmds::governed(&d, &act.id, || {
@@ -581,7 +676,8 @@ pub fn decide(args: &[String]) -> i32 {
     let Some(about) = pos.first() else {
         return fail(
             "usage: canon decide \"<what it was about>\" --outcome <supported|conflicts|unaddressed> \
-             --authority <act|notify|ask-one|ask-panel|refuse> -m \"<what was decided>\"",
+             --authority <act|notify|ask-one|ask-panel|refuse> [--citing <id>,…] \
+             -m \"<what was decided>\"",
         );
     };
     let (Some(o), Some(a)) = (flag(args, "--outcome"), flag(args, "--authority")) else {
@@ -598,7 +694,23 @@ pub fn decide(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
+    let mut citing = Vec::new();
+    for needle in flag(args, "--citing")
+        .into_iter()
+        .flat_map(|raw| raw.split(','))
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+    {
+        match crate::explain::resolve(&canon, needle) {
+            Ok(id) if !citing.contains(&id) => citing.push(id),
+            Ok(_) => {}
+            Err(e) => return fail(e),
+        }
+    }
     let prior = canon.prior_decisions(about).len();
+    // A ladder keyed on the cited rule cannot see a decision that cites
+    // nothing. Said once, here, rather than discovered at the next check.
+    let missed = citing.is_empty() && canon.policies.iter().any(|p| keys_on_cited(&p.rule));
     match write(
         &d,
         ActKind::Decided {
@@ -606,16 +718,41 @@ pub fn decide(args: &[String]) -> i32 {
             outcome,
             authority,
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
+            citing: citing.clone(),
         },
     ) {
         Ok(act) => crate::cmds::governed(&d, &act.id, || {
             println!("{act_id}  decided about \"{about}\"", act_id = act.id);
             println!("  {} / {authority}", format!("{outcome:?}").to_lowercase());
+            if !citing.is_empty() {
+                let ids: Vec<&str> = citing.iter().map(|i| i.as_str()).collect();
+                println!("  citing {}", ids.join(", "));
+            }
             // The rung is shown because the ladder is the point: a decision
             // that silently moves the next one up is a decision nobody saw.
             println!("  this is decision {} about it", prior + 1);
+            if missed {
+                println!(
+                    "  a graduated policy here counts by the rule cited; without --citing \
+                     this decision will not count on that ladder"
+                );
+            }
         }),
         Err(e) => fail(e),
+    }
+}
+
+/// Whether a rule, or a rule it wraps, is a ladder keyed on cited rules.
+fn keys_on_cited(rule: &Rule) -> bool {
+    match rule {
+        Rule::Graduated {
+            key: Some(LadderKey::Cited),
+            ..
+        } => true,
+        Rule::Graduated { base, .. } | Rule::Entrenched { base, .. } | Rule::Cautious { base } => {
+            keys_on_cited(base)
+        }
+        _ => false,
     }
 }
 
@@ -1504,7 +1641,7 @@ pub fn leave(args: &[String]) -> i32 {
             proposal: None,
         },
         store::now(),
-        "anonymous",
+        canon_core::ANONYMOUS,
     );
     match store::append(&d, &act) {
         Ok(()) => {
@@ -1512,6 +1649,86 @@ pub fn leave(args: &[String]) -> i32 {
             println!("  recorded without your name.");
             println!(
                 "  it sits next to your withdrawal in the log, so treat the anonymity as thin."
+            );
+            0
+        }
+        Err(e) => fail(e),
+    }
+}
+
+// ── canon second ────────────────────────────────────────────
+
+/// Add your weight to a question, without your name.
+///
+/// **Exit has a pre-signal and voice needs one too.** A question nobody else
+/// is seen to share reads as one person's complaint, and the cost of being
+/// seen to share it is the same cost that kept the asker quiet. A second says
+/// "me too" without saying who, so the group can tell which open questions
+/// are widely held.
+///
+/// **It gates attention, never an outcome.** A second is a `position` toward
+/// a question, by `anonymous`. Ratification counts positions on proposals by
+/// people who hold the scope, and a question is not a proposal, so nothing a
+/// second does can carry or block anything; it only moves a count in `open`.
+///
+/// **People only.** An agent may ask and cite, but a second is weight, and
+/// weight from a process that can run a thousand times is not a second.
+pub fn second(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let Some(needle) = pos.first() else {
+        return fail("usage: canon second <question-id>");
+    };
+    let me = store::actor();
+    if !me.starts_with("human:") {
+        return fail(format!(
+            "{me} cannot second a question — agents draft, ask and cite; seconding is a person's"
+        ));
+    }
+    let (d, log, canon) = match load() {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let id = match crate::explain::resolve_question(&canon, needle) {
+        Ok(i) => i,
+        Err(e) => return fail(e),
+    };
+    // `pick` falls back to an inherited commitment's upstream id, which is
+    // right for every other resolver and wrong here: weight on a commitment
+    // is a vote.
+    let Some(q) = canon.question(&id) else {
+        return fail(format!("no question matching `{needle}`"));
+    };
+    if q.status != canon_core::Status::Active {
+        return fail(format!(
+            "{id} is no longer open — it has been answered or withdrawn"
+        ));
+    }
+    let act = Act::new(
+        ActKind::Position {
+            about: id.as_str().to_string(),
+            citing: None,
+            pull: canon_core::Pull::Toward,
+            because: "seconded".into(),
+        },
+        store::now(),
+        canon_core::ANONYMOUS,
+    );
+    // Two seconds on one question in one second are the same line, and the
+    // log keeps one copy of a line. Appending it anyway would report a second
+    // that never counts.
+    if log.acts().iter().any(|a| a.id == act.id) {
+        return fail(format!(
+            "someone seconded {id} in the same second — run it again"
+        ));
+    }
+    match store::append(&d, &act) {
+        Ok(()) => {
+            let n = canon.seconds(&id) + 1;
+            println!("{id}  seconded ({n} second(s))");
+            println!("  recorded without your name.");
+            println!(
+                "  its time, and the commit that carries it, can point to you, so treat the \
+                 anonymity as thin."
             );
             0
         }

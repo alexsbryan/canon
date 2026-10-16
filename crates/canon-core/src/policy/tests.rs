@@ -315,6 +315,8 @@ fn the_ladder_climbs_on_decisions_and_starts_at_the_bottom() {
     let rule = Rule::Graduated {
         ladder: ladder.clone(),
         base: Box::new(Rule::Default),
+        key: None,
+        repair: None,
     };
     let attrs = Attributes::about("quiet hours");
 
@@ -333,6 +335,7 @@ fn the_ladder_climbs_on_decisions_and_starts_at_the_bottom() {
                 outcome: Outcome::Conflicts,
                 authority: Authority::AskOne,
                 rationale: "asked once".into(),
+                citing: Vec::new(),
             },
             200 + i as i64,
             "human:alex",
@@ -352,6 +355,7 @@ fn the_ladder_is_per_subject_and_a_community_that_never_decided_has_none() {
             outcome: Outcome::Conflicts,
             authority: Authority::AskOne,
             rationale: String::new(),
+            citing: Vec::new(),
         },
         200,
         "human:alex",
@@ -361,6 +365,8 @@ fn the_ladder_is_per_subject_and_a_community_that_never_decided_has_none() {
     let rule = Rule::Graduated {
         ladder: vec![Authority::AskOne, Authority::Refuse],
         base: Box::new(Rule::Default),
+        key: None,
+        repair: None,
     };
     assert_eq!(
         rule.decide(&s, &Attributes::about("bike storage"), &canon)
@@ -370,6 +376,193 @@ fn the_ladder_is_per_subject_and_a_community_that_never_decided_has_none() {
     );
     assert_eq!(canon.prior_decisions("quiet hours").len(), 1);
     assert_eq!(canon.prior_decisions("bike storage").len(), 0);
+}
+
+// ── what the ladder counts as the same thing (v4) ───────────
+
+fn decided(about: &str, outcome: Outcome, citing: &[&ActId], ts: i64) -> Act {
+    Act::new(
+        ActKind::Decided {
+            about: about.into(),
+            outcome,
+            authority: Authority::AskOne,
+            rationale: String::new(),
+            citing: citing.iter().map(|id| (*id).clone()).collect(),
+        },
+        ts,
+        "human:alex",
+    )
+}
+
+fn sink_ladder(key: Option<LadderKey>, repair: Option<bool>) -> Rule {
+    Rule::Graduated {
+        ladder: vec![Authority::AskOne, Authority::AskPanel, Authority::Refuse],
+        base: Box::new(Rule::Default),
+        key,
+        repair,
+    }
+}
+
+/// A canon holding the sink rule and these decisions, and the rule's id.
+fn sink_canon(decisions: impl Fn(&ActId) -> Vec<Act>) -> (Canon, ActId) {
+    let rule = Act::new(
+        ActKind::Assert {
+            text: "Pans do not sit in the sink overnight.".into(),
+            from: None,
+            source: None,
+        },
+        100,
+        "human:alex",
+    );
+    let id = rule.id.clone();
+    let mut acts = vec![rule];
+    acts.extend(decisions(&id));
+    (Log::from_acts(acts).derive(), id)
+}
+
+#[test]
+fn a_cited_ladder_survives_a_paraphrase() {
+    let (canon, sink) = sink_canon(|id| {
+        vec![decided(
+            "pans left in the sink overnight",
+            Outcome::Conflicts,
+            &[id],
+            200,
+        )]
+    });
+    let s = standing(
+        &canon,
+        vec![Position::of(sink.clone(), Pull::Against, "overnight")],
+    );
+    // Somebody new to the argument words it differently.
+    let attrs = Attributes::about("the sink full of pans again");
+    let cited = sink_ladder(Some(LadderKey::Cited), None).decide(&s, &attrs, &canon);
+    assert_eq!(
+        cited.authority,
+        Authority::AskPanel,
+        "the same rule cited is the same argument: {}",
+        cited.because
+    );
+    assert!(cited.because.contains("citing"), "{}", cited.because);
+    let worded = sink_ladder(None, None).decide(&s, &attrs, &canon);
+    assert_eq!(
+        worded.authority,
+        Authority::AskOne,
+        "keyed on words, a paraphrase starts a fresh ladder — the reason the key exists"
+    );
+}
+
+#[test]
+fn a_repair_resets_the_ladder() {
+    let about = "pans left in the sink overnight";
+    let (canon, sink) = sink_canon(|id| {
+        vec![
+            decided(about, Outcome::Conflicts, &[id], 200),
+            decided(about, Outcome::Conflicts, &[id], 201),
+            // The soaking tub: the house decided for the thing, which closes
+            // the episode.
+            decided("pans soaking, sorted out", Outcome::Supported, &[id], 202),
+        ]
+    });
+    let s = standing(
+        &canon,
+        vec![Position::of(sink.clone(), Pull::Against, "overnight")],
+    );
+    let attrs = Attributes::about(about);
+    let rule = sink_ladder(Some(LadderKey::Cited), Some(true));
+    let after = rule.decide(&s, &attrs, &canon);
+    assert_eq!(after.authority, Authority::AskOne, "{}", after.because);
+    assert!(
+        after.because.contains("since the last repair"),
+        "{}",
+        after.because
+    );
+    // Without repair every decision on the rule counts, the repair too.
+    let remembers = sink_ladder(Some(LadderKey::Cited), None).decide(&s, &attrs, &canon);
+    assert_eq!(remembers.authority, Authority::Refuse);
+
+    // One more conflict after the repair is the second rung, not the fourth.
+    let (canon, sink) = sink_canon(|id| {
+        vec![
+            decided(about, Outcome::Conflicts, &[id], 200),
+            decided(about, Outcome::Conflicts, &[id], 201),
+            decided("pans soaking, sorted out", Outcome::Supported, &[id], 202),
+            decided(about, Outcome::Conflicts, &[id], 203),
+        ]
+    });
+    let s = standing(&canon, vec![Position::of(sink, Pull::Against, "overnight")]);
+    assert_eq!(
+        rule.decide(&s, &attrs, &canon).authority,
+        Authority::AskPanel
+    );
+}
+
+#[test]
+fn nothing_cited_against_falls_back_to_about_and_says_so() {
+    let about = "pans left in the sink overnight";
+    let (canon, _) = sink_canon(|_| vec![decided(about, Outcome::Conflicts, &[], 200)]);
+    // A person's objection, and no rule cited against: there is no rule to
+    // key on, so the words are what is left.
+    let s = standing(
+        &canon,
+        vec![Position::by(
+            "human:sam",
+            Pull::Against,
+            "I wash up first thing",
+        )],
+    );
+    let d = sink_ladder(Some(LadderKey::Cited), None).decide(&s, &Attributes::about(about), &canon);
+    assert_eq!(d.authority, Authority::AskPanel, "{}", d.because);
+    assert!(
+        d.because
+            .starts_with("graduated: nothing cited against, so keyed on about: "),
+        "{}",
+        d.because
+    );
+    // A rule cited FOR the proposal is not a rule it is argued against.
+    let (canon, sink) = sink_canon(|_| vec![decided(about, Outcome::Conflicts, &[], 200)]);
+    let s = standing(&canon, vec![Position::of(sink, Pull::Toward, "helps")]);
+    let d = sink_ladder(Some(LadderKey::Cited), None).decide(&s, &Attributes::about(about), &canon);
+    assert!(d.because.contains("nothing cited against"), "{}", d.because);
+}
+
+#[test]
+fn an_old_graduated_rule_reads_as_written() {
+    // The body every canon before v4 carries. It must come back byte for
+    // byte, read as a v2 rule, and decide with the sentence it always had.
+    let raw = r#"{"rule":"graduated","ladder":["ask-one","refuse"],"base":{"rule":"default"}}"#;
+    let rule: Rule = serde_json::from_str(raw).unwrap();
+    assert_eq!(serde_json::to_string(&rule).unwrap(), raw);
+    assert!(!rule.uses_v4());
+    assert_eq!(
+        rule.prose(),
+        format!(
+            "{} Repeat decisions about the same thing escalate: ask-one, then refuse.",
+            Rule::Default.prose()
+        ),
+        "no sentence for a knob nobody set"
+    );
+
+    let (canon, sink) =
+        sink_canon(|id| vec![decided("quiet hours", Outcome::Conflicts, &[id], 200)]);
+    let s = standing(&canon, vec![Position::of(sink, Pull::Against, "late")]);
+    let attrs = Attributes::about("quiet hours");
+    let under = Rule::Default.decide(&s, &attrs, &canon).because;
+    assert_eq!(
+        rule.decide(&s, &attrs, &canon).because,
+        format!("graduated: 1 prior decision(s) about `quiet hours` -> rung 2 of 2 ({under})")
+    );
+
+    let policy = Act::new(
+        ActKind::Policy {
+            text: "ask, then no".into(),
+            rule,
+            scope: None,
+        },
+        100,
+        "human:alex",
+    );
+    assert_eq!(policy.v, crate::UNSIGNED_VERSION, "an old body stays v2");
 }
 
 #[test]
@@ -557,6 +750,8 @@ fn a_policy_round_trips_through_the_log_with_its_rule_intact() {
                 base: Box::new(Rule::Graduated {
                     ladder: vec![Authority::AskOne, Authority::Refuse],
                     base: Box::new(Rule::Consent),
+                    key: None,
+                    repair: None,
                 }),
             },
             scope: None,

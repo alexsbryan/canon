@@ -672,6 +672,18 @@ the record. "Dana ran the washing machine at 1am" is an observation about a
 person and does not. A community that has never decided anything has no ladder
 to climb, which is the correct behaviour.
 
+Two refinements keep the ladder honest without crossing that line. **It is
+keyed on the rule cited, not the words used**: a ladder that matched the
+decision's free-text subject restarted every time somebody described the same
+argument differently, so a ladder keyed on `cited` counts the decisions that
+cited the same commitment the proposal is argued against, and falls back to the
+subject text, saying so, when nothing is cited. **A repair closes an episode**:
+with `repair` on, a decision that went *for* the thing — the house bought a
+soaking tub — resets the count, so a problem the house solved does not meet its
+next occurrence on the top rung. Both still read decisions and nothing else.
+`--graduated` on `canon policy set` turns both on; `--by-about` and
+`--no-repair` write the older ladder.
+
 **One generalization pays for five technologies.** Term limits, sunset clauses,
 trial periods, revisit dates and rotation are all the same shape: an annotation
 carrying a horizon, plus one query for what is overdue. That is the strongest
@@ -851,6 +863,12 @@ reduces *exposure*:
   and adjust without anyone knowing you considered it.
 - Unattributed asking, with attributed adjudication.
 - Unattributed seconds, so you learn you are not alone without going first.
+  `canon second <question>` writes a `position` toward the question by
+  `anonymous`; `canon open` shows the count. A second gates attention and never
+  an outcome — a question is not a proposal, so no rule counts it — and only a
+  person may write one, because weight from a process that can run a thousand
+  times is not a second. The anonymity is thin: the line carries a time, and a
+  ledger kept in git carries a commit.
 - `Accept` as a real outcome, so raising something is not a bet you can only
   lose.
 

@@ -1,0 +1,87 @@
+// The kitchen, a season later. Run over the same acts.jsonl as scenario.jsonl,
+// with its own expectations:
+//
+//   canon replay fixtures/fernwood-commons \
+//     --scenario fixtures/fernwood-commons/kitchen.jsonl \
+//     --expect fixtures/fernwood-commons/kitchen.expected.json
+//
+// Four things a house runs into once it has rules at all: somebody's own
+// corner, a change to how the house decides, the same argument in new words,
+// and a question nobody wants to put their name to.
+
+// ── the setup ────────────────────────────────────────────────
+// Phylla moves in. Dana writes the sink rule and a graduated policy for the
+// sink that counts by the rule cited and forgets on repair. The milk run goes
+// round three people weekly. Mira sets the canon-wide ratification rule: a
+// change waits a week, and a person's own scope is theirs.
+{"step":"act","at":"2026-06-01","by":"human:mira","op":"grant","holder":"human:phylla","scope":"house"}
+{"step":"act","at":"2026-06-01","by":"human:dana","as":"sink-rule","op":"assert","text":"Pans do not sit in the sink overnight."}
+{"step":"act","at":"2026-06-01","by":"human:dana","op":"scoped","commitment":"@sink-rule","scope":"house.kitchen.sink"}
+{"step":"act","at":"2026-06-01","by":"human:dana","op":"policy","scope":"house.kitchen.sink","text":"Ask, then the house, then no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"},"key":"cited","repair":true}}
+{"step":"act","at":"2026-06-02","by":"human:dana","op":"allot","text":"The weekly milk run.","unit":"run","units":["milk run"],"scope":"house.kitchen.milk"}
+{"step":"act","at":"2026-06-02","by":"human:dana","op":"allocation","text":"Three of us drink it, three of us fetch it.","rule":{"rule":"rotation","order":{"order":"given","actors":["human:phylla","human:sam","human:dana"]},"step":1,"per":604800},"scope":"house.kitchen.milk"}
+{"step":"act","at":"2026-06-03","by":"human:mira","op":"ratification","text":"A change waits a week; one reasoned objection stops it. Your own corner is yours.","rule":{"rule":"consent","days":7},"personal":true,"governs":"all"}
+
+// ── somebody's own corner ────────────────────────────────────
+// Phylla's rule about her glasses lives in her own scope. Nobody else holds
+// it, so a housemate cannot set its policy, and her rule is in force on her
+// own write rather than waiting a week for the house.
+{"step":"act","at":"2026-06-04","by":"human:phylla","as":"glasses","op":"assert","text":"Nobody uses my glasses without asking me first."}
+{"step":"act","at":"2026-06-04","by":"human:phylla","op":"scoped","commitment":"@glasses","scope":"human:phylla.glasses"}
+{"step":"status","name":"kitchen-phyllas-rule-in-force-on-her-write","commitment":"@glasses"}
+{"step":"act","at":"2026-06-05","by":"human:dana","op":"grant","holder":"human:dana","scope":"human:phylla.glasses"}
+{"step":"act","at":"2026-06-05","by":"human:dana","op":"policy","scope":"human:phylla.glasses","text":"Glasses are shared.","rule":{"rule":"consent"}}
+{"step":"who","name":"kitchen-a-housemate-cannot-govern-phyllas-corner","scope":"human:phylla.glasses"}
+{"step":"check","name":"kitchen-glasses-for-the-party-conflict","scope":"house.kitchen","actor":"human:sam","about":"kitchen glasses","proposal":"use the glasses on the shelf for the party","positions":[{"citing":"@glasses","pull":"against","because":"those are Phylla's; her rule says ask first"}]}
+
+// ── a change to how the kitchen decides ──────────────────────
+// Under `governs: all` a policy waits for the ratification rule like a
+// commitment does, so Dana's threshold is a proposal, and Sam's one reasoned
+// objection refuses it. The kitchen goes on deciding as it did.
+{"step":"act","at":"2026-06-06","by":"human:dana","as":"kitchen-threshold","op":"policy","scope":"house.kitchen","text":"Two of us have to object before a kitchen thing stops.","rule":{"rule":"threshold","against":2}}
+{"step":"status","name":"kitchen-policy-change-is-proposed","commitment":"@kitchen-threshold"}
+{"step":"act","at":"2026-06-07","by":"human:sam","op":"position","about":"@kitchen-threshold","pull":"against","because":"one of us should still be able to stop a bad idea"}
+{"step":"status","name":"kitchen-policy-change-refused-by-one-objection","commitment":"@kitchen-threshold"}
+{"step":"who","name":"kitchen-still-decided-by-subsidiarity","scope":"house.kitchen"}
+
+// ── a question with weight and no names ──────────────────────
+// Ola asks; three people second it without their names, on three different
+// days. Seconds move attention and nothing else: the refused policy stays
+// refused.
+{"step":"act","at":"2026-06-08","by":"human:ola","as":"sink-q","op":"question","text":"Should the sink get a second drying rack?"}
+{"step":"act","at":"2026-06-09","by":"anonymous","op":"position","about":"@sink-q","pull":"toward","because":"seconded"}
+{"step":"act","at":"2026-06-10","by":"anonymous","op":"position","about":"@sink-q","pull":"toward","because":"seconded"}
+{"step":"act","at":"2026-06-11","by":"anonymous","op":"position","about":"@sink-q","pull":"toward","because":"seconded"}
+{"step":"status","name":"kitchen-seconds-move-no-ratification","commitment":"@kitchen-threshold"}
+
+// ── the same argument, in new words ──────────────────────────
+// The ladder counts decisions that cited the sink rule. Two conflicts climb
+// it; a supported decision (the soaking tub) is a repair and resets it; the
+// next conflict starts again at the bottom. A paraphrase of the subject is on
+// the same ladder because it cites the same rule. A proposal nothing cites
+// against has no rule to key on and falls back to its `about`, and says so.
+{"step":"check","name":"kitchen-sink-first","scope":"house.kitchen.sink","about":"pans left in the sink overnight","proposal":"leave the roasting pan to soak","positions":[{"citing":"@sink-rule","pull":"against","because":"overnight"}]}
+{"step":"act","at":"2026-06-12","by":"human:dana","op":"decided","about":"pans left in the sink overnight","outcome":"conflicts","authority":"ask-one","citing":["@sink-rule"]}
+{"step":"check","name":"kitchen-sink-second","scope":"house.kitchen.sink","about":"pans left in the sink overnight","proposal":"leave the roasting pan to soak","positions":[{"citing":"@sink-rule","pull":"against","because":"overnight"}]}
+{"step":"act","at":"2026-06-13","by":"human:dana","op":"decided","about":"pans left in the sink overnight","outcome":"conflicts","authority":"ask-panel","citing":["@sink-rule"]}
+{"step":"check","name":"kitchen-sink-third","scope":"house.kitchen.sink","about":"pans left in the sink overnight","proposal":"leave the roasting pan to soak","positions":[{"citing":"@sink-rule","pull":"against","because":"overnight"}]}
+{"step":"act","at":"2026-06-14","by":"human:dana","op":"decided","about":"pans soaking, sorted out","outcome":"supported","authority":"act","citing":["@sink-rule"],"rationale":"we bought a soaking tub"}
+{"step":"check","name":"kitchen-sink-after-repair","scope":"house.kitchen.sink","about":"pans left in the sink overnight","proposal":"leave the roasting pan to soak","positions":[{"citing":"@sink-rule","pull":"against","because":"overnight"}]}
+{"step":"act","at":"2026-06-15","by":"human:dana","op":"decided","about":"pans left in the sink overnight","outcome":"conflicts","authority":"ask-one","citing":["@sink-rule"]}
+{"step":"check","name":"kitchen-sink-paraphrase-same-rung","scope":"house.kitchen.sink","about":"the sink full of pans again","proposal":"leave it till morning","positions":[{"citing":"@sink-rule","pull":"against","because":"overnight"}]}
+{"step":"check","name":"kitchen-sink-nothing-cited-falls-back","scope":"house.kitchen.sink","about":"pans left in the sink overnight","proposal":"leave it","positions":[{"actor":"human:sam","pull":"against","because":"I wash up first thing"}]}
+
+// ── the milk run ─────────────────────────────────────────────
+{"step":"clock","at":"2026-07-02"}
+{"step":"pool","name":"kitchen-milk-week-five","scope":"house.kitchen.milk"}
+{"step":"clock","at":"2026-07-09"}
+{"step":"pool","name":"kitchen-milk-comes-round","scope":"house.kitchen.milk"}
+
+// ── leaving ──────────────────────────────────────────────────
+// Theo moves out and leaves a question behind without his name. It is open
+// with no seconds yet, beside Ola's with three, and none of the seconds is
+// reported as an unattended adjudication.
+{"step":"act","at":"2026-07-10","by":"human:theo","op":"withdraw","holder":"human:theo","scope":"house","rationale":"moving out"}
+{"step":"act","at":"2026-07-10","by":"anonymous","as":"leave-q","op":"question","text":"Who decided the sink was only the cooks' call?"}
+{"step":"open","name":"kitchen-open-questions-and-seconds"}
+{"step":"unattended","name":"kitchen-seconds-are-not-adjudications"}

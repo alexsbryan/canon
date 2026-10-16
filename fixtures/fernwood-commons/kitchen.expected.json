@@ -1,0 +1,61 @@
+{
+  "kitchen-phyllas-rule-in-force-on-her-write": { "status": "in-force" },
+  "kitchen-a-housemate-cannot-govern-phyllas-corner": { "holders": ["human:phylla"] },
+  "kitchen-glasses-for-the-party-conflict": {
+    "outcome": "conflicts",
+    "cites": ["@glasses"]
+  },
+
+  "kitchen-policy-change-is-proposed": { "status": "proposed" },
+  "kitchen-policy-change-refused-by-one-objection": {
+    "status": "refused",
+    "detail": "human:sam: one of us should still be able to stop a bad idea"
+  },
+  "kitchen-still-decided-by-subsidiarity": { "policy": "subsidiarity" },
+
+  "kitchen-seconds-move-no-ratification": { "status": "refused" },
+
+  "kitchen-sink-first": {
+    "outcome": "conflicts",
+    "authority": "ask-one",
+    "because": "0 prior conflict(s) since the last repair citing"
+  },
+  "kitchen-sink-second": {
+    "authority": "ask-panel",
+    "because": "1 prior conflict(s) since the last repair citing"
+  },
+  "kitchen-sink-third": {
+    "authority": "refuse",
+    "because": "2 prior conflict(s) since the last repair citing"
+  },
+  "kitchen-sink-after-repair": {
+    "authority": "ask-one",
+    "because": "0 prior conflict(s) since the last repair citing"
+  },
+  "kitchen-sink-paraphrase-same-rung": {
+    "authority": "ask-panel",
+    "because": "1 prior conflict(s) since the last repair citing"
+  },
+  "kitchen-sink-nothing-cited-falls-back": {
+    "because": "nothing cited against, so keyed on about: "
+  },
+
+  "kitchen-milk-week-five": {
+    "period": 5,
+    "turns": [["milk run", "human:dana"]],
+    "idle": 12
+  },
+  "kitchen-milk-comes-round": {
+    "period": 6,
+    "turns": [["milk run", "human:phylla"]],
+    "idle": 12
+  },
+
+  "kitchen-open-questions-and-seconds": {
+    "questions": [
+      { "id": "@sink-q", "seconds": 3 },
+      { "id": "@leave-q", "seconds": 0 }
+    ]
+  },
+  "kitchen-seconds-are-not-adjudications": { "unattended": [] }
+}

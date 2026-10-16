@@ -104,7 +104,8 @@ impl Canon {
         }
         let (code, out) = c.run("human:alex", None, &["identify", alex.to_str().unwrap()]);
         assert_eq!(code, 0, "{out}");
-        assert!(out.contains("vouches for the 3 act(s)"), "{out}");
+        // The founding act `init` wrote, the grant and the add.
+        assert!(out.contains("vouches for the 4 act(s)"), "{out}");
         (c, alex)
     }
 
@@ -260,7 +261,9 @@ fn identify_founds_a_canon_and_needs_nothing_configured() {
         let (code, out) = c.run("human:alex", None, args);
         assert_eq!(code, 0, "{out}");
     }
-    assert!(c.acts().lines().all(|l| l.contains(r#""sig":"#)));
+    // Everything after the founding act, which predates the key and counts
+    // through its `prior`.
+    assert!(c.acts().lines().skip(1).all(|l| l.contains(r#""sig":"#)));
     let (_, list) = c.run("human:alex", None, &["list"]);
     assert!(
         list.contains("Quiet hours") && !list.contains("do not count"),
