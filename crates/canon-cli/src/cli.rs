@@ -34,7 +34,7 @@ use clap::{Arg, ArgAction, Command};
 /// Verb, the flags that take a value, and the flags that do not.
 #[rustfmt::skip]
 const VERBS: &[(&str, &[&str], &[&str])] = &[
-    ("init", &["--profile"], &["--governed"]),
+    ("init", &["--profile"], &["--plain"]),
     ("add", &["--scope"], &[]),
     ("review", &[], &["--json"]),
     ("ui", &[], &[]),
@@ -134,10 +134,11 @@ pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
     }
     if *name == "init" {
         out.push_str(
-            "  writes .canon/acts.jsonl, the canon itself, one act per line and empty to\n  \
-             start (with --governed, its first act turns the v4 knobs on); .canon/profile,\n  \
-             which says how `check` answers; and .canon/.gitignore, which keeps this\n  \
-             machine's model config and draft runs out of git. Commit the rest.\n",
+            "  writes .canon/acts.jsonl, the canon itself, one act per line, starting\n  \
+             with the one that turns the v4 knobs on (--plain starts it empty);\n  \
+             .canon/profile, which says how `check` answers; and .canon/.gitignore,\n  \
+             which keeps this machine's model config and draft runs out of git.\n  \
+             Commit the rest.\n",
         );
     }
     out.push_str("\n  `canon help all` lists every verb.\n");

@@ -126,7 +126,8 @@ can-2c7f54a3544a  subsidiarity
 
 `--governs commitments` keeps the old shape, where a policy applies on its
 writer's standing. A canon written before v4 has no `governs` at all and
-behaves that way. `canon init --governed` founds a canon with both v4 knobs on.
+behaves that way. `canon init` founds a canon with both v4 knobs on, and
+`canon init --plain` founds one an older build can still read.
 
 ### "Some things are mine"
 

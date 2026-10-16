@@ -77,8 +77,8 @@ USAGE
 
 RECORD                                        (no model needed)
   init [--profile personal|code|house]  start a canon here
-       [--governed]                      with policy changes that wait and personal
-                                         scopes that are their owners' (v4)
+       [--plain]                         without the v4 knobs (policy changes that
+                                         wait, personal scopes), for older readers
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it

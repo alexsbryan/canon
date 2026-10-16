@@ -192,9 +192,12 @@ fn a_person_can_identify_and_then_write_signed_from_the_page() {
     );
     assert!(wrote.starts_with("HTTP/1.1 303"), "{wrote}");
     let record = std::fs::read_to_string(root.join(".canon/acts.jsonl")).unwrap();
-    assert_eq!(record.lines().count(), 2, "{record}");
+    // The founding act `init` wrote, then the key and the silence. The
+    // founding act predates the key, so it is unsigned and counts through
+    // the binding's `prior`; everything after it is signed.
+    assert_eq!(record.lines().count(), 3, "{record}");
     assert!(
-        record.lines().all(|l| l.contains("\"sig\":")),
+        record.lines().skip(1).all(|l| l.contains("\"sig\":")),
         "both signed: {record}"
     );
 }

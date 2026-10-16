@@ -382,14 +382,15 @@ pub fn init(args: &[String]) -> i32 {
         return fail(e);
     }
     store::ignore_local(&base);
-    // **The batteries, written as the canon's first act when asked for.** A
-    // change of policy waits like any other change, and a person's own scope
-    // is theirs. Opt-in for now rather than the default, because the line is
-    // v4: a canon founded this way cannot be read by a build from before the
-    // knobs, and a fresh canon that an older teammate cannot open is a
-    // surprise nobody chose. `standing` keeps the founding sitting what it
-    // always was; the knobs bite once the group picks a rule that waits.
-    if has(args, "--governed") {
+    // **The batteries, written as the canon's first act.** A change of
+    // policy waits like any other change, and a person's own scope is
+    // theirs. `standing` keeps the founding sitting what it always was; the
+    // knobs bite once the group picks a rule that waits. The act is v4, so
+    // a build from before the knobs cannot open this canon and says so;
+    // `--plain` founds one it can, with neither knob, which is how every
+    // canon before 0.3 began.
+    let plain = has(args, "--plain");
+    if !plain {
         let kind = ActKind::Ratification {
             text: "A holder's word is a rule at once. A change of policy waits like any \
                    other change, and a person's own scope is theirs."
@@ -412,6 +413,17 @@ pub fn init(args: &[String]) -> i32 {
         base.display(),
         profile.as_str()
     );
+    if !plain {
+        // Said on the way in, because it is the one thing init decides for
+        // the group, and the group can change it with `ratification set`.
+        println!("  policy changes wait like rules do, and human:<you>.… is yours alone");
+        if !store::actor().starts_with("human:") {
+            println!(
+                "  written by {}, so it waits for a person to approve it",
+                store::actor()
+            );
+        }
+    }
     // Padded to a common column, computed rather than typed: the noun
     // changes width by profile, and three lines that almost line up read as
     // sloppier than three that do not try.

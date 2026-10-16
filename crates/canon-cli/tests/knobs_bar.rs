@@ -337,26 +337,34 @@ fn a_policy_set_under_governs_all_says_it_is_proposed_and_can_be_objected_to() {
 }
 
 #[test]
-fn init_governed_founds_the_canon_with_the_knobs_on() {
+fn init_founds_the_canon_with_the_knobs_on_and_plain_without() {
     let dir = std::env::temp_dir().join(format!("canon-knobs-bar-init-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let canon = dir.join(".canon");
-    let (c, out) = canon_as(
-        &canon,
-        "human:sam",
-        &["init", "--profile", "house", "--governed"],
-    );
+    let (c, out) = canon_as(&canon, "human:sam", &["init", "--profile", "house"]);
     assert_eq!(c, 0, "{out}");
+    assert!(out.contains("is yours alone"), "said on the way in: {out}");
     let line = last_line(&canon);
     assert_eq!(line["op"], "ratification", "{line}");
     assert_eq!(line["governs"], "all", "{line}");
     assert_eq!(line["personal"], true, "{line}");
+    assert_eq!(line["v"], 4, "{line}");
 
-    // And without the flag, init writes nothing, as it always has.
+    // `--plain` founds a canon a build from before the knobs can read.
     let plain = dir.join("plain");
-    let (c, out) = canon_as(&plain, "human:sam", &["init", "--profile", "house"]);
+    let (c, out) = canon_as(
+        &plain,
+        "human:sam",
+        &["init", "--profile", "house", "--plain"],
+    );
     assert_eq!(c, 0, "{out}");
     let raw = std::fs::read_to_string(plain.join("acts.jsonl")).unwrap();
     assert!(raw.trim().is_empty(), "{raw}");
+
+    // An agent may found one, and is told its founding act waits for a person.
+    let agent = dir.join("agent");
+    let (c, out) = canon_as(&agent, "agent:helper", &["init", "--profile", "house"]);
+    assert_eq!(c, 0, "{out}");
+    assert!(out.contains("waits for a person"), "{out}");
 }
