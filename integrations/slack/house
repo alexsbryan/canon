@@ -1,0 +1,18 @@
+#!/bin/sh
+# Run canon, or one of the bot's setup commands, inside the container.
+#
+#   ./house init --profile house       any canon command
+#   ./house people                     the bot's: people, post-draft, digest
+#
+# Acts you write here go under YOUR_NAME from .env.
+set -eu
+cd "$(dirname "$0")"
+name="$(sed -n 's/^YOUR_NAME=//p' .env)"
+[ -n "$name" ] || { echo "set YOUR_NAME in .env (your Slack full name)" >&2; exit 2; }
+mkdir -p data
+case "${1:-}" in
+  people | post-draft | digest) set -- python canon_slack.py "$@" ;;
+  *) set -- canon "$@" ;;
+esac
+exec podman run --rm --env-file .env -v ./data:/data:Z \
+  -e CANON_ACTOR="human:$name" localhost/canon-slack "$@"

@@ -50,6 +50,11 @@ renames that heading to the version, and its section becomes the release notes
 - `canon second <question>` adds your weight to a question without your
   name. `canon open` shows the count. Seconds decide nothing; only a person
   can second.
+- A house can run canon through Slack without anyone installing it:
+  `integrations/slack/` is one rootless podman container, and
+  [docs/SELF_HOST.md](./docs/SELF_HOST.md) walks through it. Housemates
+  propose, approve and object with `/canon` and buttons; acts from Slack
+  are not signed yet.
 
 - `canon review` walks you through what's waiting on you, one proposal at
   a time: the words, who proposed them and when, the source passage they

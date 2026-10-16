@@ -88,6 +88,8 @@ the boundary.
 
 - [Everyday questions](./docs/COOKBOOK.md) — who decides, how to object,
   and what to do when the rules don't cover something.
+- [Run it through Slack](./docs/SELF_HOST.md) — one container on a home
+  server, so housemates propose and approve without installing anything.
 - [The guide](./docs/GUIDE.md) — the ideas and commands, in plain words.
 - [The design](./docs/PRIMITIVES.md) — what the tool fixes and what it
   leaves to your group, informed by Elinor Ostrom's work on shared resources.

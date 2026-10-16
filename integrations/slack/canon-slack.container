@@ -1,0 +1,19 @@
+# Quadlet unit: podman runs the bot as a systemd user service.
+#   cp canon-slack.container ~/.config/containers/systemd/
+#   systemctl --user daemon-reload && systemctl --user start canon-slack
+# Paths assume the repo was cloned to ~/canon. Change them if not.
+[Unit]
+Description=canon Slack bot
+
+[Container]
+Image=localhost/canon-slack
+EnvironmentFile=%h/canon/integrations/slack/.env
+Volume=%h/canon/integrations/slack/data:/data:Z
+# Only with CANON_GIT_SYNC=1: a deploy key that can push the record repo.
+# Volume=%h/.ssh/canon_deploy:/root/.ssh/id_ed25519:ro,Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

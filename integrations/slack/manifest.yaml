@@ -1,0 +1,27 @@
+# Paste this at https://api.slack.com/apps → Create New App → From a manifest.
+display_information:
+  name: canon
+  description: The house rules, and how they change.
+features:
+  bot_user:
+    display_name: canon
+    always_online: true
+  slash_commands:
+    - command: /canon
+      description: Ask about, propose, or look up a house rule
+      usage_hint: "rules | propose <rule> | pending | why <id> | ask <plan>"
+      should_escape: false
+oauth_config:
+  scopes:
+    bot:
+      - commands
+      - chat:write
+      - users:read
+      - channels:read
+      - groups:read
+settings:
+  interactivity:
+    is_enabled: true
+  socket_mode_enabled: true
+  org_deploy_enabled: false
+  token_rotation_enabled: false
