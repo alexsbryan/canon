@@ -7,6 +7,8 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.3.0 — 2026-10-16
+
 ### Before you upgrade
 
 - Nothing changes for a canon in which nobody runs `canon identify`: it
