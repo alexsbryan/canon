@@ -46,7 +46,7 @@ use alloc::{
 
 use sha2::{Digest, Sha256, Sha512};
 
-use crate::act::{Act, ActKind, FORMAT_VERSION};
+use crate::act::{Act, ActKind, SIGNED_VERSION};
 use crate::id::ActId;
 
 /// The SSHSIG namespace. A git commit signature is in `git`, so neither can
@@ -93,7 +93,7 @@ pub fn digest(act: &Act) -> String {
 /// anywhere in this act's body. Scanning the body rather than listing fields
 /// per op means an op added later is pinned without anybody remembering to.
 pub fn prepare(act: &mut Act, log: &[Act]) -> String {
-    act.v = FORMAT_VERSION;
+    act.v = act.v.max(SIGNED_VERSION);
     let by_id: BTreeMap<&ActId, &Act> = log.iter().map(|a| (&a.id, a)).collect();
     let mut named = BTreeSet::new();
     if let Some(anchor) = log

@@ -107,6 +107,56 @@ can-6c338fed1276  Guests may stay up to three nights.
 Her proposal is on the record, visible, and not in force. Nothing was thrown
 away and nothing was waved through.
 
+A rule set this way also reaches policy: a new `ratification set` writes
+`governs: all` unless told otherwise, so one holder cannot quietly change *how*
+the house decides either. Sam's change waits for the week like anything else:
+
+```sh
+canon policy set subsidiarity --scope house.kitchen -m "Whoever cooks decides the kitchen."
+```
+
+```text
+can-2c7f54a3544a  subsidiarity
+  Whoever cooks decides the kitchen.
+  governs house.kitchen and everything under it
+  PROPOSED, not yet how this scope decides — needs no objection from a holder before 2026-10-23
+  approve it:  canon approve can-2c7f54a3544a
+  object:      canon object can-2c7f54a3544a -m "<why>"
+```
+
+`--governs commitments` keeps the old shape, where a policy applies on its
+writer's standing. A canon written before v4 has no `governs` at all and
+behaves that way. `canon init --governed` founds a canon with both v4 knobs on.
+
+### "Some things are mine"
+
+Phylla's whiskey glasses live in the kitchen, and they keep getting broken.
+Saying so after the third one sounds like an accusation. Saying it before
+anything happens, about her own things, is just a boundary, and a scope named
+for her is hers alone once the canon-wide rule has `personal: on` (the default
+a new `ratification set` writes):
+
+```sh
+canon add "Nobody uses my whiskey glasses without asking me first." --scope human:phylla.glasses
+```
+
+```text
+can-54477c58a8c9  Nobody uses my whiskey glasses without asking me first.
+  in force — phylla holds human:phylla.glasses
+```
+
+It is in force on her word even though the house decides by consent, because
+the house's rule does not reach inside her scope. Anyone else's write there
+waits for her, and nobody else can take standing over it:
+
+```text
+NOT APPLIED: human:sam granted human:sam standing over human:phylla.glasses without holding it
+```
+
+The house still decides the kitchen. When somebody proposes using the glasses
+for a party, her rule is cited against it like any other, and that is a
+request to her, not a vote about her.
+
 ---
 
 ## Day to day
@@ -200,6 +250,25 @@ can-33be28b8ccee  Whoever is away longest waters the plants; say so in the group
   in force
 ```
 
+**Second a question without your name.** A question one person asked reads
+as one person's complaint, and saying "me too" costs the same exposure that
+kept everyone else quiet. A second adds weight without a name:
+
+```sh
+canon second can-d06812036101
+```
+
+```text
+can-d06812036101  seconded (1 second(s))
+  recorded without your name.
+  its time, and the commit that carries it, can point to you, so treat the anonymity as thin.
+```
+
+`canon open` then shows `1 second(s)` under the question. A second moves
+attention and nothing else: a question is not a proposal, so no policy or
+ratification rule counts it. Only a person can second — an agent asking is
+fine, an agent adding weight is not.
+
 **Say when you decided *not* to have a rule.** A gap and a deliberate silence
 are different facts, and only one of them wants filling:
 
@@ -231,9 +300,51 @@ would cost to be wrong.
 canon policy set default --graduated ask-one,ask-panel,refuse
 ```
 
-First time about a subject, ask one person. Second time, ask the group. Third,
-refuse. Repetition is the signal that something needs a rule, and the ladder
-makes the signal automatic instead of relying on somebody noticing.
+First time, ask one person. Second time, ask the group. Third, refuse.
+Repetition is the signal that something needs a rule, and the ladder makes the
+signal automatic instead of relying on somebody noticing.
+
+**The ladder counts decisions, and "the same argument" means the same rule.**
+Nobody describes a recurring problem in the same words twice — "pans in the
+sink overnight" one week, "the sink full of pans again" the next — so the
+ladder counts decisions that cited the rule the proposal is argued against,
+not decisions that happened to be worded alike. Say which rule a decision
+turned on when you record it:
+
+```sh
+canon decide "pans left in the sink overnight" --outcome conflicts \
+  --authority ask-one --citing can-5354ec4dcfd6 -m "asked Sam"
+```
+
+```text
+can-65270a77fe8e  decided about "pans left in the sink overnight"
+  conflicts / ask-one
+  citing can-5354ec4dcfd6
+  this is decision 1 about it
+```
+
+A decision recorded without `--citing` is not on that ladder, and `decide`
+says so on the spot rather than letting you find out at the next check.
+`--citing` takes an id or a unique prefix, and several separated by commas.
+
+**A repair resets it.** When the house fixes the cause — buys a soaking tub —
+record that as a decision that went *for* the thing, citing the same rule:
+
+```sh
+canon decide "pans soaking, sorted out" --outcome supported \
+  --authority act --citing can-5354ec4dcfd6 -m "we bought a soaking tub"
+```
+
+From then on only the conflicts after it count, so the next lapse is asked
+about mildly again instead of meeting the top rung for a problem that was
+solved. `check` says which way it counted: `2 prior conflict(s) since the last
+repair citing can-5354ec4dcfd6 -> rung 3 of 3`. When nothing is cited against
+a proposal there is no rule to key on, so the ladder counts by the subject's
+words and the reason begins `nothing cited against, so keyed on about`.
+
+Both are on by default. `--by-about` counts by the subject's exact words and
+`--no-repair` counts every decision ever made; with both, the policy is the
+ladder canon wrote before these existed.
 
 ### "Why is this rule like this?"
 

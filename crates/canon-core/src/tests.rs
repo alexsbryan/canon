@@ -729,12 +729,12 @@ fn a_carried_annotation_changes_nothing_and_is_reported() {
 
 #[test]
 fn a_version_beyond_this_build_is_still_refused() {
-    // v2 widened what ops mean, not what versions mean. v3 is signing, and
-    // the next one is refused the same way.
-    let ahead = line("assert", r#","text":"x""#).replace(r#""v":2"#, r#""v":4"#);
+    // v2 widened what ops mean, not what versions mean. v3 is signing, v4
+    // the governance knobs, and the next one is refused the same way.
+    let ahead = line("assert", r#","text":"x""#).replace(r#""v":2"#, r#""v":5"#);
     assert!(matches!(
         Log::parse(&ahead),
-        Err(ParseError::UnknownVersion { found: 4, .. })
+        Err(ParseError::UnknownVersion { found: 5, .. })
     ));
 }
 
@@ -1106,6 +1106,7 @@ fn every_kind() -> Vec<ActKind> {
             outcome: crate::standing::Outcome::Conflicts,
             authority: crate::policy::Authority::AskOne,
             rationale: "asked once".into(),
+            citing: Vec::new(),
         },
         ActKind::Horizon {
             target: id.clone(),
@@ -1164,6 +1165,8 @@ fn every_kind() -> Vec<ActKind> {
                 holders: vec!["human:dana".into(), "human:sam".into()],
             },
             scope: Some(Scope::new("house.kitchen").unwrap()),
+            governs: None,
+            personal: None,
         },
         ActKind::Annotation {
             kind: "from-the-future".into(),
@@ -1697,6 +1700,8 @@ fn ratification_at(rule: &str, s: &str, ts: i64, actor: &str) -> Act {
             text: String::new(),
             rule: crate::ratify::Ratify::parse(rule).expect("a rule"),
             scope: Some(scope(s)),
+            governs: None,
+            personal: None,
         },
         ts,
         actor,
@@ -2778,4 +2783,193 @@ fn twice_by_days_counts_only_approvals_written_after_the_boundary_and_no_implici
     acts.push(approve_at(&pan.id, 100 + 8 * DAY, "human:dana"));
     let canon = Log::from_acts(acts).derive_at(100 + 9 * DAY);
     assert!(matches!(canon.get(&pan.id).unwrap().status, Status::Active));
+}
+
+// ── seconds, citing, and the v4 line (format v4) ────────────
+
+fn second_at(q: &ActId, ts: i64, actor: &str, pull: Pull) -> Act {
+    Act::new(
+        ActKind::Position {
+            about: q.to_string(),
+            citing: None,
+            pull,
+            because: "seconded".into(),
+        },
+        ts,
+        actor,
+    )
+}
+
+#[test]
+fn a_second_on_a_question_is_not_unattended() {
+    // Weight with no name on a question decides nothing, so reporting it as
+    // an adjudication nobody owns would bury the real ones.
+    let q = ask("should the sink get a second rack?", 100);
+    let canon = Log::from_acts(vec![
+        q.clone(),
+        second_at(&q.id, 200, ANONYMOUS, Pull::Toward),
+        second_at(&q.id, 300, ANONYMOUS, Pull::Toward),
+    ])
+    .derive();
+    assert!(canon.unattended.is_empty(), "{:?}", canon.unattended);
+    assert_eq!(canon.seconds(&q.id), 2);
+}
+
+#[test]
+fn an_anonymous_position_on_a_proposal_is_still_unattended() {
+    // On a commitment a position is a vote, and an unsigned vote is exactly
+    // what the attribution check exists to name.
+    let c = assert_c("pans out of the sink overnight", 100);
+    let q = ask("a second rack?", 100);
+    let on_rule = second_at(&c.id, 200, ANONYMOUS, Pull::Toward);
+    // Against is an objection, not a second, even on a question.
+    let against = second_at(&q.id, 200, ANONYMOUS, Pull::Against);
+    let canon =
+        Log::from_acts(vec![c.clone(), q.clone(), on_rule.clone(), against.clone()]).derive();
+    assert!(canon.unattended.contains(&on_rule.id));
+    assert!(canon.unattended.contains(&against.id));
+    assert_eq!(canon.seconds(&c.id), 0, "a commitment has no seconds");
+    assert_eq!(canon.seconds(&q.id), 0);
+}
+
+#[test]
+fn an_agent_position_on_a_question_is_still_unattended() {
+    // Only `anonymous` seconds. An agent's stance on a question is a stance.
+    let q = ask("a second rack?", 100);
+    let by_agent = second_at(&q.id, 200, "agent:helper", Pull::Toward);
+    let canon = Log::from_acts(vec![q.clone(), by_agent.clone()]).derive();
+    assert_eq!(canon.unattended, vec![by_agent.id]);
+    assert_eq!(canon.seconds(&q.id), 0);
+}
+
+#[test]
+fn a_second_never_counts_toward_ratification() {
+    // Theo holds the house, not the kitchen, so his kitchen rule waits for a
+    // cook. Anonymous weight — on the rule itself, or on a question about
+    // it — never stands in for one.
+    let mut acts = governed_house();
+    let pan = assert_at("Wash your own pan.", 100, "human:theo");
+    acts.push(pan.clone());
+    acts.push(scoped_at(&pan.id, "house.kitchen", 100));
+    let q = ask("should we make the pan rule?", 110);
+    acts.push(q.clone());
+    for i in 0..5 {
+        acts.push(second_at(&q.id, 120 + i, ANONYMOUS, Pull::Toward));
+        acts.push(second_at(&pan.id, 120 + i, ANONYMOUS, Pull::Toward));
+    }
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert_eq!(canon.seconds(&q.id), 5);
+    assert!(
+        matches!(canon.get(&pan.id).unwrap().status, Status::Proposed { .. }),
+        "{:?}",
+        canon.get(&pan.id).unwrap().status
+    );
+    acts.push(approve_at(&pan.id, 200, "human:dana"));
+    let canon = Log::from_acts(acts).derive();
+    assert!(matches!(canon.get(&pan.id).unwrap().status, Status::Active));
+}
+
+#[test]
+fn decided_citing_reaches_the_ruling() {
+    let c = assert_c("pans out of the sink overnight", 100);
+    let missing = ActId::from_raw("can-000000000bad");
+    let d = Act::new(
+        ActKind::Decided {
+            about: "pans".into(),
+            outcome: crate::standing::Outcome::Conflicts,
+            authority: crate::policy::Authority::AskOne,
+            rationale: String::new(),
+            citing: vec![c.id.clone(), missing.clone()],
+        },
+        200,
+        "human:sam",
+    );
+    let canon = Log::from_acts(vec![c.clone(), d.clone()]).derive();
+    assert_eq!(canon.rulings[0].citing, vec![c.id.clone(), missing.clone()]);
+    assert_eq!(
+        canon
+            .ladder(Keyed::Cited(core::slice::from_ref(&c.id)), false)
+            .len(),
+        1
+    );
+    assert_eq!(
+        canon.dangling,
+        vec![(d.id, missing)],
+        "a citation of nothing in this log is a hole, reported"
+    );
+}
+
+#[test]
+fn new_fields_write_v4_and_absent_fields_do_not() {
+    let decided = |citing: Vec<ActId>| {
+        Act::new(
+            ActKind::Decided {
+                about: "pans".into(),
+                outcome: crate::standing::Outcome::Conflicts,
+                authority: crate::policy::Authority::AskOne,
+                rationale: String::new(),
+                citing,
+            },
+            200,
+            "human:sam",
+        )
+    };
+    let graduated = |key, repair| ActKind::Policy {
+        text: String::new(),
+        rule: crate::policy::Rule::Graduated {
+            ladder: vec![crate::policy::Authority::AskOne],
+            base: alloc::boxed::Box::new(crate::policy::Rule::Default),
+            key,
+            repair,
+        },
+        scope: None,
+    };
+    let ratification = |governs, personal| ActKind::Ratification {
+        text: String::new(),
+        rule: crate::ratify::Ratify::Standing,
+        scope: None,
+        governs,
+        personal,
+    };
+    let v = |kind: ActKind| Act::new(kind, 100, "human:sam").v;
+
+    assert_eq!(decided(Vec::new()).v, UNSIGNED_VERSION);
+    assert_eq!(decided(vec![ActId::from_raw("can-000000000001")]).v, 4);
+    assert_eq!(v(graduated(None, None)), UNSIGNED_VERSION);
+    assert_eq!(v(graduated(Some(crate::policy::LadderKey::Cited), None)), 4);
+    assert_eq!(v(graduated(None, Some(false))), 4, "set, even to false");
+    assert_eq!(v(ratification(None, None)), UNSIGNED_VERSION);
+    assert_eq!(v(ratification(Some(crate::ratify::Governs::All), None)), 4);
+    assert_eq!(v(ratification(None, Some(true))), 4);
+    // A knob nested under another modifier still needs a v4 reader.
+    assert_eq!(
+        v(ActKind::Policy {
+            text: String::new(),
+            rule: crate::policy::Rule::Cautious {
+                base: alloc::boxed::Box::new(crate::policy::Rule::Graduated {
+                    ladder: vec![crate::policy::Authority::AskOne],
+                    base: alloc::boxed::Box::new(crate::policy::Rule::Default),
+                    key: None,
+                    repair: Some(true),
+                }),
+            },
+            scope: None,
+        }),
+        4
+    );
+
+    // Signing lifts a v2 body to v3 and no further; a v4 body stays v4.
+    let mut plain = decided(Vec::new());
+    crate::sign::prepare(&mut plain, &[]);
+    assert_eq!(plain.v, SIGNED_VERSION);
+    let mut knob = decided(vec![ActId::from_raw("can-000000000001")]);
+    crate::sign::prepare(&mut knob, &[]);
+    assert_eq!(knob.v, FORMAT_VERSION);
+
+    // And a v4 line reads back as written.
+    let line = serde_json::to_string(&knob).unwrap();
+    assert!(line.contains(r#""v":4"#), "{line}");
+    assert!(line.contains(r#""citing":["can-000000000001"]"#), "{line}");
+    let back = Log::parse(&line).expect("a v4 line is readable");
+    assert_eq!(back.acts()[0], knob);
 }

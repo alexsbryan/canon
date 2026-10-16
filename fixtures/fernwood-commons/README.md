@@ -58,3 +58,22 @@ Two values are arbitrary but deterministic and are pinned for exactly that
 reason: the panel's `seats` and its `seed`. They are a hash of the log. Pinning
 them asserts that two people replaying the same file draw the same three names,
 which is the only property that makes a lottery auditable.
+
+## The kitchen, a season later
+
+`kitchen.jsonl` is a second scenario over the same acts, with its own
+expectations in `kitchen.expected.json`, for the v4 fields: a person's own
+scope, a change of policy that waits for the ratification rule, a sanctions
+ladder keyed on the rule cited and reset by a repair, a milk rotation, and
+anonymous seconds on a question.
+
+```sh
+canon replay fixtures/fernwood-commons \
+  --scenario fixtures/fernwood-commons/kitchen.jsonl \
+  --expect fixtures/fernwood-commons/kitchen.expected.json
+```
+
+`--expect` also refuses an expectation that names no step, so a typo in the
+file fails rather than asserting nothing. `crates/canon-cli/tests/kitchen_bar.rs`
+runs it, checks every named step is asserted, and checks the Ostrom scenario
+above is unchanged.

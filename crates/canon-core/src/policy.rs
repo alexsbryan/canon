@@ -44,10 +44,10 @@ use alloc::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::fold::Canon;
+use crate::fold::{Canon, Keyed};
 use crate::id::ActId;
 use crate::scope::Scope;
-use crate::standing::{Outcome, Pull, Source, Standing};
+use crate::standing::{Outcome, Position, Pull, Source, Standing};
 
 /// What the actor may do about it, mildest first.
 ///
@@ -284,9 +284,19 @@ pub enum Rule {
     /// it, and belongs in the record. "Dana ran the washing machine at 1am" is
     /// an observation about a person and does not. A community that has never
     /// decided anything has no ladder to climb, which is correct.
+    ///
+    /// `key` and `repair` are the v4 knobs, and absent means what the ladder
+    /// did before them: count every decision whose `about` matches.
     Graduated {
         ladder: Vec<Authority>,
         base: Box<Rule>,
+        /// What makes two decisions about the same thing. See [`LadderKey`].
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        key: Option<LadderKey>,
+        /// When true, only decisions that went against count, and only
+        /// since the last one that went for: a repair closes the episode.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        repair: Option<bool>,
     },
     /// Amending something ranked as protected costs more than amending a
     /// convention. A constitution harder to change than a statute.
@@ -327,15 +337,31 @@ impl Rule {
             Self::Subsidiarity => {
                 "Whoever holds the narrowest standing over a thing decides it.".into()
             }
-            Self::Graduated { ladder, base } => format!(
-                "{} Repeat decisions about the same thing escalate: {}.",
-                base.prose(),
-                ladder
-                    .iter()
-                    .map(|a| a.as_str())
-                    .collect::<Vec<_>>()
-                    .join(", then ")
-            ),
+            Self::Graduated {
+                ladder,
+                base,
+                key,
+                repair,
+            } => {
+                let mut prose = format!(
+                    "{} Repeat decisions about the same thing escalate: {}.",
+                    base.prose(),
+                    ladder
+                        .iter()
+                        .map(|a| a.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", then ")
+                );
+                // Only a set knob adds a sentence, so an old rule reads as it
+                // always did.
+                if *key == Some(LadderKey::Cited) {
+                    prose.push_str(" Repeats are the same when they cite the same rule.");
+                }
+                if *repair == Some(true) {
+                    prose.push_str(" A repair resets it.");
+                }
+                prose
+            }
             Self::Entrenched { protected, base } => format!(
                 "{} Amending a {} takes the group.",
                 base.prose(),
@@ -354,6 +380,31 @@ impl Rule {
             | Self::Entrenched { base, .. }
             | Self::Cautious { base } => Some(base),
             _ => None,
+        }
+    }
+}
+
+/// What a graduated ladder treats as the same subject.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LadderKey {
+    /// The decision's `about` text, matched exactly. A paraphrase starts a
+    /// new ladder.
+    About,
+    /// The commitments a decision turned on. Identity from the rule the
+    /// group agreed, not from the words somebody used this time.
+    Cited,
+}
+
+impl Rule {
+    /// True when reading this rule correctly needs a v4 reader.
+    pub fn uses_v4(&self) -> bool {
+        match self {
+            Self::Graduated {
+                key, repair, base, ..
+            } => key.is_some() || repair.is_some() || base.uses_v4(),
+            Self::Entrenched { base, .. } | Self::Cautious { base } => base.uses_v4(),
+            _ => false,
         }
     }
 }
@@ -516,19 +567,63 @@ impl Policy for Rule {
                     ),
                 }
             }
-            Self::Graduated { ladder, base } => {
+            Self::Graduated {
+                ladder,
+                base,
+                key,
+                repair,
+            } => {
                 let under = base.decide(standing, attrs, canon);
                 if ladder.is_empty() {
                     return under;
                 }
-                let prior = canon.prior_decisions(&attrs.about).len();
-                let rung = ladder[prior.min(ladder.len() - 1)];
+                let repair = repair.unwrap_or(false);
+                // The rules this proposal is argued against. A ladder keyed
+                // on them counts the same argument however it is worded; a
+                // proposal nothing cites against has no rule to key on, and
+                // falls back to its words rather than to nothing.
+                let mut cited: Vec<ActId> = Vec::new();
+                for id in standing.against().filter_map(Position::commitment) {
+                    if !cited.contains(id) {
+                        cited.push(id.clone());
+                    }
+                }
+                let (prior, subject) = match key {
+                    Some(LadderKey::Cited) if !cited.is_empty() => (
+                        canon.ladder(Keyed::Cited(&cited), repair).len(),
+                        format!(
+                            "citing {}",
+                            cited
+                                .iter()
+                                .map(ActId::as_str)
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    ),
+                    _ => (
+                        canon.ladder(Keyed::About(&attrs.about), repair).len(),
+                        format!("about `{}`", attrs.about),
+                    ),
+                };
+                let at = prior.min(ladder.len() - 1);
+                let rung = ladder[at];
+                let fallback = if *key == Some(LadderKey::Cited) && cited.is_empty() {
+                    "nothing cited against, so keyed on about: "
+                } else {
+                    ""
+                };
+                // Absent knobs keep the sentence every existing canon and
+                // expectation file was written against.
+                let counted = if repair {
+                    format!("{prior} prior conflict(s) since the last repair")
+                } else {
+                    format!("{prior} prior decision(s)")
+                };
                 Decision {
                     authority: under.authority.raise(rung),
                     because: format!(
-                        "graduated: {prior} prior decision(s) about `{}` -> rung {} of {} ({})",
-                        attrs.about,
-                        prior.min(ladder.len() - 1) + 1,
+                        "graduated: {fallback}{counted} {subject} -> rung {} of {} ({})",
+                        at + 1,
                         ladder.len(),
                         under.because
                     ),

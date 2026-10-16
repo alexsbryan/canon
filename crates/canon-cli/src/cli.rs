@@ -34,7 +34,7 @@ use clap::{Arg, ArgAction, Command};
 /// Verb, the flags that take a value, and the flags that do not.
 #[rustfmt::skip]
 const VERBS: &[(&str, &[&str], &[&str])] = &[
-    ("init", &["--profile"], &[]),
+    ("init", &["--profile"], &["--governed"]),
     ("add", &["--scope"], &[]),
     ("review", &[], &["--json"]),
     ("ui", &[], &[]),
@@ -53,13 +53,13 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("grant", &["--horizon", "-m"], &[]),
     ("withdraw", &["-m"], &[]),
     ("scope", &[], &[]),
-    ("policy", &["--entrench", "--graduated", "--objections", "--of", "--scope", "-m"], &["--cautious", "--json"]),
-    ("ratification", &["--scope", "-m"], &["--json"]),
+    ("policy", &["--entrench", "--graduated", "--objections", "--of", "--scope", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"]),
+    ("ratification", &["--governs", "--personal", "--scope", "-m"], &["--json"]),
     ("allot", &["--count", "--named", "--unit", "-m"], &[]),
     ("allocation", &["--from-draw", "--order", "--per", "--scope", "--step", "-m"], &[]),
     ("pool", &["--at"], &["--json"]),
     ("position", &["--citing", "-m"], &["--against", "--toward"]),
-    ("decide", &["--authority", "--outcome", "-m"], &[]),
+    ("decide", &["--authority", "--citing", "--outcome", "-m"], &[]),
     ("rank", &[], &[]),
     ("horizon", &["-m"], &[]),
     ("overdue", &[], &["--json"]),
@@ -67,7 +67,8 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("silence", &["-m"], &[]),
     ("voice", &[], &[]),
     ("leave", &["--why", "-m"], &[]),
-    ("replay", &["--entrench", "--graduated", "--objections", "--of", "--out", "--policy", "--profile", "--ratification", "--scenario", "--write-scenario"], &["--brief", "--cautious", "--json"]),
+    ("second", &[], &[]),
+    ("replay", &["--entrench", "--expect", "--graduated", "--objections", "--of", "--out", "--policy", "--profile", "--ratification", "--scenario", "--write-scenario"], &["--brief", "--by-about", "--cautious", "--json", "--no-repair"]),
     ("open", &[], &["--json"]),
     ("witness", &["--base", "--slack"], &["--gate", "--json"]),
     ("guard", &["--check", "--slack"], &["--apply"]),
@@ -134,9 +135,9 @@ pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
     if *name == "init" {
         out.push_str(
             "  writes .canon/acts.jsonl, the canon itself, one act per line and empty to\n  \
-             start; .canon/profile, which says how `check` answers; and .canon/.gitignore,\n  \
-             which keeps this machine's model config and draft runs out of git. Commit\n  \
-             the rest.\n",
+             start (with --governed, its first act turns the v4 knobs on); .canon/profile,\n  \
+             which says how `check` answers; and .canon/.gitignore, which keeps this\n  \
+             machine's model config and draft runs out of git. Commit the rest.\n",
         );
     }
     out.push_str("\n  `canon help all` lists every verb.\n");
@@ -302,7 +303,9 @@ fn command(verb: &'static str, valued: &[&'static str], switches: &[&'static str
 /// has no better word than "value".
 fn value_name(flag: &str) -> &'static str {
     match flag {
-        "--continue" | "--from" | "--out" | "--onto" | "--refold" | "--replay" => "path",
+        "--continue" | "--expect" | "--from" | "--out" | "--onto" | "--refold" | "--replay" => {
+            "path"
+        }
         "-m" | "--why" => "why",
         "--scope" | "--of" => "scope",
         "--except" => "id",

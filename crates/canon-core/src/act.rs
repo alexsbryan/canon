@@ -44,11 +44,27 @@ use crate::id::ActId;
 /// `key` act (see [`crate::sign`]). Only a line that carries them is written
 /// as v3. A v2 reader would fold a forgery under a bound name as genuine, and
 /// that is the same reason v2 gave for refusing.
-pub const FORMAT_VERSION: u32 = 3;
+///
+/// **v4** added the knobs a group turns to say how its own governance binds:
+/// `governs` and `personal` on `ratification`, `key` and `repair` on a
+/// graduated policy, `citing` on `decided`. Only a line that sets one is
+/// written as v4. A v3 reader would fold such a line under the old meaning —
+/// a policy applied that the group said must wait, a stranger's grant inside
+/// somebody's own scope — so refusing is again the honest answer.
+pub const FORMAT_VERSION: u32 = 4;
+
+/// The version a signed line is written at, unless its body needs a later
+/// one. Signing alone must not make a canon unreadable by a v3 build.
+pub const SIGNED_VERSION: u32 = 3;
 
 /// The version an unsigned line is written at. A canon in which nobody has
 /// bound a key writes nothing a v2 reader cannot read.
 pub const UNSIGNED_VERSION: u32 = 2;
+
+/// The actor on a line written without a name: a question left on the way
+/// out, a second on somebody's question. One spelling, because the fold
+/// recognises a second by it.
+pub const ANONYMOUS: &str = "anonymous";
 
 /// The ops that change what is live. Unknown or malformed here refuses the
 /// line; see the module note.
@@ -261,6 +277,15 @@ pub enum ActKind {
         rule: crate::ratify::Ratify,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         scope: Option<crate::scope::Scope>,
+        /// Whether a change of POLICY in this scope waits for the same rule a
+        /// commitment does. Absent is `commitments`: a policy applies on its
+        /// writer's standing, as it did before v4.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        governs: Option<crate::ratify::Governs>,
+        /// Canon-wide only: a scope rooted at a person's own actor id is
+        /// governed by that person alone. Absent is off.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        personal: Option<bool>,
     },
     /// A pool of units belonging to a scope — the sites, the headgates, the
     /// slots. The *what there is* of a commons, separate from how it is
@@ -297,6 +322,10 @@ pub enum ActKind {
         authority: crate::policy::Authority,
         #[serde(default, skip_serializing_if = "String::is_empty")]
         rationale: String,
+        /// The commitments the decision turned on. A ladder keyed on them
+        /// counts this decision whatever words `about` used.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        citing: Vec<ActId>,
     },
     /// Look at this again by then.
     ///
@@ -441,6 +470,28 @@ impl<'de> Deserialize<'de> for ActKind {
     }
 }
 
+impl ActKind {
+    /// The oldest format version that can read this act without misreading
+    /// it. See [`FORMAT_VERSION`].
+    pub fn min_version(&self) -> u32 {
+        let knob = match self {
+            Self::Ratification {
+                governs, personal, ..
+            } => governs.is_some() || personal.is_some(),
+            Self::Decided { citing, .. } => !citing.is_empty(),
+            Self::Policy { rule, .. } => rule.uses_v4(),
+            _ => false,
+        };
+        if knob {
+            FORMAT_VERSION
+        } else if matches!(self, Self::Key { .. }) {
+            SIGNED_VERSION
+        } else {
+            UNSIGNED_VERSION
+        }
+    }
+}
+
 /// One line of the log: an act plus its provenance.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Act {
@@ -476,11 +527,7 @@ impl Act {
         // A key act is new in v3 and says so; anything else is written at
         // v2 until it is signed, so an unsigned canon stays readable by the
         // builds that came before signing.
-        let v = if matches!(kind, ActKind::Key { .. }) {
-            FORMAT_VERSION
-        } else {
-            UNSIGNED_VERSION
-        };
+        let v = kind.min_version();
         Self {
             id: ActId::derive(ts_unix, &actor, &body),
             v,

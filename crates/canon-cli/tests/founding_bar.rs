@@ -90,7 +90,10 @@ fn every_verb_says_what_it_does_when_asked() {
         "{out}"
     );
     assert!(out.contains(".canon/acts.jsonl"), "{out}");
-    assert!(out.contains("flags: --profile <value>"), "{out}");
+    assert!(
+        out.contains("flags: --governed  --profile <value>"),
+        "{out}"
+    );
     assert!(!nowhere.exists(), "asking wrote nothing");
 
     let (_, same) = canon_as(&nowhere, "human:alex", &["help", "init"]);

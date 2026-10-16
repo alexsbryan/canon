@@ -169,6 +169,11 @@ pub struct Adopted {
     pub at: i64,
     pub actor: String,
     pub act: ActId,
+    /// Where the change stands, when the scope's ratification rule reaches
+    /// policy (`governs: all`). Absent for a policy that applied on its
+    /// writer's standing, which is every policy written before v4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verdict: Option<crate::ratify::Verdict>,
 }
 
 /// Something the group decided. What a graduated ladder counts.
@@ -184,6 +189,20 @@ pub struct Ruling {
     /// `Canon::unattended`, never hidden.
     pub actor: String,
     pub act: ActId,
+    /// The commitments the decision turned on, as the `decided` act named
+    /// them. What a ladder keyed on the cited rule counts by.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub citing: Vec<ActId>,
+}
+
+/// What a graduated ladder treats as one subject when it counts prior
+/// decisions. See [`crate::policy::LadderKey`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Keyed<'a> {
+    /// Decisions whose `about` is exactly this text.
+    About(&'a str),
+    /// Decisions that cited any of these commitments.
+    Cited(&'a [ActId]),
 }
 
 /// A retraction written by someone without standing over what it retracts.
@@ -256,6 +275,10 @@ pub struct Canon {
     /// In the ledger rather than beside it — see [`crate::ActKind::Policy`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub policies: Vec<Adopted>,
+    /// Changes of policy still waiting on the group, or refused by it. Only
+    /// a scope whose ratification rule `governs: all` has any.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pending_policies: Vec<Adopted>,
     /// What the group has decided, in order. Decisions, never observations.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rulings: Vec<Ruling>,
@@ -322,6 +345,10 @@ pub struct Canon {
     /// fold never saw them. See [`crate::sign`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub unverified: Vec<(ActId, String)>,
+    /// When personal scopes were honoured. Derived, never rendered: it is a
+    /// reading of `ratifications`, carried so standing can ask it mid-fold.
+    #[serde(skip)]
+    pub(crate) personal: crate::ratify::Personal,
 }
 
 impl Canon {
@@ -355,7 +382,7 @@ impl Canon {
         let mut found: Vec<&crate::scope::Grant> = self
             .grants
             .iter()
-            .filter(|g| g.held_at(now) && g.scope.covers(scope))
+            .filter(|g| g.held_at(now) && g.scope.covers(scope) && self.counts(g, Some(scope), now))
             .collect();
         // Deepest first, then by actor so two runs render identically.
         found.sort_by(|a, b| {
@@ -430,6 +457,57 @@ impl Canon {
     /// in the format that records the second kind.
     pub fn prior_decisions(&self, about: &str) -> Vec<&Ruling> {
         self.rulings.iter().filter(|r| r.about == about).collect()
+    }
+
+    /// The decisions a graduated ladder counts: those on the same subject,
+    /// by `about` text or by a shared cited commitment.
+    ///
+    /// With `repair`, a decision that went FOR the proposal closes the
+    /// episode: only the conflicts after the last one count, so a house that
+    /// sorted a problem out does not meet it again on the top rung. Without
+    /// it, every decision on the subject counts, and `About` without repair
+    /// is exactly [`Self::prior_decisions`]. Still decisions, never
+    /// observations — the same line `prior_decisions` holds.
+    pub fn ladder(&self, key: Keyed<'_>, repair: bool) -> Vec<&Ruling> {
+        let keyed: Vec<&Ruling> = self
+            .rulings
+            .iter()
+            .filter(|r| match key {
+                Keyed::About(s) => r.about == s,
+                Keyed::Cited(ids) => r.citing.iter().any(|c| ids.contains(c)),
+            })
+            .collect();
+        if !repair {
+            return keyed;
+        }
+        // Rulings are pushed in fold order, which is time order.
+        let since = keyed
+            .iter()
+            .rposition(|r| r.outcome == crate::standing::Outcome::Supported)
+            .map_or(0, |i| i + 1);
+        keyed[since..]
+            .iter()
+            .copied()
+            .filter(|r| r.outcome == crate::standing::Outcome::Conflicts)
+            .collect()
+    }
+
+    /// How many people seconded this question. Read by `open` and nothing
+    /// else: a second gates attention, never an outcome.
+    /// Anything that is not a question has none: weight on a proposal is a
+    /// vote, and an unsigned vote is reported, never counted as a second.
+    pub fn seconds(&self, q: &ActId) -> usize {
+        if self.question(q).is_none() {
+            return 0;
+        }
+        self.positions
+            .iter()
+            .filter(|s| {
+                s.about == q.as_str()
+                    && s.position.actor().is_some()
+                    && is_second(&s.by, s.position.pull)
+            })
+            .count()
     }
 
     /// Is this subject unwritten on purpose?
@@ -566,7 +644,34 @@ fn checked(acts: &[Act], now: Option<i64>) -> Canon {
         )
     };
     let now = now.unwrap_or_else(|| kept.iter().map(|a| a.ts_unix).max().unwrap_or(0));
-    let mut canon = fold(&kept, now);
+    // Personal scopes are switched on by a ratification act, which is known
+    // to be ratified only once a fold has run; standing needs the answer
+    // before that. So fold once, read when the knob was honoured, and fold
+    // again with that timeline. One refold is enough because, while the
+    // knob is declared, no canon-wide verdict reads a personal grant (see
+    // `Canon::counts`), so the second fold judges the knob exactly as the
+    // first did. A log that never declares it folds once, as before.
+    let declared = kept.iter().any(|a| {
+        matches!(
+            a.kind,
+            ActKind::Ratification {
+                scope: None,
+                personal: Some(true),
+                ..
+            }
+        )
+    });
+    let mut seed = crate::ratify::Personal {
+        declared,
+        on: Vec::new(),
+    };
+    let mut canon = fold(&kept, now, &seed);
+    if declared {
+        seed = crate::ratify::Personal::from_ratified(true, &canon.ratifications);
+        if !seed.on.is_empty() {
+            canon = fold(&kept, now, &seed);
+        }
+    }
     canon.unverified = verified.unverified;
     canon
 }
@@ -706,8 +811,13 @@ fn apply_withdraw(canon: &mut Canon, act: &Act, holder: &str, scope: &crate::sco
 /// that accumulates — so this costs nothing in a canon that has none, and the
 /// alternative is a second running copy of the grant table that has to stay
 /// in step with the first.
-fn governance_before(acts: &[Act], i: usize, tombstoned: &BTreeSet<&str>) -> Canon {
-    let mut gov = Canon::default();
+fn governance_before(
+    acts: &[Act],
+    i: usize,
+    tombstoned: &BTreeSet<&str>,
+    seed: &crate::ratify::Personal,
+) -> Canon {
+    let mut gov = seeded(acts, seed);
     for act in acts[..i]
         .iter()
         .filter(|a| !tombstoned.contains(a.id.as_str()))
@@ -785,12 +895,86 @@ fn scopes_own(
         .is_some_and(|author| *author == act.actor)
 }
 
+/// Is this act a second: weight added to a question, with no name on it?
+///
+/// Exempt from attribution because it decides nothing. A question is not a
+/// proposal, so no ratification or policy reads a position on one; a second
+/// only moves the count `open` shows. Every other position stays an
+/// adjudication — an agent's stance on a question, or an anonymous one on a
+/// proposal, is still reported unattended.
+fn seconds_a_question(act: &Act, questions: &BTreeMap<ActId, Question>) -> bool {
+    match &act.kind {
+        ActKind::Position {
+            about,
+            citing: None,
+            pull,
+            ..
+        } => is_second(&act.actor, *pull) && questions.keys().any(|q| q.as_str() == about.as_str()),
+        _ => false,
+    }
+}
+
+/// The shape of a second, apart from what it is about. One definition, read
+/// by the attribution exemption and by [`Canon::seconds`].
+fn is_second(actor: &str, pull: crate::standing::Pull) -> bool {
+    actor == crate::act::ANONYMOUS && pull == crate::standing::Pull::Toward
+}
+
 /// Derive current state as of `now`. See [`crate::Log::derive_at`].
 pub fn derive_at(acts: &[Act], now: i64) -> Canon {
     checked(acts, Some(now))
 }
 
-fn fold(acts: &[Act], now: i64) -> Canon {
+/// An empty canon that already knows when personal scopes were honoured,
+/// with each owner holding their own root for as long as they were.
+///
+/// The owner's standing is a grant like any other so every reading of
+/// standing sees it without learning about personal scopes, and its `act`
+/// is the ratification that conferred it, so `why` points somewhere real.
+/// Only roots the log names get one: a person's corner exists once somebody
+/// writes in it.
+fn seeded(acts: &[Act], seed: &crate::ratify::Personal) -> Canon {
+    let mut canon = Canon {
+        personal: seed.clone(),
+        ..Canon::default()
+    };
+    if seed.on.is_empty() {
+        return canon;
+    }
+    let mut roots: BTreeSet<crate::scope::Scope> = BTreeSet::new();
+    for act in acts {
+        let scope = match &act.kind {
+            ActKind::Scoped { scope, .. }
+            | ActKind::Grant { scope, .. }
+            | ActKind::Withdraw { scope, .. }
+            | ActKind::Allot { scope, .. }
+            | ActKind::Allocation { scope, .. } => Some(scope),
+            ActKind::Policy { scope, .. } | ActKind::Ratification { scope, .. } => scope.as_ref(),
+            _ => None,
+        };
+        if let Some(root) = scope
+            .and_then(crate::ratify::personal_owner)
+            .and_then(crate::scope::Scope::new)
+        {
+            roots.insert(root);
+        }
+    }
+    for (since, until, act) in &seed.on {
+        for root in &roots {
+            canon.grants.push(crate::scope::Grant {
+                actor: root.as_str().to_string(),
+                scope: root.clone(),
+                horizon: None,
+                granted_at: *since,
+                withdrawn_at: *until,
+                act: act.clone(),
+            });
+        }
+    }
+    canon
+}
+
+fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
     let n = acts.len();
 
     // Pass 1a — standing to revert.
@@ -815,7 +999,7 @@ fn fold(acts: &[Act], now: i64) -> Canon {
         let ActKind::Revert { targets, .. } = &act.kind else {
             continue;
         };
-        let gov = governance_before(acts, i, &tombstoned);
+        let gov = governance_before(acts, i, &tombstoned, seed);
         // All or nothing. Half a revert would be an act whose effect nobody
         // could state, and the actor asked for one thing.
         match targets.iter().find(|t| !may_revert(&gov, acts, act, t)) {
@@ -904,7 +1088,7 @@ fn fold(acts: &[Act], now: i64) -> Canon {
     let mut questions: BTreeMap<ActId, Question> = BTreeMap::new();
     let mut canon = Canon {
         ungoverned: refused,
-        ..Canon::default()
+        ..seeded(acts, seed)
     };
     let live_acts = || {
         acts.iter()
@@ -954,6 +1138,7 @@ fn fold(acts: &[Act], now: i64) -> Canon {
 
     // Pass 3 — effects, in time order, so a later act wins over an earlier one.
     let mut pending_rules: Vec<crate::ratify::AdoptedRatify> = Vec::new();
+    let mut written_policies: Vec<Adopted> = Vec::new();
     let mut pending_retractions: Vec<Retraction> = Vec::new();
     for act in live_acts() {
         // Attribution: everything except asserting and adopting is an
@@ -990,7 +1175,8 @@ fn fold(acts: &[Act], now: i64) -> Canon {
                 | ActKind::DrawReveal { .. }
                 // Binding your own key decides nothing about anybody else.
                 | ActKind::Key { .. }
-        ) && !scopes_own(act, &by_id, &questions);
+        ) && !scopes_own(act, &by_id, &questions)
+            && !seconds_a_question(act, &questions);
         if adjudication && !act.is_human() {
             canon.unattended.push(act.id.clone());
         }
@@ -1150,20 +1336,27 @@ fn fold(acts: &[Act], now: i64) -> Canon {
                 }) {
                     continue;
                 }
-                // One policy per scope. Two live policies over one scope
-                // would make "what do we decide by" have two answers, which
-                // is the duplicated decider §10.6 names.
-                canon.policies.retain(|p| p.scope != *scope);
-                canon.policies.push(Adopted {
+                // Judged in pass 4b, once every position is folded: under
+                // `governs: all` a change of policy is a proposal like any
+                // other, and nothing in this pass reads policy, so waiting
+                // costs nothing here.
+                written_policies.push(Adopted {
                     scope: scope.clone(),
                     rule: rule.clone(),
                     text: text.clone(),
                     at: act.ts_unix,
                     actor: act.actor.clone(),
                     act: act.id.clone(),
+                    verdict: None,
                 });
             }
-            ActKind::Ratification { text, rule, scope } => {
+            ActKind::Ratification {
+                text,
+                rule,
+                scope,
+                governs,
+                personal,
+            } => {
                 // Changing how a scope makes rules is decided one level up:
                 // by standing over the scope, which includes the scope above.
                 if !gate(&mut canon, act, scope.as_ref(), || {
@@ -1191,6 +1384,8 @@ fn fold(acts: &[Act], now: i64) -> Canon {
                         needs: String::new(),
                     },
                     under: crate::ratify::Ratify::Standing,
+                    governs: *governs,
+                    personal: *personal,
                 });
             }
             ActKind::Allot {
@@ -1241,6 +1436,7 @@ fn fold(acts: &[Act], now: i64) -> Canon {
                 outcome,
                 authority,
                 rationale,
+                citing,
             } => {
                 // A decision names no scope, so it takes standing in the
                 // canon at all: somebody the house has said is in.
@@ -1248,6 +1444,14 @@ fn fold(acts: &[Act], now: i64) -> Canon {
                     format!("{} decided \"{about}\" without standing here", act.actor)
                 }) {
                     continue;
+                }
+                // A citation of something this log does not carry is a hole
+                // in the record, reported like any other. The ruling keeps
+                // it: the decision still said what it turned on.
+                for id in citing {
+                    if !by_id.contains_key(id) {
+                        canon.dangling.push((act.id.clone(), id.clone()));
+                    }
                 }
                 canon.rulings.push(Ruling {
                     about: about.clone(),
@@ -1257,6 +1461,7 @@ fn fold(acts: &[Act], now: i64) -> Canon {
                     at: act.ts_unix,
                     actor: act.actor.clone(),
                     act: act.id.clone(),
+                    citing: citing.clone(),
                 })
             }
             ActKind::Silence { about, rationale } => {
@@ -1392,6 +1597,60 @@ fn fold(acts: &[Act], now: i64) -> Canon {
         r.under = under;
         canon.ratifications.push(r);
     }
+
+    // Pass 4b — policies, now that the rules of rules are known.
+    //
+    // A policy applies on its writer's standing unless the ratification rule
+    // its scope had when it was written reaches policy (`governs: all`) and
+    // is something other than `standing`; then it is judged like a change
+    // of ratification rule and applies only from the moment it was ratified.
+    //
+    // One policy per scope: two live policies over one scope would make
+    // "what do we decide by" have two answers, the duplicated decider §10.6
+    // names. The one in force is the latest to TAKE EFFECT, which for a
+    // policy that waited is its ratified moment, not its writing. The
+    // winners are kept in the order they were written, which is the order
+    // the retain-then-push this replaced produced, so a canon without the
+    // knob renders exactly as it did.
+    let mut in_force: Vec<(usize, i64, Adopted)> = Vec::new();
+    for (i, mut pol) in written_policies.into_iter().enumerate() {
+        let p = crate::ratify::Proposal {
+            id: &pol.act,
+            scope: pol.scope.as_ref(),
+            at: pol.at,
+            actor: &pol.actor,
+        };
+        let under = canon.ratification_for_at(p.scope, p.at).clone();
+        let waits = canon.governs_at(p.scope, p.at) == crate::ratify::Governs::All
+            && under != crate::ratify::Ratify::Standing;
+        if !waits {
+            let at = pol.at;
+            in_force.push((i, at, pol));
+            continue;
+        }
+        let verdict = canon.ratify_under(&under, &p, now);
+        match verdict {
+            crate::ratify::Verdict::Ratified { since, .. } => {
+                pol.verdict = Some(verdict);
+                in_force.push((i, since, pol));
+            }
+            _ => {
+                pol.verdict = Some(verdict);
+                canon.pending_policies.push(pol);
+            }
+        }
+    }
+    let mut winners: Vec<(usize, i64, Adopted)> = Vec::new();
+    for (i, effective, pol) in in_force {
+        match winners.iter_mut().find(|(_, _, w)| w.scope == pol.scope) {
+            Some(w) if effective >= w.1 => *w = (i, effective, pol),
+            Some(_) => {}
+            None => winners.push((i, effective, pol)),
+        }
+    }
+    // Order of the last write, as retain-then-push left it.
+    winners.sort_by_key(|(i, _, _)| *i);
+    canon.policies = winners.into_iter().map(|(_, _, p)| p).collect();
 
     // Pass 4 — ratification, in time order.
     //

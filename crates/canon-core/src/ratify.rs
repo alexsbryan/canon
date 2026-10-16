@@ -221,6 +221,87 @@ impl Ratify {
     }
 }
 
+/// What a scope's ratification rule reaches. See the `governs` field on the
+/// `ratification` act.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Governs {
+    /// Commitments wait for the rule; a policy applies on its writer's
+    /// standing. What every canon did before v4.
+    Commitments,
+    /// A change of policy waits for the rule too. Without it, one holder in a
+    /// house that decides by consent can make it decide by anything.
+    All,
+}
+
+/// The person a personal scope belongs to: the first segment of the path,
+/// when it is a human actor id. `human:phylla.glasses` is Phylla's.
+///
+/// **The name is the owner.** Identity from essence: nothing has to be
+/// granted, recorded or remembered for the house to know whose it is, and a
+/// scope named for an agent is never anyone's own — agents draft, they do
+/// not hold a corner.
+pub fn personal_owner(scope: &Scope) -> Option<&str> {
+    let root = scope.as_str().split('.').next()?;
+    (root.len() > "human:".len() && root.starts_with("human:")).then_some(root)
+}
+
+/// When personal scopes were honoured, as the canon-wide ratification rule
+/// said. Computed from a first fold and handed to a second, because the
+/// knob is itself a proposal: it is known only once ratification has run,
+/// and standing is needed before that.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Personal {
+    /// The log carries a ratification act that turns the knob on. While it
+    /// does, grants over personal roots never count toward the canon as a
+    /// whole — in either fold — which is what makes one refold enough: no
+    /// canon-wide verdict can depend on the knob's own effects.
+    pub(crate) declared: bool,
+    /// `[since, until)` and the act whose ratification switched it on.
+    pub(crate) on: Vec<(i64, Option<i64>, ActId)>,
+}
+
+impl Personal {
+    /// The intervals in which the canon-wide rule in force honoured personal
+    /// scopes, read off the ratified canon-wide rules in the order they took
+    /// effect — the same order [`Canon::adopted_at`] resolves.
+    pub(crate) fn from_ratified(declared: bool, ratifications: &[AdoptedRatify]) -> Self {
+        let mut wide: Vec<(i64, i64, bool, &ActId)> = ratifications
+            .iter()
+            .filter(|r| r.scope.is_none())
+            .filter_map(|r| match r.verdict {
+                Verdict::Ratified { since, .. } => {
+                    Some((since, r.at, r.personal == Some(true), &r.act))
+                }
+                _ => None,
+            })
+            .collect();
+        wide.sort_by_key(|(since, at, _, _)| (*since, *at));
+        let mut on: Vec<(i64, Option<i64>, ActId)> = Vec::new();
+        for (since, _, honoured, act) in wide {
+            let open = on.last().is_some_and(|(_, until, _)| until.is_none());
+            match (open, honoured) {
+                (false, true) => on.push((since, None, act.clone())),
+                (true, false) => {
+                    if let Some(last) = on.last_mut() {
+                        last.1 = Some(since);
+                    }
+                }
+                _ => {}
+            }
+        }
+        Self { declared, on }
+    }
+
+    /// The act that had personal scopes honoured at `at`, if any did.
+    pub(crate) fn at(&self, at: i64) -> Option<&ActId> {
+        self.on
+            .iter()
+            .find(|(since, until, _)| *since <= at && until.is_none_or(|u| at < u))
+            .map(|(_, _, act)| act)
+    }
+}
+
 /// A ratification rule someone adopted for a scope.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AdoptedRatify {
@@ -239,6 +320,12 @@ pub struct AdoptedRatify {
     /// written. Kept so `show` and `replay` can say which rule decided,
     /// without asking the question again minus this entry.
     pub under: Ratify,
+    /// What the rule reaches, when the act said. See [`Governs`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub governs: Option<Governs>,
+    /// Canon-wide: whether personal scopes are honoured, when the act said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub personal: Option<bool>,
 }
 
 /// Where a proposal stands under its scope's rule.
@@ -346,10 +433,35 @@ impl Canon {
         self.adopted_at(scope, at).map_or(&SHIPPED, |r| &r.rule)
     }
 
+    /// Whether the rule deciding a scope at a moment reaches policy too.
+    /// Absent on that rule is [`Governs::Commitments`], what every canon did
+    /// before v4.
+    pub fn governs_at(&self, scope: Option<&Scope>, at: i64) -> Governs {
+        self.adopted_at(scope, at)
+            .and_then(|r| r.governs)
+            .unwrap_or(Governs::Commitments)
+    }
+
     /// The adopted rule deciding a scope at a moment, if any was.
     pub fn adopted_at(&self, scope: Option<&Scope>, at: i64) -> Option<&AdoptedRatify> {
+        // Inside a person's own scope only a rule they set there applies.
+        // The house's rule does not reach in, so with none of their own
+        // their write is in force on arrival and anyone else's waits for
+        // them — which is `standing` with the owner as the one holder.
+        let own_root = scope
+            .filter(|s| self.owned_at(s, at).is_some())
+            .and_then(|s| personal_owner(s));
         let mut best: Option<(&AdoptedRatify, i64)> = None;
         for r in &self.ratifications {
+            if let Some(root) = own_root {
+                let inside = r
+                    .scope
+                    .as_ref()
+                    .is_some_and(|rs| personal_owner(rs) == Some(root));
+                if !inside {
+                    continue;
+                }
+            }
             let Verdict::Ratified { since, .. } = r.verdict else {
                 continue;
             };
@@ -376,6 +488,28 @@ impl Canon {
             }
         }
         best.map(|(r, _)| r)
+    }
+
+    /// The owner of `scope`, when it is a personal scope and personal scopes
+    /// were honoured at `at`.
+    pub fn owned_at<'s>(&self, scope: &'s Scope, at: i64) -> Option<&'s str> {
+        self.personal.at(at)?;
+        personal_owner(scope)
+    }
+
+    /// Does this grant count toward standing over `scope` at `at`?
+    ///
+    /// **The one place personal scopes change who holds what**, so every
+    /// reading of standing — seat, holders, who decides — gives the same
+    /// answer. Inside an honoured personal scope only the owner's grants
+    /// count, which includes the one the knob confers. Toward the canon as a
+    /// whole, a grant over anybody's personal root never counts once the
+    /// knob is declared: somebody's own corner is not a seat in the house.
+    pub fn counts(&self, g: &crate::scope::Grant, scope: Option<&Scope>, at: i64) -> bool {
+        if let Some(owner) = scope.and_then(|s| self.owned_at(s, at)) {
+            return personal_owner(&g.scope) == Some(owner) && g.actor == owner;
+        }
+        !(self.personal.declared && personal_owner(&g.scope).is_some() && scope.is_none())
     }
 
     /// May this actor change how a scope is governed — grant standing over
@@ -407,12 +541,27 @@ impl Canon {
     /// open in [`Canon::bootstrap`], and the CLI says so on the line that
     /// reports the act.
     pub fn seat(&self, actor: &str, scope: Option<&Scope>, at: i64) -> Seat {
+        // A person's own scope is theirs, whatever anyone holds above it,
+        // and it is never open: an unheld corner of somebody else's is not a
+        // corner for whoever asks first.
+        if let Some(owner) = scope.and_then(|s| self.owned_at(s, at)) {
+            return if actor == owner {
+                Seat::Held
+            } else {
+                Seat::Lacking
+            };
+        }
         let prior: Vec<&crate::scope::Grant> = self
             .grants
             .iter()
-            .filter(|g| g.granted_at < at && g.held_at(at))
+            .filter(|g| g.granted_at < at && g.held_at(at) && self.counts(g, scope, at))
             .collect();
-        if self.grants.iter().all(|g| g.granted_at >= at) {
+        if self
+            .grants
+            .iter()
+            .filter(|g| self.counts(g, None, at))
+            .all(|g| g.granted_at >= at)
+        {
             return Seat::Open;
         }
         let holds_any = || prior.iter().any(|g| g.actor == actor);
@@ -460,7 +609,11 @@ impl Canon {
         let covering: Vec<&crate::scope::Grant> = self
             .grants
             .iter()
-            .filter(|g| g.held_at(at) && scope.is_none_or(|s| g.scope.covers(s)))
+            .filter(|g| {
+                g.held_at(at)
+                    && scope.is_none_or(|s| g.scope.covers(s))
+                    && self.counts(g, scope, at)
+            })
             .collect();
         let level = match scope {
             Some(_) => covering.iter().map(|g| g.scope.depth()).max(),
@@ -477,7 +630,11 @@ impl Canon {
     /// anyone holds, which is who [`Canon::holders_at`] counts for an
     /// unscoped proposal. The canon has no scope of its own to grant.
     pub fn canon_scopes(&self, at: i64) -> Vec<&Scope> {
-        let held = || self.grants.iter().filter(|g| g.held_at(at));
+        let held = || {
+            self.grants
+                .iter()
+                .filter(|g| g.held_at(at) && self.counts(g, None, at))
+        };
         let Some(level) = held().map(|g| g.scope.depth()).min() else {
             return Vec::new();
         };
@@ -517,10 +674,12 @@ impl Canon {
     /// were written in the same sitting has not locked its founders out of
     /// their own charter; see [`Canon::may_govern`].
     fn nobody_holds_before(&self, scope: Option<&Scope>, at: i64) -> bool {
-        !self
-            .grants
-            .iter()
-            .any(|g| g.granted_at < at && g.held_at(at) && scope.is_none_or(|s| g.scope.covers(s)))
+        !self.grants.iter().any(|g| {
+            g.granted_at < at
+                && g.held_at(at)
+                && scope.is_none_or(|s| g.scope.covers(s))
+                && self.counts(g, scope, at)
+        })
     }
 
     /// The earliest moment after `t1` at which someone who did not hold the
@@ -533,6 +692,7 @@ impl Canon {
                 g.granted_at > t1
                     && is_human(&g.actor)
                     && scope.is_none_or(|s| g.scope.covers(s))
+                    && self.counts(g, scope, g.granted_at)
                     && !then.contains(g.actor.as_str())
                     && self.holder_at(scope, &g.actor, g.granted_at)
             })

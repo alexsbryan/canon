@@ -32,8 +32,10 @@ const VALUED: &[&str] = &[
     "--endpoint",
     "--entrench",
     "--except",
+    "--expect",
     "--from",
     "--from-proposal",
+    "--governs",
     "--graduated",
     "--horizon",
     "--k",
@@ -61,6 +63,7 @@ const VALUED: &[&str] = &[
     "--from-draw",
     "--step",
     "--per",
+    "--personal",
     "--at",
     "--since",
     "--base",
@@ -143,6 +146,16 @@ pub fn report_status(d: &Path, id: &ActId) {
         // So is a retraction written without standing.
         if let Some(r) = canon.retractions.iter().find(|r| r.act == *id) {
             report_retraction(r);
+        }
+        // And a change of policy, where the scope's rule reaches policy.
+        if let Some(v) = canon
+            .pending_policies
+            .iter()
+            .chain(&canon.policies)
+            .find(|p| p.act == *id)
+            .and_then(|p| p.verdict.as_ref())
+        {
+            report_verdict(id, v);
         }
         return;
     };
@@ -369,6 +382,27 @@ pub fn init(args: &[String]) -> i32 {
         return fail(e);
     }
     store::ignore_local(&base);
+    // **The batteries, written as the canon's first act when asked for.** A
+    // change of policy waits like any other change, and a person's own scope
+    // is theirs. Opt-in for now rather than the default, because the line is
+    // v4: a canon founded this way cannot be read by a build from before the
+    // knobs, and a fresh canon that an older teammate cannot open is a
+    // surprise nobody chose. `standing` keeps the founding sitting what it
+    // always was; the knobs bite once the group picks a rule that waits.
+    if has(args, "--governed") {
+        let kind = ActKind::Ratification {
+            text: "A holder's word is a rule at once. A change of policy waits like any \
+                   other change, and a person's own scope is theirs."
+                .to_string(),
+            rule: canon_core::Ratify::Standing,
+            scope: None,
+            governs: Some(canon_core::Governs::All),
+            personal: Some(true),
+        };
+        if let Err(e) = write(&base, kind) {
+            return fail(e);
+        }
+    }
     // **The whole tool, in three lines, at the moment somebody needs it.**
     // This is the n+1 explanation: if the next person cannot be handed the
     // thing in two sentences it does not spread, and `canon --help` is
@@ -1213,9 +1247,24 @@ pub fn open(args: &[String]) -> i32 {
     };
     let open: Vec<_> = st.open().collect();
     if has(args, "--json") {
+        // Each question as it always rendered, in its field order, plus how
+        // many seconded it.
+        #[derive(serde::Serialize)]
+        struct Row<'a> {
+            #[serde(flatten)]
+            question: &'a canon_core::Question,
+            seconds: usize,
+        }
+        let rows: Vec<Row> = open
+            .iter()
+            .map(|q| Row {
+                question: q,
+                seconds: st.seconds(&q.id),
+            })
+            .collect();
         println!(
             "{}",
-            serde_json::to_string_pretty(&open).unwrap_or_default()
+            serde_json::to_string_pretty(&rows).unwrap_or_default()
         );
         return 0;
     }
@@ -1227,6 +1276,10 @@ pub fn open(args: &[String]) -> i32 {
         println!("{}  ? {}", q.id, q.text);
         if let Some(p) = &q.proposal {
             println!("      from: \"{p}\"");
+        }
+        let n = st.seconds(&q.id);
+        if n > 0 {
+            println!("      {n} second(s)");
         }
     }
     println!("\n{} open", open.len());
