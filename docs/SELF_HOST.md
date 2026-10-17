@@ -84,6 +84,9 @@ Logs: `podman logs -f canon-slack`. The bot answers only while the
 machine is awake. After a restart: `podman machine start`, then
 `podman start canon-slack`.
 
+The container is one way to run it. [Run it your way](#run-it-your-way)
+says what the bot needs, for nix, launchd, a tmux pane or anything else.
+
 ## 4. Import the house's old chat (optional)
 
 You read the archive at the terminal and keep the rules that are real; the
@@ -168,14 +171,17 @@ act stays here and goes out with the next push that works.
 Start on a laptop and move to a server later; the house sees nothing
 change. The house is `data/` and `.env`.
 
-1. Stop the bot on the old machine (`podman stop canon-slack`, or
-   `systemctl --user stop canon-slack`). Run one bot at a time: Slack
+1. Stop the bot on the old machine (`podman stop canon-slack`,
+   `systemctl --user stop canon-slack`, or however you run it). Run one
+   bot at a time: Slack
    hands each event to only one of them, so two would each hear half the
    house and keep two records.
 2. On the new machine, do §2 from a canon checkout that pins the same
    release or a newer one. An older canon refuses the record.
 3. Copy `.env` and all of `data/` across. With git sync on, you can clone
-   the record's repo into `data/house` instead, and bring the deploy key.
+   the record's repo into `data/house` instead, and bring the deploy key
+   and `data/house/posted.json`; without that file, `post-pending` posts
+   again whatever is still waiting.
 4. Start the bot there (§3).
 
 ## 8. A page on the machine (optional)
@@ -192,6 +198,39 @@ CANON_DIR="$PWD/data/house/.canon" CANON_ACTOR="human:Your Name" canon ui
 
 Leave its Identify alone (see the caveat below). With git sync on, what
 you do there goes out with the bot's next write.
+
+## Run it your way
+
+The bot is one process, `python3 canon_slack.py`. The container under
+systemd is one way to keep it running; nix, launchd or a tmux pane work
+as well. It needs:
+
+- `canon` at the release the `Containerfile` pins, on PATH or named by
+  `CANON_BIN` (install it as in §4);
+- Python 3 with `slack_bolt` (`pip install -r requirements.txt`);
+- one directory it can write: the record, whose `.canon` is `CANON_DIR`,
+  with `people.json` and `posted.json` beside it;
+- outbound HTTPS to Slack, nothing listening;
+- to be the only one. Run one bot per Slack app: Slack gives each event
+  to one connection, so a second bot hears half the house and keeps a
+  second record.
+
+```sh
+cd ~/canon/integrations/slack
+SLACK_BOT_TOKEN=xoxb-… SLACK_APP_TOKEN=xapp-… CANON_CHANNEL=C0… \
+  CANON_DIR="$HOME/house/.canon" python3 canon_slack.py
+```
+
+Those four are required; without `CANON_DIR` it refuses to start.
+The rest are optional: `CANON_SCOPE` (default `house`), `CANON_PEOPLE`
+(default `people.json` beside the record), `CANON_GIT_SYNC` and
+`CANON_ALLOW_REMOTE` as in `.env.example`, and `CANON_ENDPOINT`,
+`CANON_MODEL` and `CANON_API_KEY`, which it hands to canon for
+`/canon ask`. With git sync on, it pushes with your own git and ssh.
+
+`./house` is the container's door. Without it, the one-shots take the
+same environment (`python3 canon_slack.py post-pending`), and a canon
+command runs with `CANON_DIR` and `CANON_ACTOR`, as in §4.
 
 ## Caveat: not signed yet
 

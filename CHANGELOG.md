@@ -7,6 +7,11 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- [Self-hosting](./docs/SELF_HOST.md#run-it-your-way) says what the Slack
+  bot needs to run without the container (nix, launchd, a tmux pane): the
+  pinned canon, Python with `slack_bolt`, the environment it reads, one
+  writable directory, outbound HTTPS, and only one running per Slack app.
+
 - `./house post-pending` posts each proposal the channel hasn't seen, with
   Approve / Object, and with the passage a finding was drawn from. The
   import in [Self-hosting](./docs/SELF_HOST.md) is now: review the archive
