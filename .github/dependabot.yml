@@ -6,10 +6,18 @@
 # not by discipline. So the useful signal from dependabot is small and a
 # weekly cadence would be pure noise.
 #
-# One grouped PR per ecosystem per month, majors included. A monthly batch
-# that gets read beats four weekly ones that get closed unread. If a specific
-# major needs isolating, do it by hand — the grouped PR says what moved and
-# `cargo update -p <crate>` on a branch is cheaper than a standing schedule.
+# One grouped PR per ecosystem per month. A monthly batch that gets read
+# beats four weekly ones that get closed unread.
+#
+# Cargo takes compatible updates only (`lockfile-only`): what `cargo update`
+# would take, inside the ranges Cargo.toml already allows. Majors used to
+# ride in the same group, and one of them breaking the build held every safe
+# bump hostage — #10 bundled serde_json, clap and proptest with sha2 0.11,
+# ureq 3, getrandom 0.4 and syn 3, and the no_std core boundary failed. A
+# semver-breaking upgrade is a migration, so it is started by hand:
+# `cargo update --breaking`, or `-p <crate>`, on a branch. `update-types`
+# could not have drawn this line: Dependabot reads 0.10 → 0.11 as a minor
+# bump, while Cargo treats it as breaking.
 #
 # A NEW dependency is a different matter and does not come through here: it
 # is a change to the shape of the tree, and for canon-core specifically it is
@@ -25,11 +33,11 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
+    versioning-strategy: lockfile-only
     open-pull-requests-limit: 1
     groups:
       cargo:
         patterns: ["*"]
-        update-types: ["major", "minor", "patch"]
     commit-message:
       prefix: "chore(deps)"
 
