@@ -49,6 +49,21 @@ def actor_for(client, user_id):
     return human(name)
 
 
+def unheard(actor):
+    """What to tell someone canon recorded but does not count: only people
+    who hold the scope are counted, so their click changes nothing in the
+    channel. None for a holder, and for a scope nobody holds yet."""
+    try:
+        holders = {h["actor"] for h in canon_json("who", SCOPE)}
+    except (RuntimeError, ValueError):
+        return None
+    if not holders or actor in holders:
+        return None
+    return (f"Recorded, but it doesn't count yet: you don't have a say in {SCOPE}. "
+            f"Whoever runs canon for the house can give you one with "
+            f"`./house grant \"{actor}\" {SCOPE}`.")
+
+
 # ── messages ────────────────────────────────────────────────
 
 
@@ -180,6 +195,8 @@ def build_app():
             return respond(replace_original=False, text=err or out)
         by, text = parse_proposal(body["message"])
         refresh(client, body["channel"]["id"], body["message"]["ts"], cid, by, text)
+        if note := unheard(actor):
+            respond(replace_original=False, text=note)
 
     @app.action("object")
     def object_(ack, body, client):
@@ -209,8 +226,12 @@ def build_app():
             return ack(response_action="errors", errors={"why": err or out})
         ack()
         refresh(client, meta["channel"], meta["ts"], meta["cid"], meta["by"], meta["text"])
+        note = unheard(actor)
+        standing = f" (no say in {SCOPE} yet)" if note else ""
         client.chat_postMessage(channel=meta["channel"], thread_ts=meta["ts"],
-                                text=f"{actor.removeprefix('human:')} objected: {why}")
+                                text=f"{actor.removeprefix('human:')} objected{standing}: {why}")
+        if note:
+            client.chat_postEphemeral(channel=meta["channel"], user=body["user"]["id"], text=note)
 
     def refresh(client, channel, ts, cid, by, text):
         """Rewrite a proposal message with where it stands now. The buttons

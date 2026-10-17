@@ -43,6 +43,10 @@ shouldn't get a say, run the rest:
 ./house grant "human:Jo" house -m "founding member"
 ```
 
+Someone who moves in later: `/invite` them, run `./house people` again,
+and grant them. Until then the bot records their approvals and objections
+but doesn't count them, and tells them so.
+
 Require a second person to approve a rule (otherwise proposing = deciding):
 
 ```sh

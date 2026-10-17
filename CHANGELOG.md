@@ -7,6 +7,11 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- The Slack bot tells someone without a say that their approval or
+  objection was recorded but doesn't count, and how to get one. It used to
+  change nothing and say nothing, and an objection showed in the thread as
+  if it counted.
+
 - The Slack bot's git sync (`CANON_GIT_SYNC=1`) works in its container,
   and says when it does not. The image had no ssh and no host key, so
   every pull and push failed; it had no git identity, so a rebase stopped
