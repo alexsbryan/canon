@@ -47,11 +47,17 @@ Someone who moves in later: `/invite` them, run `./house people` again,
 and grant them. Until then the bot records their approvals and objections
 but doesn't count them, and tells them so.
 
-Require a second person to approve a rule (otherwise proposing = deciding):
+Choose how a proposal passes, before anyone proposes and before an import
+(§4). Until you do, proposing is deciding. Set it for the whole canon, not
+`--scope house`: what an import keeps carries no scope, and a scoped rule
+would let it in at once.
 
 ```sh
-./house ratification set threshold:2/1 --scope house -m "two to pass, one to stop"
+./house ratification set threshold:2/1 -m "two to pass, one to stop"
 ```
+
+`threshold:2/1` takes two approvals and one objection stops it.
+`consent:3d` passes after three days with no objection.
 
 Start it as a systemd user service (Quadlet):
 
@@ -78,21 +84,40 @@ Logs: `podman logs -f canon-slack`. The bot answers only while the
 machine is awake. After a restart: `podman machine start`, then
 `podman start canon-slack`.
 
-## 4. Import old notes (optional)
+## 4. Import the house's old chat (optional)
 
-Needs a model: set `CANON_ENDPOINT` and `CANON_MODEL` in `.env`. Put a
-handbook or unzipped Slack export in `data/import/`.
+You read the archive at the terminal and keep the rules that are real; the
+house then approves each one in Slack. A workspace admin can export the
+channel's history (Slack takes a while to send it). Unzip it.
+
+Install canon at the release the image pins, and give it a model in your
+shell (`CANON_ENDPOINT`, `CANON_MODEL`, and `CANON_API_KEY` if it needs
+one):
 
 ```sh
-./house draft --from /data/import --dry-run --yes
-./house post-draft /data/house/.canon/draft-runs/<number>.json
+cd ~/canon/integrations/slack
+curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh \
+  | CANON_VERSION="$(sed -n 's/^ARG CANON_VERSION=//p' Containerfile)" sh
 ```
 
-Each find gets posted with **Propose this** / **Not ours**. Nothing becomes
-a rule until the house approves it.
+Then draft on the bot's record, as the name the bot knows you by (see
+`data/house/people.json`), and post what you kept:
 
-Cloud model? It'll see your chat. Agree as a house, then set
-`CANON_ALLOW_REMOTE=1` and add `--allow-remote`.
+```sh
+CANON_DIR="$PWD/data/house/.canon" CANON_ACTOR="human:Your Name" \
+  canon draft --from ~/slack-export --max-chunks 20
+./house post-pending
+```
+
+`draft` shows each finding with the passage it came from: `a` keeps it,
+`r` drops it, `q` stops. Try 20 passages first, then drop `--max-chunks`
+for the rest. `post-pending` posts each kept finding to the channel, with
+its quote and Approve / Object, and skips what it has posted before.
+Nothing is a rule until it passes under the rule you chose in §3.
+
+Cloud model? It reads your chat. Agree as a house first, then add
+`--allow-remote`. A local model keeps the chat on the machine and finds
+fewer rules.
 
 ## 5. Use
 
@@ -157,14 +182,11 @@ change. The house is `data/` and `.env`.
 
 `canon ui` is a page for the one person at the machine that holds the
 record: what's waiting on you, proposing, changing a rule with its reason.
-It listens on 127.0.0.1 only; housemates stay in Slack. Install canon at
-the release the image pins and open it on the bot's record, as the name
-the bot knows you by (see `data/house/people.json`):
+It listens on 127.0.0.1 only; housemates stay in Slack. Install canon as
+in §4 and open it on the bot's record, as the name the bot knows you by:
 
 ```sh
 cd ~/canon/integrations/slack
-curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh \
-  | CANON_VERSION="$(sed -n 's/^ARG CANON_VERSION=//p' Containerfile)" sh
 CANON_DIR="$PWD/data/house/.canon" CANON_ACTOR="human:Your Name" canon ui
 ```
 

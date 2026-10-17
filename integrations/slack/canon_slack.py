@@ -16,21 +16,42 @@ Socket Mode, so nothing listens on the network: the bot dials out to Slack.
     python canon_slack.py people       map the channel's members, print grants
     python canon_slack.py post-draft <run.json>
                                        post a draft run's candidates for review
+    python canon_slack.py post-pending post each proposal the channel has not seen
     python canon_slack.py digest       post what is waiting on people
 """
 
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 from gateway import (
-    SCOPE, PEOPLE, canon, canon_json, check, enroll, first_id, load_people,
-    person_for, status_of, write,
+    SCOPE, PEOPLE, CANON_DIR, canon, canon_json, check, enroll, first_id,
+    load_people, person_for, status_of, write,
 )
 from gateway import actor as human
 
 CHANNEL = os.environ.get("CANON_CHANNEL", "")
+# Every proposal the bot has posted, so `post-pending` posts each one once.
+# It says only what the channel was shown; canon says what is pending.
+POSTED = PEOPLE.with_name("posted.json")
+# The Object button carries a post's text, as JSON, in a modal's
+# private_metadata, which holds 3000 characters; JSON spells a "é" in six.
+QUOTE_MAX = 600
+
+
+def posted():
+    try:
+        return set(json.loads(POSTED.read_text()))
+    except FileNotFoundError:
+        return set()
+
+
+def mark_posted(cid):
+    tmp = POSTED.with_suffix(".tmp")
+    tmp.write_text(json.dumps(sorted(posted() | {cid}), indent=1) + "\n")
+    tmp.replace(POSTED)
 
 
 # ── people ──────────────────────────────────────────────────
@@ -136,6 +157,7 @@ def build_app():
             channel=CHANNEL, text=f"{by} proposed: {text}",
             blocks=proposal_blocks(cid, text, by, status_of(cid)),
         )
+        mark_posted(cid)
 
     @app.command("/canon")
     def slash(ack, command, client, respond):
@@ -258,6 +280,7 @@ def build_app():
             client.chat_update(channel=body["channel"]["id"], ts=body["message"]["ts"],
                                text=f"{by} proposed: {c['text']}",
                                blocks=proposal_blocks(cid, c["text"], by, status_of(cid)))
+            mark_posted(cid)
         else:
             respond(replace_original=True, text=f"{by} recorded an open question: {c['text']}")
 
@@ -310,6 +333,49 @@ def post_draft(run):
     print(f"posted {n} candidate(s) to {CHANNEL}")
 
 
+def quotes():
+    """The passage each finding came from, by its text and source, out of
+    the draft runs canon keeps; the act records only the source. A finding
+    edited at the review matches none and shows its source alone."""
+    found = {}
+    for run in sorted((CANON_DIR / "draft-runs").glob("*.json")):
+        try:
+            cands = json.loads(run.read_text()).get("candidates", [])
+        except (OSError, ValueError) as e:
+            print(f"left out the quotes in {run}: {e}", file=sys.stderr)
+            continue
+        found.update({(c.get("text"), c.get("source")): c["quote"]
+                      for c in cands if c.get("quote")})
+    return found
+
+
+def post_pending():
+    """Post each proposal waiting on the house that the channel has not
+    seen, with Approve and Object: what was kept from an import at the
+    terminal, and anything else written outside Slack."""
+    seen = posted()
+    todo = [p for p in canon_json("list").get("commitments", [])
+            if p.get("status", {}).get("status") == "proposed" and p["id"] not in seen]
+    if not todo:
+        return print("nothing new is waiting on the house")
+    c, cited = client(), quotes()
+    c.chat_postMessage(channel=CHANNEL, text=f"{len(todo)} proposal(s) waiting on the "
+                       "house. Approve or object to each one below.")
+    for p in todo:
+        time.sleep(1)  # Slack takes about one message a second in a channel
+        by, text = p["actor"].removeprefix("human:"), p["text"]
+        if src := p.get("source"):
+            # In the text, not a block of its own: refresh rebuilds a post
+            # from its text, so the passage stays through every click.
+            q = cited.get((p["text"], src), "")
+            q = q if len(q) <= QUOTE_MAX else q[:QUOTE_MAX] + "…"
+            text += f"\nfound in {src}" + (f":\n```{q}```" if q else "")
+        c.chat_postMessage(channel=CHANNEL, text=f"{by} proposed: {text}",
+                           blocks=proposal_blocks(p["id"], text, by, status_of(p["id"])))
+        mark_posted(p["id"])
+    print(f"posted {len(todo)} proposal(s) to {CHANNEL}")
+
+
 def digest():
     items = canon_json("review").get("items", [])
     if not items:
@@ -326,6 +392,8 @@ def main():
         return people()
     if cmd == "post-draft" and len(sys.argv) > 2:
         return post_draft(sys.argv[2])
+    if cmd == "post-pending":
+        return post_pending()
     if cmd == "digest":
         return digest()
     if cmd == "serve":

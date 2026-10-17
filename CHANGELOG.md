@@ -7,6 +7,14 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- `./house post-pending` posts each proposal the channel hasn't seen, with
+  Approve / Object, and with the passage a finding was drawn from. The
+  import in [Self-hosting](./docs/SELF_HOST.md) is now: review the archive
+  with `canon draft` at your terminal, then post what you kept for the
+  house to approve. The guide sets the house's rule for the whole canon,
+  because a rule set on `house` alone let whatever the import kept in at
+  once.
+
 - The Slack bot refuses to start without `CANON_DIR`, and says so. It used
   to fall back to the container's `/data/house/.canon`, so a bot run
   outside the container started with no record and failed on every
