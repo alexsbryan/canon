@@ -24,7 +24,12 @@ import threading
 from pathlib import Path
 
 CANON = os.environ.get("CANON_BIN", "canon")
-CANON_DIR = Path(os.environ.get("CANON_DIR", "/data/house/.canon"))
+# The record. The image sets /data/house/.canon; a bot run any other way
+# names its own. No default here: one would point a bot run outside the
+# container at a /data that is not there.
+if not os.environ.get("CANON_DIR"):
+    sys.exit("set CANON_DIR to the house record's .canon directory")
+CANON_DIR = Path(os.environ["CANON_DIR"])
 SCOPE = os.environ.get("CANON_SCOPE", "house")
 PEOPLE = Path(os.environ.get("CANON_PEOPLE", CANON_DIR.parent / "people.json"))
 # Commit and push the record after every write. Off unless the checkout has

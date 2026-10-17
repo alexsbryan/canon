@@ -7,6 +7,11 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- The Slack bot refuses to start without `CANON_DIR`, and says so. It used
+  to fall back to the container's `/data/house/.canon`, so a bot run
+  outside the container started with no record and failed on every
+  command.
+
 - [Self-hosting](./docs/SELF_HOST.md) covers starting on a Mac or a laptop,
   moving the house to another machine, and `canon ui` on the bot's record
   for whoever runs it.
