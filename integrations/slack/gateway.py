@@ -19,6 +19,7 @@ housemates both called Sam stay two people.
 import json
 import os
 import subprocess
+import sys
 import threading
 from pathlib import Path
 
@@ -62,23 +63,59 @@ def canon_json(*args):
 
 
 def git(*args):
+    """git in the record's checkout, under the gateway's name: the container
+    has none of its own, and a rebase that replays a local commit needs one."""
     return subprocess.run(
-        ["git", "-C", str(CANON_DIR.parent), *args],
+        ["git", "-C", str(CANON_DIR.parent), "-c", "user.name=canon-gateway",
+         "-c", "user.email=canon-gateway@localhost", *args],
         capture_output=True, text=True,
     )
+
+
+def sync(*args):
+    """A step of the sync, said in the log when it fails. The act stays
+    written here and goes out with the next push that works."""
+    r = git(*args)
+    if r.returncode != 0:
+        print(f"canon-gateway: git {args[0]} failed, the record is not synced: "
+              f"{(r.stderr or r.stdout).strip()}", file=sys.stderr, flush=True)
+    return r
+
+
+def union_acts():
+    """canon's merge driver for the act log, so a housemate's appends and
+    the bot's union instead of leaving conflict markers that canon cannot
+    read (`canon merge-driver` says why it is exact). Kept in the
+    checkout's own attributes: nothing to commit, set on every sync."""
+    git("config", "merge.canon.driver", f"{CANON} merge-driver %O %A %B")
+    where = sync("rev-parse", "--git-path", "info/attributes").stdout.strip()
+    if not where:
+        return
+    attrs = CANON_DIR.parent / where
+    rule = "acts.jsonl merge=canon\n"
+    if rule not in (attrs.read_text() if attrs.exists() else ""):
+        attrs.parent.mkdir(parents=True, exist_ok=True)
+        with attrs.open("a") as f:
+            f.write(rule)
 
 
 def write(*args, actor, note):
     """A canon verb that appends an act, with the git sync around it."""
     with LOCK:
         if GIT_SYNC:
-            git("pull", "--rebase", "--quiet")
+            union_acts()
+            if sync("pull", "--rebase", "--quiet").returncode != 0:
+                # Never leave the record mid-rebase: canon reads the file as
+                # it stands, conflict markers and all.
+                git("rebase", "--abort")
         code, out, err = canon(*args, actor=actor)
         if code == 0 and GIT_SYNC:
             git("add", str(CANON_DIR))
-            git("-c", "user.name=canon-gateway", "-c", "user.email=canon-gateway@localhost",
-                "commit", "--quiet", "-m", f"canon: {note}")
-            git("push", "--quiet")
+            # Who is who goes with the record, so a machine it moves to
+            # names people as this one did. Outside the checkout, it stays.
+            git("add", str(PEOPLE))
+            sync("commit", "--quiet", "-m", f"canon: {note}")
+            sync("push", "--quiet")
         return code, out, err
 
 

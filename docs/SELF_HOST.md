@@ -94,11 +94,29 @@ Weekly digest (crontab):
 0 18 * * 0  ~/canon/integrations/slack/house digest
 ```
 
-## 6. Backup
+## 6. Backup and sync
 
-Back up `data/`. Want git history? Make `data/house` a repo with a private
-remote, set `CANON_GIT_SYNC=1`, and uncomment the deploy key line in
-`canon-slack.container`.
+Back up `data/`. It is the whole house: the record in `data/house/.canon/`
+and who is who in `data/house/people.json`.
+
+For history and an offsite copy, keep `data/house` in a private git repo.
+Make a key, add its `.pub` to the repo as a deploy key with write access,
+then:
+
+```sh
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/canon_deploy
+cd ~/canon/integrations/slack/data/house
+git init -b main && git add -A && git commit -m "the house's record"
+git remote add origin git@github.com:YOU/house-canon.git
+GIT_SSH_COMMAND="ssh -i ~/.ssh/canon_deploy" git push -u origin main
+```
+
+Set `CANON_GIT_SYNC=1` in `.env` and uncomment the deploy key line in
+`canon-slack.container`. Each write from Slack then pulls, commits and
+pushes; acts from `./house` go with the next one. If someone pushes from
+their own clone, `canon merge-driver` joins their acts with the bot's. A
+sync that fails says so in the log (`canon-gateway: git push failed`); the
+act stays here and goes out with the next push that works.
 
 ## Caveat: not signed yet
 

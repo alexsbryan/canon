@@ -7,6 +7,14 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- The Slack bot's git sync (`CANON_GIT_SYNC=1`) works in its container,
+  and says when it does not. The image had no ssh and no host key, so
+  every pull and push failed; it had no git identity, so a rebase stopped
+  halfway; and a housemate's push left conflict markers in the act log,
+  after which every `/canon` command failed. The bot now joins the two
+  logs with `canon merge-driver`, takes the remote's host key on the
+  first push, logs a failed step, and commits `people.json` with the record.
+
 - The Slack image installs the release its `Containerfile` pins (0.3.0)
   instead of "latest". A cached build layer could keep an old canon that
   refuses a record a newer one founded, so a house moved to a second
