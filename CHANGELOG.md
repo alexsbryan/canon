@@ -7,6 +7,8 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.4.0 — 2026-10-17
+
 ### Before you upgrade
 
 - A canon that adopts `majority` or `unanimous` needs this release to read
