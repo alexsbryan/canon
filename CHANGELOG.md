@@ -7,6 +7,8 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.5.0 — 2026-10-17
+
 ### Before you upgrade
 
 - A canon that adopts `share` at any bar other than more than half or all
