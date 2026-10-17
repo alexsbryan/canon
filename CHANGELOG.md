@@ -7,6 +7,10 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- [Self-hosting](./docs/SELF_HOST.md) covers starting on a Mac or a laptop,
+  moving the house to another machine, and `canon ui` on the bot's record
+  for whoever runs it.
+
 - The Slack bot tells someone without a say that their approval or
   objection was recorded but doesn't count, and how to get one. It used to
   change nothing and say nothing, and an objection showed in the thread as

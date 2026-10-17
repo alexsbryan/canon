@@ -65,6 +65,19 @@ loginctl enable-linger "$USER"    # keep running after you log out
 
 Logs: `journalctl --user -u canon-slack -f`
 
+On a Mac, or a laptop to start, there is no systemd. Install podman
+(`brew install podman`, then `podman machine init` and
+`podman machine start` once) and run the container yourself:
+
+```sh
+podman run -d --name canon-slack --restart=always --env-file .env \
+  -v ./data:/data:Z localhost/canon-slack
+```
+
+Logs: `podman logs -f canon-slack`. The bot answers only while the
+machine is awake. After a restart: `podman machine start`, then
+`podman start canon-slack`.
+
 ## 4. Import old notes (optional)
 
 Needs a model: set `CANON_ENDPOINT` and `CANON_MODEL` in `.env`. Put a
@@ -98,6 +111,9 @@ Weekly digest (crontab):
 0 18 * * 0  ~/canon/integrations/slack/house digest
 ```
 
+On a Mac, cron can't find podman: put `PATH=/opt/homebrew/bin:/usr/bin:/bin`
+on its own line above.
+
 ## 6. Backup and sync
 
 Back up `data/`. It is the whole house: the record in `data/house/.canon/`
@@ -121,6 +137,39 @@ pushes; acts from `./house` go with the next one. If someone pushes from
 their own clone, `canon merge-driver` joins their acts with the bot's. A
 sync that fails says so in the log (`canon-gateway: git push failed`); the
 act stays here and goes out with the next push that works.
+
+## 7. Move to another machine
+
+Start on a laptop and move to a server later; the house sees nothing
+change. The house is `data/` and `.env`.
+
+1. Stop the bot on the old machine (`podman stop canon-slack`, or
+   `systemctl --user stop canon-slack`). Run one bot at a time: Slack
+   hands each event to only one of them, so two would each hear half the
+   house and keep two records.
+2. On the new machine, do §2 from a canon checkout that pins the same
+   release or a newer one. An older canon refuses the record.
+3. Copy `.env` and all of `data/` across. With git sync on, you can clone
+   the record's repo into `data/house` instead, and bring the deploy key.
+4. Start the bot there (§3).
+
+## 8. A page on the machine (optional)
+
+`canon ui` is a page for the one person at the machine that holds the
+record: what's waiting on you, proposing, changing a rule with its reason.
+It listens on 127.0.0.1 only; housemates stay in Slack. Install canon at
+the release the image pins and open it on the bot's record, as the name
+the bot knows you by (see `data/house/people.json`):
+
+```sh
+cd ~/canon/integrations/slack
+curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh \
+  | CANON_VERSION="$(sed -n 's/^ARG CANON_VERSION=//p' Containerfile)" sh
+CANON_DIR="$PWD/data/house/.canon" CANON_ACTOR="human:Your Name" canon ui
+```
+
+Leave its Identify alone (see the caveat below). With git sync on, what
+you do there goes out with the bot's next write.
 
 ## Caveat: not signed yet
 
