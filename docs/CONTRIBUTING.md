@@ -226,7 +226,9 @@ canon are `PROPOSED, not yet a rule` — mine, waiting out my own window.
 ## Releasing
 
 A release is a tag. Bump `version` in the root `Cargo.toml` (every crate
-inherits it), let `cargo build` refresh `Cargo.lock`, rename `## Unreleased`
+inherits it), let `cargo build` refresh `Cargo.lock`, move the Slack image's
+pin (`ARG CANON_VERSION` in `integrations/slack/Containerfile`) to the new
+tag, rename `## Unreleased`
 in [CHANGELOG.md](../CHANGELOG.md) to `## <version> — <YYYY-MM-DD>` with a
 fresh empty `## Unreleased` above it, commit, then:
 
@@ -236,7 +238,8 @@ git push origin main --tags
 ```
 
 [`release.yml`](../.github/workflows/release.yml) refuses a tag that
-disagrees with `Cargo.toml` or has no section in the changelog, builds the
+disagrees with `Cargo.toml` or the Slack image's pin, or has no section in
+the changelog, builds the
 binary for macOS, Linux and Windows on hosted runners, and publishes a
 GitHub Release with the archives, a `SHA256SUMS`, and that section as its
 notes. `./scripts/release-notes.sh <version>` prints what it will publish. [`install.sh`](../install.sh) at the root is

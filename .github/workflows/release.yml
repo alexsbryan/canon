@@ -93,6 +93,11 @@ jobs:
                 echo "::error::CHANGELOG.md has no notes for $have" >&2
                 exit 1
               fi
+              pin="$(sed -n 's/^ARG CANON_VERSION=v//p' integrations/slack/Containerfile)"
+              if [ "$pin" != "$have" ]; then
+                echo "::error::tag v$want but integrations/slack/Containerfile installs v$pin" >&2
+                exit 1
+              fi
               echo "version $have" ;;
             *) echo "not a tag ($GITHUB_REF): build only" ;;
           esac

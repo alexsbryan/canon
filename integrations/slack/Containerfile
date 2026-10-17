@@ -4,9 +4,11 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends curl ca-certificates git \
  && rm -rf /var/lib/apt/lists/*
 
-# The same installer the README uses. Pin a release with
-# --build-arg CANON_VERSION=v0.2.0.
-ARG CANON_VERSION=latest
+# The same installer the README uses, at one release, so every machine the
+# house's record moves to builds the same canon: an older build refuses a
+# record a newer one founded, and "latest" was whatever a cached layer last
+# fetched. A release moves this pin; release.yml refuses a tag that disagrees.
+ARG CANON_VERSION=v0.3.0
 RUN curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh \
     | CANON_VERSION=$CANON_VERSION CANON_INSTALL_DIR=/usr/local/bin sh
 

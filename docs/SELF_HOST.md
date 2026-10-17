@@ -111,6 +111,11 @@ Signing is coming. You'll rebuild the image; housemates do nothing.
 
 ## Upgrade
 
+The image installs the canon release its `Containerfile` names, so every
+machine that builds from the same checkout runs the same canon. Upgrade
+every machine that reads the record together: an older canon refuses a
+record a newer one has written to.
+
 ```sh
 cd ~/canon && git pull
 cd integrations/slack && podman build --no-cache -t canon-slack .

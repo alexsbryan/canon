@@ -7,6 +7,11 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+- The Slack image installs the release its `Containerfile` pins (0.3.0)
+  instead of "latest". A cached build layer could keep an old canon that
+  refuses a record a newer one founded, so a house moved to a second
+  machine stopped reading.
+
 ## 0.3.0 — 2026-10-16
 
 ### Before you upgrade
