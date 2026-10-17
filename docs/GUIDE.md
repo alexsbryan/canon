@@ -70,7 +70,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 
 | What it does | Example |
 |---|---|
-| What's waiting on you, one at a time: approve, object, or skip | `canon review` |
+| What's waiting on you, one at a time: read it, approve, object, or skip; offers you rooms nobody holds yet | `canon review` |
 | All of this as a page in your browser: decide, propose, change a rule, identify | `canon ui` |
 | Propose a rule; it's a proposal until its room ratifies it | `canon add "Quiet hours run 11pm to 7am." --scope house.quiet` |
 | What's in force now, and what's still proposed | `canon list` |

@@ -1012,15 +1012,8 @@ pub fn grant(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    match write(
-        &d,
-        ActKind::Grant {
-            holder: pos[0].to_string(),
-            scope: scope.clone(),
-            horizon,
-            rationale: flag(args, "-m").unwrap_or_default().to_string(),
-        },
-    ) {
+    let rationale = flag(args, "-m").unwrap_or_default();
+    match give(&d, &store::actor(), pos[0], &scope, horizon, rationale) {
         Ok(act) => {
             let holder = pos[0];
             let code = crate::cmds::governed(&d, &act.id, || {
@@ -1062,6 +1055,31 @@ pub fn grant(args: &[String]) -> i32 {
         }
         Err(e) => fail(e),
     }
+}
+
+/// `by` grants `holder` standing over `scope`: the grant act, written.
+///
+/// **The one place a grant is written.** `canon grant` and `canon review`,
+/// when a person takes standing over a scope nobody holds, both come here;
+/// whether it took is the fold's answer, read with [`crate::cmds::took`].
+pub fn give(
+    d: &std::path::Path,
+    by: &str,
+    holder: &str,
+    scope: &Scope,
+    horizon: Option<i64>,
+    rationale: &str,
+) -> Result<Act, String> {
+    crate::cmds::write_as(
+        d,
+        ActKind::Grant {
+            holder: holder.to_string(),
+            scope: scope.clone(),
+            horizon,
+            rationale: rationale.to_string(),
+        },
+        by,
+    )
 }
 
 /// Step back from a scope, or stand someone down from one.

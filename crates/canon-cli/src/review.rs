@@ -21,10 +21,12 @@
 use std::io::{BufRead, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
-use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Status, Verdict};
+use std::collections::BTreeMap;
+
+use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Scope, Status, Verdict};
 use serde::Serialize;
 
-use crate::cmds::{fail, has, load, write_as};
+use crate::cmds::{answer, fail, flag, has, load};
 use crate::explain::{one_line, person};
 use crate::store;
 
@@ -240,7 +242,8 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
 }
 
 /// Approve or object, and say where it stands afterwards. The one way both
-/// faces write, so a decision from the page is the same act as one typed.
+/// faces write, so a decision from the page is the same act as one typed —
+/// and the same act `canon approve` and `canon object` write.
 pub fn decide(
     d: &Path,
     actor: &str,
@@ -248,24 +251,7 @@ pub fn decide(
     approve: bool,
     because: &str,
 ) -> Result<String, String> {
-    let because = because.trim();
-    if !approve && because.is_empty() {
-        return Err("an objection needs a reason — a bare no does not count".into());
-    }
-    write_as(
-        d,
-        ActKind::Position {
-            about: id.as_str().into(),
-            citing: None,
-            pull: if approve { Pull::Toward } else { Pull::Against },
-            because: if because.is_empty() {
-                "approved".into()
-            } else {
-                because.into()
-            },
-        },
-        actor,
-    )?;
+    answer(d, actor, id, approve, because)?;
     let st = store::read(d)?.derive_at(store::now());
     Ok(outcome(&st, id))
 }
@@ -308,14 +294,117 @@ pub fn ago(then: i64, now: i64) -> String {
 
 // ── the terminal ────────────────────────────────────────────
 
+/// Where `review` asks and says: the terminal in use, a script in tests.
+pub trait Prompt {
+    fn say(&mut self, text: &str);
+    /// One line typed in answer, trimmed; `None` at the end of input.
+    fn ask(&mut self, question: &str) -> Option<String>;
+    /// All of `text`, for reading at the person's pace. Why not, when not.
+    fn page(&mut self, text: &str) -> Result<(), String>;
+}
+
+/// Standard input and output, once [`door`] has found both a terminal.
+struct Terminal {
+    input: std::io::StdinLock<'static>,
+}
+
+impl Prompt for Terminal {
+    fn say(&mut self, text: &str) {
+        println!("{text}");
+    }
+
+    fn ask(&mut self, question: &str) -> Option<String> {
+        print!("{question}");
+        std::io::stdout().flush().ok()?;
+        let mut line = String::new();
+        match self.input.read_line(&mut line) {
+            Ok(0) | Err(_) => None,
+            Ok(_) => Some(line.trim().to_string()),
+        }
+    }
+
+    /// Through `$PAGER`, else `less`: the program and its arguments split on
+    /// whitespace and run directly, no shell, so it works where there is
+    /// none.
+    fn page(&mut self, text: &str) -> Result<(), String> {
+        let pager = std::env::var("PAGER")
+            .ok()
+            .filter(|p| !p.trim().is_empty())
+            .unwrap_or_else(|| "less".into());
+        let mut words = pager.split_whitespace();
+        let program = words.next().unwrap_or("less");
+        let mut child = std::process::Command::new(program)
+            .args(words)
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("could not run the pager `{pager}` ({e}); set PAGER"))?;
+        if let Some(mut input) = child.stdin.take() {
+            // Quitting the pager before the end closes the pipe: read enough.
+            match input.write_all(text.as_bytes()) {
+                Err(e) if e.kind() != std::io::ErrorKind::BrokenPipe => {
+                    return Err(format!("writing to `{pager}`: {e}"));
+                }
+                _ => {}
+            }
+        }
+        let status = child.wait().map_err(|e| format!("`{pager}`: {e}"))?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(format!("the pager `{pager}` exited with {status}"))
+        }
+    }
+}
+
+/// Whether this process may walk somebody through decisions, and if not,
+/// why, in one line.
+///
+/// **A person's verb, never an agent's by accident.** `review` writes
+/// approvals and objections as `actor`, so it runs only with a terminal on
+/// both stdin and stdout and only for an actor canon counts as a person
+/// (`human:`; the fold never counts anyone else's approval). An agent's
+/// shell has no terminal, and an agent is told to set `CANON_ACTOR` to
+/// `agent:<name>`, so either stops one that runs `canon review` by mistake.
+/// It is a speed bump, not a defence: a process can allocate a pty, and
+/// whoever can set `CANON_ACTOR` can name themselves a person. What stops
+/// somebody deciding as you is `canon identify`. `--json` reads and decides
+/// nothing, so it is not behind this door.
+pub fn door(terminal: bool, actor: &str, from: &str) -> Result<(), String> {
+    if !actor.starts_with("human:") {
+        return Err(format!(
+            "`canon review` decides as a person, and {actor} (from {from}) is not one; \
+             `canon review --json` lists what is waiting"
+        ));
+    }
+    if !terminal {
+        return Err(
+            "`canon review` asks a person at a terminal, and stdin or stdout is not one; \
+             `canon review --json` lists what is waiting"
+                .into(),
+        );
+    }
+    Ok(())
+}
+
 pub fn run(args: &[String]) -> i32 {
-    let (d, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
+    let only = match flag(args, "--scope").map(|raw| Scope::new(raw).ok_or(raw)) {
+        None => None,
+        Some(Ok(s)) => Some(s),
+        Some(Err(raw)) => return fail(format!("`{raw}` is not a scope")),
     };
-    let actor = store::actor();
-    let items = queue(&log, &st, &actor, store::now());
     if has(args, "--json") {
+        let (_, log, st) = match load() {
+            Ok(v) => v,
+            Err(e) => return fail(e),
+        };
+        let actor = store::actor();
+        let items: Vec<Item> = queue(&log, &st, &actor, store::now())
+            .into_iter()
+            .filter(|i| {
+                only.as_ref()
+                    .is_none_or(|o| scope_of(i).is_some_and(|s| o.covers(&s)))
+            })
+            .collect();
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({ "actor": actor, "items": items }))
@@ -323,111 +412,350 @@ pub fn run(args: &[String]) -> i32 {
         );
         return 0;
     }
-    let (mine, others): (Vec<&Item>, Vec<&Item>) = items.iter().partition(|i| i.yours);
-    println!("{}", whoami(&log, &actor));
-    if mine.is_empty() {
-        println!("Nothing is waiting on you.");
-        if !others.is_empty() {
-            println!(
-                "{} waiting on someone else — `canon list` shows what each needs.",
-                others.len()
-            );
-        }
-        return 0;
+    let (actor, from) = store::actor_from();
+    let terminal = std::io::stdin().is_terminal() && std::io::stdout().is_terminal();
+    // The door before the canon is even looked for: refused means nothing ran.
+    if let Err(why) = door(terminal, &actor, from) {
+        return fail(why);
     }
-    println!(
-        "{} waiting on you{}.",
-        mine.len(),
-        if others.is_empty() {
-            String::new()
+    let d = match crate::cmds::dir() {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
+    let mut terminal = Terminal {
+        input: std::io::stdin().lock(),
+    };
+    session(&d, &actor, from, true, only.as_ref(), &mut terminal)
+}
+
+/// What a session decided. Counted from what was written, not what was
+/// typed: an approval that could not be written is `failed`, not approved.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct Tally {
+    pub approved: usize,
+    pub objected: usize,
+    pub skipped: usize,
+    /// Not answered, because the person quit (or input ended) first.
+    pub unreached: usize,
+    /// Acts that were asked for and not written.
+    pub failed: usize,
+}
+
+impl Tally {
+    /// The last line a session prints.
+    pub fn line(&self) -> String {
+        let mut out = format!(
+            "approved {}, objected {}, skipped {}",
+            self.approved, self.objected, self.skipped
+        );
+        if self.unreached > 0 {
+            out.push_str(&format!(", {} left for later", self.unreached));
+        }
+        if self.failed > 0 {
+            out.push_str(&format!(", {} not written", self.failed));
+        }
+        out
+    }
+}
+
+/// `canon review` at a terminal, over the canon in `d`, deciding as
+/// `actor`, in `only` and the scopes under it when it is given. The door is checked again here, so a caller that forgot it is
+/// refused too. Exits 0 unless an act it was asked to write failed.
+pub fn session(
+    d: &Path,
+    actor: &str,
+    from: &str,
+    terminal: bool,
+    only: Option<&Scope>,
+    prompt: &mut dyn Prompt,
+) -> i32 {
+    if let Err(why) = door(terminal, actor, from) {
+        return fail(why);
+    }
+    let tally = match walk(d, actor, from, only, prompt) {
+        Ok(t) => t,
+        Err(e) => return fail(e),
+    };
+    prompt.say(&format!("\n{}", tally.line()));
+    i32::from(tally.failed > 0)
+}
+
+/// The scope an item is in, when it names one.
+fn scope_of(item: &Item) -> Option<Scope> {
+    item.scope.as_deref().and_then(Scope::new)
+}
+
+/// `scope`, when nobody holds standing over it now: the fold read fresh,
+/// because an earlier answer in this session may have changed it.
+fn unheld(d: &Path, scope: Option<&Scope>) -> Result<Option<Scope>, String> {
+    let Some(scope) = scope else { return Ok(None) };
+    let now = store::now();
+    let st = store::read(d)?.derive_at(now);
+    Ok(st.who_decides(scope, now).is_empty().then(|| scope.clone()))
+}
+
+/// What came of offering somebody standing over a scope nobody holds.
+enum Stand {
+    Took,
+    Declined,
+    /// Written, and the fold did not apply it. Why.
+    Refused(String),
+    /// Input ended, or the grant could not be written.
+    Quit,
+    Failed(String),
+}
+
+/// "nobody holds `scope`; take standing?" — and on yes, the grant `canon
+/// grant <actor> <scope>` writes, through the same [`crate::govern::give`].
+/// Whether it took is the fold's answer, never assumed.
+fn stand(d: &Path, actor: &str, scope: &Scope, prompt: &mut dyn Prompt) -> Stand {
+    let Some(answer) = prompt.ask(&format!("nobody holds {scope}; take standing? [y/N] › "))
+    else {
+        return Stand::Quit;
+    };
+    if !matches!(answer.to_lowercase().as_str(), "y" | "yes") {
+        return Stand::Declined;
+    }
+    let act = match crate::govern::give(d, actor, actor, scope, None, "") {
+        Ok(a) => a,
+        Err(e) => return Stand::Failed(e),
+    };
+    match crate::cmds::took(d, &act.id) {
+        crate::cmds::Took::Applied | crate::cmds::Took::Open(_) => Stand::Took,
+        crate::cmds::Took::Refused(why) | crate::cmds::Took::Proposed(why) => Stand::Refused(why),
+    }
+}
+
+/// Every proposal waiting on `actor`, a scope at a time, one at a time.
+///
+/// What waits is the fold's answer ([`queue`]), with one addition: a
+/// proposal in a scope nobody holds waits on whoever is willing to take
+/// that scope on, so it is shown after asking once whether they will. On
+/// yes the fold is asked again, so whether it waits on them now is still
+/// its answer.
+fn walk(
+    d: &Path,
+    actor: &str,
+    from: &str,
+    only: Option<&Scope>,
+    prompt: &mut dyn Prompt,
+) -> Result<Tally, String> {
+    let log = store::read(d)?;
+    let now = store::now();
+    let st = log.derive_at(now);
+    let answered: std::collections::BTreeSet<&str> = st
+        .positions
+        .iter()
+        .filter(|p| p.by == actor)
+        .map(|p| p.about.as_str())
+        .collect();
+    let mut mine: BTreeMap<Option<String>, Vec<Item>> = BTreeMap::new();
+    let mut others = 0;
+    for item in queue(&log, &st, actor, now) {
+        let scope = scope_of(&item);
+        if only.is_some_and(|o| !scope.as_ref().is_some_and(|s| o.covers(s))) {
+            continue;
+        }
+        let open = scope
+            .as_ref()
+            .is_some_and(|s| st.who_decides(s, now).is_empty())
+            && !answered.contains(item.id.as_str());
+        if item.yours || open {
+            mine.entry(item.scope.clone()).or_default().push(item);
         } else {
-            format!(", {} on someone else", others.len())
+            others += 1;
         }
-    );
-    if !std::io::stdin().is_terminal() {
-        // Somebody piping this, or an agent: the list, and the commands a
-        // person would type. Deciding needs the person.
-        for item in &mine {
-            println!("\n{}", card(&d, item, store::now()));
-            println!("  canon approve {}", item.id);
-            println!("  canon object {} -m \"<why>\"", item.id);
-        }
-        return 0;
     }
-    let mut input = std::io::stdin().lock();
-    let (mut approved, mut objected, mut skipped) = (0, 0, 0);
-    let total = mine.len();
-    'items: for (n, item) in mine.into_iter().enumerate() {
-        println!("\n── {} of {total} ─────────────────────────────", n + 1);
-        println!("{}", card(&d, item, store::now()));
-        loop {
-            let Some(answer) = ask(&mut input, "\n  (a)pprove  (o)bject  (s)kip  (q)uit  › ")
-            else {
-                break 'items;
-            };
-            let decision = match answer.to_lowercase().as_str() {
-                "a" | "approve" | "y" => Some((true, String::new())),
-                "o" | "object" => {
-                    let Some(why) = ask(
-                        &mut input,
-                        "  why? (a reason is required; empty goes back)  › ",
-                    ) else {
-                        break 'items;
-                    };
-                    if why.is_empty() {
-                        continue;
-                    }
-                    Some((false, why))
+    prompt.say(&whoami(&log, actor, from));
+    let mut tally = Tally::default();
+    let total: usize = mine.values().map(Vec::len).sum();
+    let elsewhere = if others == 0 {
+        String::new()
+    } else {
+        format!(", {others} on someone else")
+    };
+    if total == 0 {
+        prompt.say(&format!("Nothing is waiting on you{elsewhere}."));
+        return Ok(tally);
+    }
+    prompt.say(&format!("{total} waiting on you{elsewhere}."));
+    let mut n = 0;
+    for (scope, mut items) in mine {
+        items.sort_by_key(|i| i.at);
+        let label = scope.as_deref().unwrap_or("the canon as a whole");
+        prompt.say(&format!("\n━━ {label}: {} ━━", items.len()));
+        if let Some(s) = unheld(d, scope.as_deref().and_then(Scope::new).as_ref())? {
+            match stand(d, actor, &s, prompt) {
+                Stand::Took => {
+                    prompt.say(&format!("  you hold {s} now"));
+                    // Asked again: the grant is on the record, and what
+                    // waits on you is still the fold's call.
+                    let log = store::read(d)?;
+                    let now = store::now();
+                    let fresh = queue(&log, &log.derive_at(now), actor, now);
+                    items = items
+                        .into_iter()
+                        .filter_map(|i| {
+                            let now_yours = fresh.iter().find(|f| f.id == i.id && f.yours);
+                            if now_yours.is_none() {
+                                prompt.say(&format!("  {} does not wait on you even so", i.id));
+                                tally.skipped += 1;
+                                n += 1;
+                            }
+                            now_yours.cloned()
+                        })
+                        .collect();
                 }
-                "s" | "skip" | "" => None,
-                "q" | "quit" => break 'items,
-                _ => continue,
-            };
-            match decision {
-                None => skipped += 1,
-                Some((approve, why)) => match decide(&d, &actor, &item.id, approve, &why) {
-                    Ok(now) => {
-                        if approve {
-                            approved += 1;
-                        } else {
-                            objected += 1;
-                        }
-                        println!("{}", crate::wrap::hang("  → ", &now));
-                    }
-                    Err(e) => println!("{}", crate::wrap::hang("  not written: ", &e)),
-                },
+                Stand::Declined => {
+                    prompt.say(&format!("  skipped {} in {s}", items.len()));
+                    tally.skipped += items.len();
+                    n += items.len();
+                    continue;
+                }
+                Stand::Refused(why) => {
+                    prompt.say(&crate::wrap::hang("  not granted: ", &why));
+                    tally.failed += 1;
+                    tally.skipped += items.len();
+                    n += items.len();
+                    continue;
+                }
+                Stand::Failed(why) => {
+                    prompt.say(&crate::wrap::hang("  not written: ", &why));
+                    tally.failed += 1;
+                    tally.skipped += items.len();
+                    n += items.len();
+                    continue;
+                }
+                Stand::Quit => {
+                    tally.unreached = total - n;
+                    return Ok(tally);
+                }
             }
-            break;
+        }
+        for item in &items {
+            n += 1;
+            prompt.say(&format!(
+                "\n── {n} of {total} ─────────────────────────────"
+            ));
+            prompt.say(&card(d, item, now));
+            if !one(d, actor, item, prompt, &mut tally) {
+                // This one was not answered either, so it is left with the rest.
+                tally.unreached = total - n + 1;
+                return Ok(tally);
+            }
         }
     }
-    println!("\napproved {approved}, objected {objected}, skipped {skipped}");
-    0
+    Ok(tally)
 }
 
-fn ask(input: &mut impl BufRead, prompt: &str) -> Option<String> {
-    print!("{prompt}");
-    std::io::stdout().flush().ok();
-    let mut line = String::new();
-    match input.read_line(&mut line) {
-        Ok(0) | Err(_) => None,
-        Ok(_) => Some(line.trim().to_string()),
+/// Ask about one proposal until it is answered. False when the person quit
+/// or input ended before answering it, so nothing after it is asked.
+fn one(d: &Path, actor: &str, item: &Item, prompt: &mut dyn Prompt, tally: &mut Tally) -> bool {
+    loop {
+        let Some(answer) = prompt.ask("\n  [a]pprove  [o]bject  [s]kip  [v]iew  [q]uit  › ")
+        else {
+            return false;
+        };
+        let (approve, why) = match answer.to_lowercase().as_str() {
+            "a" | "approve" | "y" => (true, String::new()),
+            "o" | "object" => {
+                let Some(why) = prompt.ask("  why? (a reason is required; empty goes back)  › ")
+                else {
+                    return false;
+                };
+                if why.is_empty() {
+                    continue;
+                }
+                (false, why)
+            }
+            "s" | "skip" | "" => {
+                tally.skipped += 1;
+                return true;
+            }
+            "q" | "quit" => return false,
+            "v" | "view" => {
+                if let Err(why) = prompt.page(&whole(item)) {
+                    // Unread is worse than unpaged: say why, then all of it.
+                    prompt.say(&format!("  {why}; here it is in full:\n"));
+                    prompt.say(&whole(item));
+                }
+                continue;
+            }
+            _ => continue,
+        };
+        match decide(d, actor, &item.id, approve, &why) {
+            Ok(now) => {
+                if approve {
+                    tally.approved += 1;
+                } else {
+                    tally.objected += 1;
+                }
+                prompt.say(&crate::wrap::hang("  → ", &now));
+            }
+            Err(e) => {
+                tally.failed += 1;
+                prompt.say(&crate::wrap::hang("  not written: ", &e));
+            }
+        }
+        return true;
     }
 }
 
-/// Who is deciding, and whether the record can tell it was them.
-pub fn whoami(log: &Log, actor: &str) -> String {
+/// Who is deciding, where that name came from, and whether the record can
+/// tell it was them.
+pub fn whoami(log: &Log, actor: &str, from: &str) -> String {
     if canon_core::sign::verify(log.acts())
         .bindings
         .get(actor)
         .is_some_and(|b| !b.contested)
     {
-        format!("You are {actor}, identified: what you decide is signed.")
+        format!("Acting as {actor} (from {from}), identified: what you decide is signed.")
     } else {
         format!(
-            "You are {actor}. Anyone who can write this file could decide as you — \
-             `canon identify` makes it so only your key can."
+            "Acting as {actor} (from {from}). Anyone who can write this file could decide \
+             as you — `canon identify` makes it so only your key can."
         )
     }
+}
+
+/// How much of a proposal's text the card shows before [v]iew. A rule is a
+/// sentence; a proposal can be a whole charter (23 KB, the day this was
+/// written), and a card that scrolls it past is one nobody reads.
+const EXCERPT: usize = 20;
+
+/// `text` as the terminal shows it: each of its own lines wrapped under
+/// `lead`, so a document keeps its paragraphs. The first line carries
+/// `lead`, the rest are indented to match.
+fn rendered(lead: &str, text: &str) -> Vec<String> {
+    let pad = " ".repeat(lead.chars().count());
+    let mut out = Vec::new();
+    for (i, line) in text.trim().lines().enumerate() {
+        if line.trim().is_empty() {
+            out.push(String::new());
+            continue;
+        }
+        let prefix = if i == 0 { lead } else { &pad };
+        out.extend(crate::wrap::hang(prefix, line).lines().map(String::from));
+    }
+    if out.is_empty() {
+        out.push(lead.trim_end().to_string());
+    }
+    out
+}
+
+/// All of a proposal, for the pager: what it is and who proposed it, then
+/// its text exactly as written.
+fn whole(item: &Item) -> String {
+    format!(
+        "{} · {}{} · proposed by {}\n\n{}\n",
+        item.id,
+        item.kind.noun(),
+        item.scope
+            .as_ref()
+            .map_or_else(String::new, |s| format!(" in {s}")),
+        item.by,
+        item.text.trim_end()
+    )
 }
 
 /// One proposal as the terminal shows it.
@@ -446,8 +774,17 @@ fn card(d: &Path, item: &Item, now: i64) -> String {
     } else {
         "  "
     };
-    out.push_str(&crate::wrap::hang(lead, &item.text));
+    let lines = rendered(lead, &item.text);
+    out.push_str(&lines[..lines.len().min(EXCERPT)].join("\n"));
     out.push('\n');
+    if lines.len() > EXCERPT {
+        out.push_str(&format!(
+            "  … the first {EXCERPT} of {} lines; [v]iew reads it all\n",
+            lines.len()
+        ));
+    } else if lines.len() > 1 {
+        out.push_str(&format!("  ({} lines)\n", lines.len()));
+    }
     if item.kind != Kind::Retraction {
         for (old, text) in &item.replaces {
             out.push('\n');

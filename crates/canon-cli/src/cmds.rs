@@ -555,17 +555,15 @@ pub fn approve(args: &[String]) -> i32 {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
-    match write(
+    match answer(
         &d,
-        ActKind::Position {
-            about: target.to_string(),
-            citing: None,
-            pull: canon_core::Pull::Toward,
-            because: flag(args, "-m").unwrap_or("approved").to_string(),
-        },
+        &store::actor(),
+        &target,
+        true,
+        flag(args, "-m").unwrap_or(""),
     ) {
-        Ok(_) => {
-            println!("{}  approved by {}", target, store::actor());
+        Ok(act) => {
+            println!("{}  approved by {}", target, act.actor);
             report_status(&d, &target);
             0
         }
@@ -580,9 +578,6 @@ pub fn object(args: &[String]) -> i32 {
     let Some(needle) = pos.first() else {
         return fail("usage: canon object <proposal-id> -m \"<why>\"");
     };
-    let Some(why) = flag(args, "-m").filter(|m| !m.trim().is_empty()) else {
-        return fail("object requires -m \"<why>\" — an objection with no reason does not count");
-    };
     let (d, _, st) = match load() {
         Ok(v) => v,
         Err(e) => return fail(e),
@@ -591,22 +586,58 @@ pub fn object(args: &[String]) -> i32 {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
-    match write(
+    match answer(
         &d,
-        ActKind::Position {
-            about: target.to_string(),
-            citing: None,
-            pull: canon_core::Pull::Against,
-            because: why.to_string(),
-        },
+        &store::actor(),
+        &target,
+        false,
+        flag(args, "-m").unwrap_or(""),
     ) {
-        Ok(_) => {
-            println!("{}  objected to by {}", target, store::actor());
+        Ok(act) => {
+            println!("{}  objected to by {}", target, act.actor);
             report_status(&d, &target);
             0
         }
         Err(e) => fail(e),
     }
+}
+
+/// Approve or object to `id` as `actor`: the position act, written.
+///
+/// **The one place either is written.** `approve`, `object`, `canon review`
+/// and the page all come here, so "what an approval is" and "an objection
+/// needs a reason" have one answer between them rather than four.
+pub fn answer(
+    d: &Path,
+    actor: &str,
+    id: &ActId,
+    approve: bool,
+    because: &str,
+) -> Result<Act, String> {
+    let because = because.trim();
+    if !approve && because.is_empty() {
+        return Err(
+            "an objection needs a reason (-m \"<why>\") — one with no reason does not count".into(),
+        );
+    }
+    write_as(
+        d,
+        ActKind::Position {
+            about: id.as_str().into(),
+            citing: None,
+            pull: if approve {
+                canon_core::Pull::Toward
+            } else {
+                canon_core::Pull::Against
+            },
+            because: if because.is_empty() {
+                "approved".into()
+            } else {
+                because.into()
+            },
+        },
+        actor,
+    )
 }
 
 pub fn list(args: &[String]) -> i32 {

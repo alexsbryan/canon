@@ -143,8 +143,15 @@ pub fn now() -> i64 {
 /// acts must set `CANON_ACTOR` to a non-human label so the fold can report it
 /// — see `State::unattended`.
 pub fn actor() -> String {
+    actor_from().0
+}
+
+/// [`actor`], and where the name came from, in the words a person would use
+/// to change it: `CANON_ACTOR`, `git user.name` or `$USER`. One resolution,
+/// so the line that says who you are acting as cannot disagree with the act.
+pub fn actor_from() -> (String, &'static str) {
     if let Ok(a) = std::env::var("CANON_ACTOR") {
-        return a;
+        return (a, "CANON_ACTOR");
     }
     let git = Command::new("git")
         .args(["config", "--get", "user.name"])
@@ -154,10 +161,17 @@ pub fn actor() -> String {
         .and_then(|o| String::from_utf8(o.stdout).ok())
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty());
-    let name = git
-        .or_else(|| std::env::var("USER").ok())
-        .unwrap_or_else(|| "unknown".into());
-    format!("human:{name}")
+    let (name, from) = match git {
+        Some(n) => (n, "git user.name"),
+        None => match std::env::var("USER") {
+            Ok(u) => (u, "$USER"),
+            Err(_) => (
+                "unknown".into(),
+                "nothing: no CANON_ACTOR, git name or $USER",
+            ),
+        },
+    };
+    (format!("human:{name}"), from)
 }
 
 /// Render a timestamp as `YYYY-MM-DD`.

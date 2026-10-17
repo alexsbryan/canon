@@ -36,7 +36,7 @@ use clap::{Arg, ArgAction, Command};
 const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("init", &["--profile"], &["--plain"]),
     ("add", &["--scope"], &[]),
-    ("review", &[], &["--json"]),
+    ("review", &["--scope"], &["--json"]),
     ("ui", &[], &[]),
     ("approve", &["-m"], &[]),
     ("object", &["-m"], &[]),
