@@ -305,7 +305,8 @@ pub fn ratification(args: &[String]) -> i32 {
             let Some(raw) = pos.get(1) else {
                 return fail(
                     "usage: canon ratification set \
-                     <standing|joint:a,b|threshold:n/m|consent:Nd|twice:<turnover|Nd>:<rule>> \
+                     <standing|joint:a,b|threshold:n/m|majority|unanimous|consent:Nd|\
+                     twice:<turnover|Nd>:<rule>> \
                      [--scope s] [--governs all|commitments] [--personal on|off] \
                      [-m \"<how it reads>\"]",
                 );
@@ -313,7 +314,8 @@ pub fn ratification(args: &[String]) -> i32 {
             let Some(rule) = canon_core::Ratify::parse(raw) else {
                 return fail(format!(
                     "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
-                     threshold:2/1, consent:7d, or twice:turnover:consent:7d"
+                     threshold:2/1, majority, unanimous, consent:7d, or \
+                     twice:turnover:consent:7d"
                 ));
             };
             let scope = match scope_from(args) {

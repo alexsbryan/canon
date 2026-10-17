@@ -296,7 +296,7 @@ proposal (§7): the person who approves it is the one deciding.
 commitment introduced by `assert` or `supersede` derives to `proposed`
 until the ratification rule of its scope is met, and to `active` once it
 is. The rule is the deepest `ratification` act covering the commitment's
-scope, else the canon-wide one, else `standing`. Five rules ship:
+scope, else the canon-wide one, else `standing`. Seven rules ship:
 
 - `standing` — a holder of the scope writes a rule directly; anyone
   else's write takes one holder's approval; a scope nobody holds is open
@@ -306,13 +306,30 @@ scope, else the canon-wide one, else `standing`. Five rules ship:
   objecting refuses it.
 - `threshold{approve, block}` — this many holders approving carries it,
   this many objecting refuses it.
+- `majority` — more than half of the people who hold the scope when the
+  proposal is written approving carries it. They are the only people it
+  counts, so somebody granted the scope later never moves it. It is refused
+  the moment more than half can no longer approve: enough of them have
+  taken a position `against`, or no longer hold the scope, that those left
+  are not more than half.
+- `unanimous` — every person who holds the scope when the proposal is
+  written approving carries it. A reasoned objection from one of them
+  refuses it, and so does one of them no longer holding the scope before
+  they approved.
 - `consent{days}` — a rule after this many days unless a holder objects
   with a reason.
 - `twice{each, between}` — carried under `each`, then again after
   `between`: `{"between":"days","days":N}` or `{"between":"turnover"}`,
   where turnover means somebody who did not hold the scope at the first
   vote has since been granted it. Nothing said before the gap counts toward
-  the second vote, and the writer's own act is never the second vote.
+  the second vote, and the writer's own act is never the second vote. Under
+  `majority` or `unanimous`, each vote counts the people who hold the scope
+  when that vote opens.
+
+Under `majority` and `unanimous`, a proposal written into a scope nobody
+holds is refused, since every share of nobody is reached at once. Neither
+rule waits on somebody who has stopped holding the scope, so a group that
+has shrunk can still decide, its ratification rule included.
 
 A reader that does not recognise a `rule` value MUST refuse the line, as it
 would any malformed known op. A new rule kind is therefore announced in this

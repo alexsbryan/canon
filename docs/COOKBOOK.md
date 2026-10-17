@@ -59,11 +59,19 @@ has to be asked who decides — it's a query.
 
 ### "How do we stop one person quietly rewriting the rules?"
 
-Say what makes a proposal into a rule. Five rules ship: `standing` (whoever
+Say what makes a proposal into a rule. Seven rules ship: `standing` (whoever
 holds the scope writes directly — the default), `joint:a,b` (everyone named),
-`threshold:n/m` (n approving carries, m objecting stops), `consent:Nd` (N
-days' silence carries it), `twice:<turnover|Nd>:<rule>` (carried twice, with
-somebody new or N days in between — below).
+`threshold:n/m` (n approving carries, m objecting stops), `majority` (more
+than half of whoever holds the scope when it's proposed), `unanimous`
+(everyone who holds it when it's proposed), `consent:Nd` (N days' silence
+carries it), `twice:<turnover|Nd>:<rule>` (carried twice, with somebody new
+or N days in between — below).
+
+`majority` and `unanimous` count the house as it stands when each proposal
+is written, so a house that grows or shrinks never needs its rule rewritten.
+A count fixed on the day the rule was chosen does: `threshold:4/1` in a house
+of four that one person leaves can never carry anything again, a change of
+the rule included.
 
 ```sh
 canon policy set consent --cautious \

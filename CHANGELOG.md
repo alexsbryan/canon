@@ -7,6 +7,28 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Before you upgrade
+
+- A canon that adopts `majority` or `unanimous` needs this release to read
+  it. Older canon refuses the `ratification` line and names the rule it
+  does not know, rather than fold every later decision under the wrong
+  rule. Every canon that doesn't adopt one reads exactly as before. Upgrade
+  everyone who reads a canon before anyone in it sets one.
+- For code built on `canon-core`: `Ratify` has `Majority` and `Unanimous`
+  variants, so an exhaustive `match` on it needs two more arms.
+
+### Changes
+
+- Two ratification rules count a share of the house as it stands when each
+  proposal is written: `canon ratification set majority` (more than half of
+  whoever holds the scope then) and `canon ratification set unanimous`
+  (all of them). Somebody who joins later never moves the count. Once the
+  share can no longer be reached, because enough of them said no or no
+  longer hold the scope, the proposal is refused and says why, so a house
+  that has shrunk can still decide, its rule of rules included. Under
+  `threshold:4/1`, a house of four that one person leaves can never carry
+  anything again.
+
 - [Self-hosting](./docs/SELF_HOST.md#run-it-your-way) says what the Slack
   bot needs to run without the container (nix, launchd, a tmux pane): the
   pinned canon, Python with `slack_bolt`, the environment it reads, one

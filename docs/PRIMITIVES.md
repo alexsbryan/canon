@@ -329,7 +329,7 @@ here:
 
 ```
 assert / supersede            a PROPOSAL, scoped
-ratification rule (per scope)  standing | joint{holders} | threshold{n/m} | consent{days}
+ratification rule (per scope)  standing | joint{holders} | threshold{n/m} | majority | unanimous | consent{days}
    ratify(proposal, positions, standing, now) -> ratified | proposed | refused
 grant / policy / ratification  applied only by somebody holding the scope, or the one above
 revert of somebody else's act  the same standing it would have taken to write it
@@ -633,7 +633,7 @@ sortition onto what it already does the way one adds a dependency.
 | Graduated sanctions | `op:decided` + `op:policy` + `policy:graduated` | built |
 | Rotating a shared resource | `op:allot` + `op:allocation` + `query:pool` | built |
 | Delegation, liquid democracy | `op:position`, and nothing types the chain | carried |
-| Quorum as a share of the eligible | nothing reads the electorate; `policy:supermajority` counts only those who spoke | absent |
+| Quorum as a share of the eligible | `op:ratification` + `op:grant` + `op:position`: `majority` and `unanimous` count everyone who held the scope when it was proposed; `policy:supermajority` still counts only those who spoke | built |
 | Choice among alternatives | no ballot over more than one proposal | absent |
 | Per-actor budgets, quadratic voting | no quantity on a position | absent |
 | Metered appropriation, booking a span | `op:allot` exists; nothing books part of a period | absent |

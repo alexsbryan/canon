@@ -21,8 +21,9 @@
 //! constitutional level, one step up — and then the act is judged under the
 //! rule in force for that scope when it was written, exactly as a commitment
 //! would be. Under `standing` a holder's change lands at once, which is what
-//! every canon did before; under `joint`, `threshold`, `consent` or `twice`
-//! it waits for the same people the old rule names. The amendment clause
+//! every canon did before; under `joint`, `threshold`, `majority`,
+//! `unanimous`, `consent` or `twice` it waits for the same people the old
+//! rule names. The amendment clause
 //! governs its own amendment, and nobody lowers the bar for their own corner
 //! without clearing the bar that stands. A ratified change takes effect from
 //! the moment it was ratified, not from the moment it was written.
@@ -92,6 +93,20 @@ pub enum Ratify {
     /// This many holders approving carries it; this many objecting refuses
     /// it. The proposer counts as approving when they hold the scope.
     Threshold { approve: usize, block: usize },
+    /// More than half of the people who hold the scope when it is proposed
+    /// approving carries it. Counted against the house as it stood then, so
+    /// nobody who joins later moves the count, and a count of the house on
+    /// the day the rule was chosen cannot outlive the house: once more than
+    /// half can no longer approve — they said no, or no longer hold the
+    /// scope — it is refused, and can be proposed again to the house as it
+    /// is.
+    Majority,
+    /// Every person who holds the scope when it is proposed approving
+    /// carries it. One of them objecting with a reason refuses it, and so
+    /// does one of them no longer holding the scope before they approved:
+    /// everyone can no longer agree, so it is refused rather than waiting
+    /// for someone who has gone.
+    Unanimous,
     /// It becomes a rule after this many days unless a holder objects with a
     /// reason. One reasoned objection refuses it. Silence is consent.
     Consent { days: u32 },
@@ -118,6 +133,8 @@ impl Ratify {
             Self::Standing => "standing".into(),
             Self::Joint { holders } => format!("joint:{}", holders.join(",")),
             Self::Threshold { approve, block } => format!("threshold:{approve}/{block}"),
+            Self::Majority => "majority".into(),
+            Self::Unanimous => "unanimous".into(),
             Self::Consent { days } => format!("consent:{days}d"),
             Self::Twice { each, between } => format!("twice:{}:{}", between.name(), each.name()),
         }
@@ -139,6 +156,14 @@ impl Ratify {
             Self::Threshold { approve, block } => format!(
                 "A rule here takes {approve} holder(s) approving; {block} objecting refuses it."
             ),
+            Self::Majority => "A rule here takes more than half of the people who hold this \
+                               scope when it is proposed. It is refused once that can no longer \
+                               happen."
+                .into(),
+            Self::Unanimous => "A rule here takes everyone who holds this scope when it is \
+                                proposed. One of them objecting, or no longer holding it before \
+                                they approve, refuses it."
+                .into(),
             Self::Consent { days } => format!(
                 "A proposal here becomes a rule after {days} day(s) unless a holder objects \
                  with a reason."
@@ -165,12 +190,16 @@ impl Ratify {
     }
 
     /// The one spelling, shared by the CLI and the seed dialect:
-    /// `standing`, `joint:dana,sam`, `threshold:2/1`, `consent:7d`,
-    /// `twice:turnover:consent:7d`, `twice:90d:threshold:2/1`.
+    /// `standing`, `joint:dana,sam`, `threshold:2/1`, `majority`,
+    /// `unanimous`, `consent:7d`, `twice:turnover:consent:7d`,
+    /// `twice:90d:threshold:2/1`.
     pub fn parse(raw: &str) -> Option<Self> {
         let raw = raw.trim();
-        if raw == "standing" {
-            return Some(Self::Standing);
+        match raw {
+            "standing" => return Some(Self::Standing),
+            "majority" => return Some(Self::Majority),
+            "unanimous" => return Some(Self::Unanimous),
+            _ => {}
         }
         if let Some(rest) = raw.strip_prefix("joint:") {
             let holders: Vec<String> = rest
@@ -901,6 +930,7 @@ impl Canon {
                     ),
                 }
             }
+            Ratify::Majority | Ratify::Unanimous => self.judge_share(rule, p, t, from, now),
             Ratify::Consent { days } => {
                 let due = from + i64::from(*days) * DAY;
                 Outcome {
@@ -919,6 +949,181 @@ impl Canon {
             }
             Ratify::Twice { .. } => unreachable!("twice is judged by judge_twice"),
         }
+    }
+
+    /// `majority` and `unanimous`: a share of the people who held the scope
+    /// when the vote opened, at `from`, counted against them alone. Somebody
+    /// who joins later never moves the count, so history stays still; and the
+    /// moment the share can no longer be reached — enough of them said no, or
+    /// no longer hold the scope — it is refused, so a house that has shrunk is
+    /// never left waiting on people who have gone, its rule of rules
+    /// included. A fixed count chosen on the day the house was four reaches
+    /// neither of those.
+    fn judge_share(&self, rule: &Ratify, p: &Proposal, t: &Tally, from: i64, now: i64) -> Outcome {
+        let here = where_(p.scope);
+        let voters = self.holders_at(p.scope, from);
+        let n = voters.len();
+        let all = matches!(rule, Ratify::Unanimous);
+        if n == 0 {
+            // Every share of nobody is reached at once, which would make an
+            // empty scope's first write law; refusing says why instead.
+            return Outcome {
+                completed: None,
+                refused: Some((
+                    from,
+                    String::new(),
+                    format!("nobody held {here} when it was proposed"),
+                )),
+                needs: String::new(),
+            };
+        }
+        let needed = if all { n } else { n / 2 + 1 };
+        let approved: Vec<(&str, i64)> = t
+            .approved
+            .iter()
+            .filter(|(who, _)| voters.contains(who))
+            .copied()
+            .collect();
+        let completed = approved.get(needed - 1).map(|(_, at)| {
+            let how = if all {
+                format!("approved by all {n} people who held {here} when it was proposed")
+            } else {
+                format!("{needed} of the {n} people who held {here} when it was proposed approved")
+            };
+            (*at, how)
+        });
+        // Who can no longer approve, and from when: their first word against
+        // (a reasoned objection under `unanimous`, as under `joint`; any
+        // position against under `majority`, as `threshold` counts its
+        // block), or the moment their standing ended. An approval first
+        // keeps them counted, whatever they said after: first word wins.
+        let mut lost: Vec<(i64, &str, Option<&str>)> = Vec::new();
+        for &voter in &voters {
+            let said = if all {
+                t.objections
+                    .iter()
+                    .find(|(_, by, _)| *by == voter)
+                    .map(|(at, _, why)| (*at, Some(*why)))
+            } else {
+                t.against
+                    .iter()
+                    .find(|(_, by)| *by == voter)
+                    .map(|(at, by)| {
+                        let why = t
+                            .objections
+                            .iter()
+                            .find(|(o, b, _)| o == at && b == by)
+                            .map(|(_, _, why)| *why);
+                        (*at, why)
+                    })
+            };
+            let ended = self
+                .holding_ended(p.scope, voter, from, now)
+                .map(|at| (at, None));
+            let Some((at, why)) = [said, ended]
+                .into_iter()
+                .flatten()
+                .min_by_key(|(at, _)| *at)
+            else {
+                continue;
+            };
+            let first_yes = approved.iter().find(|(who, _)| *who == voter);
+            if first_yes.is_none_or(|(_, yes)| *yes > at) {
+                lost.push((at, voter, why));
+            }
+        }
+        lost.sort();
+        let refused = lost
+            .iter()
+            .enumerate()
+            .find(|(i, _)| n - (i + 1) < needed)
+            .map(|(i, &(at, voter, why))| match why {
+                Some(why) => (at, voter.to_string(), why.to_string()),
+                None if all => (
+                    at,
+                    String::new(),
+                    format!(
+                        "{voter} said no or no longer holds {here}, so everyone who held it \
+                         when it was proposed can no longer approve it"
+                    ),
+                ),
+                // As under `threshold`: the first reasoned objection among
+                // them, if any, is the quoted why.
+                None => lost[..=i]
+                    .iter()
+                    .find_map(|(_, by, why)| why.map(|why| (at, by.to_string(), why.to_string())))
+                    .unwrap_or_else(|| {
+                        (
+                            at,
+                            String::new(),
+                            format!(
+                                "{} of the {n} people who held {here} when it was proposed said \
+                                 no or no longer hold it, so more than half can no longer \
+                                 approve it",
+                                i + 1
+                            ),
+                        )
+                    }),
+            });
+        let needs = if all {
+            let missing: Vec<&str> = voters
+                .iter()
+                .copied()
+                .filter(|v| !approved.iter().any(|(who, _)| who == v))
+                .collect();
+            format!(
+                "approval from {}: everyone who held {here} when it was proposed",
+                missing.join(", ")
+            )
+        } else {
+            format!(
+                "{} more approval(s) from the {n} people who held {here} when it was proposed",
+                needed.saturating_sub(approved.len())
+            )
+        };
+        Outcome {
+            completed,
+            refused,
+            needs,
+        }
+    }
+
+    /// The first moment after `from`, up to `now`, at which `actor` no longer
+    /// counts as holding `scope`: a withdrawal, a lapse, or someone granted a
+    /// narrower level of it, which moves who counts. Only a moment a grant
+    /// begins or ends, or personal scopes are switched, can change that, so
+    /// those are the moments read.
+    fn holding_ended(
+        &self,
+        scope: Option<&Scope>,
+        actor: &str,
+        from: i64,
+        now: i64,
+    ) -> Option<i64> {
+        let mut moments: Vec<i64> = self
+            .grants
+            .iter()
+            .flat_map(|g| {
+                [
+                    Some(g.granted_at),
+                    g.withdrawn_at,
+                    g.horizon.map(|h| h.saturating_add(1)),
+                ]
+            })
+            .chain(
+                self.personal
+                    .on
+                    .iter()
+                    .flat_map(|(since, until, _)| [Some(*since), *until]),
+            )
+            .flatten()
+            .filter(|at| *at > from && *at <= now)
+            .collect();
+        moments.sort_unstable();
+        moments.dedup();
+        moments
+            .into_iter()
+            .find(|at| !self.holder_at(scope, actor, *at))
     }
 
     fn judge_twice(&self, each: &Ratify, between: &Between, p: &Proposal, now: i64) -> Verdict {
@@ -1072,8 +1277,11 @@ mod tests {
             "standing",
             "joint:human:dana,human:sam",
             "threshold:2/1",
+            "majority",
+            "unanimous",
             "consent:7d",
             "twice:turnover:standing",
+            "twice:7d:majority",
             "twice:90d:joint:human:dana,human:sam",
             "twice:turnover:consent:14d",
         ] {

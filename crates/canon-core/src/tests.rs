@@ -2973,3 +2973,189 @@ fn new_fields_write_v4_and_absent_fields_do_not() {
     let back = Log::parse(&line).expect("a v4 line is readable");
     assert_eq!(back.acts()[0], knob);
 }
+
+// ── shares: a house counted as it stands when it is asked ─────────────
+
+fn granted_by(holder: &str, s: &str, ts: i64, by: &str) -> Act {
+    Act::new(
+        ActKind::Grant {
+            holder: holder.into(),
+            scope: scope(s),
+            horizon: None,
+            rationale: String::new(),
+        },
+        ts,
+        by,
+    )
+}
+
+fn moves_out(holder: &str, s: &str, ts: i64) -> Act {
+    Act::new(
+        ActKind::Withdraw {
+            holder: holder.into(),
+            scope: scope(s),
+            rationale: "moving out".into(),
+        },
+        ts,
+        holder,
+    )
+}
+
+/// Ana founds the house with these people, all in one sitting, under `rule`.
+fn a_house_of(people: &[&str], rule: &str) -> Vec<Act> {
+    let mut acts: Vec<Act> = people
+        .iter()
+        .map(|p| granted_by(p, "house", 10, "human:ana"))
+        .collect();
+    acts.push(ratification_at(rule, "house", 20, "human:ana"));
+    acts
+}
+
+/// A rule proposed into the house.
+fn proposed(text: &str, ts: i64, actor: &str) -> (Act, Act) {
+    let rule = assert_at(text, ts, actor);
+    let into = scoped_at(&rule.id, "house", ts);
+    (rule, into)
+}
+
+#[test]
+fn a_unanimous_house_that_shrinks_still_decides_and_can_change_its_rule() {
+    // Four agreed that everything takes all of them. Dee moves out. A count
+    // of the house as it was would wait on Dee for ever, and the rule of
+    // rules with it: nothing could pass, not even a change of how things pass.
+    let mut acts = a_house_of(
+        &["human:ana", "human:bo", "human:cy", "human:dee"],
+        "unanimous",
+    );
+    acts.push(moves_out("human:dee", "house", 100));
+    let (quiet, into) = proposed("Quiet after ten.", 200, "human:ana");
+    acts.extend([quiet.clone(), into]);
+    acts.push(approve_at(&quiet.id, 300, "human:bo"));
+    acts.push(approve_at(&quiet.id, 300, "human:cy"));
+    let looser = ratification_at("majority", "house", 400, "human:bo");
+    acts.push(looser.clone());
+    acts.push(approve_at(&looser.id, 500, "human:ana"));
+    acts.push(approve_at(&looser.id, 500, "human:cy"));
+    let canon = Log::from_acts(acts).derive();
+    assert!(
+        matches!(canon.get(&quiet.id).unwrap().status, Status::Active),
+        "the three who live here agreed: {:?}",
+        canon.get(&quiet.id).unwrap().status
+    );
+    let crate::ratify::Verdict::Ratified { how, .. } = verdict_of(&canon, &looser.id) else {
+        panic!("the house as it is changed its own rule")
+    };
+    assert!(how.contains("all 3 people"), "{how}");
+    assert_eq!(
+        canon.ratification_for(Some(&scope("house"))).name(),
+        "majority"
+    );
+}
+
+#[test]
+fn a_majority_is_of_the_house_when_the_proposal_was_written() {
+    // Three chose "most of us". Two more move in; a proposal written after
+    // takes three of the five, and two is not most of them.
+    let mut acts = a_house_of(&["human:ana", "human:bo", "human:cy"], "majority");
+    acts.push(granted_by("human:eve", "house", 50, "human:ana"));
+    acts.push(granted_by("human:fay", "house", 50, "human:ana"));
+    let (bikes, into) = proposed("Bikes in the shed.", 100, "human:bo");
+    acts.extend([bikes.clone(), into]);
+    acts.push(approve_at(&bikes.id, 200, "human:ana"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    let Status::Proposed { needs } = &canon.get(&bikes.id).unwrap().status else {
+        panic!(
+            "two of five is not most: {:?}",
+            canon.get(&bikes.id).unwrap().status
+        )
+    };
+    assert_eq!(
+        needs,
+        "1 more approval(s) from the 5 people who held house when it was proposed"
+    );
+    acts.push(approve_at(&bikes.id, 300, "human:eve"));
+    let canon = Log::from_acts(acts).derive();
+    assert!(
+        matches!(canon.get(&bikes.id).unwrap().status, Status::Active),
+        "three of five"
+    );
+}
+
+#[test]
+fn under_unanimous_one_reasoned_objection_refuses() {
+    let mut acts = a_house_of(&["human:ana", "human:bo", "human:cy"], "unanimous");
+    let (pets, into) = proposed("A cat may live here.", 100, "human:ana");
+    acts.extend([pets.clone(), into]);
+    acts.push(approve_at(&pets.id, 200, "human:bo"));
+    acts.push(object_at(&pets.id, 250, "human:cy", "I'm allergic"));
+    acts.push(approve_at(&pets.id, 300, "human:cy"));
+    let canon = Log::from_acts(acts).derive();
+    let Status::Refused { by, why, at } = &canon.get(&pets.id).unwrap().status else {
+        panic!("one objection refuses it, and a yes after it does not unmake that")
+    };
+    assert_eq!(
+        (by.as_str(), why.as_str(), *at),
+        ("human:cy", "I'm allergic", 250)
+    );
+}
+
+#[test]
+fn under_unanimous_someone_moving_out_before_they_approve_refuses_it() {
+    // Waiting on someone who has gone is the deadlock this rule exists to
+    // avoid: refused, said, and free to be proposed again to the house as it is.
+    let mut acts = a_house_of(&["human:ana", "human:bo", "human:cy"], "unanimous");
+    let (paint, into) = proposed("Paint the hall green.", 100, "human:ana");
+    acts.extend([paint.clone(), into]);
+    acts.push(approve_at(&paint.id, 150, "human:bo"));
+    acts.push(moves_out("human:cy", "house", 200));
+    let canon = Log::from_acts(acts).derive();
+    let Status::Refused { by, why, at } = &canon.get(&paint.id).unwrap().status else {
+        panic!(
+            "cy is gone, so everyone can no longer agree: {:?}",
+            canon.get(&paint.id).unwrap().status
+        )
+    };
+    assert_eq!((by.as_str(), *at), ("", 200));
+    assert!(
+        why.contains("human:cy") && why.contains("no longer holds house"),
+        "{why}"
+    );
+}
+
+#[test]
+fn somebody_who_joins_later_does_not_count_toward_what_was_already_asked() {
+    let mut acts = a_house_of(&["human:ana", "human:bo", "human:cy"], "majority");
+    let (rota, into) = proposed("A cleaning rota.", 100, "human:ana");
+    acts.extend([rota.clone(), into]);
+    acts.push(granted_by("human:eve", "house", 150, "human:ana"));
+    acts.push(approve_at(&rota.id, 200, "human:eve"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    let Status::Proposed { needs } = &canon.get(&rota.id).unwrap().status else {
+        panic!(
+            "eve was not here when it was asked: {:?}",
+            canon.get(&rota.id).unwrap().status
+        )
+    };
+    assert!(
+        needs.starts_with("1 more approval(s) from the 3 people"),
+        "{needs}"
+    );
+}
+
+#[test]
+fn a_share_rule_is_a_rule_kind_and_an_older_reader_refuses_it_by_name() {
+    // SPEC 6: a new rule kind is announced in the list, not versioned. Its
+    // line is written at the version its envelope needs, and a reader that
+    // does not know the kind refuses the line and says which, rather than
+    // fold the house under a rule of rules it cannot read.
+    let unanimous = ratification_at("unanimous", "house", 20, "human:ana");
+    assert_eq!(unanimous.v, UNSIGNED_VERSION);
+    let line = serde_json::to_string(&unanimous).unwrap();
+    assert!(line.contains(r#""rule":{"rule":"unanimous"}"#), "{line}");
+    assert_eq!(Log::parse(&line).expect("readable").acts()[0], unanimous);
+    let unknown = line.replace(r#""rule":"unanimous""#, r#""rule":"plurality""#);
+    let Err(ParseError::Malformed { detail, .. }) = Log::parse(&unknown) else {
+        panic!("an unknown rule is refused, not carried")
+    };
+    assert!(detail.contains("plurality"), "{detail}");
+}

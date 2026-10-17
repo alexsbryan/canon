@@ -328,8 +328,9 @@ from the next second. Typed by hand, you never notice.
 **Ratification** is how a written proposal becomes a rule: `standing`
 (whoever holds the scope writes directly — the default, and what every
 canon did before there was a choice), `joint:a,b` (everyone named),
-`threshold:2/1` (two approving carries, one objecting stops), or
-`consent:7d` (seven days' silence carries it). Set it per scope. The
+`threshold:2/1` (two approving carries, one objecting stops), `majority`
+(more than half of whoever holds the scope when it's proposed), `unanimous`
+(all of them), or `consent:7d` (seven days' silence carries it). Set it per scope. The
 deepest one wins, so the kitchen can decide differently from the house
 and neither has to know about the other.
 

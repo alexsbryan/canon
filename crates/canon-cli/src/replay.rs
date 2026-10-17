@@ -1148,7 +1148,8 @@ pub fn run(args: &[String]) -> i32 {
             None => {
                 return fail(format!(
                     "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
-                     threshold:2/1, consent:7d, or twice:turnover:consent:7d"
+                     threshold:2/1, majority, unanimous, consent:7d, or \
+                     twice:turnover:consent:7d"
                 ))
             }
         },
