@@ -22,8 +22,8 @@
 //! rule in force for that scope when it was written, exactly as a commitment
 //! would be. Under `standing` a holder's change lands at once, which is what
 //! every canon did before; under `joint`, `threshold`, `majority`,
-//! `unanimous`, `consent` or `twice` it waits for the same people the old
-//! rule names. The amendment clause
+//! `unanimous`, `share`, `consent` or `twice` it waits for the same people
+//! the old rule names. The amendment clause
 //! governs its own amendment, and nobody lowers the bar for their own corner
 //! without clearing the bar that stands. A ratified change takes effect from
 //! the moment it was ratified, not from the moment it was written.
@@ -79,6 +79,241 @@ pub enum Between {
     Turnover,
 }
 
+/// The share of the people who held a scope that a share rule needs: at
+/// least `numerator/denominator` of them, or more than that.
+///
+/// **A fraction of people, kept exact.** Two-thirds of a house of three is
+/// two; 67% of it would be three. So the bar is a fraction, and what it needs
+/// of `n` people is integer arithmetic ([`Bar::needed`]).
+///
+/// **Every bar is one a house can reach, and none is reached by nobody.**
+/// The denominator is not 0, the share is not more than everyone, and "at
+/// least none of them" is not a bar. [`Bar::new`] refuses the rest, and so
+/// does reading one from a record, so judging a proposal never divides by
+/// zero and never waits on more people than there are.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(try_from = "BarFields")]
+pub struct Bar {
+    numerator: u32,
+    denominator: u32,
+    more_than: bool,
+}
+
+/// A bar as a record spells it, before it is known to be one.
+#[derive(Deserialize)]
+struct BarFields {
+    numerator: u32,
+    denominator: u32,
+    more_than: bool,
+}
+
+impl TryFrom<BarFields> for Bar {
+    type Error = BadBar;
+    fn try_from(f: BarFields) -> Result<Self, BadBar> {
+        Self::checked(f.numerator, f.denominator, f.more_than)
+    }
+}
+
+/// Why a share is not one a house could use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BadBar {
+    /// Out of 0: there is no whole to take a share of.
+    OutOfNothing,
+    /// At least none of them: it would carry before anyone approved.
+    Nobody,
+    /// More than everyone: nothing could ever carry.
+    MoreThanEveryone,
+}
+
+impl core::fmt::Display for BadBar {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(match self {
+            Self::OutOfNothing => {
+                "a share out of 0 is no share: the number after the slash can't be 0"
+            }
+            Self::Nobody => "a share of none of them would make a rule before anyone approved it",
+            Self::MoreThanEveryone => {
+                "that is more than everyone who holds the scope, so nothing could ever carry"
+            }
+        })
+    }
+}
+
+/// Why a spelling is not a ratification rule.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NotARule {
+    /// No rule is spelled this way.
+    Unknown,
+    /// `share:` followed by neither a whole percent nor a fraction.
+    Share,
+    /// A share no house could use.
+    Bar(BadBar),
+}
+
+impl core::fmt::Display for NotARule {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Unknown => f.write_str("not a ratification rule"),
+            // A shell reads `>` as a redirect, so an unquoted `share:>1/2`
+            // arrives as `share:` and lands here: say how to type it.
+            Self::Share => f.write_str(
+                "a share is a whole percent or a fraction of the people who hold the scope: \
+                 share:60%, share:2/3, or 'share:>1/2' for more than half (quoted, so the \
+                 shell leaves the > alone)",
+            ),
+            Self::Bar(bad) => bad.fmt(f),
+        }
+    }
+}
+
+impl Bar {
+    /// More than half: what `majority` takes.
+    pub const MAJORITY: Self = Self {
+        numerator: 1,
+        denominator: 2,
+        more_than: true,
+    };
+    /// All of them: what `unanimous` takes.
+    pub const EVERYONE: Self = Self {
+        numerator: 1,
+        denominator: 1,
+        more_than: false,
+    };
+
+    /// At least `numerator/denominator` of the people, or more than that,
+    /// in lowest terms. Refused if no house could use it.
+    pub fn new(numerator: u32, denominator: u32, more_than: bool) -> Result<Self, BadBar> {
+        let (numerator, denominator) = Self::checked(numerator, denominator, more_than)?.lowest();
+        Ok(Self {
+            numerator,
+            denominator,
+            more_than,
+        })
+    }
+
+    /// Refused if no house could use it, and otherwise kept as written. A
+    /// bar read from a record keeps the record's numbers, so the act renders
+    /// to the bytes it was signed as; 6/10 and 3/5 take the same people.
+    fn checked(numerator: u32, denominator: u32, more_than: bool) -> Result<Self, BadBar> {
+        if denominator == 0 {
+            return Err(BadBar::OutOfNothing);
+        }
+        if numerator > denominator || (more_than && numerator == denominator) {
+            return Err(BadBar::MoreThanEveryone);
+        }
+        if numerator == 0 && !more_than {
+            return Err(BadBar::Nobody);
+        }
+        Ok(Self {
+            numerator,
+            denominator,
+            more_than,
+        })
+    }
+
+    pub fn numerator(&self) -> u32 {
+        self.numerator
+    }
+
+    pub fn denominator(&self) -> u32 {
+        self.denominator
+    }
+
+    /// More than the fraction, rather than at least it.
+    pub fn more_than(&self) -> bool {
+        self.more_than
+    }
+
+    /// How many of `n` people it takes: ⌈a·n/b⌉ for at least a/b, and
+    /// ⌊a·n/b⌋ + 1 for more than a/b. In whole numbers, so there is no
+    /// rounding to argue over, and widened so no size of house overflows it.
+    /// For any house of at least one it is between 1 and `n`, because
+    /// [`Bar::checked`] refused every bar that is not.
+    pub fn needed(&self, n: usize) -> usize {
+        let (a, b, n) = (
+            u128::from(self.numerator),
+            u128::from(self.denominator),
+            n as u128,
+        );
+        let needed = if self.more_than {
+            a * n / b + 1
+        } else {
+            (a * n).div_ceil(b)
+        };
+        needed as usize
+    }
+
+    /// Whether it takes everyone: the one bar under which a single person
+    /// decides, whatever the size of the house.
+    pub fn is_everyone(&self) -> bool {
+        !self.more_than && self.numerator == self.denominator
+    }
+
+    fn is_majority(&self) -> bool {
+        self.more_than && self.lowest() == (1, 2)
+    }
+
+    fn lowest(&self) -> (u32, u32) {
+        let (mut a, mut b) = (self.numerator, self.denominator);
+        while b != 0 {
+            (a, b) = (b, a % b);
+        }
+        // `a` is now the greatest common divisor, at least 1 because the
+        // denominator is not 0.
+        (self.numerator / a, self.denominator / a)
+    }
+
+    /// The share as a person writes it: a percent when it is a whole one —
+    /// its denominator divides 100 — and otherwise the fraction, so 3/5 is
+    /// `60%` and 2/3 stays `2/3`.
+    fn amount(&self) -> String {
+        let (a, b) = self.lowest();
+        if 100 % b == 0 {
+            format!("{}%", a * (100 / b))
+        } else {
+            format!("{a}/{b}")
+        }
+    }
+
+    /// What follows `share:` in the spelling.
+    fn spelling(&self) -> String {
+        let more = if self.more_than { ">" } else { "" };
+        format!("{more}{}", self.amount())
+    }
+
+    /// What it takes, in a sentence: "more than half", "60%", "more than
+    /// 2/3", "everyone".
+    pub fn phrase(&self) -> String {
+        if self.is_majority() {
+            "more than half".into()
+        } else if self.is_everyone() {
+            "everyone".into()
+        } else if self.more_than {
+            format!("more than {}", self.amount())
+        } else {
+            self.amount()
+        }
+    }
+
+    /// `60%`, `2/3`, `>50%`, `>1/2`: the part after `share:`.
+    fn parse(raw: &str) -> Result<Self, NotARule> {
+        let raw = raw.trim();
+        let (more_than, amount) = match raw.strip_prefix('>') {
+            Some(rest) => (true, rest.trim()),
+            None => (false, raw),
+        };
+        let whole = |s: &str| s.trim().parse::<u32>().map_err(|_| NotARule::Share);
+        let (numerator, denominator) = match amount.strip_suffix('%') {
+            Some(percent) => (whole(percent)?, 100),
+            None => {
+                let (a, b) = amount.split_once('/').ok_or(NotARule::Share)?;
+                (whole(a)?, whole(b)?)
+            }
+        };
+        Self::new(numerator, denominator, more_than).map_err(NotARule::Bar)
+    }
+}
+
 /// How a proposal in a scope becomes a rule.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "rule", rename_all = "snake_case")]
@@ -107,6 +342,12 @@ pub enum Ratify {
     /// everyone can no longer agree, so it is refused rather than waiting
     /// for someone who has gone.
     Unanimous,
+    /// At least, or more than, a share of the people who hold the scope when
+    /// it is proposed approving carries it: `share:60%`, `share:2/3`. Counted
+    /// and refused as `majority` is. More than half is spelled `majority`
+    /// and all of them `unanimous`, so a record names those two the way
+    /// 0.4.0 reads them, and one bar has one spelling.
+    Share(Bar),
     /// It becomes a rule after this many days unless a holder objects with a
     /// reason. One reasoned objection refuses it. Silence is consent.
     Consent { days: u32 },
@@ -135,8 +376,40 @@ impl Ratify {
             Self::Threshold { approve, block } => format!("threshold:{approve}/{block}"),
             Self::Majority => "majority".into(),
             Self::Unanimous => "unanimous".into(),
+            Self::Share(bar) => match Self::of_bar(*bar) {
+                Self::Share(bar) => format!("share:{}", bar.spelling()),
+                same => same.name(),
+            },
             Self::Consent { days } => format!("consent:{days}d"),
             Self::Twice { each, between } => format!("twice:{}:{}", between.name(), each.name()),
+        }
+    }
+
+    /// The share of the house a share rule takes; `None` for a rule that
+    /// counts something else. The one place `majority` and `unanimous` say
+    /// which share they are, so all three are judged by one count.
+    pub fn bar(&self) -> Option<Bar> {
+        match self {
+            Self::Majority => Some(Bar::MAJORITY),
+            Self::Unanimous => Some(Bar::EVERYONE),
+            Self::Share(bar) => Some(*bar),
+            Self::Standing
+            | Self::Joint { .. }
+            | Self::Threshold { .. }
+            | Self::Consent { .. }
+            | Self::Twice { .. } => None,
+        }
+    }
+
+    /// A bar as the rule it is: more than half is `majority` and all of them
+    /// is `unanimous`, whichever way it was spelled.
+    fn of_bar(bar: Bar) -> Self {
+        if bar.is_majority() {
+            Self::Majority
+        } else if bar.is_everyone() {
+            Self::Unanimous
+        } else {
+            Self::Share(bar)
         }
     }
 
@@ -164,6 +437,19 @@ impl Ratify {
                                 proposed. One of them objecting, or no longer holding it before \
                                 they approve, refuses it."
                 .into(),
+            Self::Share(bar) => match Self::of_bar(*bar) {
+                Self::Share(bar) => format!(
+                    "A rule here takes {} {} of the people who hold this scope when it is \
+                     proposed. It is refused once that can no longer happen.",
+                    if bar.more_than {
+                        "more than"
+                    } else {
+                        "at least"
+                    },
+                    bar.amount()
+                ),
+                same => same.prose(),
+            },
             Self::Consent { days } => format!(
                 "A proposal here becomes a rule after {days} day(s) unless a holder objects \
                  with a reason."
@@ -189,16 +475,31 @@ impl Ratify {
         }
     }
 
+    /// A rule from its spelling, or `None`. [`Ratify::from_str`] says why
+    /// not.
+    pub fn parse(raw: &str) -> Option<Self> {
+        raw.parse().ok()
+    }
+}
+
+impl core::str::FromStr for Ratify {
+    type Err = NotARule;
+
     /// The one spelling, shared by the CLI and the seed dialect:
     /// `standing`, `joint:dana,sam`, `threshold:2/1`, `majority`,
-    /// `unanimous`, `consent:7d`, `twice:turnover:consent:7d`,
-    /// `twice:90d:threshold:2/1`.
-    pub fn parse(raw: &str) -> Option<Self> {
+    /// `unanimous`, `share:60%`, `share:2/3`, `share:>2/3`, `consent:7d`,
+    /// `twice:turnover:consent:7d`, `twice:90d:threshold:2/1`.
+    ///
+    /// `threshold:2/1` and `share:2/3` both have a slash and mean different
+    /// things: two people approving and one objecting, against two-thirds
+    /// of the people who hold the scope.
+    fn from_str(raw: &str) -> Result<Self, NotARule> {
+        use NotARule::Unknown;
         let raw = raw.trim();
         match raw {
-            "standing" => return Some(Self::Standing),
-            "majority" => return Some(Self::Majority),
-            "unanimous" => return Some(Self::Unanimous),
+            "standing" => return Ok(Self::Standing),
+            "majority" => return Ok(Self::Majority),
+            "unanimous" => return Ok(Self::Unanimous),
             _ => {}
         }
         if let Some(rest) = raw.strip_prefix("joint:") {
@@ -208,45 +509,57 @@ impl Ratify {
                 .filter(|s| !s.is_empty())
                 .map(str::to_string)
                 .collect();
-            return (!holders.is_empty()).then_some(Self::Joint { holders });
+            return if holders.is_empty() {
+                Err(Unknown)
+            } else {
+                Ok(Self::Joint { holders })
+            };
         }
         if let Some(rest) = raw.strip_prefix("threshold:") {
-            let (a, b) = rest.split_once('/')?;
-            return Some(Self::Threshold {
-                approve: a.trim().parse().ok()?,
-                block: b.trim().parse().ok()?,
+            let (a, b) = rest.split_once('/').ok_or(Unknown)?;
+            return Ok(Self::Threshold {
+                approve: a.trim().parse().map_err(|_| Unknown)?,
+                block: b.trim().parse().map_err(|_| Unknown)?,
             });
+        }
+        if let Some(rest) = raw.strip_prefix("share:") {
+            // One bar, one spelling: more than half and all of them come
+            // back as the rules 0.4.0 already reads.
+            return Bar::parse(rest).map(Self::of_bar);
         }
         if let Some(rest) = raw.strip_prefix("consent:") {
             let days = rest.trim().strip_suffix('d').unwrap_or(rest.trim());
-            return Some(Self::Consent {
-                days: days.parse().ok()?,
+            return Ok(Self::Consent {
+                days: days.parse().map_err(|_| Unknown)?,
             });
         }
         if let Some(rest) = raw.strip_prefix("twice:") {
             // The tail is the inner rule, so nested colons are unambiguous.
-            let (gap, inner) = rest.split_once(':')?;
+            let (gap, inner) = rest.split_once(':').ok_or(Unknown)?;
             let between = match gap.trim() {
                 "turnover" => Between::Turnover,
                 d => {
-                    let days: u32 = d.strip_suffix('d')?.parse().ok()?;
+                    let days: u32 = d
+                        .strip_suffix('d')
+                        .and_then(|d| d.parse().ok())
+                        .ok_or(Unknown)?;
                     if days == 0 {
-                        return None;
+                        return Err(Unknown);
                     }
                     Between::Days { days }
                 }
             };
-            let each = Self::parse(inner)?;
+            let each: Self = inner.parse()?;
             // Twice over twice reads as nothing a person could explain.
             if matches!(each, Self::Twice { .. }) {
-                return None;
+                return Err(Unknown);
             }
-            return Some(Self::Twice {
+            return Ok(Self::Twice {
                 each: Box::new(each),
                 between,
             });
         }
-        None
+        Err(Unknown)
     }
 }
 
@@ -695,6 +1008,26 @@ impl Canon {
         }
     }
 
+    /// What the people a share counts held, by name: a scope is its own
+    /// name, and the whole canon is the scopes that held it at `at` — "the
+    /// 30 people who held house", where "who held this canon" names nothing
+    /// anyone was granted.
+    fn held_then(&self, scope: Option<&Scope>, at: i64) -> String {
+        if scope.is_some() {
+            return where_(scope);
+        }
+        let scopes: Vec<String> = self
+            .canon_scopes(at)
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        match scopes.split_last() {
+            None => where_(None),
+            Some((only, [])) => only.clone(),
+            Some((last, rest)) => format!("{} or {last}", rest.join(", ")),
+        }
+    }
+
     fn holder_at(&self, scope: Option<&Scope>, actor: &str, at: i64) -> bool {
         is_human(actor) && self.holders_at(scope, at).contains(actor)
     }
@@ -806,6 +1139,9 @@ impl Canon {
     /// One rule, one tally. `from` is when the clock starts for `consent`
     /// and the moment a holder's own write lands under `standing`.
     fn judge_once(&self, rule: &Ratify, p: &Proposal, t: &Tally, from: i64, now: i64) -> Outcome {
+        if let Some(bar) = rule.bar() {
+            return self.judge_share(bar, p, t, from, now);
+        }
         let here = where_(p.scope);
         let objection = |o: Option<(i64, &str, &str)>| {
             o.map(|(at, by, why)| (at, by.to_string(), why.to_string()))
@@ -930,7 +1266,9 @@ impl Canon {
                     ),
                 }
             }
-            Ratify::Majority | Ratify::Unanimous => self.judge_share(rule, p, t, from, now),
+            Ratify::Majority | Ratify::Unanimous | Ratify::Share(_) => {
+                unreachable!("a share of the house is judged by judge_share")
+            }
             Ratify::Consent { days } => {
                 let due = from + i64::from(*days) * DAY;
                 Outcome {
@@ -951,19 +1289,27 @@ impl Canon {
         }
     }
 
-    /// `majority` and `unanimous`: a share of the people who held the scope
-    /// when the vote opened, at `from`, counted against them alone. Somebody
-    /// who joins later never moves the count, so history stays still; and the
-    /// moment the share can no longer be reached — enough of them said no, or
-    /// no longer hold the scope — it is refused, so a house that has shrunk is
-    /// never left waiting on people who have gone, its rule of rules
-    /// included. A fixed count chosen on the day the house was four reaches
-    /// neither of those.
-    fn judge_share(&self, rule: &Ratify, p: &Proposal, t: &Tally, from: i64, now: i64) -> Outcome {
-        let here = where_(p.scope);
+    /// `majority`, `unanimous` and `share`: a share of the people who held
+    /// the scope when the vote opened, at `from`, counted against them alone.
+    /// Somebody who joins later never moves the count, so history stays
+    /// still; and the moment the share can no longer be reached — enough of
+    /// them said no, or no longer hold the scope — it is refused, so a house
+    /// that has shrunk is never left waiting on people who have gone, its
+    /// rule of rules included. A fixed count chosen on the day the house was
+    /// four reaches neither of those.
+    ///
+    /// Everything here is read off the bar, never off which rule named it,
+    /// so `majority` and the share more than half are one count.
+    fn judge_share(&self, bar: Bar, p: &Proposal, t: &Tally, from: i64, now: i64) -> Outcome {
+        let here = self.held_then(p.scope, from);
         let voters = self.holders_at(p.scope, from);
         let n = voters.len();
-        let all = matches!(rule, Ratify::Unanimous);
+        // Only a bar of everyone lets one person decide at every size of
+        // house, so only there does one reasoned objection count against,
+        // as under `joint`, and only there is a refusal that person's. Read
+        // off the bar and not off the count: a majority of two also takes
+        // both, and counts any position against, as it did in 0.4.0.
+        let all = bar.is_everyone();
         if n == 0 {
             // Every share of nobody is reached at once, which would make an
             // empty scope's first write law; refusing says why instead.
@@ -977,7 +1323,7 @@ impl Canon {
                 needs: String::new(),
             };
         }
-        let needed = if all { n } else { n / 2 + 1 };
+        let needed = bar.needed(n);
         let approved: Vec<(&str, i64)> = t
             .approved
             .iter()
@@ -993,10 +1339,10 @@ impl Canon {
             (*at, how)
         });
         // Who can no longer approve, and from when: their first word against
-        // (a reasoned objection under `unanimous`, as under `joint`; any
-        // position against under `majority`, as `threshold` counts its
-        // block), or the moment their standing ended. An approval first
-        // keeps them counted, whatever they said after: first word wins.
+        // (a reasoned objection when the bar is everyone, as under `joint`;
+        // any position against below it, as `threshold` counts its block),
+        // or the moment their standing ended. An approval first keeps them
+        // counted, whatever they said after: first word wins.
         let mut lost: Vec<(i64, &str, Option<&str>)> = Vec::new();
         for &voter in &voters {
             let said = if all {
@@ -1037,33 +1383,47 @@ impl Canon {
             .iter()
             .enumerate()
             .find(|(i, _)| n - (i + 1) < needed)
-            .map(|(i, &(at, voter, why))| match why {
-                Some(why) => (at, voter.to_string(), why.to_string()),
-                None if all => (
-                    at,
-                    String::new(),
-                    format!(
-                        "{voter} said no or no longer holds {here}, so everyone who held it \
-                         when it was proposed can no longer approve it"
-                    ),
-                ),
-                // As under `threshold`: the first reasoned objection among
-                // them, if any, is the quoted why.
-                None => lost[..=i]
-                    .iter()
-                    .find_map(|(_, by, why)| why.map(|why| (at, by.to_string(), why.to_string())))
-                    .unwrap_or_else(|| {
-                        (
+            .map(|(_, &(at, voter, why))| {
+                if all {
+                    // One reasoned objection decides, so it is that
+                    // person's refusal.
+                    return match why {
+                        Some(why) => (at, voter.to_string(), why.to_string()),
+                        None => (
                             at,
                             String::new(),
                             format!(
-                                "{} of the {n} people who held {here} when it was proposed said \
-                                 no or no longer hold it, so more than half can no longer \
-                                 approve it",
-                                i + 1
+                                "{voter} said no or no longer holds {here}, so everyone who \
+                                 held it when it was proposed can no longer approve it"
                             ),
-                        )
-                    }),
+                        ),
+                    };
+                }
+                // Below everyone, nobody refuses alone: it is refused by
+                // everyone who could no longer approve it by then, counted,
+                // with the reasons they gave. Everyone lost in that second
+                // counts, so a tie within it reads the same in any order.
+                let gone: Vec<&(i64, &str, Option<&str>)> =
+                    lost.iter().take_while(|(when, _, _)| *when <= at).collect();
+                let k = gone.len();
+                let who = match (n, k) {
+                    (1, _) => format!("the one person who held {here} when it was proposed"),
+                    _ => format!("{k} of the {n} people who held {here} when it was proposed"),
+                };
+                let hold = if k == 1 { "holds" } else { "hold" };
+                let mut why = format!(
+                    "{who} said no or no longer {hold} it, so {} can no longer approve it",
+                    bar.phrase()
+                );
+                let reasons: Vec<String> = gone
+                    .iter()
+                    .filter_map(|(_, by, said)| said.map(|said| format!("{by}: {}", said.trim())))
+                    .collect();
+                if !reasons.is_empty() {
+                    why.push_str(" — ");
+                    why.push_str(&reasons.join("; "));
+                }
+                (at, String::new(), why)
             });
         let needs = if all {
             let missing: Vec<&str> = voters
@@ -1299,6 +1659,191 @@ mod tests {
         assert!(
             Ratify::parse("twice:turnover:twice:7d:standing").is_none(),
             "twice over twice is nothing a person could explain"
+        );
+    }
+
+    fn bar(raw: &str) -> Bar {
+        Ratify::parse(raw)
+            .and_then(|r| r.bar())
+            .unwrap_or_else(|| panic!("{raw} is a share"))
+    }
+
+    #[test]
+    fn what_a_share_needs_of_one_to_forty_people() {
+        // Worked by hand, and checked against a search for the fewest k of n
+        // with k/n reaching the bar in exact fractions; not by the formula
+        // under test.
+        let table: [(&str, [usize; 40]); 5] = [
+            (
+                "majority",
+                [
+                    1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13,
+                    13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21,
+                ],
+            ),
+            (
+                "share:60%",
+                [
+                    1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 8, 8, 9, 9, 10, 11, 11, 12, 12, 13, 14, 14,
+                    15, 15, 16, 17, 17, 18, 18, 19, 20, 20, 21, 21, 22, 23, 23, 24, 24,
+                ],
+            ),
+            (
+                "share:2/3",
+                [
+                    1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 8, 8, 9, 10, 10, 11, 12, 12, 13, 14, 14, 15, 16,
+                    16, 17, 18, 18, 19, 20, 20, 21, 22, 22, 23, 24, 24, 25, 26, 26, 27,
+                ],
+            ),
+            (
+                "share:3/4",
+                [
+                    1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 9, 10, 11, 12, 12, 13, 14, 15, 15, 16, 17, 18,
+                    18, 19, 20, 21, 21, 22, 23, 24, 24, 25, 26, 27, 27, 28, 29, 30, 30,
+                ],
+            ),
+            (
+                "unanimous",
+                [
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+                    23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+                ],
+            ),
+        ];
+        for (raw, needs) in table {
+            let b = bar(raw);
+            for (i, want) in needs.into_iter().enumerate() {
+                assert_eq!(b.needed(i + 1), want, "{raw} of {}", i + 1);
+            }
+        }
+        assert_eq!(bar("share:2/3").needed(3), 2, "two-thirds of three is two");
+        assert_eq!(bar("share:67%").needed(3), 3, "where 67% of three is three");
+        assert_eq!(bar("share:60%").needed(30), 18);
+        assert_eq!(bar("share:>1/2").needed(30), 16);
+        assert_eq!(bar("share:>60%").needed(5), 4, "more than three of five");
+        // The counts 0.4.0 hard-coded, from the general bar.
+        for n in 1..=1000 {
+            assert_eq!(Bar::MAJORITY.needed(n), n / 2 + 1, "majority of {n}");
+            assert_eq!(Bar::EVERYONE.needed(n), n, "everyone of {n}");
+        }
+        // No house is too big to count: widened, never wrapped.
+        assert_eq!(Bar::EVERYONE.needed(usize::MAX), usize::MAX);
+        assert_eq!(Bar::MAJORITY.needed(usize::MAX), usize::MAX / 2 + 1);
+        let fine = Bar::new(u32::MAX - 1, u32::MAX, false).unwrap();
+        assert_eq!(fine.needed(u32::MAX as usize), u32::MAX as usize - 1);
+    }
+
+    #[test]
+    fn a_share_is_spelled_one_way_and_reads_back_as_itself() {
+        for raw in [
+            "share:60%",
+            "share:2/3",
+            "share:>60%",
+            "share:>2/3",
+            "share:50%",
+            "share:75%",
+            "share:1/3",
+            "share:>0%",
+            "twice:30d:share:60%",
+            "twice:turnover:share:2/3",
+        ] {
+            let r = Ratify::parse(raw).expect(raw);
+            assert_eq!(r.name(), raw, "{raw}");
+            assert_eq!(Ratify::parse(&r.name()), Some(r), "{raw}");
+        }
+        // Another way to write the same bar is the same rule, and names
+        // itself the one way.
+        for (raw, is) in [
+            ("share:3/5", "share:60%"),
+            ("share:6/10", "share:60%"),
+            (" share: 60 % ", "share:60%"),
+            ("share:4/6", "share:2/3"),
+            ("share:1/2", "share:50%"),
+            ("share:>3/4", "share:>75%"),
+            ("share:>1/2", "majority"),
+            ("share:>50%", "majority"),
+            ("share:>2/4", "majority"),
+            ("share:100%", "unanimous"),
+            ("share:1/1", "unanimous"),
+            ("share:3/3", "unanimous"),
+            ("twice:7d:share:>1/2", "twice:7d:majority"),
+        ] {
+            let r = Ratify::parse(raw).expect(raw);
+            assert_eq!(r.name(), is, "{raw}");
+            assert_eq!(Ratify::parse(is), Some(r), "{raw}");
+        }
+        assert_eq!(Ratify::parse("share:>1/2"), Some(Ratify::Majority));
+        assert_eq!(Ratify::parse("share:100%"), Some(Ratify::Unanimous));
+        assert_eq!(Ratify::parse("share:1/1"), Some(Ratify::Unanimous));
+        // At least half is not more than half.
+        assert!(matches!(Ratify::parse("share:50%"), Some(Ratify::Share(_))));
+        // A share held directly names itself as the rule it equals.
+        assert_eq!(Ratify::Share(Bar::MAJORITY).name(), "majority");
+        assert_eq!(Ratify::Share(Bar::EVERYONE).name(), "unanimous");
+        assert_eq!(Ratify::Majority.bar(), Some(Bar::MAJORITY));
+        assert_eq!(Ratify::Unanimous.bar(), Some(Bar::EVERYONE));
+        assert_eq!(Ratify::parse("threshold:2/1").and_then(|r| r.bar()), None);
+    }
+
+    #[test]
+    fn a_share_nobody_could_reach_or_nobody_needs_to_is_refused_and_says_why() {
+        use NotARule::{Bar as Bad, Share as Unread};
+        for (raw, why) in [
+            ("share:0%", Bad(BadBar::Nobody)),
+            ("share:0/3", Bad(BadBar::Nobody)),
+            ("share:>100%", Bad(BadBar::MoreThanEveryone)),
+            ("share:>1/1", Bad(BadBar::MoreThanEveryone)),
+            ("share:>3/3", Bad(BadBar::MoreThanEveryone)),
+            ("share:101%", Bad(BadBar::MoreThanEveryone)),
+            ("share:4/3", Bad(BadBar::MoreThanEveryone)),
+            ("share:3/0", Bad(BadBar::OutOfNothing)),
+            ("share:>0/0", Bad(BadBar::OutOfNothing)),
+            ("twice:7d:share:0%", Bad(BadBar::Nobody)),
+            // What a shell leaves of an unquoted `share:>1/2`.
+            ("share:", Unread),
+            ("share:>", Unread),
+            ("share:sixty", Unread),
+            ("share:62.5%", Unread),
+            ("share:2/", Unread),
+            ("share:-1/2", Unread),
+            ("share:2/3/4", Unread),
+            ("plurality", NotARule::Unknown),
+        ] {
+            assert_eq!(raw.parse::<Ratify>(), Err(why), "{raw}");
+            assert_eq!(Ratify::parse(raw), None, "{raw}");
+        }
+        let said = |raw: &str| raw.parse::<Ratify>().unwrap_err().to_string();
+        assert!(said("share:0%").contains("before anyone approved"));
+        assert!(said("share:>100%").contains("more than everyone"));
+        assert!(said("share:3/0").contains("can't be 0"));
+        assert!(
+            said("share:").contains("'share:>1/2'"),
+            "{}",
+            said("share:")
+        );
+        // A count of people approving and blocking is not a share of them.
+        assert_eq!(
+            Ratify::parse("threshold:2/1"),
+            Some(Ratify::Threshold {
+                approve: 2,
+                block: 1
+            })
+        );
+    }
+
+    #[test]
+    fn a_share_reads_as_what_it_takes() {
+        assert_eq!(bar("majority").phrase(), "more than half");
+        assert_eq!(bar("unanimous").phrase(), "everyone");
+        assert_eq!(bar("share:60%").phrase(), "60%");
+        assert_eq!(bar("share:>2/3").phrase(), "more than 2/3");
+        let prose = Ratify::parse("share:2/3").unwrap().prose();
+        assert!(prose.contains("at least 2/3 of the people"), "{prose}");
+        let prose = Ratify::parse("share:>60%").unwrap().prose();
+        assert!(prose.contains("more than 60% of the people"), "{prose}");
+        assert_eq!(
+            Ratify::Share(Bar::MAJORITY).prose(),
+            Ratify::Majority.prose()
         );
     }
 

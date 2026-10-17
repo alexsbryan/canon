@@ -5,7 +5,7 @@
 
 use canon_core::standing::Pull;
 use canon_core::{
-    Act, ActKind, Attributes, Between, Log, Policy, Position, Proposal, Ratify, Rule, Scope,
+    Act, ActKind, Attributes, Bar, Between, Log, Policy, Position, Proposal, Ratify, Rule, Scope,
     Standing, Status, Verdict,
 };
 use proptest::prelude::*;
@@ -80,11 +80,12 @@ fn histories() -> impl Strategy<Value = Vec<Act>> {
 fn generated_laws_are_indexed_by_the_contract() {
     // Function references make a stale/renamed check a compile error; the row
     // check makes removing its guarantee from the index an explicit change.
-    let checks: [(&str, fn()); 4] = [
+    let checks: [(&str, fn()); 5] = [
         ("replay_deterministic", replay_deterministic),
         ("arrival_order_independent", arrival_order_independent),
         ("merge_union_laws", merge_union_laws),
         ("agents_cannot_ratify", agents_cannot_ratify),
+        ("share_bars_are_their_rules", share_bars_are_their_rules),
     ];
     let contract = include_str!("../../../docs/CONTRACT.md");
     for (name, _) in checks {
@@ -93,6 +94,106 @@ fn generated_laws_are_indexed_by_the_contract() {
             "generated law {name} is missing from docs/CONTRACT.md"
         );
     }
+}
+
+/// The moments a house's people come, go and speak, around a proposal written
+/// at 100: before it, in its second, after it, and either side of the day a
+/// `twice` waits.
+const SHARE_TIMES: [i64; 9] = [10, 100, 101, 150, 200, 86_600, 86_700, 90_000, 172_900];
+
+/// A house of up to eight people around one proposal at 100. Each is granted
+/// `house` (now and then `garden`, another top-level scope) at a generated
+/// moment, some with a term that lapses, some moving out; holders, a
+/// stranger and an agent take positions for and against, with and without a
+/// reason, often in the same second. The proposer is a holder or the agent,
+/// and the proposal is put in `house` or left for the whole canon.
+fn share_histories() -> impl Strategy<Value = (Vec<Act>, Act, bool)> {
+    let person = (
+        0usize..9,
+        proptest::option::of(0usize..9),
+        proptest::option::of(0usize..9),
+        0u8..10,
+    );
+    let said = (0usize..10, 0usize..9, any::<bool>(), any::<bool>());
+    (
+        proptest::collection::vec(person, 1..9),
+        proptest::collection::vec(said, 0..16),
+        0usize..9,
+        any::<bool>(),
+    )
+        .prop_map(|(people, positions, proposer, scoped)| {
+            let house = Scope::new("house").unwrap();
+            let garden = Scope::new("garden").unwrap();
+            let name = |i: usize| format!("human:p{i}");
+            let mut acts = Vec::new();
+            for (i, (granted, lapses, leaves, seat)) in people.iter().enumerate() {
+                let scope = if *seat == 0 { &garden } else { &house };
+                acts.push(Act::new(
+                    ActKind::Grant {
+                        holder: name(i),
+                        scope: scope.clone(),
+                        horizon: lapses.map(|t| SHARE_TIMES[t]),
+                        rationale: String::new(),
+                    },
+                    SHARE_TIMES[*granted],
+                    "human:founder",
+                ));
+                if let Some(t) = leaves {
+                    acts.push(Act::new(
+                        ActKind::Withdraw {
+                            holder: name(i),
+                            scope: scope.clone(),
+                            rationale: "moving out".into(),
+                        },
+                        SHARE_TIMES[*t],
+                        name(i),
+                    ));
+                }
+            }
+            let speaker = |i: usize| match i {
+                i if i < people.len() => name(i),
+                8 => "agent:reader".into(),
+                _ => "human:stranger".into(),
+            };
+            let writer = speaker(if proposer < people.len() { proposer } else { 8 });
+            let proposal = Act::new(
+                ActKind::Assert {
+                    text: "a proposed agreement".into(),
+                    from: None,
+                    source: None,
+                },
+                100,
+                &writer,
+            );
+            if scoped {
+                acts.push(Act::new(
+                    ActKind::Scoped {
+                        commitment: proposal.id.clone(),
+                        scope: house,
+                    },
+                    100,
+                    &writer,
+                ));
+            }
+            for (who, at, toward, reasoned) in positions {
+                acts.push(Act::new(
+                    ActKind::Position {
+                        about: proposal.id.as_str().into(),
+                        citing: None,
+                        pull: if toward { Pull::Toward } else { Pull::Against },
+                        because: if reasoned {
+                            format!("{} has a reason", speaker(who))
+                        } else {
+                            String::new()
+                        },
+                    },
+                    SHARE_TIMES[at],
+                    speaker(who),
+                ));
+            }
+            acts.push(proposal.clone());
+            (acts, proposal, scoped)
+        })
 }
 
 fn union(a: &Log, b: &Log) -> Log {
@@ -236,6 +337,9 @@ proptest! {
                 rules.extend([
                     Ratify::Joint { holders: vec!["human:dana".into(), "human:sam".into()] },
                     Ratify::Threshold { approve: 2, block: 1 },
+                    Ratify::Majority,
+                    Ratify::Unanimous,
+                    Ratify::Share(Bar::new(3, 5, false).unwrap()),
                     Ratify::Consent { days },
                     Ratify::Twice { each: Box::new(Ratify::Threshold { approve: 1, block: 1 }),
                                     between: Between::Days { days } },
@@ -265,6 +369,54 @@ proptest! {
                         "human holders can still carry the proposal");
                 }
             }
+        }
+    }
+
+    #[test]
+    fn share_bars_are_their_rules(history in share_histories()) {
+        // `majority` is the share more than half and `unanimous` the share
+        // of everyone. Held as a share — as `Bar` builds it, or as a record
+        // writes it another way — each is judged as the rule it equals:
+        // the same verdict, moment and words, alone and under twice, and
+        // the same fold for a house that adopts either.
+        let (acts, proposal, scoped) = history;
+        let now = 200_000;
+        let house = Scope::new("house").unwrap();
+        let canon = Log::from_acts(acts.clone()).derive_at(now);
+        let p = Proposal {
+            id: &proposal.id,
+            scope: scoped.then_some(&house),
+            at: 100,
+            actor: &proposal.actor,
+        };
+        let written = |line: &str| serde_json::from_str::<Ratify>(line).unwrap();
+        let pairs = [
+            (Ratify::Majority, Ratify::Share(Bar::MAJORITY)),
+            (Ratify::Majority, written(r#"{"rule":"share","numerator":2,"denominator":4,"more_than":true}"#)),
+            (Ratify::Unanimous, Ratify::Share(Bar::EVERYONE)),
+            (Ratify::Unanimous, written(r#"{"rule":"share","numerator":3,"denominator":3,"more_than":false}"#)),
+        ];
+        let adopted = |rule: Ratify| {
+            let mut acts = acts.clone();
+            acts.push(grant("human:founder", &house));
+            acts.push(Act::new(ActKind::Ratification {
+                text: String::new(), rule, scope: None, governs: None, personal: None,
+            }, 50, "human:founder"));
+            let canon = Log::from_acts(acts).derive_at(now);
+            let c = canon.get(&proposal.id).unwrap();
+            (c.status.clone(), canon.ratify(c, now))
+        };
+        for (named, share) in pairs {
+            prop_assert_eq!(named.name(), share.name());
+            for between in [None, Some(Between::Days { days: 1 }), Some(Between::Turnover)] {
+                let under = |rule: &Ratify| match &between {
+                    None => rule.clone(),
+                    Some(b) => Ratify::Twice { each: Box::new(rule.clone()), between: b.clone() },
+                };
+                prop_assert_eq!(canon.ratify_under(&under(&named), &p, now),
+                                canon.ratify_under(&under(&share), &p, now));
+            }
+            prop_assert_eq!(adopted(named), adopted(share));
         }
     }
 }

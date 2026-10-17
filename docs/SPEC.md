@@ -296,7 +296,7 @@ proposal (§7): the person who approves it is the one deciding.
 commitment introduced by `assert` or `supersede` derives to `proposed`
 until the ratification rule of its scope is met, and to `active` once it
 is. The rule is the deepest `ratification` act covering the commitment's
-scope, else the canon-wide one, else `standing`. Seven rules ship:
+scope, else the canon-wide one, else `standing`. Eight rules ship:
 
 - `standing` — a holder of the scope writes a rule directly; anyone
   else's write takes one holder's approval; a scope nobody holds is open
@@ -316,6 +316,16 @@ scope, else the canon-wide one, else `standing`. Seven rules ship:
   written approving carries it. A reasoned objection from one of them
   refuses it, and so does one of them no longer holding the scope before
   they approved.
+- `share{numerator, denominator, more_than}` — at least
+  `numerator/denominator` of the people who hold the scope when the proposal
+  is written approving carries it, or more than that share when `more_than`
+  is true: of `n` people, at least a/b takes ⌈a·n/b⌉ and more than a/b takes
+  ⌊a·n/b⌋ + 1, in whole numbers. Counted and refused as `majority` is; when
+  the bar is all of them, as `unanimous` is. A reader MUST refuse a line whose
+  denominator is 0, whose share is more than all of them, or whose share is at
+  least none of them. More than 1/2 is written `majority` and all of them
+  `unanimous`, and a reader MUST fold a `share` with either bar exactly as
+  that rule.
 - `consent{days}` — a rule after this many days unless a holder objects
   with a reason.
 - `twice{each, between}` — carried under `each`, then again after
@@ -326,7 +336,7 @@ scope, else the canon-wide one, else `standing`. Seven rules ship:
   `majority` or `unanimous`, each vote counts the people who hold the scope
   when that vote opens.
 
-Under `majority` and `unanimous`, a proposal written into a scope nobody
+Under `majority`, `unanimous` and `share`, a proposal written into a scope nobody
 holds is refused, since every share of nobody is reached at once. Neither
 rule waits on somebody who has stopped holding the scope, so a group that
 has shrunk can still decide, its ratification rule included.

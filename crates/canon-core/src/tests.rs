@@ -3159,3 +3159,417 @@ fn a_share_rule_is_a_rule_kind_and_an_older_reader_refuses_it_by_name() {
     };
     assert!(detail.contains("plurality"), "{detail}");
 }
+
+// ── share: any bar, counted as majority is ────────────────────────────
+
+/// A position against with no reason given.
+fn against_at(target: &ActId, ts: i64, actor: &str) -> Act {
+    object_at(target, ts, actor, "")
+}
+
+fn status_of<'a>(canon: &'a Canon, id: &ActId) -> &'a Status {
+    &canon.get(id).expect("on the record").status
+}
+
+#[test]
+fn a_rule_0_4_0_wrote_reads_as_it_did() {
+    // Minted by the released canon 0.4.0: `canon ratification set majority
+    // --scope house`, and `unanimous` over house.kitchen. Houses have
+    // adopted these since that release, so they read as the same rule, the
+    // same id and the same bytes for ever.
+    for (line, rule) in [
+        (
+            r#"{"id":"can-6efb9b0f5d07","v":4,"ts_unix":1792269653,"actor":"human:ana","op":"ratification","text":"more than half of us","rule":{"rule":"majority"},"scope":"house","governs":"all"}"#,
+            crate::ratify::Ratify::Majority,
+        ),
+        (
+            r#"{"id":"can-a633dcbfe43e","v":4,"ts_unix":1792269653,"actor":"human:ana","op":"ratification","text":"all of us","rule":{"rule":"unanimous"},"scope":"house.kitchen","governs":"all"}"#,
+            crate::ratify::Ratify::Unanimous,
+        ),
+    ] {
+        let log = Log::parse(line).expect("0.4.0's line reads");
+        let act = &log.acts()[0];
+        let ActKind::Ratification { rule: read, .. } = &act.kind else {
+            panic!("a ratification act: {act:?}")
+        };
+        assert_eq!(read, &rule);
+        assert_eq!(log.render().trim_end(), line, "byte for byte");
+        assert_eq!(
+            Act::new(act.kind.clone(), act.ts_unix, &act.actor).id,
+            act.id
+        );
+    }
+}
+
+#[test]
+fn a_share_is_written_as_its_bar_and_a_bar_no_house_could_use_is_refused() {
+    let sixty = ratification_at("share:60%", "house", 20, "human:ana");
+    assert_eq!(sixty.v, UNSIGNED_VERSION);
+    let line = serde_json::to_string(&sixty).unwrap();
+    assert!(
+        line.contains(r#""rule":{"rule":"share","numerator":3,"denominator":5,"more_than":false}"#),
+        "{line}"
+    );
+    assert_eq!(Log::parse(&line).expect("readable").acts()[0], sixty);
+    let over =
+        serde_json::to_string(&ratification_at("share:>2/3", "house", 20, "human:ana")).unwrap();
+    assert!(
+        over.contains(r#""rule":{"rule":"share","numerator":2,"denominator":3,"more_than":true}"#),
+        "{over}"
+    );
+
+    // The same bar written another way reads as written, so the line keeps
+    // the bytes it was signed as, and takes the same people.
+    let tenths = line.replace(
+        r#""numerator":3,"denominator":5"#,
+        r#""numerator":6,"denominator":10"#,
+    );
+    let log = Log::parse(&tenths).expect("6/10 is a share");
+    assert_eq!(log.render().trim_end(), tenths);
+    let ActKind::Ratification { rule, .. } = &log.acts()[0].kind else {
+        panic!("a ratification act")
+    };
+    assert_eq!(rule.name(), "share:60%");
+    assert_eq!(rule.bar().map(|b| b.needed(30)), Some(18));
+
+    // A bar nobody could reach, or nobody needs to, refuses the line as a
+    // malformed known op, saying why, rather than fold under it.
+    for (from, to, says) in [
+        (r#""denominator":5"#, r#""denominator":0"#, "can't be 0"),
+        (
+            r#""numerator":3"#,
+            r#""numerator":0"#,
+            "before anyone approved",
+        ),
+        (r#""numerator":3"#, r#""numerator":7"#, "more than everyone"),
+        (
+            r#""numerator":3,"denominator":5,"more_than":false"#,
+            r#""numerator":1,"denominator":1,"more_than":true"#,
+            "more than everyone",
+        ),
+        (r#","more_than":false"#, "", "more_than"),
+    ] {
+        let bad = line.replace(from, to);
+        assert_ne!(bad, line, "{from}");
+        let Err(ParseError::Malformed { detail, .. }) = Log::parse(&bad) else {
+            panic!("refused: {bad}")
+        };
+        assert!(detail.contains(says), "{detail}");
+    }
+}
+
+#[test]
+fn five_people_under_sixty_percent_carry_at_three_and_refuse_as_a_house() {
+    let five = [
+        "human:ana",
+        "human:bo",
+        "human:cy",
+        "human:dee",
+        "human:eve",
+    ];
+    let mut acts = a_house_of(&five, "share:60%");
+    // Bo's own write is his yes; three of five is 60%.
+    let (shed, into) = proposed("Bikes in the shed.", 100, "human:bo");
+    acts.extend([shed.clone(), into]);
+    acts.push(approve_at(&shed.id, 200, "human:cy"));
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert_eq!(
+        status_of(&canon, &shed.id),
+        &Status::Proposed {
+            needs: "1 more approval(s) from the 5 people who held house when it was proposed"
+                .into()
+        }
+    );
+    acts.push(approve_at(&shed.id, 300, "human:dee"));
+
+    // Three can no longer approve: two said why, one just said no.
+    let (quiet, into) = proposed("Quiet after nine.", 100, "human:bo");
+    acts.extend([quiet.clone(), into]);
+    acts.push(object_at(
+        &quiet.id,
+        200,
+        "human:cy",
+        "Late cooks need the evening.",
+    ));
+    acts.push(object_at(&quiet.id, 210, "human:dee", "Not in summer."));
+    acts.push(against_at(&quiet.id, 220, "human:eve"));
+
+    // Two said no, and Eve moving out tips it.
+    let (paint, into) = proposed("Paint the hall green.", 100, "human:bo");
+    acts.extend([paint.clone(), into]);
+    acts.push(object_at(&paint.id, 200, "human:cy", "Too dark."));
+    acts.push(object_at(&paint.id, 210, "human:dee", "Not in summer."));
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(
+        matches!(status_of(&canon, &paint.id), Status::Proposed { .. }),
+        "three of the five can still approve: {:?}",
+        status_of(&canon, &paint.id)
+    );
+    acts.push(moves_out("human:eve", "house", 400));
+
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(status_of(&canon, &shed.id), &Status::Active);
+    assert_eq!(
+        canon.ratify(canon.get(&shed.id).unwrap(), i64::MAX),
+        crate::ratify::Verdict::Ratified {
+            since: 300,
+            how: "3 of the 5 people who held house when it was proposed approved".into()
+        }
+    );
+    assert_eq!(
+        status_of(&canon, &quiet.id),
+        &Status::Refused {
+            at: 220,
+            by: String::new(),
+            why: "3 of the 5 people who held house when it was proposed said no or no longer \
+                  hold it, so 60% can no longer approve it — human:cy: Late cooks need the \
+                  evening.; human:dee: Not in summer."
+                .into()
+        }
+    );
+    assert_eq!(
+        status_of(&canon, &paint.id),
+        &Status::Refused {
+            at: 400,
+            by: String::new(),
+            why: "3 of the 5 people who held house when it was proposed said no or no longer \
+                  hold it, so 60% can no longer approve it — human:cy: Too dark.; human:dee: \
+                  Not in summer."
+                .into()
+        }
+    );
+}
+
+#[test]
+fn thirty_people_under_sixty_percent_carry_at_eighteen() {
+    let names: Vec<String> = (1..=30).map(|i| format!("human:p{i:02}")).collect();
+    let thirty: Vec<&str> = names.iter().map(String::as_str).collect();
+    // P01 founds this house, as Ana founds the others.
+    let mut acts: Vec<Act> = thirty
+        .iter()
+        .map(|p| granted_by(p, "house", 10, "human:p01"))
+        .collect();
+    acts.push(ratification_at("share:60%", "house", 20, "human:p01"));
+
+    let (carry, into) = proposed("A shared tool shelf.", 100, "human:p01");
+    acts.extend([carry.clone(), into]);
+    for p in &thirty[1..17] {
+        acts.push(approve_at(&carry.id, 200, p));
+    }
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert_eq!(
+        status_of(&canon, &carry.id),
+        &Status::Proposed {
+            needs: "1 more approval(s) from the 30 people who held house when it was proposed"
+                .into()
+        },
+        "seventeen of thirty is not 60%"
+    );
+    acts.push(approve_at(&carry.id, 300, "human:p18"));
+
+    // Twelve say no and eighteen can still carry it; the thirteenth refuses.
+    let (late, into) = proposed("Breakfast ends at nine.", 100, "human:p01");
+    acts.extend([late.clone(), into]);
+    acts.push(object_at(
+        &late.id,
+        200,
+        "human:p02",
+        "Late cooks need the morning.",
+    ));
+    for p in &thirty[2..13] {
+        acts.push(against_at(&late.id, 200, p));
+    }
+    let canon = Log::from_acts(acts.clone()).derive();
+    assert!(matches!(
+        status_of(&canon, &late.id),
+        Status::Proposed { .. }
+    ));
+    acts.push(object_at(&late.id, 300, "human:p14", "Not in summer."));
+
+    // Twelve say no, and the thirtieth moving out tips it.
+    let (pool, into) = proposed("A paddling pool in the yard.", 100, "human:p01");
+    acts.extend([pool.clone(), into]);
+    acts.push(object_at(&pool.id, 200, "human:p02", "Not in summer."));
+    for p in &thirty[2..13] {
+        acts.push(against_at(&pool.id, 200, p));
+    }
+    acts.push(moves_out("human:p30", "house", 400));
+
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(status_of(&canon, &carry.id), &Status::Active);
+    assert_eq!(
+        status_of(&canon, &late.id),
+        &Status::Refused {
+            at: 300,
+            by: String::new(),
+            why: "13 of the 30 people who held house when it was proposed said no or no longer \
+                  hold it, so 60% can no longer approve it — human:p02: Late cooks need the \
+                  morning.; human:p14: Not in summer."
+                .into()
+        }
+    );
+    assert_eq!(
+        status_of(&canon, &pool.id),
+        &Status::Refused {
+            at: 400,
+            by: String::new(),
+            why: "13 of the 30 people who held house when it was proposed said no or no longer \
+                  hold it, so 60% can no longer approve it — human:p02: Not in summer."
+                .into()
+        }
+    );
+}
+
+#[test]
+fn under_majority_nobody_refuses_alone() {
+    // 0.4.0 credited this refusal to Cy, whose no came last: "refused by
+    // human:cy: Too loud." Two of three said no, and both are named.
+    let mut acts = a_house_of(&["human:ana", "human:bo", "human:cy"], "majority");
+    let (band, into) = proposed("Band practice on Sundays.", 100, "human:ana");
+    acts.extend([band.clone(), into]);
+    acts.push(object_at(
+        &band.id,
+        200,
+        "human:bo",
+        "Sunday is for sleeping.",
+    ));
+    acts.push(object_at(&band.id, 210, "human:cy", "Too loud."));
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(
+        status_of(&canon, &band.id),
+        &Status::Refused {
+            at: 210,
+            by: String::new(),
+            why: "2 of the 3 people who held house when it was proposed said no or no longer \
+                  hold it, so more than half can no longer approve it — human:bo: Sunday is \
+                  for sleeping.; human:cy: Too loud."
+                .into()
+        }
+    );
+}
+
+#[test]
+fn only_a_bar_of_everyone_waits_for_a_reason() {
+    // A majority of two takes both of them, as everyone does; it is still
+    // a majority, and a no without a reason counts, as it did in 0.4.0.
+    for (rule, refuses) in [
+        ("majority", true),
+        ("share:100%", false),
+        ("unanimous", false),
+    ] {
+        let mut acts = a_house_of(&["human:ana", "human:bo"], rule);
+        let (gate, into) = proposed("Lock the gate at night.", 100, "human:ana");
+        acts.extend([gate.clone(), into]);
+        acts.push(against_at(&gate.id, 200, "human:bo"));
+        let canon = Log::from_acts(acts.clone()).derive();
+        match status_of(&canon, &gate.id) {
+            Status::Refused { at, by, why } if refuses => {
+                assert_eq!((*at, by.as_str()), (200, ""));
+                assert_eq!(
+                    why,
+                    "1 of the 2 people who held house when it was proposed said no or no \
+                     longer holds it, so more than half can no longer approve it"
+                );
+            }
+            Status::Proposed { .. } if !refuses => {}
+            other => panic!("{rule}: {other:?}"),
+        }
+        if !refuses {
+            // Everyone: one reason decides, and it is that person's.
+            acts.push(object_at(&gate.id, 300, "human:bo", "The night shift."));
+            let canon = Log::from_acts(acts).derive();
+            assert_eq!(
+                status_of(&canon, &gate.id),
+                &Status::Refused {
+                    at: 300,
+                    by: "human:bo".into(),
+                    why: "The night shift.".into()
+                },
+                "{rule}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_share_of_the_whole_canon_names_the_scope_its_people_held() {
+    let mut acts: Vec<Act> = ["human:ana", "human:bo", "human:cy"]
+        .iter()
+        .map(|p| granted_by(p, "house", 10, "human:ana"))
+        .collect();
+    acts.push(Act::new(
+        ActKind::Ratification {
+            text: String::new(),
+            rule: crate::ratify::Ratify::parse("share:2/3").unwrap(),
+            scope: None,
+            governs: None,
+            personal: None,
+        },
+        20,
+        "human:ana",
+    ));
+    // An import keeps no scope; the canon-wide rule decides it.
+    let kept = assert_at("Shoes off at the door.", 100, "human:ana");
+    acts.push(kept.clone());
+    acts.push(against_at(&kept.id, 200, "human:bo"));
+    acts.push(object_at(
+        &kept.id,
+        210,
+        "human:cy",
+        "Not with these floors.",
+    ));
+    let canon = Log::from_acts(acts).derive();
+    assert_eq!(
+        status_of(&canon, &kept.id),
+        &Status::Refused {
+            at: 210,
+            by: String::new(),
+            why: "2 of the 3 people who held house when it was proposed said no or no longer \
+                  hold it, so 2/3 can no longer approve it — human:cy: Not with these floors."
+                .into()
+        },
+        "two-thirds of three is two; one no leaves two who can, and a second no ends it"
+    );
+}
+
+#[test]
+fn twice_under_a_share_counts_the_house_at_each_vote() {
+    // 60% of the five who held house at the first vote, then 60% of the six
+    // who held it when the second opened: four of them.
+    let five = [
+        "human:ana",
+        "human:bo",
+        "human:cy",
+        "human:dee",
+        "human:eve",
+    ];
+    let mut acts = a_house_of(&five, "twice:1d:share:60%");
+    let (oven, into) = proposed("Clean the oven monthly.", 100, "human:ana");
+    acts.extend([oven.clone(), into]);
+    acts.push(approve_at(&oven.id, 200, "human:bo"));
+    acts.push(approve_at(&oven.id, 200, "human:cy"));
+    acts.push(granted_by("human:fay", "house", 50_000, "human:ana"));
+    for p in ["human:bo", "human:cy", "human:fay"] {
+        acts.push(approve_at(&oven.id, 90_000, p));
+    }
+    let canon = Log::from_acts(acts.clone()).derive_at(100_000);
+    let Status::Proposed { needs } = status_of(&canon, &oven.id) else {
+        panic!("three of six is not 60%: {:?}", status_of(&canon, &oven.id))
+    };
+    assert!(
+        needs.ends_with("1 more approval(s) from the 6 people who held house when it was proposed"),
+        "{needs}"
+    );
+    acts.push(approve_at(&oven.id, 90_100, "human:dee"));
+    let canon = Log::from_acts(acts).derive_at(100_000);
+    let crate::ratify::Verdict::Ratified { since, how } =
+        canon.ratify(canon.get(&oven.id).unwrap(), 100_000)
+    else {
+        panic!("four of six carried the second vote")
+    };
+    assert_eq!(since, 90_100);
+    assert!(
+        how.starts_with("3 of the 5 people") && how.contains("4 of the 6 people"),
+        "{how}"
+    );
+}

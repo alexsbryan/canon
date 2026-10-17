@@ -27,7 +27,7 @@ use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Scope, Status, Verdict};
 use serde::Serialize;
 
 use crate::cmds::{answer, fail, flag, has, load};
-use crate::explain::{one_line, person};
+use crate::explain::{one_line, person, refused_by, refused_why};
 use crate::store;
 
 /// What a proposal would do if it carried.
@@ -101,13 +101,25 @@ pub fn outcome(st: &Canon, id: &ActId) -> String {
     let verdict = |v: &Verdict, done: &str| match v {
         Verdict::Ratified { .. } => done.to_string(),
         Verdict::Proposed { needs } => format!("still waiting — needs {needs}"),
-        Verdict::Refused { by, why, .. } => format!("refused by {}: {why}", person(by)),
+        Verdict::Refused { by, why, .. } => {
+            format!(
+                "refused{}: {}",
+                refused_by(by, None, person),
+                refused_why(by, why)
+            )
+        }
     };
     if let Some(c) = st.get(id) {
         return match &c.status {
             Status::Active => "in force".into(),
             Status::Proposed { needs } => format!("still waiting — needs {needs}"),
-            Status::Refused { by, why, .. } => format!("refused by {}: {why}", person(by)),
+            Status::Refused { by, why, .. } => {
+                format!(
+                    "refused{}: {}",
+                    refused_by(by, None, person),
+                    refused_why(by, why)
+                )
+            }
             Status::Superseded { by } => format!("replaced by {by}"),
             Status::Retracted { .. } => "retracted".into(),
         };

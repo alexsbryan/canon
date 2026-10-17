@@ -184,7 +184,10 @@ pub fn report_status(d: &Path, id: &ActId) {
         Status::Refused { by, why, .. } => {
             println!(
                 "{}",
-                crate::wrap::hang(&format!("  REFUSED by {by}: "), why)
+                crate::wrap::hang(
+                    &format!("  REFUSED{}: ", crate::explain::refused_by(by, None, |b| b)),
+                    &crate::explain::refused_why(by, why)
+                )
             );
         }
         Status::Superseded { .. } | Status::Retracted { .. } => {}
@@ -207,7 +210,10 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
         Verdict::Refused { by, why, .. } => {
             println!(
                 "{}",
-                crate::wrap::hang(&format!("  REFUSED by {by}: "), why)
+                crate::wrap::hang(
+                    &format!("  REFUSED{}: ", crate::explain::refused_by(by, None, |b| b)),
+                    &crate::explain::refused_why(by, why)
+                )
             );
         }
     }
@@ -236,7 +242,10 @@ pub fn report_retraction(r: &canon_core::Retraction) {
         Verdict::Refused { by, why, .. } => {
             println!(
                 "{}",
-                crate::wrap::hang(&format!("  REFUSED by {by}: "), why)
+                crate::wrap::hang(
+                    &format!("  REFUSED{}: ", crate::explain::refused_by(by, None, |b| b)),
+                    &crate::explain::refused_why(by, why)
+                )
             );
         }
     }
@@ -745,7 +754,7 @@ pub fn list(args: &[String]) -> i32 {
         .filter(|c| matches!(c.status, Status::Refused { .. }))
         .count();
     if refused > 0 {
-        println!("{refused} refused — `canon why <id>` says by whom");
+        println!("{refused} refused — `canon why <id>` says why");
     }
     if !st.ungoverned.is_empty() {
         println!(
@@ -1234,7 +1243,11 @@ pub fn log(args: &[String]) -> i32 {
                 canon_core::Verdict::Ratified { since, how } => {
                     format!("applied {}: {how}", store::ymd(*since))
                 }
-                canon_core::Verdict::Refused { by, why, .. } => format!("REFUSED by {by}: {why}"),
+                canon_core::Verdict::Refused { by, why, .. } => format!(
+                    "REFUSED{}: {}",
+                    crate::explain::refused_by(by, None, |b| b),
+                    crate::explain::refused_why(by, why)
+                ),
             };
             println!("{}", crate::wrap::hang("    ", &said));
         }

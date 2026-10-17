@@ -7,6 +7,33 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Before you upgrade
+
+- A canon that adopts `share` at any bar other than more than half or all
+  of them needs this release to read it. 0.4.0 refuses the `ratification`
+  line and names the rule (`unknown variant \`share\``) rather than fold
+  under the wrong one. `share:>1/2` is written as `majority` and
+  `share:100%` as `unanimous`, so those two still read in 0.4.0.
+- Under `majority`, a refusal no longer names one person. 0.4.0 credited it
+  to whoever's no came last ("refused by Kai: …"); it now says how many of
+  the house said no or left, and gives each reason with its author. The
+  verdict and its moment are unchanged.
+- For code built on `canon-core`: `Ratify` has a `Share` variant, so an
+  exhaustive `match` on it needs one more arm.
+
+### Changes
+
+- `canon ratification set share:60%` (or `share:2/3`, or `'share:>2/3'`
+  for more than) carries a proposal at that share of the people who held the
+  scope when it was written, counted as `majority` is: somebody who joins
+  later never moves the count, and once the share can no longer be reached
+  it is refused. Two-thirds of three is two. An impossible bar (`share:0%`,
+  `'share:>100%'`, `share:3/0`) is refused and says why.
+- A refusal that nobody made alone reads as one: `refused 2026-10-17: 13 of
+  the 30 people who held house when it was proposed said no or no longer
+  hold it, so 60% can no longer approve it — Jo: …; Sam: …`, in `why`,
+  `list`, `review` and `canon ui`, where it used to read `refused by :`.
+
 ## 0.4.0 — 2026-10-17
 
 ### Before you upgrade

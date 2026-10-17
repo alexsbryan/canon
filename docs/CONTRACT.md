@@ -25,13 +25,14 @@ not a proof over every possible history.
 | `scope_boundary_exact` | A scope covers itself and dotted descendants, not a name that merely shares its prefix. Empty segments are refused. | Validated `Scope` construction and boundary tests in [scope.rs](../crates/canon-core/src/scope.rs). |
 | `evidence_cites_existing_sources` | Validated citations name an offered source, and refused readings remain reportable. This does not establish that a reading is true. | `Standing::cited` tests in [standing.rs](../crates/canon-core/src/standing.rs), `Offered::at` tests in [resolver tests](../crates/canon-cli/src/resolver/tests.rs), source-slicing tests in [locate tests](../crates/canon-cli/src/locate/tests.rs). |
 | `agents_cannot_ratify` | Machine-authored positions do not supply ratifying approvals or objections; holding a seat does not make an agent's own write an approval. | Generated `agents_cannot_ratify` in [laws.rs](../crates/canon-core/tests/laws.rs), with human positive controls and open/held scopes. |
+| `share_bars_are_their_rules` | A share of the house and the rule it equals — more than half and `majority`, all of them and `unanimous` — give the same verdict, moment and words, alone and under `twice`, however the bar is written. | Generated `share_bars_are_their_rules` in [laws.rs](../crates/canon-core/tests/laws.rs), over houses whose people are granted, lapse and move out around the proposal, in the same second as it and either side of a `twice` gap. |
 | `unknown_is_reported` | Unfamiliar annotations are preserved, left uninterpreted, and reported. Unsupported versions and malformed known operations are refused. | `an_unknown_annotation_is_carried_and_round_trips`, `a_carried_annotation_changes_nothing_and_is_reported`, version and malformed-operation tests in [core tests](../crates/canon-core/src/tests.rs). |
 
 Consent may ratify a proposal after a waiting period without an explicit
 approval. That authority comes from the group's adopted policy, not from an
 agent's position. The ratification check exercises standing, joint, threshold,
-consent, and twice rules; it verifies that human approvals or timely objections
-still have their intended effects.
+majority, unanimous, share, consent, and twice rules; it verifies that human
+approvals or timely objections still have their intended effects.
 
 ## What the checks assume
 

@@ -115,8 +115,10 @@ GOVERN                                        (no model needed)
   scope <id> <scope>                     put a commitment in a scope
   policy show | set <rule> [-m \"...\"]    what this canon decides under
   ratification show | set <rule>         how a proposal becomes a rule, per scope:
-                                         standing, joint:a,b, threshold:n/m, majority,
-                                         unanimous, consent:Nd, twice:turnover:<rule>
+                                         standing, joint:a,b, threshold:n/m (n approve,
+                                         m objecting stop it), majority, unanimous,
+                                         share:60% or share:2/3 (that share of who holds
+                                         it), consent:Nd, twice:turnover:<rule>
                                          or twice:Nd:<rule>
        [--governs all|commitments]       whether a change of policy waits too
        [--personal on|off]               canon-wide: a person's own scope is theirs

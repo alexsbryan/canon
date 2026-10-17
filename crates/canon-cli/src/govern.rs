@@ -298,6 +298,20 @@ fn knobs(
     Ok((governs, personal))
 }
 
+/// A ratification rule from what someone typed, or what to type instead.
+/// `ratification set` and `replay --ratification` both read rules here.
+pub(crate) fn ratify_from(raw: &str) -> Result<canon_core::Ratify, String> {
+    raw.parse().map_err(|e| match e {
+        canon_core::NotARule::Unknown => format!(
+            "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
+             threshold:2/1 (two approving carry it, one objecting stops it), majority, \
+             unanimous, share:60% or share:2/3 (that share of the people who hold the \
+             scope), consent:7d, or twice:turnover:consent:7d"
+        ),
+        e => format!("`{raw}` — {e}"),
+    })
+}
+
 pub fn ratification(args: &[String]) -> i32 {
     let pos = positionals(args);
     match pos.first().copied() {
@@ -305,18 +319,15 @@ pub fn ratification(args: &[String]) -> i32 {
             let Some(raw) = pos.get(1) else {
                 return fail(
                     "usage: canon ratification set \
-                     <standing|joint:a,b|threshold:n/m|majority|unanimous|consent:Nd|\
-                     twice:<turnover|Nd>:<rule>> \
+                     <standing|joint:a,b|threshold:n/m|majority|unanimous|share:N%|share:a/b|\
+                     consent:Nd|twice:<turnover|Nd>:<rule>> \
                      [--scope s] [--governs all|commitments] [--personal on|off] \
                      [-m \"<how it reads>\"]",
                 );
             };
-            let Some(rule) = canon_core::Ratify::parse(raw) else {
-                return fail(format!(
-                    "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
-                     threshold:2/1, majority, unanimous, consent:7d, or \
-                     twice:turnover:consent:7d"
-                ));
+            let rule = match ratify_from(raw) {
+                Ok(r) => r,
+                Err(e) => return fail(e),
             };
             let scope = match scope_from(args) {
                 Ok(s) => s,

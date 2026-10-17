@@ -389,6 +389,16 @@ fn id_of(body: &Value, key: &str, labels: &BTreeMap<String, ActId>) -> Result<Ac
     }
 }
 
+/// A refusal as a step's detail: `<by>: <why>`, or the why alone when
+/// nobody refused it alone, where it read as `: <why>`.
+fn refusal_detail(by: &str, why: &str) -> String {
+    if by.is_empty() {
+        why.to_string()
+    } else {
+        format!("{by}: {why}")
+    }
+}
+
 /// A `check` step: the positions a model would have produced, supplied
 /// directly, decided under the canon's own policy.
 /// A `status` step: where a commitment — or a change to how a scope
@@ -405,7 +415,7 @@ fn status_step(
     let render = |v: &Verdict| match v {
         Verdict::Ratified { .. } => ("in-force", String::new()),
         Verdict::Proposed { needs } => ("proposed", needs.clone()),
-        Verdict::Refused { by, why, .. } => ("refused", format!("{by}: {why}")),
+        Verdict::Refused { by, why, .. } => ("refused", refusal_detail(by, why)),
     };
     if let Some(c) = canon.get(id) {
         let scope = canon.scope_of(id);
@@ -420,7 +430,7 @@ fn status_step(
             (canon_core::Status::Active, None) => ("in-force", String::new()),
             (canon_core::Status::Proposed { needs }, None) => ("proposed", needs.clone()),
             (canon_core::Status::Refused { by, why, .. }, None) => {
-                ("refused", format!("{by}: {why}"))
+                ("refused", refusal_detail(by, why))
             }
         };
         return Ok(json!({
@@ -478,7 +488,7 @@ fn policy_status(canon: &Canon, id: &ActId) -> Option<Value> {
         let (status, detail) = match &p.verdict {
             Some(canon_core::Verdict::Proposed { needs }) => ("proposed", needs.clone()),
             Some(canon_core::Verdict::Refused { by, why, .. }) => {
-                ("refused", format!("{by}: {why}"))
+                ("refused", refusal_detail(by, why))
             }
             Some(canon_core::Verdict::Ratified { .. }) | None => ("superseded", String::new()),
         };
@@ -1143,15 +1153,9 @@ pub fn run(args: &[String]) -> i32 {
     // done to the last year" is a question with an answer.
     let forced_ratify = match flag(args, "--ratification") {
         None => None,
-        Some(raw) => match canon_core::Ratify::parse(raw) {
-            Some(r) => Some(r),
-            None => {
-                return fail(format!(
-                    "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
-                     threshold:2/1, majority, unanimous, consent:7d, or \
-                     twice:turnover:consent:7d"
-                ))
-            }
+        Some(raw) => match crate::govern::ratify_from(raw) {
+            Ok(r) => Some(r),
+            Err(e) => return fail(e),
         },
     };
     let started = std::time::Instant::now();

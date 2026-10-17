@@ -47,6 +47,32 @@ pub fn person(actor: &str) -> &str {
     actor.strip_prefix("human:").unwrap_or(actor)
 }
 
+/// What follows "refused" on a line that says so: " by Kai", then ", <date>"
+/// when the line dates it. A refusal nobody made alone — a share of the
+/// house that can no longer be reached, a count of objections — has no
+/// author, and gets only the date: "refused by :" named nobody as though
+/// they were somebody. `shown` is how the surface writes a name.
+pub fn refused_by(by: &str, at: Option<i64>, shown: impl Fn(&str) -> &str) -> String {
+    let when = at.map(store::ymd);
+    match (by.is_empty(), when) {
+        (true, None) => String::new(),
+        (true, Some(when)) => format!(" {when}"),
+        (false, None) => format!(" by {}", shown(by)),
+        (false, Some(when)) => format!(" by {}, {when}", shown(by)),
+    }
+}
+
+/// Why it was refused, as read. With an author it is their own words. With
+/// none it is the fold's sentence, which names people by id, and they read
+/// by name like everywhere else.
+pub fn refused_why(by: &str, why: &str) -> String {
+    if by.is_empty() {
+        person_in(why)
+    } else {
+        why.to_string()
+    }
+}
+
 /// One line of an explanation. The caller supplies the prefix so a CLI can
 /// indent and an MCP payload need not.
 pub struct Explanation {
@@ -228,9 +254,9 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
             person_in(needs)
         )),
         Status::Refused { at, by, why } => lines.push(format!(
-            "refused by {}, {}: {why}",
-            person(by),
-            store::ymd(*at)
+            "refused{}: {}",
+            refused_by(by, Some(*at), person),
+            refused_why(by, why)
         )),
     }
 
@@ -270,9 +296,9 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                             said(rationale)
                         ));
                         lines.push(format!(
-                            "  refused by {}, {}: {why}",
-                            person(by),
-                            store::ymd(*at)
+                            "  refused{}: {}",
+                            refused_by(by, Some(*at), person),
+                            refused_why(by, why)
                         ));
                     }
                     Some(Verdict::Ratified { how, .. }) => {
