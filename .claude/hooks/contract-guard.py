@@ -137,6 +137,31 @@ def pre_tool(event):
     if re.search(r"\bgit\s+push\b[^\n;&|]*--no-verify", command):
         decide("ask", "--no-verify skips the pre-push gate, including the contract check. "
                       "pre-push.sh asks that a bypass be said out loud on the PR.")
+    if pushes_main(command):
+        decide("ask", "This push lands on main directly. The holder bypasses the PR ruleset, and "
+                      "an agent pushing with their credentials would too. Approve only if you "
+                      "asked for a direct push.")
+
+
+def pushes_main(command):
+    """Whether a git push in this command would update main.
+
+    The ruleset on main lets admins push straight to it, so the person
+    can. An agent using their credentials is let through the same way;
+    this is where it is asked instead.
+    """
+    for match in re.finditer(r"\bgit\s+push\b([^\n;&|]*)", command):
+        words = match.group(1).split()
+        if any(w in ("--all", "--mirror") for w in words):
+            return True
+        positional = [w for w in words if not w.startswith("-")]
+        refspecs = positional[1:]
+        if refspecs:
+            if any(r.lstrip("+").split(":")[-1] in ("main", "refs/heads/main") for r in refspecs):
+                return True
+        elif (git("branch", "--show-current") or "").strip() == "main":
+            return True
+    return False
 
 
 def post_edit(event):

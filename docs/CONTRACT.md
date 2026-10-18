@@ -121,8 +121,9 @@ the pre-existing `d65a6f1` standard; subsequent PRs cannot replace that evaluato
 The local gate uses your checkout's evaluator, judged against the pin `origin/main`
 holds rather than your checkout's own, so a local pin move fails before the push
 as it would in CI. A ruleset on `main` requires a pull request and the
-**Contract compatibility** check, with no bypass, so the CI result is enforced at
-merge time. A separate publisher attaches the verdict to the candidate commit; it
+**Contract compatibility** check. Admins may push to `main` directly; such a push
+still runs the local gate, and Contract CI judges it against the selected
+standard and stays red until a later commit fixes it. A separate publisher attaches the verdict to the candidate commit; it
 does not execute candidate code or consume candidate-authored result labels.
 
 Adopting a new contract is a separate governance decision, made in this order:
@@ -141,5 +142,6 @@ desirability is a human decision; its observed compatibility result is not.
 
 An agent working in this repository can draft step 3 and nothing before it.
 Hooks in [.claude/settings.json](../.claude/settings.json) refuse its edits to
-the pin and the variable, ask before it touches the evaluator, and do not let it
-finish a turn with contract-judged changes it has not run the check on.
+the pin and the variable, ask before it touches the evaluator or pushes to `main`
+with the holder's credentials, and do not let it finish a turn with
+contract-judged changes it has not run the check on.
