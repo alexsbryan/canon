@@ -1,5 +1,8 @@
 import importlib.util
 from pathlib import Path
+import re
+import subprocess
+import tempfile
 import unittest
 
 
@@ -73,6 +76,38 @@ class Classification(unittest.TestCase):
         self.assertIn('proptest="1"', merged)
         self.assertNotIn('proptest="99"', merged)
         self.assertIn('[features]\none=[]', merged)
+
+
+class Selection(unittest.TestCase):
+    def test_the_holders_variable_selects_the_standard(self):
+        chosen = "a" * 40
+        self.assertEqual(contract.selected_standard(contract.TOOL_ROOT, {"CANON_CONTRACT_BASELINE": chosen}),
+                         (chosen, "CANON_CONTRACT_BASELINE"))
+
+    def test_a_checkout_judging_itself_does_not_read_its_own_pin(self):
+        main = subprocess.run(["git", "show", "origin/main:.github/contract-baseline"],
+                              cwd=contract.TOOL_ROOT, capture_output=True, text=True)
+        if main.returncode:
+            self.skipTest("no origin/main in this clone")
+        self.assertEqual(contract.selected_standard(contract.TOOL_ROOT, {}),
+                         (main.stdout.strip(), "origin/main"))
+
+    def test_a_standard_needs_an_adoption_heading(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs").mkdir()
+            record = root / "docs/CONTRACT_ADOPTIONS.md"
+            self.assertFalse(contract.adopted(root, "b" * 40))
+            record.write_text("Mentioned in passing: " + "b" * 40 + "\n")
+            self.assertFalse(contract.adopted(root, "b" * 40))
+            record.write_text("## `" + "b" * 40 + "` — release\n")
+            self.assertTrue(contract.adopted(root, "b" * 40))
+
+    def test_every_standard_this_tree_has_pinned_is_recorded(self):
+        log = subprocess.run(["git", "log", "--format=", "-p", "--", ".github/contract-baseline"],
+                             cwd=contract.TOOL_ROOT, capture_output=True, text=True, check=True).stdout
+        for revision in set(re.findall(r"^\+([0-9a-f]{40})$", log, re.MULTILINE)):
+            self.assertTrue(contract.adopted(contract.TOOL_ROOT, revision), revision)
 
 
 if __name__ == "__main__":
