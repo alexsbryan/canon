@@ -188,6 +188,31 @@ def read_old_records(workspace, binary, records):
     return result
 
 
+def selected_standard(root, environ=os.environ):
+    """The standard to judge against, and what selected it.
+
+    CI selects it with CANON_CONTRACT_BASELINE and runs this evaluator from
+    the base checkout. A checkout judging itself would read its own pin and
+    always agree with it, so a local pin move would pass here and fail in CI.
+    It reads the pin main holds instead, which only a merged adoption moves.
+    """
+    chosen = environ.get("CANON_CONTRACT_BASELINE")
+    if chosen:
+        return chosen.strip(), "CANON_CONTRACT_BASELINE"
+    policy = TOOL_ROOT / ".github/contract-baseline"
+    if Path(root).resolve() == TOOL_ROOT:
+        main = command(["git", "show", "origin/main:.github/contract-baseline"], root)
+        if main.returncode == 0:
+            return main.stdout.strip(), "origin/main"
+    return policy.read_text().strip(), str(policy.relative_to(TOOL_ROOT))
+
+
+def adopted(root, revision):
+    """Whether the adoption record names this standard in one of its headings."""
+    record = root / "docs/CONTRACT_ADOPTIONS.md"
+    return record.exists() and re.search(rf"^## `{revision}`", record.read_text(), re.MULTILINE) is not None
+
+
 def run(root):
     report = {"outcome": "not_established", "baseline": None,
               "evaluator": str(TOOL_ROOT), "evidence": {}}
@@ -207,14 +232,20 @@ def run(root):
         for document in ("docs/CONTRACT.md", "docs/SPEC.md", ".github/contract-baseline"):
             fingerprint.update((root / document).read_bytes())
         report["candidate_fingerprint"] = fingerprint.hexdigest()
-        policy = TOOL_ROOT / ".github/contract-baseline"
-        revision = os.environ.get("CANON_CONTRACT_BASELINE", policy.read_text().strip())
+        revision, selected_by = selected_standard(root)
         if not re.fullmatch(r"[0-9a-f]{40}", revision):
             raise ValueError("baseline must be a full commit ID")
         report["baseline"] = revision
+        report["baseline_selected_by"] = selected_by
         # The candidate cannot replace the evaluator's baseline policy.
-        if (root / ".github/contract-baseline").read_text().strip() != revision:
-            raise ValueError("candidate changed the independently selected baseline")
+        pinned = (root / ".github/contract-baseline").read_text().strip()
+        if pinned != revision:
+            raise ValueError(f"candidate changed the independently selected baseline: it pins {pinned}, "
+                             f"{selected_by} selects {revision}. Moving the standard is the holder's "
+                             "decision; see docs/CONTRACT_ADOPTIONS.md")
+        if not adopted(root, revision):
+            raise ValueError(f"standard {revision} has no entry in docs/CONTRACT_ADOPTIONS.md "
+                             "saying who adopted it and on what evidence")
         checked(["git", "cat-file", "-e", f"{revision}^{{commit}}"], root)
         env = os.environ.copy()
         for key in ("CANON_DIR", "CANON_ACTOR", "CANON_ENDPOINT", "CANON_MODEL", "CANON_EXTRACT_MODEL", "CANON_API_KEY", "CANON_SIGNING_KEY"):

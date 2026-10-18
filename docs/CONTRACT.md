@@ -118,14 +118,30 @@ consumer; a private implementation change can alter record identity.
 [Contract CI](../.github/workflows/contract.yml) uses the PR base branch's workflow,
 evaluator, and inspector. Its one-time installation uses the new evaluator against
 the pre-existing `d65a6f1` standard; subsequent PRs cannot replace that evaluator.
-The local gate uses your checkout's evaluator. Make **Contract compatibility** a
-required branch check to enforce the independent CI result at merge time. A
-separate publisher attaches the verdict to the candidate commit; it does not
-execute candidate code or consume candidate-authored result labels.
+The local gate uses your checkout's evaluator, judged against the pin `origin/main`
+holds rather than your checkout's own, so a local pin move fails before the push
+as it would in CI. A ruleset on `main` requires a pull request and the
+**Contract compatibility** check. Admins may push to `main` directly; such a push
+still runs the local gate, and Contract CI judges it against the selected
+standard and stays red until a later commit fixes it. A separate publisher attaches the verdict to the candidate commit; it
+does not execute candidate code or consume candidate-authored result labels.
 
-Adopting a new contract is a separate governance decision. The repository-level
-`CANON_CONTRACT_BASELINE` Actions variable can select an independently adopted
-commit; the candidate's pin must match it. A candidate cannot move the default
-base-owned pin to make its own checks pass. A breaking adoption needs old-record
-migration or reinterpretation tests in the new standard. Its desirability is a
-human decision; its observed compatibility result is not.
+Adopting a new contract is a separate governance decision, made in this order:
+
+1. The holder reads the verdict against the current standard and decides.
+2. The holder sets the `CANON_CONTRACT_BASELINE` Actions variable to the adopted
+   commit. CI refuses to judge anything while it is unset.
+3. A pull request moves the pin to the same commit and adds its entry to
+   [CONTRACT_ADOPTIONS.md](./CONTRACT_ADOPTIONS.md): what broke against the old
+   standard and the evidence old records still read. The evaluator refuses a
+   standard without an entry.
+
+A candidate cannot move the pin to make its own checks pass. A breaking adoption
+needs old-record migration or reinterpretation tests in the new standard. Its
+desirability is a human decision; its observed compatibility result is not.
+
+An agent working in this repository can draft step 3 and nothing before it.
+Hooks in [.claude/settings.json](../.claude/settings.json) refuse its edits to
+the pin and the variable, ask before it touches the evaluator or pushes to `main`
+with the holder's credentials, and do not let it finish a turn with
+contract-judged changes it has not run the check on.
