@@ -302,7 +302,7 @@ pub fn run_scenario(
             }
             "unattended" => json!({
                 "unattended": canon
-                    .unattended
+                    .unattended()
                     .iter()
                     .map(ToString::to_string)
                     .collect::<Vec<_>>(),
@@ -322,20 +322,20 @@ pub fn run_scenario(
                 })
             }
             "lineage" => json!({
-                "generation": canon.ancestry.as_ref().map(|a| a.generation.clone()),
-                "lineage": canon.ancestry.as_ref().map(|a| a.lineage.clone()),
+                "generation": canon.ancestry().as_ref().map(|a| a.generation.clone()),
+                "lineage": canon.ancestry().as_ref().map(|a| a.lineage.clone()),
                 // What was inherited from the seed, and what this community
                 // wrote for itself. The divergence IS the congruence.
-                "inherited": canon.active().filter(|c| c.from.is_some()).count(),
-                "local": canon.active().filter(|c| c.from.is_none()).count(),
+                "inherited": canon.active().filter(|c| c.from().is_some()).count(),
+                "local": canon.active().filter(|c| c.from().is_none()).count(),
             }),
             "state" => json!({
                 "acts": acts.len(),
                 "live": canon.active().count(),
                 "proposed": canon.proposed().count(),
-                "ungoverned": canon.ungoverned.len(),
+                "ungoverned": canon.ungoverned().len(),
                 "open_questions": canon.open().count(),
-                "carried": canon.carried.len(),
+                "carried": canon.carried().len(),
                 "tolerated": canon.tolerated().count(),
             }),
             other => return Err(at(format!("unknown step `{other}`"))),
@@ -414,16 +414,16 @@ fn status_step(
     use canon_core::Verdict;
     let render = |v: &Verdict| match v {
         Verdict::Ratified { .. } => ("in-force", String::new()),
-        Verdict::Proposed { needs } => ("proposed", needs.clone()),
+        Verdict::Proposed { needs, .. } => ("proposed", needs.clone()),
         Verdict::Refused { by, why, .. } => ("refused", refusal_detail(by, why)),
     };
     if let Some(c) = canon.get(id) {
         let scope = canon.scope_of(id);
         let deciding = forced.map_or_else(
-            || canon.ratification_for_at(scope, c.asserted_at).name(),
+            || canon.ratification_for_at(scope, c.asserted_at()).name(),
             canon_core::Ratify::name,
         );
-        let (status, detail) = match (&c.status, forced) {
+        let (status, detail) = match (&c.status(), forced) {
             (canon_core::Status::Superseded { by }, _) => ("superseded", by.to_string()),
             (canon_core::Status::Retracted { .. }, _) => ("retracted", String::new()),
             (_, Some(rule)) => render(&canon.ratify_under(rule, &canon.proposal_of(c), now)),
@@ -437,10 +437,10 @@ fn status_step(
             "status": status,
             "detail": detail,
             "rule": deciding,
-            "by": c.actor,
+            "by": c.actor(),
         }));
     }
-    if let Some(r) = canon.ratifications.iter().find(|r| r.act == *id) {
+    if let Some(r) = canon.ratifications().iter().find(|r| r.act == *id) {
         let p = canon_core::Proposal {
             id: &r.act,
             scope: r.scope.as_ref(),
@@ -475,7 +475,7 @@ fn status_step(
 /// recorded. A policy in `canon.policies` is the one in force for its scope;
 /// one written without standing is in `ungoverned` with the reason.
 fn policy_status(canon: &Canon, id: &ActId) -> Option<Value> {
-    if let Some(p) = canon.policies.iter().find(|p| p.act == *id) {
+    if let Some(p) = canon.policies().iter().find(|p| p.act == *id) {
         return Some(json!({
             "status": "in-force",
             "detail": "",
@@ -484,9 +484,9 @@ fn policy_status(canon: &Canon, id: &ActId) -> Option<Value> {
         }));
     }
     // Waiting on the group, or refused by it, under `governs: all`.
-    if let Some(p) = canon.pending_policies.iter().find(|p| p.act == *id) {
+    if let Some(p) = canon.pending_policies().iter().find(|p| p.act == *id) {
         let (status, detail) = match &p.verdict {
-            Some(canon_core::Verdict::Proposed { needs }) => ("proposed", needs.clone()),
+            Some(canon_core::Verdict::Proposed { needs, .. }) => ("proposed", needs.clone()),
             Some(canon_core::Verdict::Refused { by, why, .. }) => {
                 ("refused", refusal_detail(by, why))
             }
@@ -500,7 +500,7 @@ fn policy_status(canon: &Canon, id: &ActId) -> Option<Value> {
         }));
     }
     canon
-        .ungoverned
+        .ungoverned()
         .iter()
         .find(|(act, _)| act == id)
         .map(|(_, why)| json!({ "status": "ungoverned", "detail": why }))
@@ -864,7 +864,7 @@ fn slug(s: &str) -> String {
 /// The positions on record about a subject, in the scenario's own dialect.
 fn positions_on(canon: &Canon, about: &str) -> Vec<Value> {
     canon
-        .positions
+        .positions()
         .iter()
         .filter(|p| p.about == about)
         .map(|p| {
@@ -893,7 +893,7 @@ fn positions_on(canon: &Canon, about: &str) -> Vec<Value> {
 /// Which scope a subject sits in, when a position cited a scoped commitment.
 fn scope_of_subject(canon: &Canon, about: &str) -> Option<String> {
     canon
-        .positions
+        .positions()
         .iter()
         .filter(|p| p.about == about)
         .find_map(|p| match &p.position.source {
@@ -910,7 +910,7 @@ fn scope_of_subject(canon: &Canon, about: &str) -> Option<String> {
 fn subject_text(canon: &Canon, about: &str) -> String {
     if about.starts_with(canon_core::ID_PREFIX) {
         if let Some(c) = canon.get(&ActId::from_raw(about)) {
-            return c.text.clone();
+            return c.text().to_string();
         }
     }
     about.to_string()
@@ -960,7 +960,7 @@ fn derive_scenario(canon: &Canon, now: i64, last: i64) -> (String, usize) {
     // Who holds what — one line per boundary anybody holds. It costs nothing
     // and it is the picture a group wants beside the decisions.
     let mut scopes: Vec<String> = canon
-        .grants
+        .grants()
         .iter()
         .filter(|g| g.held_at(now))
         .map(|g| g.scope.to_string())
@@ -978,10 +978,10 @@ fn derive_scenario(canon: &Canon, now: i64, last: i64) -> (String, usize) {
     // Rulings first, because a `decided` act names who adjudicated — so the
     // step can also ask whether that person held the thing they ruled on.
     let subjects: Vec<(String, Option<String>)> = canon
-        .rulings
+        .rulings()
         .iter()
         .map(|r| (r.about.clone(), Some(r.actor.clone())))
-        .chain(canon.positions.iter().map(|p| (p.about.clone(), None)))
+        .chain(canon.positions().iter().map(|p| (p.about.clone(), None)))
         .collect();
     let mut seen: Vec<String> = Vec::new();
     let mut names: Vec<String> = Vec::new();
@@ -1028,26 +1028,26 @@ fn derive_scenario(canon: &Canon, now: i64, last: i64) -> (String, usize) {
     // Where each rule stands under its scope's ratification rule — the
     // steps `--ratification` re-judges. Only in a canon somebody holds: in
     // a notebook every line is in force and there is nothing to re-judge.
-    if !canon.grants.is_empty() {
-        for c in &canon.commitments {
+    if !canon.grants().is_empty() {
+        for c in canon.commitments() {
             if matches!(
-                c.status,
+                c.status(),
                 canon_core::Status::Superseded { .. } | canon_core::Status::Retracted { .. }
             ) {
                 continue;
             }
-            let mut name = format!("stands-{}", slug(&c.text));
+            let mut name = format!("stands-{}", slug(c.text()));
             let mut n = 2;
             while names.contains(&name) {
-                name = format!("stands-{}-{n}", slug(&c.text));
+                name = format!("stands-{}-{n}", slug(c.text()));
                 n += 1;
             }
             names.push(name.clone());
             lines.push(step_line(&[
                 ("step", json!("status")),
                 ("name", json!(name)),
-                ("proposal", json!(c.text)),
-                ("commitment", json!(c.id.to_string())),
+                ("proposal", json!(c.text())),
+                ("commitment", json!(c.id().to_string())),
             ]));
         }
     }
@@ -1085,7 +1085,7 @@ pub fn run(args: &[String]) -> i32 {
         std::fs::read_to_string(dir.join(name))
             .map_err(|e| format!("reading {}: {e}", dir.join(name).display()))
     };
-    let seed = match read(crate::store::FILE) {
+    let seed = match crate::store::raw(dir) {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
@@ -1209,12 +1209,7 @@ pub fn run(args: &[String]) -> i32 {
         let out = Path::new(out);
         let profile = flag(args, "--profile").unwrap_or("house");
         if let Err(e) = std::fs::create_dir_all(out)
-            .and_then(|()| {
-                std::fs::write(
-                    out.join(crate::store::FILE),
-                    Log::from_acts(replay.acts.clone()).render(),
-                )
-            })
+            .and_then(|()| crate::store::materialize(out, &Log::from_acts(replay.acts.clone())))
             .and_then(|()| std::fs::write(out.join("profile"), format!("{profile}\n")))
         {
             return fail(format!("writing {}: {e}", out.display()));
@@ -1643,7 +1638,7 @@ mod tests {
             canon_core::ANONYMOUS,
         );
         let canon = Log::from_acts(vec![q, second]).derive_at(ts + 1);
-        assert_eq!(canon.seconds(&canon.questions[0].id), 1);
+        assert_eq!(canon.seconds(&canon.questions()[0].id), 1);
         let (text, checks) = derive_scenario(&canon, ts + 1, ts + 1);
         assert_eq!(checks, 0, "{text}");
     }
@@ -1664,7 +1659,7 @@ mod tests {
         }
         let mut files: Vec<_> = dirs
             .into_iter()
-            .map(|d| d.join(crate::store::FILE))
+            .map(|d| crate::store::file(&d))
             .filter(|f| f.is_file())
             .collect();
         files.sort();

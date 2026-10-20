@@ -55,7 +55,7 @@ fn fresh_secret() -> Result<String, String> {
 
 pub(crate) fn resolve_draw(canon: &canon_core::Canon, needle: &str) -> Result<ActId, String> {
     let hits: Vec<&ActId> = canon
-        .draws
+        .draws()
         .iter()
         .map(|d| &d.act)
         .filter(|id| id.as_str().starts_with(needle))
@@ -157,7 +157,7 @@ fn seal(_args: &[String], pos: &[&str]) -> i32 {
         Err(e) => return fail(e),
     };
     let announced = canon
-        .draws
+        .draws()
         .iter()
         .find(|x| x.act == commit)
         .expect("resolved");
@@ -170,7 +170,7 @@ fn seal(_args: &[String], pos: &[&str]) -> i32 {
     }
     let actor = store::actor();
     if canon
-        .sealed
+        .sealed()
         .iter()
         .any(|s| s.commit == commit && s.actor == actor)
     {
@@ -227,7 +227,7 @@ fn open(args: &[String], pos: &[&str]) -> i32 {
         Err(e) => return fail(e),
     };
     let announced = canon
-        .draws
+        .draws()
         .iter()
         .find(|x| x.act == commit)
         .expect("resolved");
@@ -339,14 +339,14 @@ fn list(args: &[String]) -> i32 {
         );
         return 0;
     }
-    if canon.draws.is_empty() {
+    if canon.draws().is_empty() {
         println!("no draws announced. `canon draw commit <scope> <seats> --after <date>`");
         return 0;
     }
     let now = store::now();
     for d in canon.draws_announced() {
-        let sealed = canon.sealed.iter().filter(|s| s.commit == d.act).count();
-        let opened = canon.opened.iter().filter(|o| o.commit == d.act).count();
+        let sealed = canon.sealed().iter().filter(|s| s.commit == d.act).count();
+        let opened = canon.opened().iter().filter(|o| o.commit == d.act).count();
         let state = if now < d.after_ts {
             format!("sealing until {}", store::ymd(d.after_ts))
         } else {

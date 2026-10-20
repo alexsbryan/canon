@@ -62,6 +62,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::fold::{Canon, Commitment};
 use crate::id::ActId;
+use crate::person::Person;
 use crate::scope::Scope;
 use crate::standing::Pull;
 
@@ -645,7 +646,7 @@ impl Personal {
 }
 
 /// A ratification rule someone adopted for a scope.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AdoptedRatify {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scope: Option<Scope>,
@@ -671,15 +672,25 @@ pub struct AdoptedRatify {
 }
 
 /// Where a proposal stands under its scope's rule.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+///
+/// Only ratification makes one: each variant is `non_exhaustive`, so
+/// outside this crate a verdict can be matched and never built.
+///
+/// ```compile_fail,E0639
+/// let forged = canon_core::Verdict::Ratified { since: 0, how: String::new() };
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "verdict", rename_all = "snake_case")]
 pub enum Verdict {
     /// A rule, from `since` on. `how` says which rule made it one and on
     /// whose word.
+    #[non_exhaustive]
     Ratified { since: i64, how: String },
     /// Not yet. `needs` says what would make it one.
+    #[non_exhaustive]
     Proposed { needs: String },
     /// Refused by the people the rule names. `why` quotes the objection.
+    #[non_exhaustive]
     Refused { at: i64, by: String, why: String },
 }
 
@@ -713,23 +724,24 @@ pub struct Proposal<'a> {
 }
 
 fn is_human(actor: &str) -> bool {
-    actor.starts_with("human:")
+    Person::of(actor).is_some()
 }
 
-/// The counted word of the people a rule names, in time order.
+/// The counted word of the people a rule names, in time order. Every entry
+/// is a [`Person`], so nothing but a person's word can be counted here.
 struct Tally<'a> {
     /// Who approved and when they first did. The proposer's own act, when it
     /// counts, is the earliest entry.
-    approved: Vec<(&'a str, i64)>,
+    approved: Vec<(Person<'a>, i64)>,
     /// Reasoned objections: `(at, by, why)`.
-    objections: Vec<(i64, &'a str, &'a str)>,
+    objections: Vec<(i64, Person<'a>, &'a str)>,
     /// Every position against, reasoned or not, by time. Threshold's block
     /// counts these.
-    against: Vec<(i64, &'a str)>,
+    against: Vec<(i64, Person<'a>)>,
 }
 
 impl<'a> Tally<'a> {
-    fn first_objection(&self) -> Option<(i64, &'a str, &'a str)> {
+    fn first_objection(&self) -> Option<(i64, Person<'a>, &'a str)> {
         self.objections.first().copied()
     }
 }
@@ -1029,7 +1041,12 @@ impl Canon {
     }
 
     fn holder_at(&self, scope: Option<&Scope>, actor: &str, at: i64) -> bool {
-        is_human(actor) && self.holders_at(scope, at).contains(actor)
+        self.holding(scope, actor, at).is_some()
+    }
+
+    /// The person, if they hold the scope at its narrowest level at `at`.
+    fn holding<'a>(&self, scope: Option<&Scope>, actor: &'a str, at: i64) -> Option<Person<'a>> {
+        Person::of(actor).filter(|_| self.holders_at(scope, at).contains(actor))
     }
 
     /// Held BEFORE the moment. A house whose first rules and first grants
@@ -1072,8 +1089,8 @@ impl Canon {
             objections: Vec::new(),
             against: Vec::new(),
         };
-        if implicit && self.holder_at(p.scope, p.actor, p.at) {
-            t.approved.push((p.actor, p.at));
+        if let Some(who) = self.holding(p.scope, p.actor, p.at).filter(|_| implicit) {
+            t.approved.push((who, p.at));
         }
         let mut said: Vec<&crate::fold::Stated> = self
             .positions
@@ -1082,20 +1099,19 @@ impl Canon {
             .collect();
         said.sort_by_key(|s| s.at);
         for s in said {
-            if !self.holder_at(p.scope, &s.by, s.at) {
+            let Some(who) = self.holding(p.scope, &s.by, s.at) else {
                 continue;
-            }
+            };
             match s.position.pull {
                 Pull::Toward => {
-                    if !t.approved.iter().any(|(who, _)| *who == s.by) {
-                        t.approved.push((s.by.as_str(), s.at));
+                    if !t.approved.iter().any(|(w, _)| *w == who) {
+                        t.approved.push((who, s.at));
                     }
                 }
                 Pull::Against => {
-                    t.against.push((s.at, s.by.as_str()));
+                    t.against.push((s.at, who));
                     if !s.position.because.trim().is_empty() {
-                        t.objections
-                            .push((s.at, s.by.as_str(), s.position.because.as_str()));
+                        t.objections.push((s.at, who, s.position.because.as_str()));
                     }
                 }
             }
@@ -1110,25 +1126,25 @@ impl Canon {
     /// decides an agent's proposal in a scope nobody holds, where there are
     /// no holders to count.
     fn people_said<'a>(&'a self, p: &Proposal, from: i64) -> Tally<'a> {
-        let mut said: Vec<&crate::fold::Stated> = self
+        let mut said: Vec<(Person<'a>, &crate::fold::Stated)> = self
             .positions
             .iter()
-            .filter(|s| s.about == p.id.as_str() && s.at >= from && is_human(&s.by))
+            .filter(|s| s.about == p.id.as_str() && s.at >= from)
+            .filter_map(|s| Some((Person::of(&s.by)?, s)))
             .collect();
-        said.sort_by_key(|s| s.at);
+        said.sort_by_key(|(_, s)| s.at);
         let mut t = Tally {
             approved: Vec::new(),
             objections: Vec::new(),
             against: Vec::new(),
         };
-        for s in said {
+        for (who, s) in said {
             match s.position.pull {
-                Pull::Toward => t.approved.push((s.by.as_str(), s.at)),
+                Pull::Toward => t.approved.push((who, s.at)),
                 Pull::Against => {
-                    t.against.push((s.at, s.by.as_str()));
+                    t.against.push((s.at, who));
                     if !s.position.because.trim().is_empty() {
-                        t.objections
-                            .push((s.at, s.by.as_str(), s.position.because.as_str()));
+                        t.objections.push((s.at, who, s.position.because.as_str()));
                     }
                 }
             }
@@ -1143,7 +1159,7 @@ impl Canon {
             return self.judge_share(bar, p, t, from, now);
         }
         let here = where_(p.scope);
-        let objection = |o: Option<(i64, &str, &str)>| {
+        let objection = |o: Option<(i64, Person, &str)>| {
             o.map(|(at, by, why)| (at, by.to_string(), why.to_string()))
         };
         match rule {
@@ -1182,7 +1198,7 @@ impl Canon {
                 let own = t
                     .approved
                     .first()
-                    .filter(|(who, at)| *who == p.actor && *at == p.at);
+                    .filter(|(who, at)| who.actor() == p.actor && *at == p.at);
                 let completed = match (own, t.approved.first()) {
                     (Some(_), _) => Some((from, format!("{} holds {here}", p.actor))),
                     (None, Some((who, at))) => {
@@ -1206,17 +1222,22 @@ impl Canon {
             }
             Ratify::Joint { holders } => {
                 let named = |who: &str| holders.iter().any(|h| h == who);
-                let refused = objection(t.objections.iter().find(|(_, by, _)| named(by)).copied());
+                let refused = objection(
+                    t.objections
+                        .iter()
+                        .find(|(_, by, _)| named(by.actor()))
+                        .copied(),
+                );
                 let missing: Vec<&str> = holders
                     .iter()
                     .map(String::as_str)
-                    .filter(|h| !t.approved.iter().any(|(who, _)| who == h))
+                    .filter(|h| !t.approved.iter().any(|(who, _)| who.actor() == *h))
                     .collect();
                 let completed = if missing.is_empty() {
                     let done = t
                         .approved
                         .iter()
-                        .filter(|(who, _)| named(who))
+                        .filter(|(who, _)| named(who.actor()))
                         .map(|(_, at)| *at)
                         .max()
                         .unwrap_or(from);
@@ -1324,10 +1345,10 @@ impl Canon {
             };
         }
         let needed = bar.needed(n);
-        let approved: Vec<(&str, i64)> = t
+        let approved: Vec<(Person, i64)> = t
             .approved
             .iter()
-            .filter(|(who, _)| voters.contains(who))
+            .filter(|(who, _)| voters.contains(who.actor()))
             .copied()
             .collect();
         let completed = approved.get(needed - 1).map(|(_, at)| {
@@ -1348,12 +1369,12 @@ impl Canon {
             let said = if all {
                 t.objections
                     .iter()
-                    .find(|(_, by, _)| *by == voter)
+                    .find(|(_, by, _)| by.actor() == voter)
                     .map(|(at, _, why)| (*at, Some(*why)))
             } else {
                 t.against
                     .iter()
-                    .find(|(_, by)| *by == voter)
+                    .find(|(_, by)| by.actor() == voter)
                     .map(|(at, by)| {
                         let why = t
                             .objections
@@ -1373,7 +1394,7 @@ impl Canon {
             else {
                 continue;
             };
-            let first_yes = approved.iter().find(|(who, _)| *who == voter);
+            let first_yes = approved.iter().find(|(who, _)| who.actor() == voter);
             if first_yes.is_none_or(|(_, yes)| *yes > at) {
                 lost.push((at, voter, why));
             }
@@ -1429,7 +1450,7 @@ impl Canon {
             let missing: Vec<&str> = voters
                 .iter()
                 .copied()
-                .filter(|v| !approved.iter().any(|(who, _)| who == v))
+                .filter(|v| !approved.iter().any(|(who, _)| who.actor() == *v))
                 .collect();
             format!(
                 "approval from {}: everyone who held {here} when it was proposed",
@@ -1581,24 +1602,25 @@ impl Canon {
     /// instead would let a stranger's retraction take effect by waiting.
     pub fn judge_retraction(&self, p: &Proposal, now: i64) -> Verdict {
         let here = where_(p.scope);
-        let mut said: Vec<&crate::fold::Stated> = self
+        let mut said: Vec<(Person, &crate::fold::Stated)> = self
             .positions
             .iter()
             .filter(|s| {
-                s.about == p.id.as_str()
-                    && is_human(&s.by)
-                    && self.seat(&s.by, p.scope, s.at) != Seat::Lacking
+                s.about == p.id.as_str() && self.seat(&s.by, p.scope, s.at) != Seat::Lacking
             })
+            .filter_map(|s| Some((Person::of(&s.by)?, s)))
             .collect();
-        said.sort_by_key(|s| s.at);
+        said.sort_by_key(|(_, s)| s.at);
         let completed = said
             .iter()
-            .find(|s| s.position.pull == Pull::Toward)
-            .map(|s| (s.at, format!("approved by {}, who holds {here}", s.by)));
+            .find(|(_, s)| s.position.pull == Pull::Toward)
+            .map(|(who, s)| (s.at, format!("approved by {who}, who holds {here}")));
         let refused = said
             .iter()
-            .find(|s| s.position.pull == Pull::Against && !s.position.because.trim().is_empty())
-            .map(|s| (s.at, s.by.clone(), s.position.because.clone()));
+            .find(|(_, s)| {
+                s.position.pull == Pull::Against && !s.position.because.trim().is_empty()
+            })
+            .map(|(who, s)| (s.at, who.to_string(), s.position.because.clone()));
         settle(Outcome {
             completed,
             refused,

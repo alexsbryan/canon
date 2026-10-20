@@ -82,7 +82,7 @@ pub fn adopt(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    if let Some(a) = &canon.ancestry {
+    if let Some(a) = &canon.ancestry() {
         return fail(format!(
             "this canon already descends from {}@{} — `canon upgrade <gen>` takes a newer \
              generation of it",
@@ -273,26 +273,11 @@ pub fn fetch(
             )
         })?;
     }
-    // A lineage repository publishes `acts.jsonl` at its root; a project
-    // repository carries the same file inside `.canon/`. Both shapes are real
-    // and a maintainer should not have to restructure to publish, so look in
-    // both — and SAY which one was read, because "it adopted something, but
-    // what?" is the confusing failure.
-    let root = cache.join(store::FILE);
-    let nested = cache.join(store::DIR).join(store::FILE);
-    let (file, home) = if root.is_file() {
-        (root, cache.clone())
-    } else if nested.is_file() {
-        (nested, cache.join(store::DIR))
-    } else {
-        return Err(format!(
-            "{url} does not look like a lineage: no {} at its root and none in {}/",
-            store::FILE,
-            store::DIR
-        ));
-    };
+    // Look at the root and in `.canon/` — and SAY which one was read,
+    // because "it adopted something, but what?" is the confusing failure.
+    let (raw, file, home) =
+        store::published(&cache).map_err(|e| format!("{url} does not look like a lineage: {e}"))?;
     eprintln!("reading {}", file.display());
-    let raw = std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
     let upstream = Log::parse(&raw)
         .map_err(|e| format!("{}: {e}", file.display()))?
         .derive();
@@ -467,7 +452,7 @@ fn render_divergence(d: &Divergence, canon: &canon_core::Canon, seed: &Snapshot)
     }
     for id in &d.added {
         if let Some(c) = canon.get(id) {
-            out.push_str(&format!("\nADDED       {}\n  \"{}\"\n", c.id, c.text));
+            out.push_str(&format!("\nADDED       {}\n  \"{}\"\n", c.id(), c.text()));
         }
     }
     out
@@ -507,7 +492,7 @@ fn render_proposal(d: &Divergence, canon: &canon_core::Canon) -> String {
     for id in &d.added {
         if let Some(c) = canon.get(id) {
             n += 1;
-            out.push_str(&format!("ADD\n  \"{}\"\n", c.text));
+            out.push_str(&format!("ADD\n  \"{}\"\n", c.text()));
         }
     }
     out.push_str(&format!("--- {n} change(s) · no rationales included\n"));
@@ -525,7 +510,7 @@ pub fn upgrade(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let Some(ancestry) = canon.ancestry.clone() else {
+    let Some(ancestry) = canon.ancestry().clone() else {
         return fail("this canon was not adopted from a lineage — nothing to upgrade");
     };
     let Some(url) = ancestry.source.clone().filter(|s| s != "paste") else {
@@ -559,9 +544,9 @@ pub fn upgrade(args: &[String]) -> i32 {
     };
     let local_of = |upstream_id: &canon_core::ActId| {
         canon
-            .commitments
+            .commitments()
             .iter()
-            .find(|c| c.from.as_ref() == Some(upstream_id))
+            .find(|c| c.from() == Some(upstream_id))
     };
 
     let mut applied = 0;
@@ -581,7 +566,7 @@ pub fn upgrade(args: &[String]) -> i32 {
                         &dir,
                         ActKind::Supersede {
                             text: c.text.clone(),
-                            old: vec![local.id.clone()],
+                            old: vec![local.id().clone()],
                             rationale: format!("upstream {}@{generation}", next.lineage),
                         },
                     ) {
@@ -630,7 +615,7 @@ pub fn upgrade(args: &[String]) -> i32 {
                 if let Err(e) = crate::cmds::write(
                     &dir,
                     ActKind::Retract {
-                        target: local.id.clone(),
+                        target: local.id().clone(),
                         rationale: format!("withdrawn upstream in {}@{generation}", next.lineage),
                     },
                 ) {
@@ -723,8 +708,8 @@ fn seed_ancestor(
             return Some(cur);
         }
         seen.push(cur.clone());
-        if let Some(c) = upstream.commitments.iter().find(|c| c.id == cur) {
-            frontier.extend(c.replaces.iter().cloned());
+        if let Some(c) = upstream.commitments().iter().find(|c| c.id() == &cur) {
+            frontier.extend(c.replaces().iter().cloned());
         }
     }
     None

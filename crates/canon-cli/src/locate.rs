@@ -48,6 +48,96 @@ pub enum Basis {
 /// A citation shorter than this cannot be evidence of anything.
 pub const QUOTE_MIN: usize = 20;
 
+/// Words of a passage, and only that.
+///
+/// The field is private to this module and both constructors take the
+/// passage: [`cite`] cuts it at the positions a model returned, and
+/// [`Quote::within`] keeps a quote read back from a run only where the
+/// passage has it. So a quote canon shows is a slice of the text it was
+/// handed, whoever wrote the run file. Which text that was is the caller's:
+/// the draft hands each candidate its own recorded chunk.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[serde(transparent)]
+pub struct Quote(String);
+
+impl Quote {
+    /// `claimed` as the passage has it, or nothing when the passage does not.
+    ///
+    /// Verbatim first. Then word for word with whitespace ignored, because
+    /// runs written before 2026-08-26 kept their quotes with line breaks
+    /// collapsed; the passage's own bytes are kept either way, so what is
+    /// shown is the source as written.
+    pub fn within(passage: &str, claimed: &str) -> Option<Self> {
+        let claimed = claimed.trim();
+        if claimed.is_empty() {
+            return None;
+        }
+        if passage.contains(claimed) {
+            return Some(Self(claimed.to_string()));
+        }
+        // One word with no whitespace in it was a verbatim question above.
+        let want: Vec<&str> = claimed.split_whitespace().collect();
+        let base = passage.as_ptr() as usize;
+        let words: Vec<(usize, &str)> = passage
+            .split_whitespace()
+            .map(|w| (w.as_ptr() as usize - base, w))
+            .collect();
+        let (first, last) = (want[0], want[want.len() - 1]);
+        // A quote may begin inside a word and end inside one (`period` of
+        // `period,`); every word between is the passage's exactly.
+        words
+            .windows(want.len())
+            .find(|run| {
+                run[0].1.ends_with(first)
+                    && run[run.len() - 1].1.starts_with(last)
+                    && run[1..run.len() - 1]
+                        .iter()
+                        .map(|(_, w)| *w)
+                        .eq(want[1..want.len() - 1].iter().copied())
+            })
+            .map(|run| {
+                let start = run[0].0 + run[0].1.len() - first.len();
+                let end = run[run.len() - 1].0 + last.len();
+                Self(passage[start..end].to_string())
+            })
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::ops::Deref for Quote {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl PartialEq<str> for Quote {
+    fn eq(&self, other: &str) -> bool {
+        self.0 == other
+    }
+}
+
+impl PartialEq<&str> for Quote {
+    fn eq(&self, other: &&str) -> bool {
+        self.0 == *other
+    }
+}
+
+impl PartialEq<String> for Quote {
+    fn eq(&self, other: &String) -> bool {
+        &self.0 == other
+    }
+}
+
+impl fmt::Display for Quote {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 /// The most sentences one rule may cite.
 ///
 /// A rule and its qualifier can straddle a sentence break; a rule pointing at
@@ -262,7 +352,7 @@ pub fn cite(
     first: usize,
     last: usize,
     max: usize,
-) -> Result<String, Miscited> {
+) -> Result<Quote, Miscited> {
     let have = spans.len();
     if first < 1 || last < 1 || first > have || last > have {
         return Err(Miscited::OutOfRange { first, last, have });
@@ -279,7 +369,7 @@ pub fn cite(
     if chars < QUOTE_MIN {
         return Err(Miscited::TooShort { chars });
     }
-    Ok(quoted.to_string())
+    Ok(Quote(quoted.to_string()))
 }
 
 /// Does this line open a unit the document itself marked?

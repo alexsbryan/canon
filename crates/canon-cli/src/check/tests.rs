@@ -306,7 +306,7 @@ fn the_canon_own_policy_decides_the_check_and_not_what_shipped() {
         &canon,
         "take the 8am rotation",
         vec![canon_core::Position::of(
-            canon.active().next().unwrap().id.clone(),
+            canon.active().next().unwrap().id().clone(),
             Pull::Against,
             "the rotation starts at 8",
         )],
@@ -339,7 +339,7 @@ fn a_canon_that_adopted_no_rule_is_not_told_about_the_ladder() {
     // act, anything else means ask a person. Printing it says nothing and
     // costs a reader a vocabulary lesson.
     let (canon, standing) = stand(&[(1, "against", "the rotation starts at 8")]);
-    assert!(canon.policies.is_empty(), "nobody adopted anything");
+    assert!(canon.policies().is_empty(), "nobody adopted anything");
     let text = render(
         Profile::House,
         &canon,
@@ -368,7 +368,7 @@ fn adopting_a_rule_makes_the_ladder_appear_and_keeps_it_visible() {
         &canon,
         "p",
         vec![canon_core::Position::of(
-            canon.active().next().unwrap().id.clone(),
+            canon.active().next().unwrap().id().clone(),
             Pull::Toward,
             "it serves it",
         )],

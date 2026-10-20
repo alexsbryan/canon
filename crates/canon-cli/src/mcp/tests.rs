@@ -149,26 +149,31 @@ fn canon_why_without_an_id_is_an_error_the_agent_can_read() {
 
 #[test]
 fn small_canons_still_list_their_rules_and_large_canons_show_an_index() {
-    use canon_core::{ActId, Commitment, Status};
-    let mut canon = canon_core::Canon::default();
+    use canon_core::{Act, ActKind, Log, Scope};
+    let mut acts = Vec::new();
     for i in 0..60 {
-        let id = ActId::derive(i, "human:dana", &format!("rule {i}"));
-        canon.commitments.push(Commitment {
-            id: id.clone(),
-            text: format!("Rule {i} about the kitchen"),
-            status: Status::Active,
-            asserted_at: i,
-            actor: "human:dana".into(),
-            replaces: vec![],
-            from: None,
-            source: None,
-        });
+        let rule = Act::new(
+            ActKind::Assert {
+                text: format!("Rule {i} about the kitchen"),
+                from: None,
+                source: None,
+            },
+            2 * i,
+            "human:dana",
+        );
         if i < 30 {
-            canon
-                .scopes
-                .push((id, canon_core::Scope::new("house.kitchen").unwrap()));
+            acts.push(Act::new(
+                ActKind::Scoped {
+                    commitment: rule.id.clone(),
+                    scope: Scope::new("house.kitchen").unwrap(),
+                },
+                2 * i + 1,
+                "human:dana",
+            ));
         }
+        acts.push(rule);
     }
+    let canon = Log::from_acts(acts.clone()).derive();
     let index = list_of(&canon, &json!({})).unwrap();
     assert!(index.contains("60 in force. By scope:"));
     assert!(index.contains("house.kitchen  30"));
@@ -194,7 +199,8 @@ fn small_canons_still_list_their_rules_and_large_canons_show_an_index() {
     assert!(list_of(&canon, &json!({"limit": 0})).is_err());
     assert!(list_of(&canon, &json!({"scope": "house..kitchen"})).is_err());
 
-    canon.commitments.truncate(2);
-    let small = list_of(&canon, &json!({})).unwrap();
+    // The first two rules and their placements: acts at seconds 0 to 3.
+    let two = Log::from_acts(acts.into_iter().filter(|a| a.ts_unix < 4).collect()).derive();
+    let small = list_of(&two, &json!({})).unwrap();
     assert!(small.contains("Rule 0 about") && small.contains("Rule 1 about"));
 }

@@ -27,6 +27,7 @@ pub mod horizon;
 pub mod id;
 pub mod lineage;
 pub mod log;
+pub mod person;
 pub mod policy;
 pub mod ratify;
 pub mod scope;
@@ -37,13 +38,14 @@ pub use act::{Act, ActKind, ANONYMOUS, FORMAT_VERSION, SIGNED_VERSION, UNSIGNED_
 pub use allot::{AdoptedAllocation, Allocation, Allotment, Award, Order, PoolError, Schedule};
 pub use draw::{DrawError, Drawn};
 pub use fold::{
-    derive, Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Keyed, Question,
-    Retraction, Ruling, Silence, Stated, Status, Voice,
+    Adopted, Ancestry, Canon, Commitment, Conflict, Disposition, Keyed, Question, Retraction,
+    Ruling, Silence, Stated, Status, Voice,
 };
 pub use horizon::{Due, Horizon, Overdue};
 pub use id::{short_digest, ActId, ID_PREFIX};
 pub use lineage::{Divergence, Fate, Inherited, Snapshot, SnapshotCommitment};
 pub use log::{Log, ParseError};
+pub use person::Person;
 pub use policy::{default_outcome, Attributes, Authority, Decision, LadderKey, Policy, Rule};
 pub use ratify::{
     AdoptedRatify, BadBar, Bar, Between, Governs, NotARule, Proposal, Ratify, Seat, Verdict,

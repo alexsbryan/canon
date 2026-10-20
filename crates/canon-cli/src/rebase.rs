@@ -155,9 +155,9 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
         if let Some(c) = canon.get(id) {
             out.push(Change {
                 kind: Kind::Addition,
-                did: format!("added \"{}\", which the seed did not have", c.text),
+                did: format!("added \"{}\", which the seed did not have", c.text()),
                 command: None,
-                standalone: Some(format!("canon add \"{}\"", c.text)),
+                standalone: Some(format!("canon add \"{}\"", c.text())),
             });
         }
     }

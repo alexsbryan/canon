@@ -101,7 +101,10 @@ pub fn assess(
     // The same numbering discipline as every other reader here, from the one
     // place that owns it — see `crate::resolver`. `Offered::at` never clamps:
     // clamping attributes a conflict to whichever rule happens to be last.
-    let offered = Offered::new(live.iter().map(|c| c.text.clone()).collect(), "commitment");
+    let offered = Offered::new(
+        live.iter().map(|c| c.text().to_string()).collect(),
+        "commitment",
+    );
     if offered.is_empty() {
         return Ok(Standing::cited(canon, proposal, Vec::new()));
     }
@@ -129,7 +132,7 @@ pub fn assess(
                 continue;
             }
         };
-        positions.push(Position::of(c.id.clone(), pull, b.because.trim()));
+        positions.push(Position::of(c.id().clone(), pull, b.because.trim()));
     }
     // Counted, not merely warned about: "the reader cited past the end nine
     // times" is a measurement about this pass, not noise to swallow.
@@ -183,7 +186,7 @@ fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
             ),
         );
     };
-    let status = match &c.status {
+    let status = match &c.status() {
         Status::Active => "in force, never superseded".to_string(),
         Status::Superseded { by } => format!("superseded by {by}"),
         Status::Retracted { at } => format!("retracted {}", store::ymd(*at)),
@@ -193,11 +196,14 @@ fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
             crate::explain::refused_by(by, Some(*at), |b| b)
         ),
     };
-    let pad = " ".repeat(c.id.as_str().len() + 2);
+    let pad = " ".repeat(c.id().as_str().len() + 2);
     format!(
         "{}\n{indent}{pad}asserted {}, {status}\n{}\n",
-        crate::wrap::hang(&format!("{indent}{}  \"", c.id), &format!("{}\"", c.text)),
-        store::ymd(c.asserted_at),
+        crate::wrap::hang(
+            &format!("{indent}{}  \"", c.id()),
+            &format!("{}\"", c.text())
+        ),
+        store::ymd(c.asserted_at()),
         crate::wrap::hang(&format!("{indent}{pad}because: "), &b.because),
     )
 }
@@ -386,7 +392,7 @@ fn render_verdict(
     //
     // `--json` is unaffected. An agent reading the payload wants the ladder
     // whether or not a person would have found it noise.
-    if !canon.policies.is_empty() {
+    if !canon.policies().is_empty() {
         out.push_str(&authority_line(decision));
     }
     // Exactly one trailing newline. The per-citation affordances end with a
@@ -415,7 +421,8 @@ fn settle(canon: &Canon, b: &Position) -> String {
     format!(
         "  amend it:  canon supersede {} \"<the new rule>\" -m \"<why>\"\n  \
          or carry both knowingly:  canon accept {} <other> -m \"<what this protects>\"\n\n",
-        c.id, c.id
+        c.id(),
+        c.id()
     )
 }
 
@@ -433,7 +440,7 @@ fn render_stakes(canon: &Canon, standing: &Standing) -> String {
         .positions
         .iter()
         .filter_map(|b| b.commitment().and_then(|id| canon.get(id)))
-        .map(|c| c.text.chars().count())
+        .map(|c| c.text().chars().count())
         .max()
         .unwrap_or(0)
         .min(52);
@@ -445,10 +452,10 @@ fn render_stakes(canon: &Canon, standing: &Standing) -> String {
             Pull::Against => "pulls against",
             Pull::Toward => "pulls toward",
         };
-        let quoted = format!("\"{}\"", c.text);
+        let quoted = format!("\"{}\"", c.text());
         out.push_str(&format!(
             "    {}  {:<width$}  <- {arrow}\n",
-            c.id,
+            c.id(),
             quoted,
             width = width + 2
         ));
@@ -456,7 +463,7 @@ fn render_stakes(canon: &Canon, standing: &Standing) -> String {
         // belongs to the words, and a reader scans the left edge of the text.
         out.push_str(&format!(
             "    {}  {}\n",
-            " ".repeat(c.id.as_str().len()),
+            " ".repeat(c.id().as_str().len()),
             b.because
         ));
     }

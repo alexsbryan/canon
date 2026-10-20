@@ -544,6 +544,6 @@ impl Act {
     /// Adjudication — everything except `Assert`, `Question` and `Adopt` — is
     /// expected to be human-authored. See [`crate::Canon::unattended`].
     pub fn is_human(&self) -> bool {
-        self.actor.starts_with("human:")
+        crate::person::Person::of(&self.actor).is_some()
     }
 }

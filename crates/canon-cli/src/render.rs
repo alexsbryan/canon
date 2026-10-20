@@ -36,9 +36,9 @@ pub fn markdown(canon: &Canon, name: &str, profile: Profile) -> String {
     let mut unscoped: Vec<&Commitment> = Vec::new();
     let mut inherited: Vec<&Commitment> = Vec::new();
     for c in canon.active() {
-        match canon.scope_of(&c.id) {
+        match canon.scope_of(c.id()) {
             Some(s) => scoped.entry(s.to_string()).or_default().push(c),
-            None if c.from.is_some() => inherited.push(c),
+            None if c.from().is_some() => inherited.push(c),
             None => unscoped.push(c),
         }
     }
@@ -64,7 +64,7 @@ pub fn markdown(canon: &Canon, name: &str, profile: Profile) -> String {
         items(&mut out, canon, &unscoped);
     }
     if !inherited.is_empty() {
-        match &canon.ancestry {
+        match &canon.ancestry() {
             Some(a) => out.push_str(&format!(
                 "\n## Inherited from {}@{}\n\n`canon diff --upstream` says where this canon has \
                  diverged from them.\n",
@@ -77,7 +77,7 @@ pub fn markdown(canon: &Canon, name: &str, profile: Profile) -> String {
 
     let waiting = canon.proposed().count()
         + canon
-            .retractions
+            .retractions()
             .iter()
             .filter(|r| matches!(r.verdict, canon_core::Verdict::Proposed { .. }))
             .count();
@@ -94,13 +94,13 @@ pub fn markdown(canon: &Canon, name: &str, profile: Profile) -> String {
 fn items(out: &mut String, canon: &Canon, cs: &[&Commitment]) {
     out.push('\n');
     let (ranked, plain): (Vec<&&Commitment>, Vec<&&Commitment>) =
-        cs.iter().partition(|c| canon.rank_of(&c.id).is_some());
+        cs.iter().partition(|c| canon.rank_of(c.id()).is_some());
     for c in ranked.into_iter().chain(plain) {
-        debug_assert!(matches!(c.status, Status::Active));
-        let text = c.text.replace('\n', " ");
-        match canon.rank_of(&c.id) {
-            Some(rank) => out.push_str(&format!("- **{rank}:** {text} `{}`\n", c.id)),
-            None => out.push_str(&format!("- {text} `{}`\n", c.id)),
+        debug_assert!(matches!(c.status(), Status::Active));
+        let text = c.text().replace('\n', " ");
+        match canon.rank_of(c.id()) {
+            Some(rank) => out.push_str(&format!("- **{rank}:** {text} `{}`\n", c.id())),
+            None => out.push_str(&format!("- {text} `{}`\n", c.id())),
         }
     }
 }
@@ -118,8 +118,8 @@ pub fn with_scope_and_rank(canon: &Canon) -> serde_json::Value {
             let Some(id) = c
                 .get("id")
                 .and_then(|i| i.as_str())
-                .and_then(|i| canon.commitments.iter().find(|x| x.id.as_str() == i))
-                .map(|x| x.id.clone())
+                .and_then(|i| canon.commitments().iter().find(|x| x.id().as_str() == i))
+                .map(|x| x.id().clone())
             else {
                 continue;
             };

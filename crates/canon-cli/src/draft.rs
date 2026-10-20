@@ -51,7 +51,7 @@ use std::path::{Path, PathBuf};
 use canon_core::ActKind;
 use serde::{Deserialize, Serialize};
 
-use crate::locate;
+use crate::locate::{self, Quote};
 use crate::model::{self, Client, ModelError, Schema};
 use crate::profile::Profile;
 use crate::quantify;
@@ -239,10 +239,17 @@ impl Kind {
     }
 }
 
+/// A rule, question or silence a reading proposed, with the words it cites.
+///
+/// `Q` is the quote: a [`Quote`] everywhere a candidate is shown or judged,
+/// and a bare `String` only between reading a run file and
+/// [`DraftRun::bound`], which is the one way across. `Candidate<Quote>` has
+/// no `Deserialize`, so a quote from disk cannot skip being found in its
+/// passage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Candidate {
+pub struct Candidate<Q = Quote> {
     pub text: String,
-    pub quote: String,
+    pub quote: Q,
     pub chunk: usize,
     pub source: String,
     /// Defaulted so a run artifact written before this existed still reads —
@@ -288,7 +295,7 @@ pub struct Dropped {
 /// REPLAY rather than by re-running the model (§18.4). A run that cannot be
 /// re-scored without a second inference call is not instrumented.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct DraftRun {
+pub struct DraftRun<Q = Quote> {
     pub schema: String,
     pub at: i64,
     pub endpoint: String,
@@ -307,7 +314,7 @@ pub struct DraftRun {
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub skipped: std::collections::BTreeMap<String, usize>,
     pub chunks: Vec<Chunk>,
-    pub candidates: Vec<Candidate>,
+    pub candidates: Vec<Candidate<Q>>,
     /// Candidates the citation check refused. Kept, because "the extractor
     /// paraphrased nine times" is a measurement, not noise.
     pub dropped: Vec<Dropped>,
@@ -413,6 +420,111 @@ pub struct DraftRun {
     /// and their notes should not be copied into an artifact nobody asked for.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tape: Vec<model::TapeEntry>,
+}
+
+impl DraftRun<String> {
+    /// The run as recorded, each candidate's quote found in the passage it
+    /// names: its own chunk, by id and source. A quote that passage does not
+    /// have refuses the file and names the candidate, because a run that
+    /// misquotes its own passages is not a record of a reading.
+    pub fn bound(self) -> Result<DraftRun, String> {
+        // Every field by name, so a field added to the run is a compile
+        // error here until it is carried across.
+        let DraftRun {
+            schema,
+            at,
+            endpoint,
+            model,
+            served_model,
+            profile,
+            sources,
+            skipped,
+            chunks,
+            candidates,
+            dropped,
+            unread,
+            duplicates,
+            kept,
+            tensions,
+            tension_passes,
+            tension_passes_unread,
+            tension_schedule,
+            already_read,
+            capped,
+            failed,
+            samples,
+            replayed_from,
+            continued_from,
+            support_unchecked,
+            stopped_after,
+            checkpoint,
+            tape,
+        } = self;
+        let candidates = candidates
+            .into_iter()
+            .enumerate()
+            .map(|(i, c)| {
+                let passage = chunks
+                    .get(c.chunk)
+                    .filter(|p| p.id == c.chunk && p.source == c.source)
+                    .ok_or_else(|| {
+                        format!(
+                            "candidate {i} cites chunk {} of {}, which the run does not have",
+                            c.chunk, c.source
+                        )
+                    })?;
+                let quote = Quote::within(&passage.text, &c.quote).ok_or_else(|| {
+                    format!("candidate {i}'s quote is not in its passage, {}", c.source)
+                })?;
+                Ok(Candidate {
+                    text: c.text,
+                    quote,
+                    chunk: c.chunk,
+                    source: c.source,
+                    kind: c.kind,
+                    because: c.because,
+                    sample: c.sample,
+                })
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        Ok(DraftRun {
+            schema,
+            at,
+            endpoint,
+            model,
+            served_model,
+            profile,
+            sources,
+            skipped,
+            chunks,
+            candidates,
+            dropped,
+            unread,
+            duplicates,
+            kept,
+            tensions,
+            tension_passes,
+            tension_passes_unread,
+            tension_schedule,
+            already_read,
+            capped,
+            failed,
+            samples,
+            replayed_from,
+            continued_from,
+            support_unchecked,
+            stopped_after,
+            checkpoint,
+            tape,
+        })
+    }
+}
+
+/// A run file, read and bound. The only way a recorded run is read.
+pub fn read_run(raw: &str) -> Result<DraftRun, String> {
+    serde_json::from_str::<DraftRun<String>>(raw)
+        .map_err(|e| e.to_string())?
+        .bound()
 }
 
 fn one() -> usize {
@@ -962,7 +1074,7 @@ pub fn extract(
         if kind == Kind::Silence && because.is_empty() {
             dropped.push(refuse(
                 text,
-                quote,
+                quote.to_string(),
                 "a silence with no stated reason is indistinguishable from a gap".into(),
             ));
             continue;
@@ -1112,7 +1224,7 @@ pub fn support(client: &Client, candidates: Vec<Candidate>) -> Result<Supported,
         match quantify::unsupported(&rule, &cited, &c.text, &c.quote) {
             Some(m) => dropped.push(Dropped {
                 text: c.text,
-                quote: c.quote,
+                quote: c.quote.to_string(),
                 chunk: c.chunk,
                 reason: format!("states `{m}`, which its citation does not"),
             }),
@@ -1420,7 +1532,7 @@ fn refold(args: &[String], target: &str) -> i32 {
             Ok(r) => r,
             Err(e) => return crate::cmds::fail(format!("reading {}: {e}", path.display())),
         };
-        let mut run: DraftRun = match serde_json::from_str(&raw) {
+        let mut run = match read_run(&raw) {
             Ok(r) => r,
             Err(e) => return crate::cmds::fail(format!("{}: {e}", path.display())),
         };
@@ -1496,7 +1608,7 @@ fn continue_run(
 ) -> i32 {
     let recorded: DraftRun = match std::fs::read_to_string(target)
         .map_err(|e| format!("reading {target}: {e}"))
-        .and_then(|raw| serde_json::from_str(&raw).map_err(|e| format!("{target}: {e}")))
+        .and_then(|raw| read_run(&raw).map_err(|e| format!("{target}: {e}")))
     {
         Ok(r) => r,
         Err(e) => return crate::cmds::fail(e),
@@ -1582,7 +1694,7 @@ fn replay(dir: &Path, args: &[String], target: &str) -> i32 {
         Ok(r) => r,
         Err(e) => return crate::cmds::fail(format!("reading {target}: {e}")),
     };
-    let recorded: DraftRun = match serde_json::from_str(&raw) {
+    let recorded = match read_run(&raw) {
         Ok(r) => r,
         Err(e) => return crate::cmds::fail(format!("{target}: {e}")),
     };
@@ -1945,7 +2057,7 @@ fn resume(dir: &Path, profile: Profile, seen: &mut Seen, pick: Option<&str>) -> 
             Ok(r) => r,
             Err(e) => return crate::cmds::fail(format!("reading {}: {e}", path.display())),
         };
-        let run: DraftRun = match serde_json::from_str(&raw) {
+        let run = match read_run(&raw) {
             Ok(r) => r,
             Err(e) => return crate::cmds::fail(format!("{}: {e}", path.display())),
         };
@@ -2041,9 +2153,9 @@ fn runs_to_resume(dir: &Path, pick: Option<&str>) -> Result<(Vec<PathBuf>, Vec<P
 fn remaining(run: &DraftRun, canon: &canon_core::Canon, seen: &Seen) -> Vec<usize> {
     let already: std::collections::BTreeSet<&str> = canon
         .active()
-        .map(|c| c.text.as_str())
+        .map(|c| c.text())
         .chain(canon.open().map(|q| q.text.as_str()))
-        .chain(canon.silences.iter().map(|s| s.about.as_str()))
+        .chain(canon.silences().iter().map(|s| s.about.as_str()))
         .collect();
     run.kept
         .iter()
@@ -2164,7 +2276,9 @@ pub fn run(args: &[String]) -> i32 {
         // Nothing new is a RESULT, not an error: an agent polling a feed
         // gets this most of the time, and it has to be cheap and quiet. Same
         // artifact shape either way, so a caller parses one schema (§10.6).
-        let quiet = DraftRun {
+        // No candidates, so no quotes: `String` is the quote type with a
+        // `Default`, and it serialises the same.
+        let quiet = DraftRun::<String> {
             schema: RUN_SCHEMA.into(),
             at: store::now(),
             profile: profile.as_str().to_string(),
@@ -2601,7 +2715,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     };
     let fresh: Vec<&canon_core::Commitment> = canon
         .active()
-        .filter(|c| accepted.contains(&c.id))
+        .filter(|c| accepted.contains(c.id()))
         .collect();
     if fresh.len() < 2 {
         return 0;
@@ -2633,7 +2747,7 @@ fn recorded_context<'a>(candidate: &Candidate, chunks: &'a [Chunk]) -> Option<&'
         chunk.id == candidate.chunk
             && chunk.source == candidate.source
             && !candidate.quote.is_empty()
-            && chunk.text.contains(&candidate.quote)
+            && chunk.text.contains(candidate.quote.as_str())
     })
 }
 

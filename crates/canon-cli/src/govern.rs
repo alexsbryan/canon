@@ -187,18 +187,18 @@ pub fn policy(args: &[String]) -> i32 {
             if has(args, "--json") {
                 // The bare array when nothing waits, which is what every
                 // canon without the knob has always printed.
-                let out = if canon.pending_policies.is_empty() {
-                    serde_json::to_string_pretty(&canon.policies)
+                let out = if canon.pending_policies().is_empty() {
+                    serde_json::to_string_pretty(&canon.policies())
                 } else {
                     serde_json::to_string_pretty(&serde_json::json!({
-                        "policies": canon.policies,
-                        "pending": canon.pending_policies,
+                        "policies": canon.policies(),
+                        "pending": canon.pending_policies(),
                     }))
                 };
                 println!("{}", out.unwrap_or_default());
                 return 0;
             }
-            if canon.policies.is_empty() && canon.pending_policies.is_empty() {
+            if canon.policies().is_empty() && canon.pending_policies().is_empty() {
                 // Absence reported as absence. A canon that adopted nothing
                 // is still governed by something, and it should know which.
                 println!("no policy adopted. this canon decides by what shipped:");
@@ -207,7 +207,7 @@ pub fn policy(args: &[String]) -> i32 {
                 println!("\n  adopt one:  canon policy set consent -m \"<how it reads here>\"");
                 return 0;
             }
-            for p in &canon.policies {
+            for p in canon.policies() {
                 match &p.scope {
                     Some(s) => println!("{}  {}  over {s}", p.act, p.rule.name()),
                     None => println!("{}  {}  (whole canon)", p.act, p.rule.name()),
@@ -218,7 +218,7 @@ pub fn policy(args: &[String]) -> i32 {
                     crate::cmds::report_verdict(&p.act, v);
                 }
             }
-            for p in &canon.pending_policies {
+            for p in canon.pending_policies() {
                 match &p.scope {
                     Some(s) => println!("{}  {}  over {s}", p.act, p.rule.name()),
                     None => println!("{}  {}  (whole canon)", p.act, p.rule.name()),
@@ -229,7 +229,7 @@ pub fn policy(args: &[String]) -> i32 {
                     crate::cmds::report_verdict(&p.act, v);
                 }
             }
-            println!("\n{} policy act(s)", canon.policies.len());
+            println!("\n{} policy act(s)", canon.policies().len());
             0
         }
         Some(other) => fail(format!(
@@ -374,11 +374,11 @@ pub fn ratification(args: &[String]) -> i32 {
             if has(args, "--json") {
                 println!(
                     "{}",
-                    serde_json::to_string_pretty(&canon.ratifications).unwrap_or_default()
+                    serde_json::to_string_pretty(&canon.ratifications()).unwrap_or_default()
                 );
                 return 0;
             }
-            if canon.ratifications.is_empty() {
+            if canon.ratifications().is_empty() {
                 println!("no ratification rule adopted. proposals become rules by what shipped:");
                 println!("  {}", canon_core::Ratify::Standing.name());
                 println!("  {}", canon_core::Ratify::Standing.prose());
@@ -388,7 +388,7 @@ pub fn ratification(args: &[String]) -> i32 {
                 return 0;
             }
             let now = store::now();
-            for r in &canon.ratifications {
+            for r in canon.ratifications() {
                 // The one deciding its scope today, among the history kept.
                 let deciding = canon
                     .adopted_at(r.scope.as_ref(), now)
@@ -594,12 +594,12 @@ pub fn allocation(args: &[String]) -> i32 {
                 Ok(v) => v,
                 Err(e) => return fail(e),
             };
-            if canon.allocations.is_empty() {
+            if canon.allocations().is_empty() {
                 println!("no allocation rule adopted; nothing here is shared out by rule.");
                 println!("  adopt one:  canon allocation set rotation --scope <scope>");
                 return 0;
             }
-            for a in &canon.allocations {
+            for a in canon.allocations() {
                 println!("{}  {}  over {}", a.act, a.rule.name(), a.scope);
                 println!("  {}", a.text);
                 println!("  adopted {} by {}", store::ymd(a.at), a.actor);
@@ -723,7 +723,7 @@ pub fn decide(args: &[String]) -> i32 {
     let prior = canon.prior_decisions(about).len();
     // A ladder keyed on the cited rule cannot see a decision that cites
     // nothing. Said once, here, rather than discovered at the next check.
-    let missed = citing.is_empty() && canon.policies.iter().any(|p| keys_on_cited(&p.rule));
+    let missed = citing.is_empty() && canon.policies().iter().any(|p| keys_on_cited(&p.rule));
     match write(
         &d,
         ActKind::Decided {
@@ -809,10 +809,10 @@ pub fn rank(args: &[String]) -> i32 {
 /// Every scope a grant or a commitment names, once each.
 fn scopes_in_use(canon: &canon_core::Canon) -> Vec<Scope> {
     let mut used: Vec<Scope> = canon
-        .grants
+        .grants()
         .iter()
         .map(|g| g.scope.clone())
-        .chain(canon.scopes.iter().map(|(_, s)| s.clone()))
+        .chain(canon.scopes().iter().map(|(_, s)| s.clone()))
         .collect();
     used.sort();
     used.dedup();
@@ -835,7 +835,7 @@ fn who_holds_the_canon(args: &[String]) -> i32 {
     let now = store::now();
     let scopes = canon.canon_scopes(now);
     let mut holders: Vec<&canon_core::Grant> = canon
-        .grants
+        .grants()
         .iter()
         .filter(|g| g.held_at(now) && scopes.contains(&&g.scope))
         .collect();
@@ -941,7 +941,7 @@ pub fn who(args: &[String]) -> i32 {
         // Lapsed standing is remembered here even though it is not held, so
         // "it used to be Dana and nobody renewed it" is answerable.
         let lapsed: Vec<&canon_core::Grant> = canon
-            .grants
+            .grants()
             .iter()
             .filter(|g| g.lapsed(now) && g.scope.covers(&scope))
             .collect();
@@ -985,11 +985,11 @@ pub fn who(args: &[String]) -> i32 {
     // A change still waiting is shown under the rule it would replace, so
     // "I set it and it did not take" has its answer on the same screen.
     for r in canon
-        .ratifications
+        .ratifications()
         .iter()
         .filter(|r| r.scope.as_ref().is_none_or(|s| s.covers(&scope)))
     {
-        if let canon_core::Verdict::Proposed { needs } = &r.verdict {
+        if let canon_core::Verdict::Proposed { needs, .. } = &r.verdict {
             println!(
                 "{}",
                 crate::wrap::hang(
@@ -1294,7 +1294,7 @@ pub fn overdue(args: &[String]) -> i32 {
             canon_core::Due::Horizon { rationale } => {
                 let what = canon
                     .get(&o.target)
-                    .map(|c| c.text.clone())
+                    .map(|c| c.text().to_string())
                     .or_else(|| canon.question(&o.target).map(|q| format!("? {}", q.text)))
                     .unwrap_or_else(|| o.target.to_string());
                 println!("{when}  {}  {what}", o.target);
@@ -1442,7 +1442,7 @@ pub fn voice(args: &[String]) -> i32 {
                 ));
             }
             canon_core::ActKind::Dismiss { a, b, rationale } if act.actor == who => {
-                let outside = canon.ungoverned.iter().any(|(x, _)| x == &act.id);
+                let outside = canon.ungoverned().iter().any(|(x, _)| x == &act.id);
                 // The verdict on one line, the two rules named under it, and
                 // what became of it under those.
                 rulings.push(format!(
@@ -1562,7 +1562,7 @@ fn overruled(
     // A pair can carry two dispositions in the fold — the dismissal and the
     // later acceptance — so the current one is the latest, not the first.
     let Some(c) = canon
-        .conflicts
+        .conflicts()
         .iter()
         .filter(|c| c.is_pair(a, b))
         .max_by_key(|c| c.at)

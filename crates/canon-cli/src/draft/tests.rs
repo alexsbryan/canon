@@ -68,8 +68,26 @@ fn review_context_is_the_recorded_passage_only_when_the_quote_still_fits() {
     candidate.source = "another.md:3-3".into();
     assert!(render_recorded_context(&candidate, &chunks).contains("unavailable"));
     candidate.source = chunks[0].source.clone();
-    candidate.quote = "a quote the recorded passage does not have".into();
-    assert!(render_recorded_context(&candidate, &chunks).contains("unavailable"));
+    // A quote its passage does not have cannot be a `Candidate` at all: the
+    // run file it came from is refused when it is read.
+    let misquoted = DraftRun::<String> {
+        chunks: chunks.clone(),
+        candidates: vec![Candidate {
+            text: candidate.text.clone(),
+            quote: "a quote the recorded passage does not have".into(),
+            chunk: candidate.chunk,
+            source: candidate.source.clone(),
+            kind: candidate.kind,
+            because: String::new(),
+            sample: 0,
+        }],
+        ..Default::default()
+    };
+    let refused = misquoted.bound().unwrap_err();
+    assert!(
+        refused.contains("candidate 0's quote is not in its passage"),
+        "{refused}"
+    );
 }
 
 #[test]
@@ -187,7 +205,7 @@ fn the_citation_is_cut_from_the_passage_not_taken_from_the_reply() {
         kept[0].quote,
         "Quiet hours run from 11:00 PM until 7:00 AM."
     );
-    assert!(chunks[0].text.contains(&kept[0].quote));
+    assert!(chunks[0].text.contains(kept[0].quote.as_str()));
 }
 
 #[test]
@@ -285,10 +303,31 @@ fn quantified(rules: &[&[(&str, &str, &str, &str)]]) -> Vec<Vec<quantify::Quanti
         .collect()
 }
 
+/// A quote that is its own passage, for a candidate with no chunk behind it.
+fn quote(text: &str) -> Quote {
+    Quote::within(text, text).expect("a quote is in itself")
+}
+
+/// A candidate quoting a chunk it was read from, for a test that writes the
+/// run and reads it back: a run file's quotes must be in their passages.
+fn cited(chunks: &[Chunk], text: &str, quoted: &str) -> Candidate {
+    let chunk = chunks
+        .iter()
+        .find(|c| c.text.contains(quoted))
+        .expect("the quote is in one of the chunks");
+    Candidate {
+        text: text.into(),
+        quote: Quote::within(&chunk.text, quoted).unwrap(),
+        chunk: chunk.id,
+        source: chunk.source.clone(),
+        ..candidate(text)
+    }
+}
+
 fn candidate(text: &str) -> Candidate {
     Candidate {
         text: text.into(),
-        quote: format!("verbatim: {text}"),
+        quote: quote(&format!("verbatim: {text}")),
         chunk: 0,
         source: "house.md:1-2".into(),
         kind: Kind::Rule,
@@ -306,7 +345,7 @@ fn candidate(text: &str) -> Candidate {
 /// fixture that contradicts its own reading tests nothing it claims to.
 fn candidate_citing(text: &str, quote: &str) -> Candidate {
     Candidate {
-        quote: quote.into(),
+        quote: self::quote(quote),
         ..candidate(text)
     }
 }
@@ -315,7 +354,7 @@ fn candidate_citing(text: &str, quote: &str) -> Candidate {
 fn read(sample: usize, quote: &str, text: &str) -> Candidate {
     Candidate {
         text: text.into(),
-        quote: quote.into(),
+        quote: self::quote(quote),
         chunk: 0,
         source: "house.md:1-2".into(),
         kind: Kind::Rule,
@@ -920,7 +959,8 @@ fn a_stage_that_fails_writes_what_ran_before_it() {
     std::fs::create_dir_all(&dir).unwrap();
 
     let chunks = chunk_text("house.md", DOC);
-    let cands = vec![candidate("Quiet hours start at 11 PM.")];
+    let quiet = "Quiet hours run from 11:00 PM until 7:00 AM.";
+    let cands = vec![cited(&chunks, quiet, quiet)];
     let mut artifact = in_flight(chunks, cands);
     let code = abandon(
         &dir,
@@ -939,8 +979,7 @@ fn a_stage_that_fails_writes_what_ran_before_it() {
         .filter_map(|e| e.ok())
         .collect();
     assert_eq!(written.len(), 1, "the partial run is on disk");
-    let got: DraftRun =
-        serde_json::from_str(&std::fs::read_to_string(written[0].path()).unwrap()).unwrap();
+    let got = read_run(&std::fs::read_to_string(written[0].path()).unwrap()).unwrap();
 
     // The extraction survives...
     assert_eq!(got.candidates.len(), 1);
@@ -1043,17 +1082,15 @@ fn a_killed_run_leaves_its_work_in_a_checkpoint() {
     // stage that ERRORS; nothing wrote a SIGKILL, so two hours of extraction
     // went with it and have to be paid again.
     let dir = scratch("canon-checkpoint-keeps-work");
-    let mut artifact = in_flight(
-        chunk_text("house.md", DOC),
-        vec![candidate("Quiet hours start at 11 PM.")],
-    );
+    let chunks = chunk_text("house.md", DOC);
+    let quiet = "Quiet hours run from 11:00 PM until 7:00 AM.";
+    let mut artifact = in_flight(chunks.clone(), vec![cited(&chunks, quiet, quiet)]);
     checkpoint(&dir, &mut artifact, "extract", &taped());
 
     assert_eq!(runs_in(&dir), vec!["1.partial.json"]);
-    let got: DraftRun = serde_json::from_str(
-        &std::fs::read_to_string(dir.join(RUNS_DIR).join("1.partial.json")).unwrap(),
-    )
-    .unwrap();
+    let got =
+        read_run(&std::fs::read_to_string(dir.join(RUNS_DIR).join("1.partial.json")).unwrap())
+            .unwrap();
     assert_eq!(got.candidates.len(), 1, "the extraction survives");
     assert_eq!(got.chunks.len(), 2);
     assert_eq!(
@@ -1073,15 +1110,16 @@ fn a_second_checkpoint_replaces_the_first() {
     // `persist` refuses to overwrite for. A run that left one file per stage
     // would hand the bar four artifacts for one measurement.
     let dir = scratch("canon-checkpoint-replaces");
-    let mut artifact = in_flight(chunk_text("house.md", DOC), vec![candidate("Quiet hours.")]);
+    let chunks = chunk_text("house.md", DOC);
+    let quiet = "Quiet hours run from 11:00 PM until 7:00 AM.";
+    let mut artifact = in_flight(chunks.clone(), vec![cited(&chunks, quiet, quiet)]);
     checkpoint(&dir, &mut artifact, "extract", &taped());
     checkpoint(&dir, &mut artifact, "dedupe", &taped());
 
     assert_eq!(runs_in(&dir), vec!["1.partial.json"], "one file, not two");
-    let got: DraftRun = serde_json::from_str(
-        &std::fs::read_to_string(dir.join(RUNS_DIR).join("1.partial.json")).unwrap(),
-    )
-    .unwrap();
+    let got =
+        read_run(&std::fs::read_to_string(dir.join(RUNS_DIR).join("1.partial.json")).unwrap())
+            .unwrap();
     assert_eq!(got.checkpoint.as_deref(), Some("dedupe"), "the later one");
 }
 
@@ -1340,12 +1378,12 @@ fn resuming_offers_only_what_is_not_already_in_the_canon() {
             .map(|c| {
                 Act::new(
                     ActKind::Assert {
-                        text: c.text.clone(),
+                        text: c.text().to_string(),
                         from: None,
                         source: None,
                     },
-                    c.asserted_at,
-                    c.actor.clone(),
+                    c.asserted_at(),
+                    c.actor().to_string(),
                 )
             })
             .chain(std::iter::once(Act::new(
@@ -1660,7 +1698,19 @@ fn convergence_run(dir: &str, samples: usize, cands: Vec<Candidate>) -> std::pat
     let d = std::env::temp_dir().join(dir);
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
-    let mut run = in_flight(vec![], cands);
+    // One passage holding every quote the readings cite, so the run reads
+    // back: a run file's quotes must be in their passages.
+    let mut quotes: Vec<&str> = cands.iter().map(|c| c.quote.as_str()).collect();
+    quotes.dedup();
+    let passage = Chunk {
+        id: 0,
+        source: "house.md:1-2".into(),
+        heading: None,
+        text: quotes.join("\n"),
+        said_at: None,
+        by_line: false,
+    };
+    let mut run = in_flight(vec![passage], cands);
     run.samples = samples;
     run.stopped_after = Some(format!("extract: --samples {samples}"));
     std::fs::write(d.join("run-1.json"), serde_json::to_string(&run).unwrap()).unwrap();
@@ -1762,7 +1812,10 @@ fn a_run_written_before_samples_existed_reads_as_one_reading() {
         "sources": [], "chunks": [], "candidates": [], "dropped": [],
         "duplicates": [], "kept": [], "tensions": []
     });
-    let run: DraftRun = serde_json::from_value(old).unwrap();
+    let run = serde_json::from_value::<DraftRun<String>>(old)
+        .unwrap()
+        .bound()
+        .unwrap();
     assert_eq!(run.samples, 1);
     assert_eq!(run.stopped_after, None);
 }
@@ -1908,11 +1961,20 @@ fn continue_finishes_a_failed_run_without_reading_a_passage_again() {
     // disk and nothing could use them: a real run keeps no tape, so `--replay`
     // refused it, and every passage was already marked read.
     let dir = scratch("canon-continue-finishes");
+    let chunks = chunk_text("house.md", DOC);
     let mut failed = in_flight(
-        chunk_text("house.md", DOC),
+        chunks.clone(),
         vec![
-            candidate("Quiet hours run from 11:00 PM until 7:00 AM."),
-            candidate("The kitchen must be cleaned by whoever used it."),
+            cited(
+                &chunks,
+                "Quiet hours run from 11:00 PM until 7:00 AM.",
+                "Quiet hours run from 11:00 PM until 7:00 AM.",
+            ),
+            cited(
+                &chunks,
+                "The kitchen must be cleaned by whoever used it.",
+                "The kitchen must be cleaned by whoever used it",
+            ),
         ],
     );
     failed.failed = Some("support: the endpoint refused (HTTP 503): deadline exceeded".into());
@@ -1960,9 +2022,8 @@ fn continue_finishes_a_failed_run_without_reading_a_passage_again() {
 
     let runs = runs_in(&dir);
     assert_eq!(runs.len(), 1, "{runs:?}");
-    let got: DraftRun =
-        serde_json::from_str(&std::fs::read_to_string(dir.join(RUNS_DIR).join(&runs[0])).unwrap())
-            .unwrap();
+    let got =
+        read_run(&std::fs::read_to_string(dir.join(RUNS_DIR).join(&runs[0])).unwrap()).unwrap();
     assert!(got.failed.is_none(), "{:?}", got.failed);
     assert_eq!(got.chunks.len(), 2);
     assert_eq!(got.candidates.len(), 2);
@@ -1995,4 +2056,37 @@ fn continue_refuses_a_run_that_finished() {
     );
     assert_ne!(code, 0);
     assert!(mock.requests().is_empty());
+}
+
+#[test]
+fn every_recorded_run_here_reads_back_with_its_quotes_in_their_passages() {
+    // Runs written before 2026-08-26 kept their quotes with line breaks
+    // collapsed; binding finds those word for word and keeps the passage's
+    // own bytes. A run that will not bind is one whose quotes are not in its
+    // passages, and nothing in this repository should be one.
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
+    let mut stack = vec![root];
+    let mut read = 0;
+    while let Some(d) = stack.pop() {
+        for e in std::fs::read_dir(&d).unwrap().flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                stack.push(p);
+                continue;
+            }
+            if p.extension().is_none_or(|x| x != "json") {
+                continue;
+            }
+            let raw = std::fs::read_to_string(&p).unwrap();
+            if !raw.contains(RUN_SCHEMA) {
+                continue;
+            }
+            let run = read_run(&raw).unwrap_or_else(|e| panic!("{}: {e}", p.display()));
+            for c in &run.candidates {
+                assert!(run.chunks[c.chunk].text.contains(c.quote.as_str()));
+            }
+            read += 1;
+        }
+    }
+    assert!(read >= 20, "found only {read} runs");
 }

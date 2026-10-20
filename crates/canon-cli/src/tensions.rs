@@ -416,13 +416,13 @@ fn one_pass(client: &Client, texts: &[&str], idx: &[usize]) -> Result<Vec<Propos
 
 /// Find tensions among commitments that already have ids.
 pub fn detect(client: &Client, commitments: &[&Commitment]) -> Result<Vec<Conflict>, ModelError> {
-    let texts: Vec<&str> = commitments.iter().map(|c| c.text.as_str()).collect();
+    let texts: Vec<&str> = commitments.iter().map(|c| c.text()).collect();
     Ok(detect_over(client, &texts)?
         .pairs
         .into_iter()
         .map(|p| Conflict {
-            a: commitments[p.a].id.clone(),
-            b: commitments[p.b].id.clone(),
+            a: commitments[p.a].id().clone(),
+            b: commitments[p.b].id().clone(),
             // `at: 0` because nothing happened: no act was written, so there
             // is no moment to record. The fold never mints this.
             at: 0,
@@ -463,7 +463,7 @@ pub fn render(canon: &Canon, open: &[Conflict], settled: usize) -> String {
     let text = |id: &ActId| {
         canon
             .get(id)
-            .map(|c| c.text.clone())
+            .map(|c| c.text().to_string())
             .unwrap_or_else(|| "(not in this canon)".into())
     };
     for c in open {

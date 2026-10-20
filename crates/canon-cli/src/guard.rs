@@ -206,15 +206,7 @@ fn git(root: &Path, args: &[&str]) -> Result<String, String> {
 fn repo_for(dir: &Path) -> Option<Repo> {
     let root = git(dir, &["rev-parse", "--show-toplevel"]).ok()?;
     let root = PathBuf::from(root);
-    let file = dir.join(store::FILE);
-    let file = file.canonicalize().unwrap_or(file);
-    let root_c = root.canonicalize().unwrap_or_else(|_| root.clone());
-    let rel = file.strip_prefix(&root_c).ok()?;
-    let ledger = rel
-        .components()
-        .map(|c| c.as_os_str().to_string_lossy().to_string())
-        .collect::<Vec<_>>()
-        .join("/");
+    let ledger = store::pathspec(dir, &root)?;
     Some(Repo { root, ledger })
 }
 
@@ -346,7 +338,7 @@ pub fn witness(args: &[String]) -> i32 {
     let gate = has(args, "--gate");
     if let Some(base) = flag(args, "--base") {
         let parent = show(&repo, base).unwrap_or_default();
-        let child = std::fs::read_to_string(dir.join(store::FILE)).unwrap_or_default();
+        let child = store::raw(&dir).unwrap_or_default();
         let findings = witness_pair(&parent, &child, store::now(), slack);
         if has(args, "--json") {
             println!(

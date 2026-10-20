@@ -40,7 +40,16 @@ impl core::fmt::Display for ParseError {
 
 impl core::error::Error for ParseError {}
 
-/// An ordered set of acts.
+/// An ordered set of acts, and the only way into the fold from outside this
+/// crate.
+///
+/// Its constructors sort by `(ts_unix, id)` and dedupe by id, and the fold
+/// over a bare slice is private, so arrival order cannot reach what is in
+/// force:
+///
+/// ```compile_fail,E0603
+/// let canon = canon_core::fold::derive(&[]);
+/// ```
 #[derive(Debug, Clone, Default)]
 pub struct Log {
     acts: Vec<Act>,

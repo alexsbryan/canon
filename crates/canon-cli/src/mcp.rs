@@ -250,10 +250,10 @@ fn render_list(dir: &Path, args: &Value) -> Result<String, String> {
     let mut out = list_of(&canon, args)?;
     // An agent reading the rules should know some lines were set aside, and
     // that they were set aside because they were not who they said.
-    if !canon.unverified.is_empty() {
+    if !canon.unverified().is_empty() {
         out.push_str(&format!(
             "\n{} act(s) under a name that has bound a key were not signed by it and do not count.",
-            canon.unverified.len()
+            canon.unverified().len()
         ));
     }
     Ok(out)
@@ -304,7 +304,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
         let mut counts: BTreeMap<String, usize> = BTreeMap::new();
         for c in &live {
             let key = canon
-                .scope_of(&c.id)
+                .scope_of(c.id())
                 .map(|s| s.as_str())
                 .unwrap_or("(unscoped)");
             *counts.entry(key.to_string()).or_default() += 1;
@@ -325,10 +325,10 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
         .filter(|c| {
             scope
                 .as_ref()
-                .is_none_or(|s| canon.scope_of(&c.id).is_none_or(|here| here.covers(s)))
+                .is_none_or(|s| canon.scope_of(c.id()).is_none_or(|here| here.covers(s)))
                 && query
                     .as_ref()
-                    .is_none_or(|q| c.text.to_lowercase().contains(q))
+                    .is_none_or(|q| c.text().to_lowercase().contains(q))
         })
         .collect();
     if filtered.is_empty() {
@@ -349,7 +349,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     }
     let mut out = String::new();
     for c in filtered.iter().skip(offset).take(limit) {
-        out.push_str(&format!("{}  {}\n", c.id, c.text));
+        out.push_str(&format!("{}  {}\n", c.id(), c.text()));
     }
     if obj.is_empty() {
         out.push_str(&format!("\n{} in force.", filtered.len()));
@@ -373,10 +373,10 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
         ));
     }
     // A hole in the record is louder than a missing feature (§18.3).
-    if !canon.dangling.is_empty() {
+    if !canon.dangling().is_empty() {
         out.push_str(&format!(
             "\nWARNING: {} act(s) reference a commitment absent from this log.",
-            canon.dangling.len()
+            canon.dangling().len()
         ));
     }
     Ok(out)

@@ -8,7 +8,11 @@ use std::process::Command;
 use canon_core::{Act, Log};
 
 pub const DIR: &str = ".canon";
-pub const FILE: &str = "acts.jsonl";
+/// The ledger's name, private so that every write to it is a function in
+/// this module: [`append`], [`create`] and [`materialize`]. Other modules
+/// read it through [`read`] or [`raw`], and git names it through
+/// [`pathspec`].
+const FILE: &str = "acts.jsonl";
 
 /// Find the nearest `.canon` walking up from `start`, the way git finds `.git`.
 /// A codebase canon is committed at the repo root; a personal one lives in
@@ -75,8 +79,75 @@ pub fn read(dir: &Path) -> Result<Log, String> {
     Log::parse(&raw).map_err(|e| format!("{}: {e}", path.display()))
 }
 
-/// Append one act. Append-only: we never rewrite the file, so a concurrent
-/// writer's line is never lost and git sees an additive diff.
+/// The ledger's bytes, unparsed, for what must see lines the fold would
+/// refuse: the witness compares them line by line.
+pub fn raw(dir: &Path) -> Result<String, String> {
+    let path = dir.join(FILE);
+    std::fs::read_to_string(&path).map_err(|e| format!("reading {}: {e}", path.display()))
+}
+
+/// Whether `dir` holds a ledger.
+pub fn exists(dir: &Path) -> bool {
+    dir.join(FILE).is_file()
+}
+
+/// An empty ledger, for `init`. Opened to append, never truncated, so a
+/// ledger that appeared since the caller looked is kept.
+pub fn create(dir: &Path) -> Result<(), String> {
+    let path = dir.join(FILE);
+    std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .map(drop)
+        .map_err(|e| format!("creating {}: {e}", path.display()))
+}
+
+/// A whole canon written at once: `replay --out` minting a fixture as a
+/// real canon. The one write here that replaces a ledger, because what it
+/// writes is a new canon rather than an edit of one.
+pub fn materialize(dir: &Path, log: &Log) -> std::io::Result<()> {
+    std::fs::write(dir.join(FILE), log.render())
+}
+
+/// The ledger as git names it: its path under `root`, `/`-separated, or
+/// nothing when it is not under `root`.
+pub fn pathspec(dir: &Path, root: &Path) -> Option<String> {
+    let file = dir.join(FILE);
+    let file = file.canonicalize().unwrap_or(file);
+    let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    let rel = file.strip_prefix(&root).ok()?;
+    Some(
+        rel.components()
+            .map(|c| c.as_os_str().to_string_lossy().to_string())
+            .collect::<Vec<_>>()
+            .join("/"),
+    )
+}
+
+/// A ledger published in a lineage repository: at its root, or inside
+/// `.canon/` as a project carries it. Both shapes are real and a maintainer
+/// should not have to restructure to publish, so look in both. Returns the
+/// bytes, the path read (to say which one it was), and the directory that
+/// holds it.
+pub fn published(repo: &Path) -> Result<(String, PathBuf, PathBuf), String> {
+    let (file, home) = if repo.join(FILE).is_file() {
+        (repo.join(FILE), repo.to_path_buf())
+    } else if repo.join(DIR).join(FILE).is_file() {
+        (repo.join(DIR).join(FILE), repo.join(DIR))
+    } else {
+        return Err(format!("no {FILE} at its root and none in {DIR}/"));
+    };
+    let raw = std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
+    Ok((raw, file, home))
+}
+
+/// The ledger's path, for tests that tamper with it or compare its bytes.
+#[cfg(test)]
+pub fn file(dir: &Path) -> PathBuf {
+    dir.join(FILE)
+}
+
 /// What inside `.canon` belongs to this machine rather than to the group.
 ///
 /// **The canon is meant to be committed.** `acts.jsonl` is a text file people
@@ -112,6 +183,8 @@ pub fn ignore_local(dir: &Path) {
     );
 }
 
+/// Append one act. Append-only: we never rewrite the file, so a concurrent
+/// writer's line is never lost and git sees an additive diff.
 pub fn append(dir: &Path, act: &Act) -> Result<(), String> {
     let path = dir.join(FILE);
     let line = serde_json::to_string(act).map_err(|e| e.to_string())?;

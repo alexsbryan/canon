@@ -240,8 +240,8 @@ proptest! {
         prop_assert_eq!(log.render(), restored.render());
         prop_assert_eq!(state.overdue(now), again.overdue(now));
 
-        let evidence: Vec<_> = state.commitments.iter().enumerate().map(|(i, c)| {
-            Position::of(c.id.clone(), if pulls.rotate_right(i as u32) & 1 == 0 {
+        let evidence: Vec<_> = state.commitments().iter().enumerate().map(|(i, c)| {
+            Position::of(c.id().clone(), if pulls.rotate_right(i as u32) & 1 == 0 {
                 Pull::Toward
             } else {
                 Pull::Against
@@ -330,7 +330,7 @@ proptest! {
             noisy.push(vote(&act.id, &proposer, 210, Pull::Toward));
             let quiet = Log::from_acts(base.clone()).derive_at(now);
             let loud = Log::from_acts(noisy.clone()).derive_at(now);
-            prop_assert!(matches!(loud.get(&act.id).unwrap().status, Status::Proposed { .. }),
+            prop_assert!(matches!(loud.get(&act.id).unwrap().status(), Status::Proposed { .. }),
                          "an agent's write remains proposed under standing");
             let mut rules = vec![Ratify::Standing];
             if held {
@@ -404,7 +404,7 @@ proptest! {
             }, 50, "human:founder"));
             let canon = Log::from_acts(acts).derive_at(now);
             let c = canon.get(&proposal.id).unwrap();
-            (c.status.clone(), canon.ratify(c, now))
+            (c.status().clone(), canon.ratify(c, now))
         };
         for (named, share) in pairs {
             prop_assert_eq!(named.name(), share.name());
