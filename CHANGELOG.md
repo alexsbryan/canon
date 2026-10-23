@@ -7,6 +7,16 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Changes
+
+- `canon adopt <url>` no longer leaves its clone of the lineage where
+  `git add .canon` commits it. `canon init` lists `lineages/` in
+  `.canon/.gitignore`, and the cache writes a `.gitignore` of its own the
+  next time `adopt`, `upgrade` or `rebase` fetches, so a canon founded
+  before this is covered without its `.gitignore` being edited. A clone
+  already committed stays in git until you `git rm -r --cached
+  .canon/lineages`.
+
 ## 0.5.0 — 2026-10-17
 
 ### Before you upgrade

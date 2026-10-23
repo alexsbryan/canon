@@ -247,6 +247,23 @@ fn git(args: &[&str], cwd: Option<&Path>) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out.stdout).to_string())
 }
 
+/// Create the lineage cache, carrying a `.gitignore` of its own.
+///
+/// `init` lists `lineages/` now, but a canon founded before it did has a
+/// `.gitignore` this tool never rewrites, and `git add .canon` there
+/// committed a nested clone. The cache ignores itself instead, the way
+/// `secrets/` does, so the fix reaches every canon that clones a lineage
+/// without editing a file its group may have edited on purpose.
+fn ignore_cache(dir: &Path) -> Result<(), String> {
+    let cache = dir.join(CACHE_DIR);
+    std::fs::create_dir_all(&cache).map_err(|e| format!("creating the lineage cache: {e}"))?;
+    let ignore = cache.join(".gitignore");
+    if !ignore.exists() {
+        std::fs::write(&ignore, "*\n").map_err(|e| format!("writing {}: {e}", ignore.display()))?;
+    }
+    Ok(())
+}
+
 /// Clone or refresh a lineage and read what is live at `generation`.
 ///
 /// The adopter never types git: this is the whole reason it is here.
@@ -256,13 +273,14 @@ pub fn fetch(
     generation: Option<&str>,
 ) -> Result<(Snapshot, canon_core::Canon), String> {
     let cache = dir.join(CACHE_DIR).join(slug(url));
+    // Before either branch: a cache cloned before this existed is ignored
+    // from its next fetch on.
+    ignore_cache(dir)?;
     if cache.join(".git").is_dir() {
         // Not --quiet: a rejected tag update is reported on stderr and is
         // exactly the thing worth seeing.
         git(&["fetch", "--tags", "origin"], Some(&cache))?;
     } else {
-        std::fs::create_dir_all(cache.parent().unwrap_or(&cache))
-            .map_err(|e| format!("creating the lineage cache: {e}"))?;
         git(&["clone", "--quiet", url, &cache.to_string_lossy()], None)?;
     }
     if let Some(g) = generation {
