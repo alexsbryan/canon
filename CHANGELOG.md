@@ -16,7 +16,7 @@ renames that heading to the version, and its section becomes the release notes
   before this is covered without its `.gitignore` being edited. A clone
   already committed stays in git until you `git rm -r --cached
   .canon/lineages`.
-- `canon rebase --onto` decides in code every change the new base settles
+- `canon rebase --onto <url>@<gen>` decides in code every change the new base settles
   word for word before it asks a model: a retraction of a rule the base
   holds verbatim carries onto it, one the base withdrew too is already
   there, and an added rule the base already says is already there. Only
@@ -32,6 +32,17 @@ renames that heading to the version, and its section becomes the release notes
   lineage without writing anything. `adopt --paste` now says so on its
   success line. A block carries no history, so a rule upstream reworded
   arrives as a new rule and the withdrawal of the old one.
+- `canon adopt <url>@<gen> --rebase` (or `--paste --rebase`) moves a canon
+  that already descends from one lineage onto another, keeping its own
+  record: its additions, retractions, positions and history stay as they
+  are, and `diff --upstream` and `upgrade` then read against the new base.
+  It writes one `adopt` act, asserts the base's rules this canon has no
+  counterpart of, and retracts inherited rules the base does not hold that
+  this canon never changed, as `upgrade` does; it refuses, writing nothing,
+  wherever `canon rebase --onto <url>@<gen>` would mark a conflict, so it needs an
+  endpoint when a change is not settled word for word. The pairing of the
+  base's rules with the ones this canon holds is kept beside the seed, in
+  `.canon/upstream/carried.json`; commit it with the rest.
 
 ## 0.5.0 — 2026-10-17
 

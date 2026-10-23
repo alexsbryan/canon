@@ -13,7 +13,9 @@
 //! as a command the person running it can read, edit, or ignore; a conflict
 //! comes out marked and with no command at all. Nothing auto-resolves, and
 //! anything they do run is authored by them — which is the point, because
-//! after a rebase the law is theirs to answer for.
+//! after a rebase the law is theirs to answer for. `canon adopt
+//! <url>@<gen> --rebase` makes the move itself once this reading has no
+//! conflict in it ([`obstacles`]).
 //!
 //! The number that matters is the first line: **how much of your law survives
 //! before you commit to the move.**
@@ -362,6 +364,48 @@ fn land(
     Ok(landed)
 }
 
+/// What a rebase onto `base` leaves for a person: each change it marks as a
+/// conflict, and each change nothing placed. `canon adopt --rebase` moves a
+/// canon only when this is empty.
+///
+/// The same reading `rebase` prints, so the move refuses exactly where the
+/// proposal would say "decide this one yourself". A model's reply here can
+/// only refuse the move; nothing it says is written.
+pub(crate) fn obstacles(
+    client: impl FnOnce() -> Result<Client, ModelError>,
+    d: &Divergence,
+    canon: &Canon,
+    seed: &Snapshot,
+    base: &Base,
+) -> Result<Vec<String>, ModelError> {
+    let changes = describe(d, canon);
+    let landed = land(client, &changes, seed, base)?;
+    let mut out = Vec::new();
+    for l in landed.iter().filter(|l| l.verdict == Verdict::Conflicts) {
+        let onto = l
+            .target
+            .and_then(|n| base.snapshot.commitments.get(n - 1))
+            .map(|c| format!("\n    against {}  \"{}\"", c.id, c.text))
+            .unwrap_or_default();
+        out.push(format!(
+            "  CONFLICTS  you {}{onto}\n    {}",
+            l.change.did, l.because
+        ));
+    }
+    // A change the reading said nothing about has not been shown not to
+    // conflict, and "did not answer" is not "answered: no".
+    for c in changes
+        .iter()
+        .filter(|c| !landed.iter().any(|l| l.change.did == c.did))
+    {
+        out.push(format!(
+            "  UNMAPPED   you {} — the reading said nothing about it",
+            c.did
+        ));
+    }
+    Ok(out)
+}
+
 pub fn run(args: &[String]) -> i32 {
     let Some(onto) = flag(args, "--onto") else {
         return fail("usage: canon rebase --onto <url>@<generation>");
@@ -383,7 +427,10 @@ pub fn run(args: &[String]) -> i32 {
         Err(e) => return fail(e),
     };
 
-    let d = Divergence::compute(&seed, &canon);
+    let d = match lineage::diverged(&dir, &seed, &canon) {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
     let changes = describe(&d, &canon);
     if changes.is_empty() {
         println!(

@@ -23,7 +23,7 @@ use std::io::Read;
 use std::path::Path;
 use std::process::Command;
 
-use canon_core::{ActKind, Divergence, Fate, Log, Snapshot};
+use canon_core::{ActId, ActKind, Canon, Divergence, Fate, Log, Snapshot};
 
 use crate::cmds::{fail, has, positionals};
 use crate::profile::Profile;
@@ -82,35 +82,63 @@ pub fn adopt(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    if let Some(a) = &canon.ancestry() {
-        return fail(format!(
-            "this canon already descends from {}@{} — `canon upgrade <gen>` takes a newer \
-             generation of it",
-            a.lineage, a.generation
-        ));
+    let rebasing = has(args, "--rebase");
+    match (canon.ancestry(), rebasing) {
+        (Some(a), false) => {
+            return fail(format!(
+                "this canon already descends from {}@{} — `canon upgrade <gen>` takes a newer \
+                 generation of it, and `canon adopt <url>@<gen> --rebase` moves it onto \
+                 another base",
+                a.lineage, a.generation
+            ))
+        }
+        (None, true) => {
+            return fail(
+                "this canon descends from no lineage, so there is nothing to move — `canon \
+                 adopt` without --rebase adopts one",
+            )
+        }
+        _ => {}
+    }
+    if rebasing && has(args, "--except") {
+        return fail(
+            "--except retracts rules as a canon first adopts them; a canon moving onto a new \
+             base keeps its own retractions. Nothing was written",
+        );
     }
 
     let pos = positionals(args);
-    let (snapshot, source) = if has(args, "--paste") {
+    let (snapshot, log, source) = if has(args, "--paste") {
         let mut block = String::new();
         if let Err(e) = std::io::stdin().read_to_string(&mut block) {
             return fail(format!("reading the pasted block: {e}"));
         }
         match Snapshot::parse(&block) {
-            Ok(s) => (s, "paste".to_string()),
+            Ok(s) => (s, None, "paste".to_string()),
             Err(e) => return fail(e),
         }
     } else if let Some(target) = pos.first() {
         let (url, gen) = split_generation(target);
         match fetch(&dir, url, gen) {
-            Ok((s, _)) => (s, url.to_string()),
+            Ok((s, log)) => (s, Some(log), url.to_string()),
             Err(e) => return fail(e),
         }
     } else {
         return fail(
-            "usage: canon adopt <url>[@generation] | --paste  [--except <id>,… -m \"<why>\"]",
+            "usage: canon adopt <url>[@generation] | --paste  [--except <id>,… -m \"<why>\"] \
+             [--rebase]",
         );
     };
+    if rebasing {
+        return onto::onto(
+            &dir,
+            &canon,
+            has(args, "--allow-remote"),
+            &snapshot,
+            log.as_ref(),
+            &source,
+        );
+    }
 
     // Resolved before anything is written: a typo in one id must not leave
     // a half-adopted canon behind it.
@@ -393,6 +421,79 @@ pub fn load_seed(dir: &Path) -> Result<Snapshot, String> {
     serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))
 }
 
+/// Which local commitment holds each rule of the base this canon moved onto.
+///
+/// Written by `adopt --rebase`, beside the seed. A canon that moves keeps
+/// its record, and its inherited rules carry `from` the lineage it first
+/// adopted; the record is append-only, so the link to the new base lives
+/// here instead, and every divergence is computed through it
+/// ([`Divergence::compute_carried`]). Absent for a canon that never moved.
+pub const CARRIED_FILE: &str = "carried.json";
+
+pub fn load_carried(dir: &Path) -> Result<Vec<(ActId, ActId)>, String> {
+    let path = dir.join(UPSTREAM_DIR).join(CARRIED_FILE);
+    let Ok(raw) = std::fs::read_to_string(&path) else {
+        return Ok(Vec::new());
+    };
+    let pairs: Vec<serde_json::Value> =
+        serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))?;
+    pairs
+        .iter()
+        .map(|p| match (p["upstream"].as_str(), p["local"].as_str()) {
+            (Some(u), Some(l)) => Ok((ActId::from_raw(u), ActId::from_raw(l))),
+            _ => Err(format!(
+                "{}: an entry without `upstream` and `local` — refusing to diff against a \
+                 half-read base",
+                path.display()
+            )),
+        })
+        .collect()
+}
+
+pub fn save_carried(dir: &Path, pairs: &[(ActId, ActId)]) -> Result<(), String> {
+    let up = dir.join(UPSTREAM_DIR);
+    std::fs::create_dir_all(&up).map_err(|e| format!("creating {}: {e}", up.display()))?;
+    let body: Vec<serde_json::Value> = pairs
+        .iter()
+        .map(|(u, l)| serde_json::json!({ "upstream": u.as_str(), "local": l.as_str() }))
+        .collect();
+    let path = up.join(CARRIED_FILE);
+    std::fs::write(
+        &path,
+        serde_json::to_string_pretty(&body).map_err(|e| e.to_string())? + "\n",
+    )
+    .map_err(|e| format!("writing {}: {e}", path.display()))
+}
+
+/// How this canon has diverged from its seed, through whatever it carried
+/// when it moved. The one way every verb here computes it.
+pub fn diverged(dir: &Path, seed: &Snapshot, canon: &Canon) -> Result<Divergence, String> {
+    Ok(Divergence::compute_carried(
+        seed,
+        canon,
+        &load_carried(dir)?,
+    ))
+}
+
+/// The local commitment that holds the seed rule `upstream`: the one whose
+/// `from` names it, else the one the move carried it onto.
+pub fn local_of<'a>(
+    canon: &'a Canon,
+    carried: &[(ActId, ActId)],
+    upstream: &ActId,
+) -> Option<&'a canon_core::Commitment> {
+    canon
+        .commitments()
+        .iter()
+        .find(|c| c.from() == Some(upstream))
+        .or_else(|| {
+            carried
+                .iter()
+                .find(|(u, _)| u == upstream)
+                .and_then(|(_, l)| canon.get(l))
+        })
+}
+
 // ── diff --upstream ─────────────────────────────────────────
 
 pub fn diff(args: &[String]) -> i32 {
@@ -407,7 +508,10 @@ pub fn diff(args: &[String]) -> i32 {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let d = Divergence::compute(&seed, &canon);
+    let d = match diverged(&dir, &seed, &canon) {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
     if has(args, "--json") {
         println!("{}", serde_json::to_string_pretty(&d).unwrap_or_default());
         return 0;
@@ -597,19 +701,18 @@ pub fn upgrade(args: &[String]) -> i32 {
         return 0;
     }
 
-    let d = Divergence::compute(&seed, &canon);
+    let carried = match load_carried(&dir) {
+        Ok(c) => c,
+        Err(e) => return fail(e),
+    };
+    let d = Divergence::compute_carried(&seed, &canon, &carried);
     let fate_of = |upstream_id: &canon_core::ActId| -> Option<&Fate> {
         d.inherited
             .iter()
             .find(|i| &i.upstream == upstream_id)
             .map(|i| &i.fate)
     };
-    let local_of = |upstream_id: &canon_core::ActId| {
-        canon
-            .commitments()
-            .iter()
-            .find(|c| c.from() == Some(upstream_id))
-    };
+    let local_of = |upstream_id: &canon_core::ActId| local_of(&canon, &carried, upstream_id);
 
     let mut applied = 0;
     let mut held: Vec<String> = Vec::new();
@@ -835,6 +938,8 @@ pub fn merge_driver(args: &[String]) -> i32 {
         }
     }
 }
+
+mod onto;
 
 #[cfg(test)]
 mod tests;

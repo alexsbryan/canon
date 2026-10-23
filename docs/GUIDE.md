@@ -173,9 +173,12 @@ of the model is what moves quality here. Measure yours with
 
 A canon is a file; you can fork one, carry your own rules onto a different
 base, and diff the two. `canon share` prints a pasteable snapshot, `canon
-adopt --paste` forks one, and `canon rebase --onto <url>` carries your rules
-onto a different base (*model*). `canon mcp` serves the same verbs to an agent
-over MCP.
+adopt --paste` forks one, and a newer block piped into `canon upgrade
+--paste` takes its next generation. `canon rebase --onto <url>` proposes how
+your rules land on a different base (*model*, only for what the base does not
+settle word for word), and `canon adopt <url>@<gen> --rebase` makes the move,
+keeping your own record and refusing where the proposal would mark a
+conflict. `canon mcp` serves the same verbs to an agent over MCP.
 
 For a small canon, `canon_list` shows every rule. Above fifty rules it first
 shows counts by scope. Pass `scope` and/or `query` to narrow the list; `limit`
