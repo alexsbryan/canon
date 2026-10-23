@@ -25,6 +25,9 @@ renames that heading to the version, and its section becomes the release notes
   lands "onto": the rules and the changes in the model's prompt are
   numbered apart, so a reply naming a change's own number is not read as a
   rule.
+  A rule you replaced whose original the new base withdrew (including one
+  it excepted on adoption) carries as your own rule there, decided in code,
+  with the `canon add` that puts it on the new base.
 - A canon forked with `canon share | canon adopt --paste` can take its
   upstream's later generations: pipe a newer `canon share` block of the same
   lineage into `canon upgrade --paste`. It applies the block as `upgrade

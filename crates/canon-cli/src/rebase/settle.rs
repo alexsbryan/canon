@@ -26,12 +26,22 @@ pub(super) fn settle(changes: &[Change], base: &Base) -> (Vec<Landed>, Vec<Chang
     let mut rest = Vec::new();
     for c in changes {
         match decide(&c.basis, base) {
-            Some((verdict, target, because)) => decided.push(Landed {
-                change: c.clone(),
-                verdict,
-                target,
-                because: because.to_string(),
-            }),
+            Some((verdict, target, because)) => {
+                let mut change = c.clone();
+                // Carried with no base rule to land on, a replacement is
+                // added as the new rule it now is.
+                if let (Basis::Superseded { now, .. }, Verdict::Carries, None) =
+                    (&c.basis, verdict, target)
+                {
+                    change.standalone = Some(format!("canon add \"{now}\""));
+                }
+                decided.push(Landed {
+                    change,
+                    verdict,
+                    target,
+                    because: because.to_string(),
+                })
+            }
             None => rest.push(c.clone()),
         }
     }
@@ -64,6 +74,16 @@ fn decide(basis: &Basis, base: &Base) -> Option<(Verdict, Option<usize>, &'stati
                 Verdict::Already,
                 Some(k),
                 "decided in code: the new base already says this word for word.",
+            )),
+            // The base withdrew the rule this replaced, and does not say the
+            // replacement either: it is this canon's own rule on the new
+            // base. zoracite's two replacements of rules cw-family-canon
+            // excepted on arrival were called orphaned, which drops them.
+            (None, None) if withdrew(base, upstream) => Some((
+                Verdict::Carries,
+                None,
+                "decided in code: the new base withdrew the rule this replaced, so the \
+                 replacement is this canon's own rule there.",
             )),
             // Both, or neither: which one the change is about is a judgement.
             _ => None,

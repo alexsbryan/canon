@@ -458,3 +458,56 @@ fn the_rules_and_the_changes_are_numbered_apart_so_neither_reads_as_the_other() 
     assert_eq!(landed[0].change.kind, Kind::Addition);
     assert_eq!(landed[0].target, None);
 }
+
+#[test]
+fn a_replacement_of_a_rule_the_new_base_withdrew_carries_as_this_canons_own() {
+    // zoracite replaced "It must be specific and actionable by someone who
+    // did not see the incident." with its own words; cw-family-canon adopted
+    // with `--except`, so its copy of the original arrived retracted. The
+    // model called the change orphaned, which drops the replacement. The
+    // base withdrew the original itself, so the replacement is this canon's
+    // own rule on the new base, and that is a lookup.
+    const OLD: &str = "It must be specific and actionable by someone who did not see the incident.";
+    const NEW: &str = "A principle must be specific, and actionable by someone who did not see it.";
+    let seed = snap(
+        "commonwealth-ai",
+        &[
+            ("can-cw0000000010", OLD),
+            ("can-cw0000000004", "Commit freely; never push."),
+        ],
+    );
+    let old = asserted(OLD, Some("can-cw0000000010"), 100);
+    let keep = asserted("Commit freely; never push.", Some("can-cw0000000004"), 101);
+    let sup = Act::new(
+        ActKind::Supersede {
+            text: NEW.into(),
+            old: vec![old.id.clone()],
+            rationale: "ours".into(),
+        },
+        200,
+        "human:sam",
+    );
+    let fork = Log::from_acts(vec![old, keep, sup]).derive();
+
+    let t_old = asserted(OLD, Some("can-cw0000000010"), 300);
+    let t_keep = asserted("Commit freely; never push.", Some("can-cw0000000004"), 301);
+    let family = Log::from_acts(vec![retracted(&t_old, 300), t_old, t_keep]).derive();
+    let target = Snapshot::of(&family, "cw-family-canon", "house", 0);
+
+    let changes = describe(&Divergence::compute(&seed, &fork), &fork);
+    assert_eq!(changes.len(), 1, "{changes:#?}");
+    let mock = Mock::spawn(vec![(
+        200,
+        mapping(&[(2, "orphaned", None, "the new set has no such rule")]),
+    )]);
+    let base = Base {
+        snapshot: &target,
+        log: Some(&family),
+    };
+    let landed = land(|| Ok(mock.client()), &changes, &seed, &base).unwrap();
+    assert_eq!(landed.len(), 1);
+    assert_eq!(landed[0].verdict, Verdict::Carries);
+    assert!(mock.requests().is_empty(), "the model was asked");
+    let text = render(&seed, &target, &changes, &landed);
+    assert!(text.contains(&format!("canon add \"{NEW}\"")), "{text}");
+}
