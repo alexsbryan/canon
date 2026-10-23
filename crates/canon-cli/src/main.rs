@@ -157,6 +157,7 @@ LINEAGE                             (git optional; only rebase needs a model)
         [--except <id>,… -m \"<why>\"]       retract these as they arrive
         <url>@<gen> --rebase             move a canon that descends from one
                                          lineage onto another, keeping its record
+              [--carry <id> -m \"<why>\"]     carry a conflict anyway, as your ruling
   diff --upstream [--propose]            how you have diverged from your seed
   upgrade <gen> | --paste                take a newer generation
   rebase --onto <url>@<gen>              carry your law onto a different base

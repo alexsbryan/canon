@@ -20,7 +20,7 @@
 //! The number that matters is the first line: **how much of your law survives
 //! before you commit to the move.**
 
-use canon_core::{ActId, Canon, Divergence, Fate, Snapshot};
+use canon_core::{ActId, Canon, Divergence, Fate, Snapshot, SnapshotCommitment};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
@@ -140,6 +140,10 @@ pub(crate) struct Base<'a> {
 struct Change {
     kind: Kind,
     basis: Basis,
+    /// The local commitment the change left in force, when there is one:
+    /// the rule added, the replacement, the rule carried knowingly. What
+    /// `adopt --rebase --carry` names.
+    local: Option<ActId>,
     /// What the person did, in one line, for the prompt.
     did: String,
     /// The command that reproduces it against the new base, with `{}` where
@@ -153,8 +157,9 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
     let mut out = Vec::new();
     for i in &d.inherited {
         match &i.fate {
-            Fate::Superseded { text, .. } => out.push(Change {
+            Fate::Superseded { text, by } => out.push(Change {
                 kind: Kind::Edit,
+                local: Some(by.clone()),
                 basis: Basis::Superseded {
                     upstream: i.upstream.clone(),
                     text: i.text.clone(),
@@ -169,6 +174,8 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
             }),
             Fate::Retracted => out.push(Change {
                 kind: Kind::Edit,
+                // Retracted: nothing of it is in force to carry.
+                local: None,
                 basis: Basis::Retracted {
                     upstream: i.upstream.clone(),
                     text: i.text.clone(),
@@ -179,6 +186,11 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
             }),
             Fate::Accepted { rationale } => out.push(Change {
                 kind: Kind::Edit,
+                local: canon
+                    .commitments()
+                    .iter()
+                    .find(|c| c.from() == Some(&i.upstream))
+                    .map(|c| c.id().clone()),
                 basis: Basis::Accepted {
                     upstream: i.upstream.clone(),
                     text: i.text.clone(),
@@ -197,6 +209,7 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
         if let Some(c) = canon.get(id) {
             out.push(Change {
                 kind: Kind::Addition,
+                local: Some(c.id().clone()),
                 basis: Basis::Added {
                     text: c.text().to_string(),
                 },
@@ -364,9 +377,30 @@ fn land(
     Ok(landed)
 }
 
+/// One change a rebase onto a base leaves for a person.
+pub(crate) struct Obstacle {
+    /// The local commitment the change left in force, if any.
+    pub local: Option<ActId>,
+    /// The base rule a conflict was read against, if it named one.
+    pub against: Option<SnapshotCommitment>,
+    /// A conflict, rather than a change nothing placed.
+    pub conflict: bool,
+    /// How the reading put it, for the refusal.
+    pub line: String,
+}
+
+impl Obstacle {
+    /// Can the person carry this one anyway? Only a conflict with a rule in
+    /// force here and a base rule it was read against: the `accept` that
+    /// records the carry names both.
+    pub fn carriable(&self) -> bool {
+        self.conflict && self.local.is_some() && self.against.is_some()
+    }
+}
+
 /// What a rebase onto `base` leaves for a person: each change it marks as a
 /// conflict, and each change nothing placed. `canon adopt --rebase` moves a
-/// canon only when this is empty.
+/// canon only when every one is empty or carried by the person.
 ///
 /// The same reading `rebase` prints, so the move refuses exactly where the
 /// proposal would say "decide this one yourself". A model's reply here can
@@ -377,20 +411,34 @@ pub(crate) fn obstacles(
     canon: &Canon,
     seed: &Snapshot,
     base: &Base,
-) -> Result<Vec<String>, ModelError> {
+) -> Result<Vec<Obstacle>, ModelError> {
     let changes = describe(d, canon);
     let landed = land(client, &changes, seed, base)?;
     let mut out = Vec::new();
     for l in landed.iter().filter(|l| l.verdict == Verdict::Conflicts) {
-        let onto = l
+        let against = l
             .target
             .and_then(|n| base.snapshot.commitments.get(n - 1))
+            .cloned();
+        let onto = against
+            .as_ref()
             .map(|c| format!("\n    against {}  \"{}\"", c.id, c.text))
             .unwrap_or_default();
-        out.push(format!(
-            "  CONFLICTS  you {}{onto}\n    {}",
-            l.change.did, l.because
-        ));
+        let id = l
+            .change
+            .local
+            .as_ref()
+            .map(|i| format!("{i}  "))
+            .unwrap_or_default();
+        out.push(Obstacle {
+            local: l.change.local.clone(),
+            against,
+            conflict: true,
+            line: format!(
+                "  CONFLICTS  {id}you {}{onto}\n    {}",
+                l.change.did, l.because
+            ),
+        });
     }
     // A change the reading said nothing about has not been shown not to
     // conflict, and "did not answer" is not "answered: no".
@@ -398,10 +446,15 @@ pub(crate) fn obstacles(
         .iter()
         .filter(|c| !landed.iter().any(|l| l.change.did == c.did))
     {
-        out.push(format!(
-            "  UNMAPPED   you {} — the reading said nothing about it",
-            c.did
-        ));
+        out.push(Obstacle {
+            local: c.local.clone(),
+            against: None,
+            conflict: false,
+            line: format!(
+                "  UNMAPPED   you {} — the reading said nothing about it",
+                c.did
+            ),
+        });
     }
     Ok(out)
 }

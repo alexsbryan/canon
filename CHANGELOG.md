@@ -46,6 +46,11 @@ renames that heading to the version, and its section becomes the release notes
   endpoint when a change is not settled word for word. The pairing of the
   base's rules with the ones this canon holds is kept beside the seed, in
   `.canon/upstream/carried.json`; commit it with the rest.
+  When the person judges a reported conflict does not hold, `--carry <id>
+  -m "<why>"` (repeatable, by the local id the refusal prints) moves the
+  canon anyway and records the ruling as an `accept` of the pair they
+  author, so `diff --upstream` shows the base rule as carried knowingly.
+  Refusal stays the default, and a carry needs its reason.
 
 ## 0.5.0 — 2026-10-17
 

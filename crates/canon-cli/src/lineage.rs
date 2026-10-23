@@ -137,6 +137,8 @@ pub fn adopt(args: &[String]) -> i32 {
             &snapshot,
             log.as_ref(),
             &source,
+            &crate::cmds::flags(args, "--carry"),
+            crate::cmds::flag(args, "-m").unwrap_or_default(),
         );
     }
 

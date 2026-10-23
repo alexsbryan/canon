@@ -218,6 +218,11 @@ const MINE: &str = "Ersilia measures and recommends; a person enacts.";
 /// A local endpoint answering every rebase reading with `fate` for each
 /// change it is shown, numbered as the prompt numbers them.
 fn endpoint(fate: &'static str) -> String {
+    endpoint_against(fate, None)
+}
+
+/// [`endpoint`], naming the base rule whose text is `against` as the target.
+fn endpoint_against(fate: &'static str, against: Option<&'static str>) -> String {
     use std::io::Read;
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
@@ -249,13 +254,22 @@ fn endpoint(fate: &'static str) -> String {
             };
             let req: serde_json::Value = serde_json::from_str(&body).unwrap_or_default();
             let user = req["messages"][1]["content"].as_str().unwrap_or("");
-            let made = user.split("The changes they made:").nth(1).unwrap_or("");
+            let (rules, made) = user
+                .split_once("The changes they made:")
+                .unwrap_or(("", ""));
+            let target: Option<usize> = against.and_then(|t| {
+                rules
+                    .lines()
+                    .filter_map(|l| l.split_once(". "))
+                    .find(|(_, text)| *text == t)
+                    .and_then(|(n, _)| n.trim().parse().ok())
+            });
             let changes: Vec<serde_json::Value> = made
                 .lines()
                 .filter_map(|l| l.split_once(". They "))
                 .filter_map(|(n, _)| n.trim().parse::<usize>().ok())
                 .map(|n| {
-                    serde_json::json!({ "change": n, "fate": fate, "target": null,
+                    serde_json::json!({ "change": n, "fate": fate, "target": target,
                                         "because": "the reading" })
                 })
                 .collect();
@@ -444,4 +458,67 @@ fn a_move_the_rebase_would_mark_as_a_conflict_is_refused_and_writes_nothing() {
         std::fs::read_to_string(ersilia.join("upstream/seed.json")).unwrap(),
         seed
     );
+}
+
+#[test]
+fn the_person_moving_can_carry_a_conflict_the_reading_reports_and_it_is_theirs_on_the_record() {
+    // zoracite's "Commit as you go … never amend or rebase" was read as
+    // conflicting with the family's "Commit freely but never push": stricter,
+    // not contrary, but that is for the person to say. Refusal stays the
+    // default; `--carry` is the person saying it, with a reason, as an
+    // `accept` of the pair they author.
+    let base = scratch("move-carry");
+    let (ersilia, fam) = the_family(&base);
+    let url = format!("{}@g1", fam.display());
+    let log = ok(&ersilia, &["log"]);
+    let mine = log
+        .lines()
+        .find(|l| l.contains(MINE))
+        .and_then(|l| l.split_whitespace().next())
+        .unwrap()
+        .to_string();
+    let e = endpoint_against("conflicts", Some(PUSH));
+
+    let (code, out) = canon_at(&ersilia, Some(&e), &["adopt", &url, "--rebase"]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains(&format!("--carry {mine}")), "{out}");
+
+    // Not without a reason.
+    let (code, out) = canon_at(
+        &ersilia,
+        Some(&e),
+        &["adopt", &url, "--rebase", "--carry", &mine],
+    );
+    assert_ne!(code, 0, "{out}");
+    assert_eq!(
+        ok(&ersilia, &["log"]),
+        log,
+        "a refused carry wrote something"
+    );
+
+    let (code, out) = canon_at(
+        &ersilia,
+        Some(&e),
+        &[
+            "adopt",
+            &url,
+            "--rebase",
+            "--carry",
+            &mine,
+            "-m",
+            "stricter, not contrary",
+        ],
+    );
+    assert_eq!(code, 0, "{out}");
+    let acts = ok(&ersilia, &["log", "--json"]);
+    let accept = acts
+        .lines()
+        .find(|l| l.contains("\"op\":\"accept\""))
+        .unwrap_or_else(|| panic!("no accept on the record:\n{acts}"));
+    assert!(accept.contains("\"actor\":\"human:sam\""), "{accept}");
+    assert!(accept.contains(&format!("\"a\":\"{mine}\"")), "{accept}");
+    assert!(accept.contains("stricter, not contrary"), "{accept}");
+    let diff = ok(&ersilia, &["diff", "--upstream"]);
+    assert!(diff.contains("ACCEPTED (1)"), "{diff}");
+    assert!(diff.contains(PUSH), "{diff}");
 }

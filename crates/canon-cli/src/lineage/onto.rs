@@ -55,6 +55,8 @@ pub(super) fn onto(
     target: &Snapshot,
     target_log: Option<&Canon>,
     source: &str,
+    carry: &[&str],
+    why: &str,
 ) -> i32 {
     let seed = match super::load_seed(dir) {
         Ok(s) => s,
@@ -76,26 +78,14 @@ pub(super) fn onto(
         snapshot: target,
         log: target_log,
     };
-    match rebase::obstacles(
+    let stops = match rebase::obstacles(
         || model::client_for(dir, allow_remote),
         &d,
         canon,
         &seed,
         &base,
     ) {
-        Ok(stops) if !stops.is_empty() => {
-            return fail(format!(
-                "not moved onto {}@{}: the rebase leaves {} change(s) for a person, and \
-                 nothing was written.\n\n{}\n\n  `canon rebase --onto {source}@{}` prints the \
-                 whole reading.",
-                target.lineage,
-                target.generation,
-                stops.len(),
-                stops.join("\n"),
-                target.generation
-            ))
-        }
-        Ok(_) => {}
+        Ok(v) => v,
         Err(e) => {
             eprintln!(
                 "not moved: whether this canon's changes conflict with {}@{} could not be \
@@ -104,6 +94,43 @@ pub(super) fn onto(
             );
             return model::report(e);
         }
+    };
+    let carries = match carried_anyway(&stops, carry, why) {
+        Ok(c) => c,
+        Err(e) => return fail(e),
+    };
+    let left: Vec<&rebase::Obstacle> = stops
+        .iter()
+        .filter(|o| !carries.iter().any(|(l, _)| o.local.as_ref() == Some(l)))
+        .collect();
+    if !left.is_empty() {
+        let lines: Vec<&str> = left.iter().map(|o| o.line.as_str()).collect();
+        // The way through, named, because only the person can take it. Not a
+        // command to paste: the reason is theirs to write.
+        let ids: Vec<String> = left
+            .iter()
+            .filter(|o| o.carriable())
+            .filter_map(|o| o.local.as_ref().map(|l| format!("--carry {l}")))
+            .collect();
+        let through = if ids.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "\n  A conflict you judge does not hold can be carried anyway, as your ruling on \
+                 the record:\n    {} -m \"<why it stands against the base>\"",
+                ids.join(" ")
+            )
+        };
+        return fail(format!(
+            "not moved onto {}@{}: the rebase leaves {} change(s) for a person, and nothing \
+             was written.\n\n{}\n\n  `canon rebase --onto {source}@{}` prints the whole \
+             reading.{through}",
+            target.lineage,
+            target.generation,
+            left.len(),
+            lines.join("\n"),
+            target.generation
+        ));
     }
 
     let plan = match plan(&seed, canon, &carried, target, target_log) {
@@ -122,13 +149,83 @@ pub(super) fn onto(
             std::thread::sleep(std::time::Duration::from_millis(250));
         }
     }
-    match write(dir, &seed, &carried, target, source, plan) {
+    match write(
+        dir, canon, &seed, &carried, target, source, plan, &carries, why,
+    ) {
         Ok(lines) => {
             print!("{lines}");
             0
         }
         Err(e) => fail(e),
     }
+}
+
+/// The conflicts the person named with `--carry`, each as the local rule
+/// and the base rule the reading set it against.
+///
+/// **The model can only refuse; only the person overrides.** A carry names
+/// a conflict this reading reported, by the local id the refusal printed,
+/// and needs a reason: it is written as an `accept` of the pair, the act
+/// canon already has for a contradiction carried knowingly, authored by
+/// whoever runs the move.
+fn carried_anyway(
+    stops: &[rebase::Obstacle],
+    carry: &[&str],
+    why: &str,
+) -> Result<Vec<(ActId, SnapshotCommitment)>, String> {
+    let needles: Vec<&str> = carry
+        .iter()
+        .flat_map(|n| n.split(','))
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+        .collect();
+    if needles.is_empty() {
+        return Ok(Vec::new());
+    }
+    if why.trim().is_empty() {
+        return Err(
+            "--carry needs -m \"<why it stands against the base>\": carrying a conflict is a \
+             ruling, and a ruling says what it protects. Nothing was written"
+                .into(),
+        );
+    }
+    let mut out: Vec<(ActId, SnapshotCommitment)> = Vec::new();
+    for needle in needles {
+        let hits: Vec<&rebase::Obstacle> = stops
+            .iter()
+            .filter(|o| o.conflict)
+            .filter(|o| {
+                o.local
+                    .as_ref()
+                    .is_some_and(|l| l.as_str() == needle || l.as_str().starts_with(needle))
+            })
+            .collect();
+        let o = match hits.as_slice() {
+            [o] => *o,
+            [] => {
+                return Err(format!(
+                    "`{needle}` is not a conflict in this reading — nothing was written. A \
+                     reading can differ from the last; the refusal names what blocks this one"
+                ))
+            }
+            many => {
+                return Err(format!(
+                    "`{needle}` matches {} conflicts — use more characters; nothing was written",
+                    many.len()
+                ))
+            }
+        };
+        let (Some(local), Some(against)) = (o.local.clone(), o.against.clone()) else {
+            return Err(format!(
+                "`{needle}` conflicts with no base rule the reading named, so there is no pair \
+                 to carry it against. Nothing was written; a fresh reading may name one"
+            ));
+        };
+        if !out.iter().any(|(l, _)| l == &local) {
+            out.push((local, against));
+        }
+    }
+    Ok(out)
 }
 
 /// Is `c` exactly as it arrived: in force, and not carried knowingly
@@ -250,13 +347,17 @@ fn reworded_from(target_log: Option<&Canon>, id: &ActId) -> Vec<ActId> {
     out
 }
 
+#[allow(clippy::too_many_arguments)]
 fn write(
     dir: &Path,
+    canon: &Canon,
     seed: &Snapshot,
     carried: &[(ActId, ActId)],
     target: &Snapshot,
     source: &str,
     plan: Plan,
+    carries: &[(ActId, SnapshotCommitment)],
+    why: &str,
 ) -> Result<String, String> {
     let at = format!("{}@{}", target.lineage, target.generation);
     crate::cmds::write(
@@ -280,8 +381,9 @@ fn write(
         )?;
         pairs.push((t.id.clone(), act.id));
     }
+    let mut asserted: Vec<(ActId, ActId)> = Vec::new();
     for t in &plan.asserted {
-        crate::cmds::write(
+        let act = crate::cmds::write(
             dir,
             ActKind::Assert {
                 text: t.text.clone(),
@@ -289,6 +391,7 @@ fn write(
                 source: None,
             },
         )?;
+        asserted.push((t.id.clone(), act.id));
     }
     for (local, _) in &plan.retracted {
         crate::cmds::write(
@@ -296,6 +399,43 @@ fn write(
             ActKind::Retract {
                 target: local.clone(),
                 rationale: format!("not in {at}, the base this canon moved onto"),
+            },
+        )?;
+    }
+    // Each conflict the person carried: an `accept` of their rule and this
+    // canon's holder of the base rule it was read against.
+    for (local, against) in carries {
+        let holder = pairs
+            .iter()
+            .chain(asserted.iter())
+            .find(|(t, _)| t == &against.id)
+            .map(|(_, l)| l.clone())
+            .or_else(|| {
+                canon
+                    .commitments()
+                    .iter()
+                    .find(|c| c.from() == Some(&against.id))
+                    .map(|c| c.id().clone())
+            })
+            .ok_or_else(|| {
+                format!(
+                    "moved, but {} has no holder here to carry {local} against; nothing \
+                     records the carry — `canon accept {local} <id> -m \"…\"` does",
+                    against.id
+                )
+            })?;
+        crate::cmds::write(
+            dir,
+            ActKind::Accept {
+                a: local.clone(),
+                b: holder,
+                rationale: format!(
+                    "{} (carried onto {at} against the rebase's reading that it conflicts \
+                     with {})",
+                    why.trim(),
+                    against.id
+                ),
+                revisit: None,
             },
         )?;
     }
@@ -320,6 +460,12 @@ fn write(
         if n > 0 {
             out.push_str(&format!("  {n} {label}\n"));
         }
+    }
+    if !carries.is_empty() {
+        out.push_str(&format!(
+            "  {} conflict(s) carried as your ruling, each an `accept` on the record\n",
+            carries.len()
+        ));
     }
     for (_, text) in &plan.retracted {
         out.push_str(&format!("    retracted \"{text}\"\n"));
