@@ -156,7 +156,7 @@ LINEAGE                             (git optional; only rebase needs a model)
   adopt <url>[@gen] | --paste            fork someone else's canon
         [--except <id>,… -m \"<why>\"]       retract these as they arrive
   diff --upstream [--propose]            how you have diverged from your seed
-  upgrade <gen>                          take a newer generation
+  upgrade <gen> | --paste                take a newer generation
   rebase --onto <url>@<gen>              carry your law onto a different base
   merge-driver %O %A %B                  git merge driver; run it for setup
 

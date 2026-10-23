@@ -25,6 +25,13 @@ renames that heading to the version, and its section becomes the release notes
   lands "onto": the rules and the changes in the model's prompt are
   numbered apart, so a reply naming a change's own number is not read as a
   rule.
+- A canon forked with `canon share | canon adopt --paste` can take its
+  upstream's later generations: pipe a newer `canon share` block of the same
+  lineage into `canon upgrade --paste`. It applies the block as `upgrade
+  <gen>` applies a fetched generation, and refuses a block from another
+  lineage without writing anything. `adopt --paste` now says so on its
+  success line. A block carries no history, so a rule upstream reworded
+  arrives as a new rule and the withdrawal of the old one.
 
 ## 0.5.0 — 2026-10-17
 

@@ -121,3 +121,73 @@ fn a_cloned_lineage_never_lands_in_the_adopters_commit() {
     );
     assert!(staged.contains(".canon/upstream/seed.json"), "{staged}");
 }
+
+/// The id on a write's first line, `can-…`.
+fn id_of(out: &str) -> String {
+    out.split_whitespace()
+        .find(|w| w.starts_with("can-"))
+        .unwrap_or_else(|| panic!("no id in: {out}"))
+        .trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '-')
+        .to_string()
+}
+
+/// A canon at `dir`, named `name`, holding `rules`; the ids of the rules.
+fn founded(dir: &Path, name: &str, rules: &[&str]) -> Vec<String> {
+    ok(dir, &["init", "--profile", "house"]);
+    std::fs::write(dir.join("name"), name).unwrap();
+    rules.iter().map(|r| id_of(&ok(dir, &["add", r]))).collect()
+}
+
+#[test]
+fn a_pasted_fork_takes_its_upstreams_next_generation_by_paste() {
+    // Ersilia forked commonwealth-ai with `share | adopt --paste`, and a day
+    // later `upgrade` refused: a pasted block has no upstream to fetch, and
+    // the advice was to adopt into a new canon, discarding the fork's own
+    // record (LOAD_TEST_COMMONWEALTH.md entry 32).
+    let base = scratch("paste-upgrade");
+    let up = base.join("up");
+    let ids = founded(
+        &up,
+        "house",
+        &["Quiet hours run 11pm-7am.", "Bikes live inside."],
+    );
+    let first = ok(&up, &["share"]);
+
+    let fork = base.join("fork");
+    ok(&fork, &["init", "--profile", "house"]);
+    let (code, adopted) = canon(&fork, &["adopt", "--paste"], Some(&first));
+    assert_eq!(code, 0, "{adopted}");
+    assert!(
+        adopted.contains("canon upgrade --paste"),
+        "adopt --paste does not say how such a fork takes a later generation:\n{adopted}"
+    );
+    ok(&fork, &["add", "Thursday is movie night."]);
+
+    // Upstream moves on: a new rule, and one withdrawn.
+    ok(&up, &["add", "Guests sign the book."]);
+    ok(&up, &["retract", &ids[1], "-m", "the shed is built"]);
+    let second = ok(&up, &["share"]);
+
+    let (code, out) = canon(&fork, &["upgrade", "--paste"], Some(&second));
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("2 change(s) applied"), "{out}");
+    let live = ok(&fork, &["list"]);
+    assert!(live.contains("Guests sign the book."), "{live}");
+    assert!(!live.contains("Bikes live inside."), "{live}");
+    assert!(live.contains("Thursday is movie night."), "{live}");
+    let diff = ok(&fork, &["diff", "--upstream"]);
+    assert!(diff.contains("ADDED (1) · UNTOUCHED (2)"), "{diff}");
+
+    // A block from another lineage is refused, and writes nothing.
+    let other = base.join("other");
+    founded(&other, "elsewhere", &["Dogs welcome."]);
+    let before = ok(&fork, &["log"]);
+    let (code, out) = canon(
+        &fork,
+        &["upgrade", "--paste"],
+        Some(&ok(&other, &["share"])),
+    );
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains("elsewhere"), "{out}");
+    assert_eq!(ok(&fork, &["log"]), before);
+}

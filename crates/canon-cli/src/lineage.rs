@@ -137,6 +137,15 @@ pub fn adopt(args: &[String]) -> i32 {
                 );
             }
             println!("  canon diff --upstream   how you have diverged, later");
+            if source == "paste" {
+                // A pasted fork has no URL to fetch from, and nothing at
+                // adoption used to say how it takes a later generation.
+                println!(
+                    "  later generations: a newer `canon share` block of {}, piped into \
+                     `canon upgrade --paste`",
+                    snapshot.lineage
+                );
+            }
             0
         }
         Err(e) => fail(e),
@@ -521,9 +530,11 @@ fn render_proposal(d: &Divergence, canon: &canon_core::Canon) -> String {
 
 pub fn upgrade(args: &[String]) -> i32 {
     let pos = positionals(args);
-    let Some(generation) = pos.first() else {
-        return fail("usage: canon upgrade <generation>");
-    };
+    let pasted = has(args, "--paste");
+    let generation = pos.first().copied();
+    if generation.is_none() && !pasted {
+        return fail("usage: canon upgrade <generation> | --paste");
+    }
     let (dir, _, canon) = match crate::cmds::load() {
         Ok(v) => v,
         Err(e) => return fail(e),
@@ -531,19 +542,52 @@ pub fn upgrade(args: &[String]) -> i32 {
     let Some(ancestry) = canon.ancestry().clone() else {
         return fail("this canon was not adopted from a lineage — nothing to upgrade");
     };
-    let Some(url) = ancestry.source.clone().filter(|s| s != "paste") else {
-        return fail(
-            "this canon was adopted from a pasted block, which has no upstream to fetch. \
-             Ask for a fresh block and `canon adopt --paste` into a new canon",
-        );
-    };
     let seed = match load_seed(&dir) {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let (next, upstream) = match fetch(&dir, &url, Some(generation)) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
+    // **Two ways in, one way through.** A canon adopted by paste has no
+    // upstream to fetch, and `upgrade` used to refuse it and advise adopting
+    // into a new canon, which discards the fork's own record. A newer block
+    // of the same lineage is read instead: its header names the lineage and
+    // the generation, and everything after this point is the same.
+    let (next, upstream, source) = if pasted {
+        let mut block = String::new();
+        if let Err(e) = std::io::stdin().read_to_string(&mut block) {
+            return fail(format!("reading the pasted block: {e}"));
+        }
+        let next = match Snapshot::parse(&block) {
+            Ok(s) => s,
+            Err(e) => return fail(e),
+        };
+        if next.lineage != ancestry.lineage {
+            return fail(format!(
+                "that block is {}@{}, and this canon descends from {} — nothing was written. \
+                 `canon adopt --paste --rebase` moves a canon onto another lineage",
+                next.lineage, next.generation, ancestry.lineage
+            ));
+        }
+        // A snapshot carries no supersession history, so a rule upstream
+        // rewrote arrives as a new rule and the withdrawal of the old one.
+        // Said, because the held list below can then name both halves.
+        eprintln!(
+            "reading a pasted {}@{}: a block carries no history, so a rule upstream reworded \
+             reads as a new rule and a withdrawn one",
+            next.lineage, next.generation
+        );
+        (next, Log::default().derive(), "paste".to_string())
+    } else {
+        let Some(url) = ancestry.source.clone().filter(|s| s != "paste") else {
+            return fail(
+                "this canon was adopted from a pasted block, which has no upstream to fetch. \
+                 Ask for a newer block of the same lineage and pipe it into \
+                 `canon upgrade --paste`",
+            );
+        };
+        match fetch(&dir, &url, generation) {
+            Ok((next, upstream)) => (next, upstream, url),
+            Err(e) => return fail(e),
+        }
     };
     if next.generation == seed.generation {
         println!(
@@ -585,7 +629,7 @@ pub fn upgrade(args: &[String]) -> i32 {
                         ActKind::Supersede {
                             text: c.text.clone(),
                             old: vec![local.id().clone()],
-                            rationale: format!("upstream {}@{generation}", next.lineage),
+                            rationale: format!("upstream {}@{}", next.lineage, next.generation),
                         },
                     ) {
                         return fail(e);
@@ -634,7 +678,10 @@ pub fn upgrade(args: &[String]) -> i32 {
                     &dir,
                     ActKind::Retract {
                         target: local.id().clone(),
-                        rationale: format!("withdrawn upstream in {}@{generation}", next.lineage),
+                        rationale: format!(
+                            "withdrawn upstream in {}@{}",
+                            next.lineage, next.generation
+                        ),
                     },
                 ) {
                     return fail(e);
@@ -656,7 +703,7 @@ pub fn upgrade(args: &[String]) -> i32 {
         ActKind::Adopt {
             lineage: next.lineage.clone(),
             generation: next.generation.clone(),
-            source: Some(url.clone()),
+            source: Some(source.clone()),
         },
     ) {
         return fail(e);
@@ -678,10 +725,15 @@ pub fn upgrade(args: &[String]) -> i32 {
         for h in &held {
             println!("{h}\n");
         }
-        println!(
-            "  `canon rebase --onto {}@{generation}` proposes how to carry your law onto the new base.",
-            url
-        );
+        if source == "paste" {
+            println!("  `canon diff --upstream` shows where this canon now stands against it.");
+        } else {
+            println!(
+                "  `canon rebase --onto {source}@{}` proposes how to carry your law onto the new \
+                 base.",
+                next.generation
+            );
+        }
     }
     0
 }

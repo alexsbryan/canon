@@ -77,7 +77,7 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("share", &[], &[]),
     ("adopt", &["--except", "-m"], &["--paste"]),
     ("diff", &[], &["--json", "--propose", "--upstream"]),
-    ("upgrade", &[], &[]),
+    ("upgrade", &[], &["--paste"]),
     ("rebase", &["--onto"], &["--allow-remote", "--json"]),
     ("merge-driver", &[], &[]),
     ("tensions", &[], &["--allow-remote", "--json"]),
