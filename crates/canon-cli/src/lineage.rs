@@ -130,16 +130,7 @@ pub fn adopt(args: &[String]) -> i32 {
         );
     };
     if rebasing {
-        return onto::onto(
-            &dir,
-            &canon,
-            has(args, "--allow-remote"),
-            &snapshot,
-            log.as_ref(),
-            &source,
-            &crate::cmds::flags(args, "--carry"),
-            crate::cmds::flag(args, "-m").unwrap_or_default(),
-        );
+        return onto::onto(&dir, &canon, args, &snapshot, log.as_ref(), &source);
     }
 
     // Resolved before anything is written: a typo in one id must not leave

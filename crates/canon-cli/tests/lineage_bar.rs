@@ -522,3 +522,24 @@ fn the_person_moving_can_carry_a_conflict_the_reading_reports_and_it_is_theirs_o
     assert!(diff.contains("ACCEPTED (1)"), "{diff}");
     assert!(diff.contains(PUSH), "{diff}");
 }
+
+#[test]
+fn an_addition_read_as_orphaned_is_named_once_not_once_per_rule() {
+    // ersilia's real move printed 23 lines of "note: change N adds a rule,
+    // so `orphaned` is not a fate it can have": one correction, said 23
+    // times. It is said once, with the count.
+    let base = scratch("move-addnote");
+    let (ersilia, fam) = the_family(&base);
+    ok(&ersilia, &["add", "Second rule of our own."]);
+    ok(&ersilia, &["add", "Third rule of our own."]);
+    let url = format!("{}@g1", fam.display());
+    let e = endpoint("orphaned");
+    let (code, out) = canon_at(&ersilia, Some(&e), &["adopt", &url, "--rebase"]);
+    assert_eq!(code, 0, "{out}");
+    assert_eq!(
+        out.lines().filter(|l| l.contains("orphaned")).count(),
+        1,
+        "{out}"
+    );
+    assert!(out.contains("3 added rule(s)"), "{out}");
+}

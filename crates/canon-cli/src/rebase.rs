@@ -286,6 +286,7 @@ fn map_changes(
     let mapped: Mapped = client.complete_json(SYSTEM, &user, "changes", &SCHEMA)?;
 
     let mut out = Vec::new();
+    let mut reread = 0;
     for m in mapped.changes {
         let Some(change) = m
             .change
@@ -311,12 +312,12 @@ fn map_changes(
         // to be about. Corrected here rather than trusted to the prompt — and
         // named, because a silent correction is the thing this codebase most
         // wants not to do.
+        //
+        // Said once, with the count: ersilia's real move printed it 23 times.
+        // The additions still go to the model, because whether one conflicts
+        // with the base is the judgement the move refuses on.
         if change.kind == Kind::Addition && verdict == Verdict::Orphaned {
-            eprintln!(
-                "note: change {} adds a rule, so `orphaned` is not a fate it can have — \
-                 reading it as `carries`",
-                m.change
-            );
+            reread += 1;
             verdict = Verdict::Carries;
         }
         // A target number out of range is dropped rather than clamped: a
@@ -340,6 +341,12 @@ fn map_changes(
             target: target_no,
             because: m.because.trim().to_string(),
         });
+    }
+    if reread > 0 {
+        eprintln!(
+            "note: the reading called {reread} added rule(s) orphaned, which an added rule \
+             cannot be — read as `carries`"
+        );
     }
     Ok(out)
 }

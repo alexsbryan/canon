@@ -48,16 +48,19 @@ struct Plan {
     retracted: Vec<(ActId, String)>,
 }
 
+/// `args` are `adopt`'s own: `--allow-remote`, `--carry` and `-m` are read
+/// from them here.
 pub(super) fn onto(
     dir: &Path,
     canon: &Canon,
-    allow_remote: bool,
+    args: &[String],
     target: &Snapshot,
     target_log: Option<&Canon>,
     source: &str,
-    carry: &[&str],
-    why: &str,
 ) -> i32 {
+    let allow_remote = crate::cmds::has(args, "--allow-remote");
+    let carry = crate::cmds::flags(args, "--carry");
+    let why = crate::cmds::flag(args, "-m").unwrap_or_default();
     let seed = match super::load_seed(dir) {
         Ok(s) => s,
         Err(e) => return fail(e),
@@ -95,7 +98,7 @@ pub(super) fn onto(
             return model::report(e);
         }
     };
-    let carries = match carried_anyway(&stops, carry, why) {
+    let carries = match carried_anyway(&stops, &carry, why) {
         Ok(c) => c,
         Err(e) => return fail(e),
     };
