@@ -16,6 +16,15 @@ renames that heading to the version, and its section becomes the release notes
   before this is covered without its `.gitignore` being edited. A clone
   already committed stays in git until you `git rm -r --cached
   .canon/lineages`.
+- `canon rebase --onto` decides in code every change the new base settles
+  word for word before it asks a model: a retraction of a rule the base
+  holds verbatim carries onto it, one the base withdrew too is already
+  there, and an added rule the base already says is already there. Only
+  the rest is sent, and a canon whose changes all settle needs no endpoint.
+  The proposal no longer cites an unrelated rule as the one an added rule
+  lands "onto": the rules and the changes in the model's prompt are
+  numbered apart, so a reply naming a change's own number is not read as a
+  rule.
 
 ## 0.5.0 — 2026-10-17
 

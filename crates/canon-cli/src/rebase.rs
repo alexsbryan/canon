@@ -18,7 +18,7 @@
 //! The number that matters is the first line: **how much of your law survives
 //! before you commit to the move.**
 
-use canon_core::{Canon, Divergence, Fate, Snapshot};
+use canon_core::{ActId, Canon, Divergence, Fate, Snapshot};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
@@ -41,7 +41,8 @@ redundant now.
 Rules:
 - Judge each change on its own.
 - `already` and `conflicts` both require naming a target rule.
-- Say which target rule in `target`, or null for orphaned.
+- Say which target rule in `target`, or null for orphaned. The rules and the \
+changes are numbered apart: `target` is a rule's number, never a change's.
 - A change that ADDS a new rule is never orphaned. There was no earlier rule for it to be about, so it is `carries` unless the target already says it (`already`) or says something incompatible (`conflicts`).
 - One sentence in `because`.";
 
@@ -106,11 +107,37 @@ enum Kind {
     Addition,
 }
 
+/// What a change was done to, kept whole so code can place it against the
+/// new base before a model is asked anything.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Basis {
+    /// An inherited rule, withdrawn with no replacement.
+    Retracted { upstream: ActId, text: String },
+    /// An inherited rule, replaced by `now`.
+    Superseded {
+        upstream: ActId,
+        text: String,
+        now: String,
+    },
+    /// An inherited rule, carried knowingly against another.
+    Accepted { upstream: ActId, text: String },
+    /// A rule this canon wrote.
+    Added { text: String },
+}
+
+/// The base a rebase lands on: what is live there, and its log when it came
+/// by git, which says where each of its rules came from.
+pub(crate) struct Base<'a> {
+    pub snapshot: &'a Snapshot,
+    pub log: Option<&'a Canon>,
+}
+
 /// One thing this canon did to its inherited law, in a form both the model
 /// and the renderer can read.
 #[derive(Debug, Clone)]
 struct Change {
     kind: Kind,
+    basis: Basis,
     /// What the person did, in one line, for the prompt.
     did: String,
     /// The command that reproduces it against the new base, with `{}` where
@@ -126,6 +153,11 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
         match &i.fate {
             Fate::Superseded { text, .. } => out.push(Change {
                 kind: Kind::Edit,
+                basis: Basis::Superseded {
+                    upstream: i.upstream.clone(),
+                    text: i.text.clone(),
+                    now: text.clone(),
+                },
                 did: format!("replaced \"{}\" with \"{}\"", i.text, text),
                 command: Some(format!(
                     "canon supersede {{}} \"{}\" -m \"<why, in your words>\"",
@@ -135,12 +167,20 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
             }),
             Fate::Retracted => out.push(Change {
                 kind: Kind::Edit,
+                basis: Basis::Retracted {
+                    upstream: i.upstream.clone(),
+                    text: i.text.clone(),
+                },
                 did: format!("withdrew \"{}\" with no replacement", i.text),
                 command: Some("canon retract {} -m \"<why, in your words>\"".into()),
                 standalone: None,
             }),
             Fate::Accepted { rationale } => out.push(Change {
                 kind: Kind::Edit,
+                basis: Basis::Accepted {
+                    upstream: i.upstream.clone(),
+                    text: i.text.clone(),
+                },
                 did: format!(
                     "chose to carry \"{}\" knowingly against another rule ({rationale})",
                     i.text
@@ -155,6 +195,9 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
         if let Some(c) = canon.get(id) {
             out.push(Change {
                 kind: Kind::Addition,
+                basis: Basis::Added {
+                    text: c.text().to_string(),
+                },
                 did: format!("added \"{}\", which the seed did not have", c.text()),
                 command: None,
                 standalone: Some(format!("canon add \"{}\"", c.text())),
@@ -209,13 +252,19 @@ fn map_changes(
     for c in &seed.commitments {
         user.push_str(&format!("- {}\n", c.text));
     }
+    // **Numbered apart.** Both lists counted from 1, and for an addition,
+    // which has no target rule, the model gave its own change number as the
+    // target, so "new rule 43" in its reason was change 43 while the line
+    // above it printed target rule 43. The changes now number on from the
+    // last rule, and a target that names a change is out of range.
+    let first = target.commitments.len() + 1;
     user.push_str("\nThe rules they want to land on:\n");
     for (i, c) in target.commitments.iter().enumerate() {
         user.push_str(&format!("{}. {}\n", i + 1, c.text));
     }
     user.push_str("\nThe changes they made:\n");
     for (i, c) in changes.iter().enumerate() {
-        user.push_str(&format!("{}. They {}\n", i + 1, c.did));
+        user.push_str(&format!("{}. They {}\n", first + i, c.did));
     }
     user.push_str("\nFor each change, say whether it carries onto the new rules.");
 
@@ -226,13 +275,13 @@ fn map_changes(
         let Some(change) = m
             .change
             .get()
-            .filter(|n| *n >= 1)
-            .and_then(|n| changes.get(n - 1))
+            .filter(|n| *n >= first)
+            .and_then(|n| changes.get(n - first))
         else {
             eprintln!(
-                "warning: dropped a mapping for change {} — only 1..{} exist",
+                "warning: dropped a mapping for change {} — only {first}..{} exist",
                 m.change,
-                changes.len()
+                first + changes.len() - 1
             );
             continue;
         };
@@ -280,6 +329,39 @@ fn map_changes(
     Ok(out)
 }
 
+/// Place every change against the new base: in code wherever the base holds
+/// the rule word for word or withdrew it too ([`settle`]), and through the
+/// model, acquired only when something is left for it, for the rest.
+fn land(
+    client: impl FnOnce() -> Result<Client, ModelError>,
+    changes: &[Change],
+    seed: &Snapshot,
+    base: &Base,
+) -> Result<Vec<Landed>, ModelError> {
+    let (mut landed, rest) = settle::settle(changes, base);
+    if !landed.is_empty() {
+        eprintln!(
+            "decided {} change(s) in code: the new base holds the rule word for word, or \
+             withdrew it too",
+            landed.len()
+        );
+    }
+    if !rest.is_empty() {
+        let client = client()?;
+        eprintln!(
+            "mapping {} local change(s) onto {}@{} on {}",
+            rest.len(),
+            base.snapshot.lineage,
+            base.snapshot.generation,
+            client.describe()
+        );
+        landed.extend(map_changes(&client, &rest, seed, base.snapshot)?);
+    }
+    // In the order the changes came, whichever decided them.
+    landed.sort_by_key(|l| changes.iter().position(|c| c.did == l.change.did));
+    Ok(landed)
+}
+
 pub fn run(args: &[String]) -> i32 {
     let Some(onto) = flag(args, "--onto") else {
         return fail("usage: canon rebase --onto <url>@<generation>");
@@ -296,7 +378,7 @@ pub fn run(args: &[String]) -> i32 {
         Some((u, g)) if !u.is_empty() && !g.contains('/') && !g.contains(':') => (u, Some(g)),
         _ => (onto, None),
     };
-    let (target, _) = match lineage::fetch(&dir, url, generation) {
+    let (target, target_log) = match lineage::fetch(&dir, url, generation) {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
@@ -315,18 +397,17 @@ pub fn run(args: &[String]) -> i32 {
         return 0;
     }
 
-    let client = match model::client_for(&dir, has(args, "--allow-remote")) {
-        Ok(c) => c,
-        Err(e) => return model::report(e),
+    let allow_remote = has(args, "--allow-remote");
+    let base = Base {
+        snapshot: &target,
+        log: Some(&target_log),
     };
-    eprintln!(
-        "mapping {} local change(s) onto {}@{} on {}",
-        changes.len(),
-        target.lineage,
-        target.generation,
-        client.describe()
-    );
-    let landed = match map_changes(&client, &changes, &seed, &target) {
+    let landed = match land(
+        || model::client_for(&dir, allow_remote),
+        &changes,
+        &seed,
+        &base,
+    ) {
         Ok(v) => v,
         Err(e) => return model::report(e),
     };
@@ -439,6 +520,8 @@ fn render(seed: &Snapshot, target: &Snapshot, changes: &[Change], landed: &[Land
     );
     out
 }
+
+mod settle;
 
 #[cfg(test)]
 mod tests;
