@@ -89,6 +89,8 @@ the boundary.
 
 - [Everyday questions](./docs/COOKBOOK.md) — who decides, how to object,
   and what to do when the rules don't cover something.
+- [Start a house](./docs/START_A_HOUSE.md) — one steward writes the first
+  rules alone, then opens the canon to the house through Slack.
 - [Run it through Slack](./docs/SELF_HOST.md) — one container on a home
   server, so housemates propose and approve without installing anything.
 - [The guide](./docs/GUIDE.md) — the ideas and commands, in plain words.
