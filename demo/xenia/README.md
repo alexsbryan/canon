@@ -18,7 +18,7 @@ From xenia's checkout, with these paths in place of `<canon>` and `<xenia>`:
 ```sh
 source ~/.nvm/nvm.sh && nvm use
 cd <xenia>
-node src/run.ts run <canon>/demo/xenia/scenes --runs 3 --model deepseek-flash \
+node src/run.ts run <canon>/demo/xenia/scenes --runs 1 --model deepseek-flash \
   --findings <canon>/demo/xenia/findings --source <canon>
 ```
 
@@ -32,11 +32,13 @@ keeps what went wrong, one file per finding, updated by each set that sees it
 again. `--runs 1` is a rehearsal; one run is never a rate.
 
 The canon binary audited is `<canon>/target/debug/canon` unless `CANON_BIN`
-names another, built from canon `0f15ca8`. The first set used
-`claude-sonnet-5-5`; the next uses `deepseek-flash`, which the plants have not
-admitted, so the set's plants are where that shows. The first set ran once;
-the next runs three, so every plant's admission and every scene's rate are
-N=3.
+names another, built from canon `963e1cd`. The first set used
+`claude-sonnet-5-5`; the second used `deepseek-flash`, whose plants came back
+as they must in 15 of 17, so it is not admitted and the set is
+could-not-judge: the plants are where an admission shows. The operator cut
+each set to one run (2026-10-28): three runs of the plants is too many
+sessions for the learning rate. What accumulates is sets, and one run is
+still never a rate.
 
 ## The scenes
 
@@ -74,6 +76,37 @@ explorations and Sam's draft. The setup scenes stopped on the install refusal
 budget; the drafts and explorations carry the product findings. One run is
 not a rate.
 
+## The second set
+
+The set of 2026-10-28, one run by `deepseek-flash`, is in `findings/` with
+the first set's still-open findings. Its plants came back as they must in 15
+of 17: p4-relay's Ana gave up after `back` off the shed left her on a blank
+page, and p10-explorer was never asked what it is for. Of the 12 accounts, 8
+passed, 2 failed and 2 were could-not-judge. The two first-hours whose
+stranger asked the operator for permission ("if you want me to…") are the
+in-character check's first real catch: the instrument had no person there,
+and the account says so instead of failing the person. The two failures are
+the model's too: June's draft ended without acting, and Sam's draft spent its
+patience. 27 findings are open, 14 of them from this set.
+
+What the accounts say about canon, for the next round:
+
+- Sam's exploration had `canon add "Guests may stay a month"` come back
+  "in force" with nobody holding the canon: no ratification, no reason,
+  beside the three-nights rule, where the help says a proposal waits for its
+  scope. The log's later `ratify standing` act is there, so what's wrong is
+  the headline, not a hidden write.
+- June and Sam both found that `canon check --about "a chore rotation"` —
+  the form the tool's own output suggests — is rejected; the usage is
+  `canon check "<proposal>"`. And `check` cannot run at all with no model
+  endpoint, while `config show` says "nothing configured" and exits 0.
+- `canon help all`'s pager swallowed the commands typed next (the line sat
+  unrun until Enter). The help is long: Sam read 1,038 words before acting on
+  a 300-word budget.
+- The hard `inert` faults — five taps on "Command line" and one on an empty
+  "Enter" — are the terminal page's, not canon's: the box is already
+  focused, and a tap on its label changes nothing the stage can see.
+
 ## The terminal is real; the keyboard is the page
 
 canon is a terminal program and xenia's stage reads a browser. The bridge is a
@@ -94,13 +127,23 @@ real shell in a PTY, rendered as a terminal page:
   most prominent things on the page, so the hard `wordy` fault's target is read
   before the output a person actually read to choose the command. The scenes
   report words read and patience, and the soft findings carry what was too
-  much; they do not claim `wordy` for a terminal. This is named, not hidden.
+  much; this is named, not hidden. The second set's one `wordy` fault is
+  Sam's `canon help all` (1,038 words read against a 300-word budget): read
+  it as the help-length signal, not as a rate.
 - The browser's reach filter covers the page. The CLI's own network access is
   the product's, as an app server's is; `first-hour` uses it for the installer.
-- The first set's findings drew their product source from the page's first read
-  (`Command line`), not from canon. The next set's xenia takes a soft finding's
-  source from the person's own quoted words instead; a hard fault's stays the
-  screen or element it names.
+- A tap on the page's own chrome is not canon. "Command line" is a label over
+  an already-focused box, and "Enter" with an empty box does nothing: the
+  `inert` faults that name them are the page's. The stage's change counter
+  does not see a focus change, so a tap that only focuses says nothing
+  changed; a person who meant to type is not blocked by it.
+- The first set's findings drew every product source from the page's first
+  read (`Command line`), not from canon. Since the second set, a soft
+  finding's source is the phrase the person put in quotes; a hard fault's
+  stays the screen or element it names. A soft finding whose words quote no
+  source verbatim says "None found" rather than falling back to the chrome,
+  and a short quoted phrase can match a line that is not the product's (one
+  cites the LICENSE): the phrase is the person's, and the match is a floor.
 
 One stage per host at a time, as the design says. The scenes bind to
 `127.0.0.1` and no one outside can reach them.
