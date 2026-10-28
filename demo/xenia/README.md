@@ -100,9 +100,10 @@ What the accounts say about canon, for the next round:
   the form the tool's own output suggests — is rejected; the usage is
   `canon check "<proposal>"`. And `check` cannot run at all with no model
   endpoint, while `config show` says "nothing configured" and exits 0.
-- `canon help all`'s pager swallowed the commands typed next (the line sat
-  unrun until Enter). The help is long: Sam read 1,038 words before acting on
-  a 300-word budget.
+- The help is long: `canon help all` was 1,038 words read before acting, on
+  a 300-word budget. (Sam's account read the next line as "swallowed by a
+  pager"; the trace is a type and then an Enter — the page's two-step Enter,
+  not canon.)
 - The hard `inert` faults — five taps on "Command line" and one on an empty
   "Enter" — are the terminal page's, not canon's: the box is already
   focused, and a tap on its label changes nothing the stage can see.
