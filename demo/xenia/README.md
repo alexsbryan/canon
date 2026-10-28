@@ -18,7 +18,7 @@ From xenia's checkout, with these paths in place of `<canon>` and `<xenia>`:
 ```sh
 source ~/.nvm/nvm.sh && nvm use
 cd <xenia>
-node src/run.ts run <canon>/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 \
+node src/run.ts run <canon>/demo/xenia/scenes --runs 3 --model deepseek-flash \
   --findings <canon>/demo/xenia/findings --source <canon>
 ```
 
@@ -32,8 +32,11 @@ keeps what went wrong, one file per finding, updated by each set that sees it
 again. `--runs 1` is a rehearsal; one run is never a rate.
 
 The canon binary audited is `<canon>/target/debug/canon` unless `CANON_BIN`
-names another, built from canon `0f15ca8`. The strangers' model is
-`claude-sonnet-5-5`, the one xenia's plants admit.
+names another, built from canon `0f15ca8`. The first set used
+`claude-sonnet-5-5`; the next uses `deepseek-flash`, which the plants have not
+admitted, so the set's plants are where that shows. The first set ran once;
+the next runs three, so every plant's admission and every scene's rate are
+N=3.
 
 ## The scenes
 
@@ -41,9 +44,10 @@ Each file in `scenes/` is one scene: it stands up a world in a fresh temp
 directory, prints xenia's scene line, and keeps the terminal up until xenia
 closes its stdin. A scene is one person and one story.
 
-- **`first-hour`** — canon is not installed. Sam asks the person to install
-  it, start it with the house profile, add the quiet-hours rule, and leave
-  the list showing. The installer is canon's own, from the release.
+- **`first-hour`** — canon is not installed. The person's own note says they
+  are setting it up; its README is in `~/canon-README.md`. They install it,
+  start a canon, add the quiet-hours rule, and leave the list showing. The
+  installer is canon's own, from the release.
 - **`join`** — canon is installed and a housemate's share block is in
   `~/share.txt`. The person starts a canon and reads the block into it.
 - **`draft`** — canon is installed and the house's chat export is in
@@ -93,6 +97,10 @@ real shell in a PTY, rendered as a terminal page:
   much; they do not claim `wordy` for a terminal. This is named, not hidden.
 - The browser's reach filter covers the page. The CLI's own network access is
   the product's, as an app server's is; `first-hour` uses it for the installer.
+- The first set's findings drew their product source from the page's first read
+  (`Command line`), not from canon. The next set's xenia takes a soft finding's
+  source from the person's own quoted words instead; a hard fault's stays the
+  screen or element it names.
 
 One stage per host at a time, as the design says. The scenes bind to
 `127.0.0.1` and no one outside can reach them.

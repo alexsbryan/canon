@@ -1,6 +1,6 @@
 ---
-budget: 160         # words she reads before acting: a terminal's help is denser than a phone page, but she still wants the next step fast
-patience: 480       # a step's reading; full again at each named screen (the install, the new canon, the first rule)
+budget: 250         # words they read before acting; a CLI help is long, and setup is a reading task
+patience: 1500       # a step's reading; full again at each named screen. The first set read the help and ran out mid-setup
 wait_s: 90          # seconds of an install or a model she would wait before deciding it is stuck
 reads_wpm: 210      # for the clock only
 act_s: 4            # for the clock only: a careful typist

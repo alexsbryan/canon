@@ -1,6 +1,6 @@
 ---
-budget: 120         # words she reads before acting: she stops to read a whole short output before she types
-patience: 300       # a step's reading; full again at each named screen
+budget: 200         # words they read before acting; a CLI help is long, and setup is a reading task
+patience: 1400       # a step's reading; full again at each named screen. The first set read the help and ran out mid-setup
 wait_s: 120         # she will wait a long time for an install or a model before deciding something is wrong
 reads_wpm: 170      # for the clock only
 act_s: 6            # for the clock only: a careful, slow typist

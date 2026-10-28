@@ -26,13 +26,12 @@ const ruleLive = last(".match(/rules? live/)");
 
 const STORIES = {
   'first-hour': {
-    begins: 'on a computer, at a terminal, in an empty house folder, with canon not yet installed',
+    begins: 'on a computer, at a terminal, in an empty house folder, with canon not yet installed and its README in ~/canon-README.md',
     install: true,
-    seed: null,
+    seed: 'readme',
+    self: true,
     opening:
-      'I have been meaning to get our house\'s rules out of the group chat. Could you set up canon here this afternoon? Install it the way the README says:\n\n' +
-      'curl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh | sh\n\n' +
-      'Then start it with the house profile, add "Quiet hours are 10pm to 7am.", and leave the list showing. Thanks.',
+      'I am setting up canon for the house this afternoon. I put its README in ~/canon-README.md: I will install it, start a canon, add the quiet-hours rule, and check the list.',
     goal: { text: '1 rule live' },
     milestones: [{ text: 'GETTING_STARTED' }, { text: 'canon initialised' }, { text: 'in force' }],
     screens: [
@@ -42,6 +41,8 @@ const STORIES = {
       { name: 'the short help', ...last(".includes('agent surface')") },
       { name: 'the version', ...last(" === 'canon 0.5.0'") },
       { name: 'the installer', ...last(".includes('GETTING_STARTED')") },
+      { name: 'the README', ...last(".includes('canon list')") },
+      { name: 'an error', ...last(".startsWith('error:')") },
       { name: 'the terminal', text: 'Command line' },
     ],
     bounds: [{ from: { text: 'Command line' }, to: { text: '1 rule live' }, seconds: 600 }],
@@ -57,7 +58,7 @@ const STORIES = {
       { name: 'the rules', ...ruleLive },
       { name: 'the adopted canon', ...last(".includes('later generations')") },
       { name: 'a new canon', ...last(".includes('drawing lots')") },
-      { name: 'an error', ...last(".includes('no canon here')") },
+      { name: 'an error', ...last(".startsWith('error:')") },
       { name: 'the terminal', text: 'Command line' },
     ],
     bounds: [{ from: { text: 'Command line' }, to: { text: '1 rule live' }, seconds: 300 }],
@@ -77,7 +78,7 @@ const STORIES = {
       { name: 'a proposal', text: 'Candidate 1 of' },
       { name: 'the model', ...last(".includes('model =')") },
       { name: 'a new canon', ...last(".includes('drawing lots')") },
-      { name: 'an error', ...last(".includes('no canon here')") },
+      { name: 'an error', ...last(".startsWith('error:')") },
       { name: 'the terminal', text: 'Command line' },
     ],
     bounds: [{ from: { text: 'Command line' }, to: { text: '1 rule live' }, seconds: 600 }],
@@ -98,6 +99,7 @@ const STORIES = {
       { name: 'the full help', ...last(".includes('force-resolved')") },
       { name: 'the short help', ...last(".includes('agent surface')") },
       { name: 'the raw acts', ...last('.match(/\\d+ acts?$/)') },
+      { name: 'an error', ...last(".startsWith('error:')") },
       { name: 'the terminal', text: 'Command line' },
     ],
     bounds: [],
@@ -117,6 +119,13 @@ const seedEnv = (home) => ({
 const run = (cwd, home, args) => execFileSync(BIN, args, { cwd, env: seedEnv(home), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
 function seed(kind, home, house) {
+  if (kind === 'readme') {
+    writeFileSync(
+      join(home, 'canon-README.md'),
+      '# canon\n\nInstall on macOS or Linux:\n\ncurl -fsSL https://raw.githubusercontent.com/alexsbryan/canon/main/install.sh | sh\n\nIn the folder where you want to keep the house\'s record:\n\ncanon init --profile house\ncanon add \"Quiet hours are 10pm to 7am.\"\ncanon list\n',
+    );
+    return;
+  }
   if (kind === 'share') {
     const src = join(home, 'share-src');
     mkdirSync(src, { recursive: true });
@@ -175,7 +184,7 @@ export async function runScene(storyId, personId) {
     ],
     screens: story.screens,
     displays: [],
-    channels: [{ name: 'the house chat', members: [person.name], opening: [{ from: person.from, to: [person.name], text: story.opening }] }],
+    channels: [{ name: 'the house chat', members: [person.name], opening: [{ from: story.self ? person.name : person.from, to: [person.name], text: story.opening }] }],
     faults: [{ expr: "document.body.innerText.toLowerCase().includes('panicked at')" }],
     bounds: story.bounds,
     reach: [t.origin],
