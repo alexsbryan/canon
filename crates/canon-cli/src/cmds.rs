@@ -425,7 +425,12 @@ pub fn init(args: &[String]) -> i32 {
     if !plain {
         // Said on the way in, because it is the one thing init decides for
         // the group, and the group can change it with `ratification set`.
-        println!("  policy changes wait like rules do, and human:<you>.… is yours alone");
+        match store::actor().strip_prefix("human:") {
+            Some(name) => {
+                println!("  policy changes wait like rules do, and human:{name}.… is yours alone")
+            }
+            None => println!("  policy changes wait like rules do"),
+        }
         if !store::actor().starts_with("human:") {
             println!(
                 "  written by {}, so it waits for a person to approve it",
@@ -867,7 +872,7 @@ pub fn why(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let id = match crate::explain::resolve_any(&st, needle) {
+    let id = match crate::explain::resolve_why(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -878,6 +883,12 @@ pub fn why(args: &[String]) -> i32 {
                     .get(&id)
                     .and_then(|c| serde_json::to_value(c).ok())
                     .or_else(|| st.question(&id).and_then(|q| serde_json::to_value(q).ok()))
+                    .or_else(|| {
+                        st.silences()
+                            .iter()
+                            .find(|s| s.act == id)
+                            .and_then(|s| serde_json::to_value(s).ok())
+                    })
                     .unwrap_or(serde_json::Value::Null);
                 println!(
                     "{}",

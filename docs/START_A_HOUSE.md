@@ -19,6 +19,7 @@ other spelling makes you two people. Put it in your shell profile.
 
 ```sh
 export CANON_ACTOR='human:So And So'
+```
 
 **3. Start it in a private git repository**, the one the bot will sync later.
 

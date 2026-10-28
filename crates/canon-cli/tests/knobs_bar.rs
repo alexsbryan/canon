@@ -345,6 +345,10 @@ fn init_founds_the_canon_with_the_knobs_on_and_plain_without() {
     let (c, out) = canon_as(&canon, "human:sam", &["init", "--profile", "house"]);
     assert_eq!(c, 0, "{out}");
     assert!(out.contains("is yours alone"), "said on the way in: {out}");
+    assert!(
+        out.contains("human:sam.… is yours alone"),
+        "the real personal scope, never a placeholder: {out}"
+    );
     let line = last_line(&canon);
     assert_eq!(line["op"], "ratification", "{line}");
     assert_eq!(line["governs"], "all", "{line}");

@@ -54,7 +54,7 @@ canon — the rules you already have, and what was decided about them
   add \"<text>\"                           write one down by hand
   check \"<proposal>\"                     does it clash with one?
   list                                   what is live now
-  why <id>                               what replaced what, when, and why
+  why <id>                               what replaced what, when, and why; a silence too
   log                                    the raw acts, oldest first
 
 Nobody writes one of these a rule at a time. `draft` reads a folder — anything
@@ -94,7 +94,7 @@ RECORD                                        (no model needed)
   list                                   what is live now, and what is proposed
        --markdown [--out <f> [--check]]  the same, as a document for readers without
                                          canon; --check fails when <f> is stale
-  why <id>                               what this replaced, when, and why
+  why <id>                               what this replaced, when, and why; a silence or question shows its act
   supersede <id> \"<text>\" -m \"<reason>\"  replace a commitment
   retract <id> -m \"<reason>\"             withdraw one, no replacement; an upstream id
                                          names what was inherited from it. Without

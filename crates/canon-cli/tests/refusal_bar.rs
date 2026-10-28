@@ -295,3 +295,31 @@ fn review_refuses_without_a_terminal_and_for_an_agent() {
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("Quiet after eleven."), "{out}");
 }
+
+#[test]
+fn why_explains_a_silence_the_log_names() {
+    // The log prints the silence's id; `why` used to answer "no record
+    // matching", because it resolved commitments and questions only. A
+    // silence is a record too, and the reason is the useful part.
+    let dir = fresh("why-silence");
+    let (code, out) = canon_as(
+        &dir,
+        "human:sam",
+        &[
+            "silence",
+            "a chore rota",
+            "-m",
+            "It would turn a kindness into a duty.",
+        ],
+    );
+    assert_eq!(code, 0, "{out}");
+    let id = id_of(&out);
+    let (code, out) = canon_as(&dir, "human:sam", &["why", &id]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("unwritten on purpose"), "{out}");
+    assert!(
+        out.contains("It would turn a kindness into a duty."),
+        "{out}"
+    );
+    assert!(out.contains("written"), "{out}");
+}

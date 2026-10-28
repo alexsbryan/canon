@@ -99,6 +99,7 @@ canon init --profile house
 
 ```text
 canon initialised at /home/mira/house/.canon (house)
+  policy changes wait like rules do, and human:mira.… is yours alone
 
   canon add "<a rule you already have>"      write one down
   canon check "<something you want to do>"   does it clash with one?

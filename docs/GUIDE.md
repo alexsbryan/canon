@@ -74,7 +74,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | All of this as a page in your browser: decide, propose, change a rule, identify | `canon ui` |
 | Propose a rule; it's a proposal until its room ratifies it | `canon add "Quiet hours run 11pm to 7am." --scope house.quiet` |
 | What's in force now, and what's still proposed | `canon list` |
-| Where a rule came from, and what it replaced | `canon why can-ffc1` |
+| Where an entry came from, and what it replaced | `canon why can-ffc1` |
 | Replace a rule, keeping the reason | `canon supersede can-ffc1 "Guests may stay up to three nights." -m "Sam's cousin stayed two weeks and nobody knew how to raise it."` |
 | Withdraw a rule with no replacement | `canon retract can-ffc1 -m "Nobody was using it."` |
 | Undo an entry — yours, or one you hold a seat over | `canon undo can-0ea2 -m "That was the wrong room."` |

@@ -128,6 +128,20 @@ pub fn resolve_any(canon: &Canon, needle: &str) -> Result<ActId, String> {
     pick(canon, ids, needle, "record")
 }
 
+/// Resolve anything `why` can explain: a commitment, a question, or a
+/// silence. A silence is an act in the log and the fold keeps it, but it is
+/// neither a rule nor a question, so `why` used to answer its own log's id
+/// with "no record matching" (xenia audit, 2026-10-28).
+pub fn resolve_why(canon: &Canon, needle: &str) -> Result<ActId, String> {
+    let ids = canon
+        .commitments()
+        .iter()
+        .map(|c| c.id())
+        .chain(canon.questions().iter().map(|q| &q.id))
+        .chain(canon.silences().iter().map(|s| &s.act));
+    pick(canon, ids, needle, "record")
+}
+
 /// Resolve a question by id or unique prefix.
 ///
 /// `second` takes only a question: weight added to a commitment would be a
@@ -196,6 +210,9 @@ fn pick<'a>(
 }
 
 pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, String> {
+    if let Some(s) = canon.silences().iter().find(|s| &s.act == id) {
+        return Ok(explain_silence(s));
+    }
     if let Some(q) = canon.question(id) {
         return Ok(explain_question(canon, q));
     }
@@ -458,6 +475,23 @@ pub fn person_in(text: &str) -> String {
     }
     out.push_str(rest);
     out
+}
+
+/// A silence, as the act that recorded it: what is unwritten, when, by
+/// whom, and the reason it is kept unwritten. The same words `canon silence`
+/// prints, with the `why` headline so every explanation reads alike.
+fn explain_silence(s: &canon_core::Silence) -> Explanation {
+    Explanation {
+        headline: format!("{}  unwritten on purpose: \"{}\"", s.act, s.about),
+        lines: vec![
+            format!("written {} by {}", store::ymd(s.at), person(&s.actor)),
+            s.rationale.clone(),
+            format!(
+                "`canon check --about \"{}\"` will say so rather than call it a gap",
+                s.about
+            ),
+        ],
+    }
 }
 
 fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
