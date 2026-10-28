@@ -165,7 +165,7 @@ pub fn report_status(d: &Path, id: &ActId) {
         // before this was written; it was open" shows up, on the act it is
         // about, rather than a second later as a proposal nobody expected.
         Status::Active => match canon.ratify(c, store::now()) {
-            canon_core::Verdict::Ratified { how, .. } if !canon.grants().is_empty() => {
+            canon_core::Verdict::Ratified { how, .. } => {
                 println!(
                     "{}",
                     crate::wrap::hang("  in force — ", &crate::explain::person_in(&how))

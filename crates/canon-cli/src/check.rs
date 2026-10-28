@@ -525,8 +525,13 @@ fn attributes(args: &[String], proposal: &str) -> Result<Attributes, String> {
 }
 
 pub fn run(args: &[String]) -> i32 {
-    let pos = crate::cmds::positionals(args);
-    let Some(proposal) = pos.first() else {
+    // `--about` without a proposal is the command `canon silence` prints
+    // (DESIGN: a silence is not a gap), so the subject is the proposal.
+    let Some(proposal) = crate::cmds::positionals(args)
+        .first()
+        .copied()
+        .or_else(|| crate::cmds::flag(args, "--about"))
+    else {
         return crate::cmds::fail("usage: canon check \"<proposal>\"");
     };
     let (dir, _, canon) = match crate::cmds::load() {

@@ -323,3 +323,47 @@ fn why_explains_a_silence_the_log_names() {
     );
     assert!(out.contains("written"), "{out}");
 }
+
+#[test]
+fn a_rule_added_before_anyone_holds_the_canon_says_it_took_while_open() {
+    // The second canon set's Sam added a rule to a canon nobody held, and
+    // heard a bare "in force" beside the three-nights rule; `canon who` said
+    // it was open, and the log's `ratify standing` act explained it. The
+    // headline is the act's, and the founding case is the one it exists for.
+    let dir = fresh("open-add");
+    let (code, out) = canon_as(&dir, "human:sam", &["add", "Quiet after eleven."]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("in force — "), "{out}");
+    assert!(out.contains("nobody held"), "{out}");
+    assert!(out.contains("it was open"), "{out}");
+}
+
+#[test]
+fn check_about_alone_is_the_command_the_silence_prints() {
+    // `canon silence` prints `canon check --about "…"` as the way to see it
+    // is not a gap; the check demanded a proposal and exited 2 with its
+    // usage, so the tool's own advice did not run.
+    let dir = fresh("check-about");
+    let (code, out) = canon_as(&dir, "human:sam", &["add", "Quiet after eleven."]);
+    assert_eq!(code, 0, "{out}");
+    let (code, out) = canon_as(
+        &dir,
+        "human:sam",
+        &[
+            "silence",
+            "a chore rotation",
+            "-m",
+            "It would turn a kindness into a duty.",
+        ],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(
+        out.contains("canon check --about \"a chore rotation\""),
+        "the silence no longer prints the check: {out}"
+    );
+    let (code, out) = canon_as(&dir, "human:sam", &["check", "--about", "a chore rotation"]);
+    // There is no model endpoint here: a check that runs gets as far as
+    // saying so (exit 3), never the usage refusal.
+    assert_eq!(code, 3, "{out}");
+    assert!(!out.contains("usage: canon check"), "{out}");
+}
