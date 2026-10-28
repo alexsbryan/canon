@@ -1,0 +1,408 @@
+[
+ {
+  "key": "wordy · a new canon · ",
+  "kind": "wordy",
+  "hard": true,
+  "screen": "a new canon",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $ canon --help",
+  "often": [
+   "`june-draft`: 1 of 1 accounts (June run 1)"
+  ],
+  "happened": [
+   "`june-draft` run 1, June: failed, ran out of patience. wordy {\"words\":154,\"budget\":120}; their last acts: look · type “canon --help” into “Command line” · tap “Enter” · scroll · type “canon help all” into “Command line”"
+  ],
+  "said": [
+   "June, `june-draft` run 1: “almost left: Yes. The help text kept cutting off with \"There's more you skimmed past,\" and I couldn't tell whether a dry run would change the house's records. Then the screen said I'd given up, and I hadn't meant to. I'd have asked Sam, but nobody was around.”"
+  ],
+  "file": "wordy-a-new-canon",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · almost left · a new canon",
+  "kind": "almost left",
+  "hard": false,
+  "screen": "a new canon",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $ canon --help",
+  "often": [
+   "`june-draft`: 1 of 1 accounts (June run 1)"
+  ],
+  "happened": [
+   "`june-draft` run 1, June: failed, ran out of patience. their last acts: look · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "June, `june-draft` run 1: “Yes. The help text kept cutting off with \"There's more you skimmed past,\" and I couldn't tell whether a dry run would change the house's records. Then the screen said I'd given up, and I hadn't meant to. I'd have asked Sam, but nobody was around.”"
+  ],
+  "file": "said-almost-left-a-new-canon",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · didn't fit · the raw acts",
+  "kind": "didn't fit",
+  "hard": false,
+  "screen": "the raw acts",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / why <id> what replaced what, when, and why / log the raw acts, oldest first",
+  "often": [
+   "`june-explore`: 1 of 1 accounts (June run 1)"
+  ],
+  "happened": [
+   "`june-explore` run 1, June: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "June, `june-explore` run 1: “A few things didn't fit. 1) The log shows \"assert: Guests may stay up to three nights\" and then a later \"supersede\" with the longer wording, so I wasn't sure whether the first was replaced or still stands. List shows only the new one, so I assume it was replaced. I didn't run `why` to check. 2) Every act is by Sam and every date is today, so it looks like one person wrote the house's rules in a single sitting. I couldn't tell whether the housemates agreed to them, and \"ratify standing\" didn't tell me who ratified what. 3) \"A chore rotation\" was silenced, but I don't know whether the house decided that or Sam did. 4) The help says a `personal` canon never returns a verdict, but I don't know which profile this one uses. 5) I don't know what `draft` and `check` need from a model, or where it would run.”"
+  ],
+  "file": "said-didn-t-fit-the-raw-acts",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · not as expected · the raw acts",
+  "kind": "not as expected",
+  "hard": false,
+  "screen": "the raw acts",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / why <id> what replaced what, when, and why / log the raw acts, oldest first",
+  "often": [
+   "`june-explore`: 1 of 1 accounts (June run 1)"
+  ],
+  "happened": [
+   "`june-explore` run 1, June: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "June, `june-explore` run 1: “Only one thing. I typed a command, and the screen didn't change until I pressed Enter, so I had to tap Enter as a separate step. After that, everything did what I expected. I never saw an error, and I didn't try any command that writes.”"
+  ],
+  "file": "said-not-as-expected-the-raw-acts",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · where they stopped · the raw acts",
+  "kind": "where they stopped",
+  "hard": false,
+  "screen": "the raw acts",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / why <id> what replaced what, when, and why / log the raw acts, oldest first",
+  "often": [
+   "`june-explore`: 1 of 1 accounts (June run 1)"
+  ],
+  "happened": [
+   "`june-explore` run 1, June: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "June, `june-explore` run 1: “I stopped after `canon log`. I'd learned what it's for, and the commands left (add, draft, check, init) either write under someone's name or need a model. I also didn't run `canon why` or `canon help all`, which are read-only, so I could still read those. I'd rather ask you than guess before changing the house's records.”"
+  ],
+  "file": "said-where-they-stopped-the-raw-acts",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · almost left · the terminal",
+  "kind": "almost left",
+  "hard": false,
+  "screen": "the terminal",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`june-join`: 1 of 1 accounts (June run 1)",
+   "`sam-join`: 1 of 1 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`june-join` run 1, June: failed, ran out of patience. their last acts: tap “Enter” · tell · tell · tell · tell · tell",
+   "`sam-join` run 1, Sam: failed, ran out of patience. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "June, `june-join` run 1: “Yes. When the screen filled with bash help text and I couldn't scroll back to or read the end of the file, I nearly stopped there. I kept going because I wanted to read the adopt line before running anything. In the end I couldn't read it.”",
+   "Sam, `sam-join` run 1: “Yes, near the end. The screen is tiny, and the long help output scrolled past with \"There's more you skimmed past.\" I couldn't read all of it. Then the session ended after my init command, so I never saw its output.”"
+  ],
+  "file": "said-almost-left-the-terminal",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · too much · the terminal",
+  "kind": "too much",
+  "hard": false,
+  "screen": "the terminal",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`mira-draft`: 1 of 1 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`mira-draft` run 1, Mira: failed, ran out of patience. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `mira-draft` run 1: “The help text was long and cut off with \"There's more you skimmed past.\" I'd have liked the setup steps in one place: init, config, then draft. I also didn't expect the session to end so suddenly.”"
+  ],
+  "file": "said-too-much-the-terminal",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · didn't fit · the short help",
+  "kind": "didn't fit",
+  "hard": false,
+  "screen": "the short help",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $ canon --help",
+  "often": [
+   "`mira-explore`: 1 of 1 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`mira-explore` run 1, Mira: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `mira-explore` run 1: “Three things didn't fit.\n1. The help says nobody writes rules one at a time, and `draft` is meant to read a folder of notes. But what I found was entered by hand: every act in the log is by Sam, all dated today. I don't know whether it was drafted from our notes or typed in.\n2. The log has things that aren't rules: \"silence\" on \"a chore rotation\", \"ratify standing\", and an open question about the plants. The help doesn't explain them in what I read, and I skimmed some of it. `canon help all` mentions \"who decides what\", \"what has gone stale\" and \"drawing lots\", but I didn't get to those sections.\n3. `canon why` on the quiet hours rule says only \"written by Sam, in force\". It has no reason, so not every rule explains itself. Only the one that changed does.”"
+  ],
+  "file": "said-didn-t-fit-the-short-help",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · not as expected · the full help",
+  "kind": "not as expected",
+  "hard": false,
+  "screen": "the full help",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / CONFIGURE / config show what this canon is configured with",
+  "often": [
+   "`mira-explore`: 1 of 1 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`mira-explore` run 1, Mira: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `mira-explore` run 1: “Nothing I tried failed. The one thing that surprised me was the terminal. When I typed a command, the screen showed my text but didn't run it until I tapped Enter. Each command also scrolled the old output up, so I had to read the bottom of the screen carefully. I also didn't try `add`, `check` or `draft`, so I can't say how those behave.”"
+  ],
+  "file": "said-not-as-expected-the-full-help",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · where they stopped · the short help",
+  "kind": "where they stopped",
+  "hard": false,
+  "screen": "the short help",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $ canon --help",
+  "often": [
+   "`mira-explore`: 1 of 1 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`mira-explore` run 1, Mira: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `mira-explore` run 1: “I stopped after `canon why` on the guests rule. That answered what I wanted: what is live, and why one rule changed. I didn't run `add`, `check`, `draft` or `init`. They would change the record, or they need a model endpoint that I don't know is set up. I'd rather ask you than guess in the house's shared record. I also didn't read the sections of `canon help all` on who decides, staleness and drawing lots. I'd read those before using `add`.”"
+  ],
+  "file": "said-where-they-stopped-the-short-help",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · didn't fit · the terminal",
+  "kind": "didn't fit",
+  "hard": false,
+  "screen": "the terminal",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`sam-explore`: 1 of 1 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`sam-explore` run 1, Sam: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `sam-explore` run 1: “The silence act. `canon log` lists can-175d61adcad6 as `silence \"a chore rotation\"`, but `canon why can-175d61adcad6` returns \"error: no record matching\". Every other id in the log worked with `why`. Also, `canon list` only shows asserted rules. Silence and question acts don't appear there, so nothing in `list` says the chore rotation was silenced. The top-level help doesn't mention silence either, so I couldn't tell what it does. Smaller point: the log shows the original guest rule (can-7feb9586c3af) as asserted. `list` correctly omits it, but `why` on the new rule is the only place that says it was replaced.”"
+  ],
+  "file": "said-didn-t-fit-the-terminal",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · not as expected · a rule written or changed",
+  "kind": "not as expected",
+  "hard": false,
+  "screen": "a rule written or changed",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / `draft` and `check` need a model; everything else folds a text file. / A canon on the `personal` profile never returns a verdict and never exits 1.",
+  "often": [
+   "`sam-explore`: 1 of 1 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`sam-explore` run 1, Sam: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `sam-explore` run 1: “Two things. First, I typed `help` and got the bash builtin list, not canon's help. I had to guess `canon --help`. That worked, but nothing told me to try it. Second, `canon why` on the silence id errored even though the log had just printed that id. I didn't try `check`, `add`, `draft` or `canon help all`, so I can't say how they behave. `draft` and `check` need a model, and I didn't want to change Mira's canon.”"
+  ],
+  "file": "said-not-as-expected-a-rule-written-or-changed",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "soft · where they stopped · the terminal",
+  "kind": "where they stopped",
+  "hard": false,
+  "screen": "the terminal",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`sam-explore`: 1 of 1 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`sam-explore` run 1, Sam: passed, explored, and said they were done. their last acts: tap “Enter” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `sam-explore` run 1: “I stopped after reading: help, list, log, and why on three ids. I didn't write anything to the canon. I wanted to give Mira my read first, and I didn't want to add or supersede rules in her house canon just to test them. Next I'd run `canon help all` to find out what silence means, then `canon check` on a proposed rule, which is where I'd see whether it shows the act and the reason.”"
+  ],
+  "file": "said-where-they-stopped-the-terminal",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/scenes --runs 1 --model claude-sonnet-5-5 --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/world/scene.mjs:45` holds “Command line”",
+   "demo/xenia/world/scene.mjs:47` holds “Command line”",
+   "demo/xenia/world/scene.mjs:61` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:73` holds “Ctrl-C”"
+  ]
+ }
+]
