@@ -73,7 +73,8 @@
       "feedback": [
         "Did setting it up feel shared, or did one person do it?",
         "What did canon assume about who holds the house?"
-      ]
+      ],
+      "minutes": 6
     },
     {
       "id": "guests",
@@ -81,7 +82,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "quiet",
@@ -89,7 +91,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "chores",
@@ -97,7 +100,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "groceries",
@@ -105,7 +109,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "fridge",
@@ -113,7 +118,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "bins",
@@ -121,7 +127,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "heating",
@@ -129,7 +136,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "parties",
@@ -137,7 +145,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "pets",
@@ -145,7 +154,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "bikes",
@@ -153,7 +163,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "repairs",
@@ -161,7 +172,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "office",
@@ -169,7 +181,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "leaving",
@@ -177,7 +190,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     },
     {
       "id": "fund",
@@ -185,7 +199,8 @@
       "feedback": [
         "What did canon make easier here?",
         "What did you reach for that wasn't there?"
-      ]
+      ],
+      "minutes": 2
     }
   ],
   "debrief": {
@@ -194,6 +209,7 @@
       "What did canon make easier over the whole evening?",
       "What did you reach for that wasn't there?",
       "Would you keep using it?"
-    ]
+    ],
+    "minutes": 2
   }
 }
