@@ -67,6 +67,35 @@ is careful with computers. They are a first cut, and the operator may rewrite
 them; a changed person is a new person, so the accounts on either side of a
 rewrite do not compare.
 
+## The houses
+
+`houses/coliving.json` is the first house: one declaration for a group of
+three, a shared terminal, and a sequence of scenarios. It is canon's
+authoring surface, and the shape is the design: a house file says
+
+- `people`, the cast, each a person file; and `chat`, the channel they
+  share;
+- `surface`, the terminal page: the shared `cwd` (the house's folder),
+  each person's `homes`, and whether canon is installed at the start;
+- `seed`, the files written once before the first scenario, `{as}` the
+  person's name;
+- `screens`, the names the accounts can reach, each a `match` on the
+  terminal's last line;
+- `scenarios`, one per situation, in order: a `brief` is a chat line,
+  `"<from>: <text>"`, posted to the house chat; `feedback` are the
+  questions `tell` asks at that scene's close; `reach` is an optional
+  list of screen names to measure;
+- `debrief`, the last scene, with the questions after the list.
+
+The run keeps the house, the chat and each person's conversation across
+the scenarios; the next brief is what begins the next scene. The
+compiler turns the file into xenia's run line: the cast's terminal URLs,
+the screens as checks on the page, and the scenarios as `scenes`.
+
+The file is the design; nothing reads it yet. The compiler and xenia's
+run support land next, and the first coliving set runs once, as the
+operator cut the rate.
+
 ## The first set
 
 The set of 2026-10-28, one run by `claude-sonnet-5-5`, is in `findings/`.
