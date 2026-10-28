@@ -92,9 +92,16 @@ the scenarios; the next brief is what begins the next scene. The
 compiler turns the file into xenia's run line: the cast's terminal URLs,
 the screens as checks on the page, and the scenarios as `scenes`.
 
-The file is the design; nothing reads it yet. The compiler and xenia's
-run support land next, and the first coliving set runs once, as the
-operator cut the rate.
+`houses/coliving.mjs` is its command: the compiler stands the house up
+and prints xenia's run line. A house is its own directory for the
+runner:
+
+```sh
+node src/run.ts run <canon>/demo/xenia/houses --runs 1 --model deepseek-flash \
+  --findings <canon>/demo/xenia/findings --source <canon>
+```
+
+The first coliving set runs once, as the operator cut the rate.
 
 ## The first set
 
