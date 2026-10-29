@@ -1457,10 +1457,43 @@ impl Canon {
                 missing.join(", ")
             )
         } else {
-            format!(
-                "{} more approval(s) from the {n} people who held {here} when it was proposed",
-                needed.saturating_sub(approved.len())
-            )
+            // Who is still able to approve, by name. The count alone left
+            // the house unable to tell "Sam is thinking" from "Sam has not
+            // seen it": two proposals could both say "one more approval"
+            // and the same person could be the one missing from both.
+            // Somebody who said no or no longer holds the scope is not a
+            // name to chase, so they are left out.
+            let lost_now: BTreeSet<&str> = lost.iter().map(|(_, voter, _)| *voter).collect();
+            let missing: Vec<&str> = voters
+                .iter()
+                .copied()
+                .filter(|v| !approved.iter().any(|(who, _)| who.actor() == *v))
+                .filter(|v| !lost_now.contains(v))
+                .collect();
+            let count = needed.saturating_sub(approved.len());
+            if missing.is_empty() {
+                format!(
+                    "{} more approval(s) from the {n} people who held {here} when it was proposed",
+                    count
+                )
+            } else {
+                // Three names is enough to chase; thirty is a list, not a
+                // sentence. The count is still there for the rest.
+                let shown = missing.len().min(3);
+                let names = missing[..shown].join(if shown == 2 { " or " } else { ", " });
+                let who = if missing.len() > shown {
+                    format!("any of {names} and {} other(s)", missing.len() - shown)
+                } else if shown <= 2 {
+                    names
+                } else {
+                    format!("any of {names}")
+                };
+                format!(
+                    "{} more approval(s) from {who} — of the {n} people who held {here} when it \
+                     was proposed",
+                    count
+                )
+            }
         };
         Outcome {
             completed,

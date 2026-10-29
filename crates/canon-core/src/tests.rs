@@ -3071,7 +3071,8 @@ fn a_majority_is_of_the_house_when_the_proposal_was_written() {
     };
     assert_eq!(
         needs,
-        "1 more approval(s) from the 5 people who held house when it was proposed"
+        "1 more approval(s) from any of human:cy, human:eve, human:fay — of the 5 people who \
+         held house when it was proposed"
     );
     acts.push(approve_at(&bikes.id, 300, "human:eve"));
     let canon = Log::from_acts(acts).derive();
@@ -3137,7 +3138,7 @@ fn somebody_who_joins_later_does_not_count_toward_what_was_already_asked() {
         )
     };
     assert!(
-        needs.starts_with("1 more approval(s) from the 3 people"),
+        needs.starts_with("1 more approval(s) from human:bo or human:cy"),
         "{needs}"
     );
 }
@@ -3276,7 +3277,8 @@ fn five_people_under_sixty_percent_carry_at_three_and_refuse_as_a_house() {
     assert_eq!(
         status_of(&canon, &shed.id),
         &Status::Proposed {
-            needs: "1 more approval(s) from the 5 people who held house when it was proposed"
+            needs: "1 more approval(s) from any of human:ana, human:dee, human:eve — of the 5 \
+                    people who held house when it was proposed"
                 .into()
         }
     );
@@ -3360,7 +3362,8 @@ fn thirty_people_under_sixty_percent_carry_at_eighteen() {
     assert_eq!(
         status_of(&canon, &carry.id),
         &Status::Proposed {
-            needs: "1 more approval(s) from the 30 people who held house when it was proposed"
+            needs: "1 more approval(s) from any of human:p18, human:p19, human:p20 and 10 \
+                    other(s) — of the 30 people who held house when it was proposed"
                 .into()
         },
         "seventeen of thirty is not 60%"
@@ -3557,7 +3560,11 @@ fn twice_under_a_share_counts_the_house_at_each_vote() {
         panic!("three of six is not 60%: {:?}", status_of(&canon, &oven.id))
     };
     assert!(
-        needs.ends_with("1 more approval(s) from the 6 people who held house when it was proposed"),
+        needs.contains("1 more approval(s) from any of human:ana, human:dee, human:eve"),
+        "{needs}"
+    );
+    assert!(
+        needs.ends_with("of the 6 people who held house when it was proposed"),
         "{needs}"
     );
     acts.push(approve_at(&oven.id, 90_100, "human:dee"));

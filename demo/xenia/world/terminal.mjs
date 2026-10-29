@@ -35,7 +35,7 @@ export TERM=dumb
 // folder the story happens in. The page's `data-last` is the last completed
 // line, which is what a screen check reads: a terminal's current state is its
 // latest output, not the whole scrollback.
-function shellFor(as, home, cwd) {
+function shellFor(as, home, cwd, env = {}) {
   mkdirSync(home, { recursive: true });
   mkdirSync(cwd, { recursive: true });
   writeFileSync(join(home, '.bashrc'), BASHRC);
@@ -45,6 +45,7 @@ function shellFor(as, home, cwd) {
       PATH: `${home}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin`,
       TERM: 'dumb',
       PS1: '$ ',
+      ...env,
     },
     cwd,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -116,13 +117,13 @@ cmd.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventD
 
 // `people` is `[{ as, home, cwd }]`; each gets its own shell and page. The
 // server is bound to this computer only, as the worlds are.
-export async function terminal(people) {
+export async function terminal(people, env = {}) {
   const shells = new Map();
   const shell = (as) => {
     if (shells.has(as)) return shells.get(as);
     const p = people.find((x) => x.as === as);
     if (!p) throw new Error(`no person named ${JSON.stringify(as)} here`);
-    const s = shellFor(as, p.home, p.cwd);
+    const s = shellFor(as, p.home, p.cwd, env);
     shells.set(as, s);
     return s;
   };

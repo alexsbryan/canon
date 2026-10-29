@@ -36,7 +36,7 @@ export async function runHouse(file) {
     }
   }
   if (house.surface.installed) for (const home of Object.values(homes)) symlinkSync(BIN, join(home, '.local', 'bin', 'canon'));
-  const t = await terminal(names.map((as) => ({ as, home: homes[as], cwd })));
+  const t = await terminal(names.map((as) => ({ as, home: homes[as], cwd })), house.surface.env ?? {});
   const line = {
     begins: `${names.join(', ')} at their own terminals in the house they share; canon ${house.surface.installed ? 'installed' : 'not yet installed'}`,
     cast: names.map((as) => ({ as, person: `../people/${basename(house.people[as].file)}`, device: 'computer', url: t.url(as) })),

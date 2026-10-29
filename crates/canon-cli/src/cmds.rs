@@ -524,10 +524,34 @@ pub fn add(args: &[String]) -> i32 {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let d = match dir() {
-        Ok(d) => d,
+    let (d, _, st) = match load() {
+        Ok(v) => v,
         Err(e) => return fail(e),
     };
+    // A near-duplicate is a warning, not a refusal: the write still lands,
+    // and the person can retract it. The warning is on stderr, so a pipe
+    // and `--json` keep their contract. It comes before the new act so the
+    // person sees what it resembles while it is still cheap to stop.
+    if let Some(like) = crate::similar::nearest(&st, text) {
+        eprintln!(
+            "warning: this looks like {} ({}): {}",
+            like.id,
+            like.status,
+            crate::explain::one_line(like.text)
+        );
+        if like.status == "proposed" {
+            eprintln!(
+                "  if it is the same decision, approve or object to that one; if it changes it, \
+                 `canon supersede {}`",
+                like.id
+            );
+        } else {
+            eprintln!(
+                "  if it changes it, `canon supersede {}`; if it is the same, do not add a second",
+                like.id
+            );
+        }
+    }
     // Why it is a rule, or where it was written: both are the commitment's
     // source, which `why` shows as "from …". The group's repeated want was
     // to keep the neighbours' complaint or the old chat with the rule,

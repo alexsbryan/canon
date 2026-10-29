@@ -30,6 +30,7 @@ mod replay;
 mod resolver;
 mod review;
 mod seen;
+mod similar;
 mod sources;
 mod store;
 mod subject;

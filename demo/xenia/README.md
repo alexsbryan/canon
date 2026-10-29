@@ -23,7 +23,9 @@ node src/run.ts run <canon>/demo/xenia/scenes --runs 1 --model deepseek-flash \
 ```
 
 The draft scenes need the reference model server: a local OpenAI-compatible
-endpoint at `http://localhost:9741/v1` that answers to `primary`. The other
+endpoint at `http://localhost:9741/v1` that answers to `primary`. The
+coliving house starts each shell with `CANON_ENDPOINT` and `CANON_MODEL`
+pointing there, so `check` and `draft` work without a `config set`. The other
 scenes need nothing but the network for the installer, in `first-hour`.
 
 xenia runs its own plants first, then each scene `--runs` times, and writes
@@ -76,7 +78,8 @@ authoring surface, and the shape is the design: a house file says
 - `people`, the cast, each a person file; and `chat`, the channel they
   share;
 - `surface`, the terminal page: the shared `cwd` (the house's folder),
-  each person's `homes`, and whether canon is installed at the start;
+  each person's `homes`, whether canon is installed at the start, and the
+  `env` each shell begins with;
 - `seed`, the files written once before the first scenario, `{as}` the
   person's name;
 - `screens`, the names the accounts can reach, each a `match` on the
@@ -170,9 +173,9 @@ What the group did and said:
   endpoint** (two overlapping guest rules, each one approval short, with
   nothing saying they were near-duplicates; and canon's config named
   8080 while the reference model is 9741); and **the save dialog** that
-  took Sam's terminal (xenia's, not canon's). The record and the dialog
-  are fixed; the pending-proposal clarity and the endpoint are the next
-  change.
+  took Sam's terminal (xenia's, not canon's). The record, the dialog and
+  the endpoint are fixed, and `add` now warns when a rule looks like one
+  already live or proposed; the next set is their check.
 - The answers' product themes: the policy layers (`ratification` is not
   `policy`), the queue of proposals each one signature short, the missing
   dates and receipts, and the rules that point at a page canon cannot

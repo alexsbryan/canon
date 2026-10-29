@@ -24,7 +24,11 @@
     "kind": "terminal",
     "cwd": "house",
     "homes": "home/{as}",
-    "installed": true
+    "installed": true,
+    "env": {
+      "CANON_ENDPOINT": "http://localhost:9741/v1",
+      "CANON_MODEL": "primary"
+    }
   },
   "seed": [
     {
