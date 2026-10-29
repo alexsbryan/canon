@@ -51,22 +51,35 @@ canon — the rules you already have, and what was decided about them
 
   init [--profile personal|code|house]   start one in this directory
   draft --from <folder>                  read what you already have
-  add \"<text>\"                           write one down by hand
-  check \"<proposal>\"                     does it clash with one?
+  add \"<text>\" [-m <why>] [--cite <where>] write one down, with why it is one and where it came from
+  check \"<proposal>\"                     does it clash with one? A model does the
+                                         reading: canon config set endpoint <url>
   list                                   what is live now
   why <id>                               what replaced what, when, and why; a silence too
   log                                    the raw acts, oldest first
 
-Nobody writes one of these a rule at a time. `draft` reads a folder — anything
-in it that is text, in whatever format you keep it — or a pipe: `cat whatever |
-canon draft --from - --dry-run --json`. `--resume` finishes a review later.
+Nobody writes one of these a rule at a time. `draft` reads a folder — any text
+in it — or a pipe: `cat whatever | canon draft --from - --dry-run --json`.
 
-`draft` and `check` need a model; everything else folds a text file.
-A canon on the `personal` profile never returns a verdict and never exits 1.
+`draft`/`check` need a model (`canon config set endpoint <url>`); the rest folds a text file.
 
   canon help all    who decides what, how you decide, what has gone stale,
                     forking and merging, drawing lots, the agent surface
 ";
+
+/// The two things a reader asks before their first write: which profile
+/// they founded, and what a scope is. `canon help profile` used to print
+/// the short help; a topic nobody has says so now.
+const TOPICS: &[(&str, &str)] = &[
+    (
+        "profile",
+        "THE THREE PROFILES\n\n  personal  a person's own journal: what has a stake, and which\n            way it pulls; never a verdict, never exit 1.\n  code      a codebase's principles: verdict-shaped, because CI reads\n            exit codes.\n  house     a household's rules: which act a proposal needs.\n\n  `canon init` defaults to personal; `canon init --profile <p>` picks one.\n  The profile changes the words and the verdicts, not the record.\n",
+    ),
+    (
+        "scopes",
+        "SCOPES\n\n  A scope is a dotted path: `house`, `house.quiet`, `repo.defaults`.\n  A grant over `house` covers `house.quiet` and everything under it; a\n  grant over `house.quiet` covers only the quiet corner. The whole canon's\n  scope is the profile's own: `house`, `repo` or `personal`.\n\n  `canon who` names the scopes that hold the canon; `canon grant <actor>\n  <scope>` gives standing over one; `canon help grant` has the flags.\n",
+    ),
+];
 
 /// Everything. Reached by `canon help all`, never by accident.
 const HELP_ALL: &str = "\
@@ -222,6 +235,19 @@ fn main() {
         if let Some(verb) = args.get(1).and_then(|v| cli::help_for(v, HELP_ALL)) {
             print!("{verb}");
             std::process::exit(0);
+        }
+        let topic = args.get(1).map(String::as_str);
+        if let Some((_, text)) = topic.and_then(|t| TOPICS.iter().find(|(n, _)| *n == t)) {
+            print!("{text}");
+            std::process::exit(0);
+        }
+        // A topic nobody has used to print the short help, so a reader asking
+        // about profiles learned nothing and was not told so.
+        if let Some(t) = topic.filter(|t| *t != "all" && *t != "--all" && !t.starts_with('-')) {
+            eprintln!(
+                "no such topic `{t}` — canon help all lists the verbs, and `canon help profile | scopes` the rest."
+            );
+            std::process::exit(1);
         }
         // `canon help all` is the only way to the long form. Somebody who
         // typed `canon` by accident gets seven verbs, not forty-nine.

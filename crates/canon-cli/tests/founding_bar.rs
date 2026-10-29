@@ -431,3 +431,20 @@ fn add_keeps_why_it_is_a_rule_and_where_it_came_from() {
     assert!(why.contains("Sam's cousin stayed two weeks."), "{why}");
     assert!(why.contains("the house chat, 2025-06"), "{why}");
 }
+
+#[test]
+fn help_topics_explain_profiles_and_scopes_and_an_unknown_topic_says_so() {
+    let nowhere = scratch("topics").join(".canon");
+    let (code, out) = canon_as(&nowhere, "human:alex", &["help", "profile"]);
+    assert_eq!(code, 0, "{out}");
+    for word in ["personal", "code", "house"] {
+        assert!(out.contains(word), "{out}");
+    }
+    let (code, out) = canon_as(&nowhere, "human:alex", &["help", "scopes"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("house.quiet"), "{out}");
+    let (code, out) = canon_as(&nowhere, "human:alex", &["help", "nonsense"]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains("no such topic"), "{out}");
+    assert!(!nowhere.exists(), "asking wrote nothing");
+}

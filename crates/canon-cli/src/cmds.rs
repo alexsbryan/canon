@@ -511,6 +511,7 @@ pub fn init(args: &[String]) -> i32 {
     println!();
     println!("that is the whole thing. `canon help all` when you want the rest —");
     println!("who decides what, how you decide, what has gone stale, drawing lots.");
+    println!("Profile or scope? `canon help profile` and `canon help scopes`.");
     0
 }
 
