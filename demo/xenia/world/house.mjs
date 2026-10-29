@@ -46,7 +46,7 @@ export async function runHouse(file) {
     faults: [{ expr: "document.body.innerText.toLowerCase().includes('panicked at')" }],
     bounds: [],
     reach: [t.origin],
-    scenes: [...house.scenarios, { id: house.debrief.id ?? 'debrief', ...house.debrief }].map(({ id, brief: text, feedback, reach, minutes }) => ({ id, brief: brief(text, house.chat.members), feedback, ...(reach ? { reach } : {}), ...(minutes ? { minutes } : {}) })),
+    scenes: [...house.scenarios, { id: house.debrief.id ?? 'debrief', ...house.debrief }].map(({ id, brief: text, feedback, reach, minutes, talk }) => ({ id, brief: brief(text, house.chat.members), feedback, ...(reach ? { reach } : {}), ...(minutes ? { minutes } : {}), ...(talk ? { talk } : {}) })),
   };
   console.log(JSON.stringify(line));
   await new Promise((done) => {
