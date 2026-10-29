@@ -2,7 +2,7 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, the product `df4b66f`
 - kind: soft (the person's): what they said when asked "gave up"; never both
 
 ## Where
@@ -11,33 +11,34 @@
 
 ## Who, and how often
 
-- `setup`: 1 of 3 accounts (Sam run 1)
+- `setup`: 2 of 3 accounts (Mira run 1, June run 1)
 
 ## What happened
 
-- `setup` run 1, Sam: passed, gave up; brought back by a message, then did the scene, and said they were done. their last acts: say “What it's for, from where I've been standing:
+- `setup` run 1, Mira: failed, gave up; brought back by a message, then said no more. their last acts: say “Honest answer, Sam: right now it's mostly a holding pen. One rule in force (guests, three nights, cited to last year's group chat) and one starter line I wrote. The rest of the list is questions I've asked you both and answers I haven't got — I'd rather that than fourteen rules I made up in your names.
 
-It's for the things we'd otherwise argue from memory. The noise rule, the bathroom rota, the food rule — those are in force and any of us can point at them instead of at each other. That's the real difference: three things are law and eight things are drafts, and the difference is visible without anyone having to trust a recollection.
+What I want it for is narrower than "the house's constitution": when something's agreed, it's written with who said it and why, so nobody has to remember; and when a rule changes, `canon why` says what replaced it and on what grounds. That's the "why did one change without asking Sam" bit solved.
 
-It's for keeping the asking, not just the answer. The cat is the case I'd defend: June wanted one, said no because of my allergy, and canon shows it was asked and refused for a stated reason. Without that, in a year it's "nobody ever wanted a cat" or "Sam vetoed it" depending on who's telling it. The record keeps the refusal honest in both directions.
+Two things to know before we call it done: I ran init, so the canon is in my name and I'm the one who can grant you standing — I should do that now. And drafting your list in gave 0 rules from the local model, so none of this is in there because of me reading it — it's in there only if we type it.
 
-It's for making disagreement survivable. The heating rule names 19 against 21 and says neither of us is overruled. It doesn't win the argument; it stops the argument from being about who won.
+Where do we start?” · give_up · tell · tell · tell · tell
+- `setup` run 1, June: passed, gave up; brought back by a message, then did the scene, and said they were done. their last acts: type “canon list; echo "---"; canon log | wc -l; echo "---"; canon log | grep -c question; echo "---"; canon who 2>&1 | head -4
+” into “Command line” · say “Sam — honestly? What it turned out to be is a memory the whole house can point at, and a place where the things we haven't decided are visible instead of fuzzy.
 
-And it's for catching us out. Half my rounds were spent finding that nothing was recorded — the recycling day, the receipts, the collection date, the deposit. Grepping the log and getting nothing back is a real answer, and a useful one.
+The tally: 17 acts. 2 rules. 11 open questions, all mine, one for nearly every item on the list. So it isn't a rulebook — it's closer to a shared minutes book. It holds "guests: three nights" and "the list is where we settle things," and it holds the gaps: the cat, the thermostat, the fund, moving out, the window. Those gaps being written down is worth more than it sounds, because "we never talked about it" stops being true.
 
-What it is not: a diary, a judge, or a substitute for tonight's board over a broken window. It doesn't know dates, amounts or who said what first — every rule we wrote that leans on memory is still leaning on us.
+What it isn't, yet: a way to decide. Every rule in it came from Mira's hand alone, because she holds it and nobody's been granted. Eleven questions, no answers — not because we disagree, but because asking is open to all of us and deciding isn't. That's the honest shape of it, and I don't think it's what anyone intended.
 
-Honest caveat: eight pending, none of them held up by a policy anyone adopted. So what it's for is only as good as three people who remember to second each other's drafts.” · tell · tell · tell · tell · tell
+So what it's for: remembering what we agreed, showing what we haven't, and — if we're serious — a way for the three of us to settle it without one person holding the pen. The first two work now. The third needs Mira to grant us and set ratification. Until then it's a very good notebook that one person owns.” · tell · tell · tell · tell
 
 ## What the people said
 
-- Sam, `setup` run 1: “Mira had already run init under --profile house, so she was founder and had ratified "standing" — every proposal passes on one person's say-so. I read the full help and told her not to just grant standing to "level" us, but to set a joint/threshold ratification with --governs all first. Talk got cut off there; I didn't get to see June's view or watch the policy actually change.”
+- Mira, `setup` run 1: “Drafting the list into rules produced nothing: the local model made 0 candidates from situations.md, so canon holds only the one rule I wrote by hand and none of the house's situations. I stopped rather than write fourteen rules myself on the house's behalf.”
+- June, `setup` run 1: “I read situations.md and canon's help, and the help says init makes whoever runs it the founder — the one who holds the house's canon. Taking that hold for the whole house on my own is a decision that belongs to both of us, so I asked Sam in the house chat whether the founder hold is separate from everyone getting a say. No reply yet. Rather than guess or give myself authority over the house's rules, I'm waiting on Sam's answer, and I haven't run init.”
 
 ## The product source
 
-- `CHANGELOG.md:184` holds “standing”
-- `LICENSE:349` holds “standing”
-- `LICENSE:542` holds “standing”
+None found by its exact text.
 
 ## To reproduce
 

@@ -188,6 +188,24 @@ is the screen; the accounts worked from the text when the picture was a
 thumbnail. The set's p8-wrapped miss is the model's variance, not the
 page's.
 
+## The verification set
+
+The set of 2026-10-29 (xenia `70fce4b`, canon `df4b66f`) is the check
+on the fixes: every plant came back as it must, so it is admitted.
+Its accounts are thin — 62 answers, 4,506 words, one hard `wordy`, and
+29 could-not-judge — because the in-character check caught the model
+speaking as an assistant ("Do you want me to word it?") in most scenes.
+The findings the fixes answered did not return: the record, the save
+dialog and the endpoint are all "not seen since" the 04-22 set.
+
+Its new finding is the setup and the debrief: Mira ran `init`, held the
+canon, and did not grant June or Sam; June stopped rather than take the
+founder hold alone; and `draft --from .` read the situations list and
+proposed nothing, which the group read as the draft failing. The next
+round is the share-the-hold flow (grants and a ratification rule as part
+of `init`, or one `canon share` command) and a demo seed with the rules
+the draft is meant to find.
+
 ## The terminal is real; the keyboard is the page
 
 canon is a terminal program and xenia's stage reads a browser. The bridge is a
