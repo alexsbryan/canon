@@ -35,7 +35,7 @@ use clap::{Arg, ArgAction, Command};
 #[rustfmt::skip]
 const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("init", &["--profile"], &["--plain", "--open"]),
-    ("add", &["--scope"], &[]),
+    ("add", &["--scope", "-m", "--cite"], &[]),
     ("review", &["--scope"], &["--json"]),
     ("ui", &[], &[]),
     ("approve", &["-m"], &[]),

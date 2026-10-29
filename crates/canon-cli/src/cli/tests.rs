@@ -257,7 +257,7 @@ fn a_refused_argument_speaks_the_way_the_rest_of_the_tool_does() {
     let listed = check("add", &args(&["a rule", "--nonsense-flag"])).unwrap_err();
     assert_eq!(
         listed,
-        "`canon add` has no `--nonsense-flag` — it takes `--scope`"
+        "`canon add` has no `--nonsense-flag` — it takes `--cite`, `--scope`, `-m`"
     );
 
     // Past a handful, the list stops being a hint and becomes a wall.

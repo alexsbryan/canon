@@ -23,6 +23,7 @@ const VALUED: &[&str] = &[
     "-m",
     "--about",
     "--after",
+    "--cite",
     "--as",
     "--amends",
     "--authority",
@@ -516,7 +517,7 @@ pub fn init(args: &[String]) -> i32 {
 pub fn add(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(text) = pos.first() else {
-        return fail("usage: canon add \"<commitment>\" [--scope <scope>]");
+        return fail("usage: canon add \"<commitment>\" [--scope <scope>] [-m \"<why>\"] [--cite \"<where>\"]");
     };
     let scope = match scope_arg(args) {
         Ok(s) => s,
@@ -526,7 +527,19 @@ pub fn add(args: &[String]) -> i32 {
         Ok(d) => d,
         Err(e) => return fail(e),
     };
-    match propose(&d, &store::actor(), text, scope) {
+    // Why it is a rule, or where it was written: both are the commitment's
+    // source, which `why` shows as "from …". The group's repeated want was
+    // to keep the neighbours' complaint or the old chat with the rule,
+    // instead of retyping it into the text.
+    let source = flag(args, "-m")
+        .into_iter()
+        .chain(flag(args, "--cite"))
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join(" — ");
+    let source = (!source.is_empty()).then_some(source);
+    match propose(&d, &store::actor(), text, scope, source.as_deref()) {
         Ok(act) => {
             println!("{}  {}", act.id, text);
             report_status(&d, &act.id);
@@ -543,13 +556,14 @@ pub fn propose(
     actor: &str,
     text: &str,
     scope: Option<canon_core::Scope>,
+    source: Option<&str>,
 ) -> Result<Act, String> {
     let act = write_as(
         d,
         ActKind::Assert {
             text: text.to_string(),
             from: None,
-            source: None,
+            source: source.map(str::to_string),
         },
         actor,
     )?;

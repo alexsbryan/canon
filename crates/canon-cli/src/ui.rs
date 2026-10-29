@@ -463,7 +463,7 @@ fn propose(form: &Form, ctx: &Ctx) -> Response {
             }
         },
     };
-    match crate::cmds::propose(&ctx.dir, &ctx.actor, text, scope) {
+    match crate::cmds::propose(&ctx.dir, &ctx.actor, text, scope, None) {
         Ok(act) => Response::see(&format!("/?done={}", act.id.as_str())),
         Err(e) => home(ctx, None, None, Some(not_written(&e))),
     }

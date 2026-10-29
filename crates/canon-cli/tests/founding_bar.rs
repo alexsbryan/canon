@@ -399,3 +399,35 @@ fn a_bare_name_is_refused_before_it_is_written_and_who_names_the_refused_acts() 
         "{who}"
     );
 }
+
+#[test]
+fn add_keeps_why_it_is_a_rule_and_where_it_came_from() {
+    // Sam's two asks in the guests and quiet scenes: the reason at the
+    // first writing, and the scattered source with it, never retyped into
+    // the rule's text.
+    let dir = std::env::temp_dir().join(format!("canon-add-source-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(
+        &canon,
+        "human:june",
+        &[
+            "add",
+            "Guests stay three nights.",
+            "-m",
+            "Sam's cousin stayed two weeks.",
+            "--cite",
+            "the house chat, 2025-06",
+        ],
+    );
+    assert_eq!(code, 0, "{out}");
+    let id = out.split_whitespace().next().unwrap_or_default();
+    let (code, why) = canon_as(&canon, "human:june", &["why", id]);
+    assert_eq!(code, 0, "{why}");
+    assert!(why.contains("Sam's cousin stayed two weeks."), "{why}");
+    assert!(why.contains("the house chat, 2025-06"), "{why}");
+}
