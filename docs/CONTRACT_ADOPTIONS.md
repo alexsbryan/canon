@@ -16,6 +16,37 @@ Each entry names what broke against the standard before it, because an
 adopted break is still a break for anyone holding a record or a consumer
 written against the old one.
 
+## `0e85c938ca6dd906a7cf74950efee68775029d16` — the core read through methods, toward 0.6.0
+
+Adopted 2026-10-29 by human:alex, replacing `1b178c6`.
+
+Judged against `1b178c6`, it is `breaks_checked_contract`, all of it from
+`2368296`, which holds the first invariant of
+[ENG_NORTH_STAR.md](./ENG_NORTH_STAR.md) in the compiler. `Canon` and
+`Commitment` fields are private and read through methods of the same names,
+so an old consumer reading `canon.commitments` or `c.status` stops compiling
+(E0616). `derive` and `derive_at` are gone, so `Log::derive` is the one way
+into the fold. `Verdict`'s variants are `non_exhaustive`, so an old
+exhaustive match needs `..` (E0638). `Canon`, `Commitment`, `Adopted`,
+`Retraction`, `AdoptedRatify` and `Verdict` no longer derive `Deserialize`.
+`Person` and the accessors are added. No law is added, changed or removed,
+and SPEC.md is unchanged.
+
+Records are unchanged. With the 0.5.0 and adopted binaries side by side, all
+17 fixture scenarios give the same decisions and mint the same bytes. The
+records 0.5.0 mints, along with `.canon/`, read the same under `list` and
+`overdue`. `log` differs in one way: a ratification's line now ends with the
+reason it was adopted with. `a_rule_0_4_0_wrote_reads_as_it_did` and
+`every_ledger_here_reads_and_renders_as_it_did_before_v4` pass in the adopted
+commit.
+
+This break is meant to be the last of its kind. Each of the four earlier
+adoptions broke the Rust surface while old records read as before, and much
+of that surface was public fields, which every old consumer read. With fields behind methods and
+`Verdict` non-exhaustive, a change inside the core is an extension. Only a
+new `ActKind` or `Ratify` variant, which is a change of mechanism, still
+breaks.
+
 ## `1b178c6840c68ee92d6c20c67261db8342decbbf` — release 0.5.0
 
 Adopted 2026-10-17 by human:alex, replacing `1f71182`.
