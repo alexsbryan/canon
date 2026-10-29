@@ -1461,7 +1461,7 @@ fn two_up_once(
             String::from_utf8_lossy(&out.stderr).trim()
         ))
     };
-    must(&["init", "--profile", "house"])?;
+    must(&["init", "--profile", "house", "--open"])?;
     // `add` prints `<id>  <text>`. With a window we have to know WHICH pair
     // came back, not merely that something did.
     let added = |text: &str| -> Result<String, String> {

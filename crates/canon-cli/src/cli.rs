@@ -34,7 +34,7 @@ use clap::{Arg, ArgAction, Command};
 /// Verb, the flags that take a value, and the flags that do not.
 #[rustfmt::skip]
 const VERBS: &[(&str, &[&str], &[&str])] = &[
-    ("init", &["--profile"], &["--plain"]),
+    ("init", &["--profile"], &["--plain", "--open"]),
     ("add", &["--scope"], &[]),
     ("review", &["--scope"], &["--json"]),
     ("ui", &[], &[]),

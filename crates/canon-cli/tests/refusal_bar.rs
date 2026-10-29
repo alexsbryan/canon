@@ -17,7 +17,11 @@ fn fresh(name: &str) -> PathBuf {
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let canon = dir.join(".canon");
-    let (code, out) = canon_as(&canon, "human:setup", &["init", "--profile", "house"]);
+    let (code, out) = canon_as(
+        &canon,
+        "human:setup",
+        &["init", "--profile", "house", "--open"],
+    );
     assert_eq!(code, 0, "{out}");
     canon
 }

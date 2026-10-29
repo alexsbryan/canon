@@ -30,7 +30,11 @@ impl Canon {
             dir: root.join(".canon"),
             root,
         };
-        let (code, out) = c.run("human:alex", None, &["init", "--profile", "house"]);
+        let (code, out) = c.run(
+            "human:alex",
+            None,
+            &["init", "--profile", "house", "--open"],
+        );
         assert_eq!(code, 0, "{out}");
         c
     }

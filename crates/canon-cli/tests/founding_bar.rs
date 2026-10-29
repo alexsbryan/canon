@@ -23,7 +23,11 @@ fn scratch(name: &str) -> PathBuf {
 
 fn fresh(name: &str) -> PathBuf {
     let canon = scratch(name).join(".canon");
-    let (code, out) = canon_as(&canon, "human:alex", &["init", "--profile", "code"]);
+    let (code, out) = canon_as(
+        &canon,
+        "human:alex",
+        &["init", "--profile", "code", "--open"],
+    );
     assert_eq!(code, 0, "{out}");
     canon
 }
@@ -90,7 +94,10 @@ fn every_verb_says_what_it_does_when_asked() {
         "{out}"
     );
     assert!(out.contains(".canon/acts.jsonl"), "{out}");
-    assert!(out.contains("flags: --plain  --profile <value>"), "{out}");
+    assert!(
+        out.contains("flags: --open  --plain  --profile <value>"),
+        "{out}"
+    );
     assert!(!nowhere.exists(), "asking wrote nothing");
 
     let (_, same) = canon_as(&nowhere, "human:alex", &["help", "init"]);
@@ -329,4 +336,42 @@ fn the_canon_renders_to_a_file_and_says_when_the_file_is_stale() {
 
     let (code, _) = canon_as(&dir, "human:alex", &["list", "--markdown", "--check"]);
     assert_eq!(code, 2, "--check without a file is a usage error");
+}
+
+#[test]
+fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
+    // The group's finding: a canon that nobody holds lets the first person
+    // to write become the house. `init` now seats its founder, so the
+    // founder's write is the house's and everyone else's is a proposal.
+    let dir = std::env::temp_dir().join(format!("canon-founded-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("human:june holds this canon (house)"), "{out}");
+    assert!(out.contains("grant the others"), "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(
+        &canon,
+        "human:june",
+        &["add", "Quiet hours are 10pm to 7am."],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("in force — june holds this canon"), "{out}");
+    let (code, out) = canon_as(&canon, "human:sam", &["add", "Guests stay three nights."]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("PROPOSED"), "{out}");
+
+    // The old shared start is explicit.
+    let shared = dir.join("shared");
+    let (code, out) = canon_as(
+        &shared,
+        "human:june",
+        &["init", "--profile", "house", "--open"],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("nothing holds this canon"), "{out}");
+    let (_, who) = canon_as(&shared, "human:june", &["who"]);
+    assert!(who.contains("nobody holds this canon"), "{who}");
 }

@@ -76,9 +76,11 @@ USAGE
   canon <command> [args]
 
 RECORD                                        (no model needed)
-  init [--profile personal|code|house]  start a canon here
+  init [--profile personal|code|house]  start a canon here: its founder holds it
        [--plain]                         without the v4 knobs (policy changes that
                                          wait, personal scopes), for older readers
+       [--open]                          the old shared start: any write takes
+                                         until someone holds it
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
   add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it

@@ -99,6 +99,8 @@ canon init --profile house
 
 ```text
 canon initialised at /home/mira/house/.canon (house)
+  human:mira holds this canon (house) — you write, it is in force.
+  grant the others: canon grant human:<them> house
   policy changes wait like rules do, and human:mira.… is yours alone
 
   canon add "<a rule you already have>"      write one down

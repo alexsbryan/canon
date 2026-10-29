@@ -78,7 +78,7 @@ fn git(cwd: &Path, args: &[&str]) -> String {
 fn lineage(root: &Path, name: &str, rules: &[&str]) -> PathBuf {
     std::fs::create_dir_all(root).unwrap();
     let c = root.join(".canon");
-    ok(&c, &["init", "--profile", "house"]);
+    ok(&c, &["init", "--profile", "house", "--open"]);
     std::fs::write(c.join("name"), name).unwrap();
     for r in rules {
         ok(&c, &["add", r]);
@@ -116,7 +116,7 @@ fn a_cloned_lineage_never_lands_in_the_adopters_commit() {
     std::fs::create_dir_all(&home).unwrap();
     git(&home, &["init", "--quiet"]);
     let c = home.join(".canon");
-    ok(&c, &["init", "--profile", "house"]);
+    ok(&c, &["init", "--profile", "house", "--open"]);
     std::fs::write(c.join(".gitignore"), "seen\ndraft-runs/\nconfig\n").unwrap();
     ok(&c, &["adopt", &format!("{}@g1", up.display())]);
 
@@ -140,7 +140,7 @@ fn id_of(out: &str) -> String {
 
 /// A canon at `dir`, named `name`, holding `rules`; the ids of the rules.
 fn founded(dir: &Path, name: &str, rules: &[&str]) -> Vec<String> {
-    ok(dir, &["init", "--profile", "house"]);
+    ok(dir, &["init", "--profile", "house", "--open"]);
     std::fs::write(dir.join("name"), name).unwrap();
     rules.iter().map(|r| id_of(&ok(dir, &["add", r]))).collect()
 }
@@ -161,7 +161,7 @@ fn a_pasted_fork_takes_its_upstreams_next_generation_by_paste() {
     let first = ok(&up, &["share"]);
 
     let fork = base.join("fork");
-    ok(&fork, &["init", "--profile", "house"]);
+    ok(&fork, &["init", "--profile", "house", "--open"]);
     let (code, adopted) = canon(&fork, &["adopt", "--paste"], Some(&first));
     assert_eq!(code, 0, "{adopted}");
     assert!(
@@ -343,7 +343,7 @@ fn the_family(base: &Path) -> (PathBuf, PathBuf) {
     let block = ok(&cw, &["share"]);
 
     let ersilia = base.join("ersilia/.canon");
-    ok(&ersilia, &["init", "--profile", "house"]);
+    ok(&ersilia, &["init", "--profile", "house", "--open"]);
     let (code, out) = canon(
         &ersilia,
         &[
@@ -363,7 +363,7 @@ fn the_family(base: &Path) -> (PathBuf, PathBuf) {
     let fam = base.join("family");
     let fam_canon = fam.join(".canon");
     let ola = |args: &[&str], stdin: Option<&str>| canon_by(&fam_canon, "human:ola", args, stdin);
-    let (code, out) = ola(&["init", "--profile", "house"], None);
+    let (code, out) = ola(&["init", "--profile", "house", "--open"], None);
     assert_eq!(code, 0, "{out}");
     std::fs::write(fam_canon.join("name"), "cw-family-canon").unwrap();
     let (code, out) = ola(

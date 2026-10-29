@@ -399,6 +399,7 @@ pub fn init(args: &[String]) -> i32 {
     // `--plain` founds one it can, with neither knob, which is how every
     // canon before 0.3 began.
     let plain = has(args, "--plain");
+    let open = has(args, "--open");
     if !plain {
         let kind = ActKind::Ratification {
             text: "A holder's word is a rule at once. A change of policy waits like any \
@@ -413,6 +414,30 @@ pub fn init(args: &[String]) -> i32 {
             return fail(e);
         }
     }
+    // **The founding grant.** A canon whose founder holds it cannot be
+    // taken by the first person to write in it: the founder's word is the
+    // house's, and everyone else's is a proposal until they hold a scope.
+    // An agent cannot seat itself, so its founding waits for a person;
+    // `--open` is the old shared start, and writes there are unguarded.
+    let founder = store::actor();
+    let granted = if plain || open || !founder.starts_with("human:") {
+        false
+    } else {
+        let scope = match canon_core::Scope::new(profile.scope()) {
+            Some(s) => s,
+            None => return fail(format!("`{}` is not a scope", profile.scope())),
+        };
+        let kind = ActKind::Grant {
+            holder: founder.clone(),
+            scope,
+            horizon: None,
+            rationale: format!("founded this canon; {founder} holds it"),
+        };
+        if let Err(e) = write(&base, kind) {
+            return fail(e);
+        }
+        true
+    };
     // **The whole tool, in three lines, at the moment somebody needs it.**
     // This is the n+1 explanation: if the next person cannot be handed the
     // thing in two sentences it does not spread, and `canon --help` is
@@ -425,6 +450,19 @@ pub fn init(args: &[String]) -> i32 {
     if !plain {
         // Said on the way in, because it is the one thing init decides for
         // the group, and the group can change it with `ratification set`.
+        if granted {
+            println!(
+                "  {founder} holds this canon ({}) — you write, it is in force.",
+                profile.scope()
+            );
+            println!(
+                "  grant the others: canon grant human:<them> {}",
+                profile.scope()
+            );
+        } else if open {
+            println!("  nothing holds this canon: it is open, and any write takes.");
+            println!("  hold it: canon grant {founder} {}", profile.scope());
+        }
         match store::actor().strip_prefix("human:") {
             Some(name) => {
                 println!("  policy changes wait like rules do, and human:{name}.… is yours alone")
@@ -435,6 +473,11 @@ pub fn init(args: &[String]) -> i32 {
             println!(
                 "  written by {}, so it waits for a person to approve it",
                 store::actor()
+            );
+            println!(
+                "  the founding grant waits too: canon grant {} {}",
+                store::actor(),
+                profile.scope()
             );
         }
     }

@@ -41,7 +41,9 @@ fn the_page_lets_in_its_own_address_and_is_not_held_by_an_idle_socket() {
             .output()
             .unwrap()
     };
-    assert!(canon(&["init", "--profile", "house"]).status.success());
+    assert!(canon(&["init", "--profile", "house", "--open"])
+        .status
+        .success());
     assert!(canon(&["add", "Quiet hours are 10pm to 7am."])
         .status
         .success());
@@ -117,7 +119,7 @@ fn a_person_can_identify_and_then_write_signed_from_the_page() {
     let mut init = Command::new(env!("CARGO_BIN_EXE_canon"));
     env(&mut init);
     assert!(init
-        .args(["init", "--profile", "house"])
+        .args(["init", "--profile", "house", "--open"])
         .output()
         .unwrap()
         .status

@@ -14,7 +14,7 @@ fn a_reviewer_can_open_context_and_then_quit_without_writing_an_act() {
     std::fs::create_dir_all(&dir).unwrap();
     let binary = env!("CARGO_BIN_EXE_canon");
     let init = Command::new(binary)
-        .args(["init", "--profile", "house"])
+        .args(["init", "--profile", "house", "--open"])
         .env("CANON_DIR", &canon)
         .output()
         .unwrap();

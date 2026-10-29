@@ -15,7 +15,11 @@ fn fresh(name: &str) -> PathBuf {
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let canon = dir.join(".canon");
-    let (code, out) = canon_as(&canon, "human:setup", &["init", "--profile", "house"]);
+    let (code, out) = canon_as(
+        &canon,
+        "human:setup",
+        &["init", "--profile", "house", "--open"],
+    );
     assert_eq!(code, 0, "{out}");
     canon
 }
@@ -349,11 +353,14 @@ fn init_founds_the_canon_with_the_knobs_on_and_plain_without() {
         out.contains("human:sam.… is yours alone"),
         "the real personal scope, never a placeholder: {out}"
     );
+    assert!(out.contains("human:sam holds this canon (house)"), "{out}");
+    assert!(out.contains("grant the others"), "{out}");
     let line = last_line(&canon);
-    assert_eq!(line["op"], "ratification", "{line}");
-    assert_eq!(line["governs"], "all", "{line}");
-    assert_eq!(line["personal"], true, "{line}");
-    assert_eq!(line["v"], 4, "{line}");
+    assert_eq!(line["op"], "grant", "{line}");
+    assert_eq!(line["holder"], "human:sam", "{line}");
+    assert_eq!(line["scope"], "house", "{line}");
+    let raw = std::fs::read_to_string(canon.join("acts.jsonl")).unwrap();
+    assert!(raw.contains("\"op\":\"ratification\""), "{raw}");
 
     // `--plain` founds a canon a build from before the knobs can read.
     let plain = dir.join("plain");
