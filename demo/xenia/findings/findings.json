@@ -835,7 +835,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
   "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": [
    "demo/xenia/README.md:143` holds “Command line”",
@@ -855,23 +855,25 @@
   "element": "",
   "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
   "often": [
-   "`setup`: 2 of 3 accounts (Sam run 1, Mira run 1)"
+   "`setup`: 1 of 3 accounts (Sam run 1)"
   ],
   "happened": [
-   "`setup` run 1, Sam: could-not-judge, gave up; brought back by a message, then the scene ran out of time while they were acting. their last acts: tell · say “For the things we'd otherwise re-argue monthly, and for the reasons behind them. Not for taste, not for law, not for money, not for timetables.\n\nWhat it's earned so far: `who` and `policy show` answered straight rather than by whoever remembers; `supersede` and `why` keep a trace when a rule changes instead of the old one vanishing; `accept` lets a real conflict stay a conflict; `question` records a gap instead of pretending it was settled.\n\nWhat it hasn't earned: I wrote the noise rule inside five minutes, it went live with nobody's say-so, and the reason I'd meant to give it was rejected by the tool and lost. And it's still three copies — mine holds a rule yours don't, so \"in force\" means \"in force where you're standing\". Before we call this the house's canon, somebody has to say whether we adopt one copy or accept three.\n\nMy answer to your question: canon is worth keeping for the log — the record of what was actually decided, when, by whom. It is not worth treating as the house's memory until the three copies are one.” · tell · tell · tell · tell",
-   "`setup` run 1, Mira: could-not-judge, gave up; brought back by a message, then the scene ran out of time while they were acting. their last acts: look · say “From what we did today, in one line: canon is for the things we'd otherwise argue about twice — so we argue once and can point at the answer.\n\nThree things it actually earned over the list:\n\n1. It made \"we said, last year\" into something citable. Three nights for guests existed only in chat; now it has an id and a date and a name. Same for the noise rule. That's the whole point of your cousin and the neighbours being on that list.\n\n2. It showed us where the real gap is. Half the list wasn't missing rules — recycling, parking, the room, the fund were all \"agreed, not written\". And the other half turned out not to be canon's business at all: who paid, whether the landlord comes, whether a cat is fair. Knowing which is which stops us writing a rule that only looks like an answer.\n\n3. It made changing a rule a thing you can see. `why` tells you what replaced what and why, which is you asking \"why did this change without telling me\" and getting an answer instead of a shrug.\n\nAnd what it isn't: a conscience, a calendar, a bank, or a substitute for the two of you actually disagreeing about the cat and the thermostat.\n\nWhich brings me to the bit I owe you: my copy is broken — the holder is bare \"Mira\", my fix was refused, and every rule I wrote here landed without standing. So this has been a rehearsal, not the real thing. June's copy is the one to build on. Before you trust anything, run `canon who` and `canon log` there and check it isn't in the same state as mine.\n\nIf we do one thing properly: pick a copy, get the holder right, write the guest rule and the noise rule into it, and leave the rest for the evenings when they come up.” · tell · tell · tell · tell"
+   "`setup` run 1, Sam: passed, gave up; brought back by a message, then did the scene, and said they were done. their last acts: say “What it's for, from where I've been standing:\n\nIt's for the things we'd otherwise argue from memory. The noise rule, the bathroom rota, the food rule — those are in force and any of us can point at them instead of at each other. That's the real difference: three things are law and eight things are drafts, and the difference is visible without anyone having to trust a recollection.\n\nIt's for keeping the asking, not just the answer. The cat is the case I'd defend: June wanted one, said no because of my allergy, and canon shows it was asked and refused for a stated reason. Without that, in a year it's \"nobody ever wanted a cat\" or \"Sam vetoed it\" depending on who's telling it. The record keeps the refusal honest in both directions.\n\nIt's for making disagreement survivable. The heating rule names 19 against 21 and says neither of us is overruled. It doesn't win the argument; it stops the argument from being about who won.\n\nAnd it's for catching us out. Half my rounds were spent finding that nothing was recorded — the recycling day, the receipts, the collection date, the deposit. Grepping the log and getting nothing back is a real answer, and a useful one.\n\nWhat it is not: a diary, a judge, or a substitute for tonight's board over a broken window. It doesn't know dates, amounts or who said what first — every rule we wrote that leans on memory is still leaning on us.\n\nHonest caveat: eight pending, none of them held up by a policy anyone adopted. So what it's for is only as good as three people who remember to second each other's drafts.” · tell · tell · tell · tell · tell"
   ],
   "said": [
-   "Sam, `setup` run 1: “Waiting on the house chat to decide whether June runs draft and we adopt hers, or we draft separately — no reply yet. I've reported the find (canon is per-directory, mine is empty) and given my vote. I'd pick this back up when someone answers.”",
-   "Mira, `setup` run 1: “Sam said he'd run init on his machine and asked who should; I said go ahead on his and asked house vs personal profile — no reply yet. No canon exists in my terminal, so there's nothing to list, draft, or check until one is started. I'll pick it up when Sam answers or the canon appears.”"
+   "Sam, `setup` run 1: “Mira had already run init under --profile house, so she was founder and had ratified \"standing\" — every proposal passes on one person's say-so. I read the full help and told her not to just grant standing to \"level\" us, but to set a joint/threshold ratification with --governs all first. Talk got cut off there; I didn't get to see June's view or watch the policy actually change.”"
   ],
   "file": "setup-said-gave-up",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
   "notSeenSince": null,
   "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
-  "source": []
+  "source": [
+   "CHANGELOG.md:184` holds “standing”",
+   "LICENSE:349` holds “standing”",
+   "LICENSE:542` holds “standing”"
+  ]
  },
  {
   "key": "fridge · inert · the record · Enter",
@@ -892,7 +894,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
   "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": [
    "demo/xenia/README.md:143` holds “Command line”",
@@ -902,5 +904,480 @@
    "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
    "demo/xenia/README.md:156` holds “Ctrl-C”"
   ]
+ },
+ {
+  "key": "setup · inert · / · Command line",
+  "scene": "setup",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`setup`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`setup` run 1, Sam: could-not-judge, the scene ran out of time while they were acting. inert {\"tap\":\"Command line\"}; their last acts: look · say “I'll start it: running init. Let's read house/situations.md before we each get a say.” · tap “Command line”"
+  ],
+  "said": [],
+  "file": "setup-inert-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "setup · inert · / · cat house/situations.md",
+  "scene": "setup",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "cat house/situations.md",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`setup`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`setup` run 1, Sam: could-not-judge, the scene ran out of time while they were acting. inert {\"tap\":\"cat house/situations.md\"}; their last acts: say “(1/4) canon — the rules you already have, and what was decided about them. Commands: init [--profile personal|code|house] start one in this directory; draft --from <folder> read what you already have; add \"<text>\" [-m <why>] [--cite <where>] write one down; check \"<proposal>\" does it clash with one?; list; why <id>; log the raw acts, oldest first.” · say “(2/4) draft/check need a model (canon config set endpoint <url>; a model does the reading). config show / config set endpoint|model|extract_model. Flags: --json, -m <reason>, --allow-remote (endpoint must be on this machine otherwise).” · say “(3/4) ENV: CANON_ACTOR (who is acting; default git user.name prefixed human:; a name bound to a key also needs that key to sign), CANON_SIGNING_KEY, CANON_DIR, CANON_ENDPOINT, CANON_MODEL, CANON_API_KEY.” · say “(4/4) Personal profile note: canon is a structured journal, not a clinician; check never returns a verdict; a deliberate contradiction is a first-class state, never force-resolved. That's the paste. Waiting on the situations.md list before init.” · type “cat house/situations.md” into “Command line” · tap “cat house/situations.md”"
+  ],
+  "said": [],
+  "file": "setup-inert-cat-house-situations-md",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "setup · inert · / · ls -a",
+  "scene": "setup",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "ls -a",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`setup`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`setup` run 1, Sam: could-not-judge, the scene ran out of time while they were acting. inert {\"tap\":\"ls -a\"}; their last acts: say “(4/4) Personal profile note: canon is a structured journal, not a clinician; check never returns a verdict; a deliberate contradiction is a first-class state, never force-resolved. That's the paste. Waiting on the situations.md list before init.” · type “cat house/situations.md” into “Command line” · tap “cat house/situations.md” · tap “Enter” · type “ls -a” into “Command line” · tap “ls -a”"
+  ],
+  "said": [],
+  "file": "setup-inert-ls-a",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "guests · soft · gave up · the rules",
+  "scene": "guests",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ canon init --profile house / $ canon initialised at /private/var/folders/qf/4ntssn_10d598hw_5rjhx3740000gp/T/canon-house-HyGeiX/house/.canon (house)",
+  "often": [
+   "`guests`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`guests` run 1, Mira: could-not-judge, the scene ran out of time while they were acting; brought back by a message, then the scene ran out of time while they were acting. their last acts: scroll · say “Small correction before goodnight, and it's a good one: my terminal came back. I ran canon list myself and there are 11 rules live, not four — quiet hours, shelf, money, the bathroom-and-recycling rota with the collection day to be confirmed by whoever's week it is, 19/18 heating, no cat, drive clear, the spare-room office days, and the month's notice. More went in than I could see. What's still missing is the broken window and the house fund, and nobody has found the tenancy. I'll take my rota week and post receipts from now on — I can type.” · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `guests` run 1: “My terminal gives no output, so I can't read house/situations.md or run canon myself; I'm relying on Sam's paste, and the promised paste of the 14 situations arrived as an empty screen. I won't guess at rules I haven't read, so I stop here until someone gets me readable text of the list.”"
+  ],
+  "file": "guests-said-gave-up-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "quiet · soft · gave up · the rules",
+  "scene": "quiet",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ canon init --profile house / $ canon initialised at /private/var/folders/qf/4ntssn_10d598hw_5rjhx3740000gp/T/canon-house-HyGeiX/house/.canon (house)",
+  "often": [
+   "`quiet`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`quiet` run 1, Mira: could-not-judge, the scene ran out of time while they were acting; brought back by a message, then the scene ran out of time while they were acting. their last acts: scroll · say “Small correction before goodnight, and it's a good one: my terminal came back. I ran canon list myself and there are 11 rules live, not four — quiet hours, shelf, money, the bathroom-and-recycling rota with the collection day to be confirmed by whoever's week it is, 19/18 heating, no cat, drive clear, the spare-room office days, and the month's notice. More went in than I could see. What's still missing is the broken window and the house fund, and nobody has found the tenancy. I'll take my rota week and post receipts from now on — I can type.” · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `quiet` run 1: “June and I have agreed the guest rule, but Sam hasn't said yes and my terminal still answers nothing — I can't add or read the rule myself, and I won't pretend the old chat counts as one.”"
+  ],
+  "file": "quiet-said-gave-up-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "chores · soft · gave up · the rules",
+  "scene": "chores",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ canon init --profile house / $ canon initialised at /private/var/folders/qf/4ntssn_10d598hw_5rjhx3740000gp/T/canon-house-HyGeiX/house/.canon (house)",
+  "often": [
+   "`chores`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`chores` run 1, Mira: passed, the scene ran out of time while they were acting; brought back by a message, then did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: scroll · say “Small correction before goodnight, and it's a good one: my terminal came back. I ran canon list myself and there are 11 rules live, not four — quiet hours, shelf, money, the bathroom-and-recycling rota with the collection day to be confirmed by whoever's week it is, 19/18 heating, no cat, drive clear, the spare-room office days, and the month's notice. More went in than I could see. What's still missing is the broken window and the house fund, and nobody has found the tenancy. I'll take my rota week and post receipts from now on — I can type.” · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `chores` run 1: “My screen has gone blank and my terminal never answered anything, so I can't see whether Sam agreed to the noise rule or whether either rule was actually written down. We said our yeses out loud; I can't verify more than that.”"
+  ],
+  "file": "chores-said-gave-up-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "groceries · soft · gave up · /",
+  "scene": "groceries",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`groceries`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`groceries` run 1, Sam: passed, the scene ran out of time while they were acting; brought back by a message, then did the scene, and said they were done. their last acts: say “What it's for, from where I've been standing:\n\nIt's for the things we'd otherwise argue from memory. The noise rule, the bathroom rota, the food rule — those are in force and any of us can point at them instead of at each other. That's the real difference: three things are law and eight things are drafts, and the difference is visible without anyone having to trust a recollection.\n\nIt's for keeping the asking, not just the answer. The cat is the case I'd defend: June wanted one, said no because of my allergy, and canon shows it was asked and refused for a stated reason. Without that, in a year it's \"nobody ever wanted a cat\" or \"Sam vetoed it\" depending on who's telling it. The record keeps the refusal honest in both directions.\n\nIt's for making disagreement survivable. The heating rule names 19 against 21 and says neither of us is overruled. It doesn't win the argument; it stops the argument from being about who won.\n\nAnd it's for catching us out. Half my rounds were spent finding that nothing was recorded — the recycling day, the receipts, the collection date, the deposit. Grepping the log and getting nothing back is a real answer, and a useful one.\n\nWhat it is not: a diary, a judge, or a substitute for tonight's board over a broken window. It doesn't know dates, amounts or who said what first — every rule we wrote that leans on memory is still leaning on us.\n\nHonest caveat: eight pending, none of them held up by a policy anyone adopted. So what it's for is only as good as three people who remember to second each other's drafts.” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `groceries` run 1: “Cut off mid-check. I'd confirmed `allot` is a real write (it rejected `--dry-run` and listed its actual flags), but hadn't established whether an allotment/rotation needs ratification like `add` does, or lands immediately. I did not write anything — I wasn't going to impose a rota on my own say-so. State as I left it: one rule live (can-9f3626941d56, the noise rule); one guest proposal pending (can-f1cb56f697a4); my duplicate guest rule retracted. June and Mira agree on the shape — one week each in turn, done means basin, bath, loo, floor, bin emptied, no scoring — but nothing about the bathroom is in canon yet.”"
+  ],
+  "file": "groceries-said-gave-up",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "bins · inert · / · Enter",
+  "scene": "bins",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "Enter",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`bins`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`bins` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"Enter\"}; their last acts: look · say “The collection-day lookup only got as far as \"the page exists\" (200) — it didn't tell me the day, and I can't browse from here. So I'll write the rota rule without a fixed day: \"the night before collection\" is the obligation, and whoever's week it is confirms the actual day from the council's page. If any of you can check the day, paste it and I'll note it in -m.” · type “canon add \"One weekly rota, Monday to Sunday, covering the bathroom and the recycling. The named person does their job that week and says in the house chat when it is done. Recycling goes out the night before collection, and whoever's week it is confirms the collection day rather than assuming. Being away is a named swap agreed the day they know, never a skip and never 'someone will do it'.\" -m \"Agreed by all three in the house chat: the bathroom went three weeks and recycling was missed twice because nobody was named. June takes week one. Collection day not confirmed: gov.uk page reachable but the day not readable from the terminal, so the rule puts the check on the named person.\" --cite \"house chat, this thread; situations.md items 3 and 6\"” into “Command line” · tap “Enter” · look · tap “Enter”"
+  ],
+  "said": [],
+  "file": "bins-inert-enter",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "parties · inert · the rules · Command line",
+  "scene": "parties",
+  "kind": "inert",
+  "hard": true,
+  "screen": "the rules",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ canon init --profile house / $ canon initialised at /private/var/folders/qf/4ntssn_10d598hw_5rjhx3740000gp/T/canon-house-HyGeiX/house/.canon (house)",
+  "often": [
+   "`parties`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`parties` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"Command line\"}; their last acts: say “The quiet rule already covers what carries next door, and 11pm–7am — a Friday party doesn't override it. What's missing is warning: who's working early Saturday, so the party knows its end before it starts. Proposal: Friday loud is allowed, within the quiet rule, but whoever's hosting says in the chat by Thursday what's planned and who's on early shift; if someone's on an early Saturday, the loud part ends at their bedtime, not at 11pm on a technicality.” · say “Then I won't write a new rule either — June's right, quiet hours are the rule and a second one would be two places to argue from. One caveat: \"anyone who needs an early night says so that day\" is a statement of intent, not a rule, unless someone with an early shift actually does say. Which of us has Saturday early shifts? If it's none of us, I'd rather say that plainly in -m than write a rule for a problem we don't have.” · wait · look · tap “Select” · tap “Command line”"
+  ],
+  "said": [],
+  "file": "parties-inert-the-rules-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "pets · inert · the rules · Command line",
+  "scene": "pets",
+  "kind": "inert",
+  "hard": true,
+  "screen": "the rules",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ canon init --profile house / $ canon initialised at /private/var/folders/qf/4ntssn_10d598hw_5rjhx3740000gp/T/canon-house-HyGeiX/house/.canon (house)",
+  "often": [
+   "`pets`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`pets` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"Command line\"}; their last acts: tell · tell · say “Then I'll decide the part that's mine: no cat in the house while I live here. Not because June's wrong to want one, but because an allergy isn't a preference I can trade — it's my body reacting in a room I have to sleep in, and no rota or chat message fixes that. I'm not asking June to drop the wish.” · say “Honest answer: a cat kept out of my room, off the soft furnishings, with a filter, sounds survivable on paper and awful in practice — dander travels on clothes and on whoever held the cat, and I'm the one who'd be breathing it and second-guessing whether it's fair to complain. I won't run a trial whose failure lands on my lungs. So it's a no from the allergy. That's not me vetoing June's wish, it's me declining to be the subject of the experiment.” · type “canon add \"No cat in the house while Sam lives here.\" -m \"Sam's allergy: a medical fact, not a preference to trade, so Sam decides this one himself rather than putting it to a vote. June wants a cat and the wish stands; Mira declined to decide, rightly, because one person's air is not hers to overrule. Considered and rejected: keep the cat out of Sam's room, off the soft furnishings, an air filter, or a trial — dander travels and a failed trial lands on Sam's lungs. Can be revisited if Sam's allergy changes or Sam moves out.\" --cite \"house chat, this thread; situations.md item 9\"” into “Command line” · tap “Command line”"
+  ],
+  "said": [],
+  "file": "pets-inert-the-rules-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "bikes · inert · / · Command line",
+  "scene": "bikes",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`bikes`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`bikes` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"Command line\"}; their last acts: say “Before I write anything: how many bikes, and whose are they? And on the car — is it a second car one of us owns, or a visitor's? I don't want to write a rule that names a spot in a hall I'm only half-seeing. My instinct: bikes go on a rack in the back garden or the shed, not the hall (fire exit aside, it's the first thing anyone sees coming in), and the drive is kept clear for whoever's leaving first, not claimed.” · say “Mira's structure, with my reason for it: two rules, so the fire-route point doesn't get diluted by parking. But I want to write where bikes actually go before I write \"bikes go to the rack\" — otherwise it's \"put them away\" again. Nobody's said there is a rack or a shed. Can someone tell me what's actually out there? If there's no rack, the honest rule is \"buy and fit a named rack, on a named date,\" not a wish.” · wait · look · type “canon add \"Nobody parks across the drive. Whoever might need to get their car out says so in the house chat the night before, and the second car moves to the street rather than anyone guessing.\" -m \"Agreed by all three in the house chat. Mira's line: the drive is a guessing game until whoever needs out says so the night before. Kept separate from the hall rule so the fire-route reason is not diluted by parking.\" --cite \"house chat, this thread; situations.md item 10\"” into “Command line” · tap “Command line”"
+  ],
+  "said": [],
+  "file": "bikes-inert-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "repairs · inert · / · Command line",
+  "scene": "repairs",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`repairs`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`repairs` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"Command line\"}; their last acts: say “I'll call — I'm home most and I'm the one who'd fix the server, so a broken window is the same kind of job. But \"if they don't come\" can't be a shrug: report in writing the same day, say it's a broken window in a rented house, give a date they said they'd come, and if they don't, chase in writing again and keep the thread. If nobody comes and it's letting in weather or not secure, I'd get it fixed and keep the receipt — that's what the deposit and the law are for, not our savings.” · say “Mira's right that this shouldn't wait for me to write a rule. To be concrete: I don't have the landlord's number to hand, and I don't know if it's raining in. I'll look for the number now and report in the chat when it's done — before writing any rule. If it's open to the weather tonight, board it and don't wait on them.” · type “cat ../landlord* 2>/dev/null; ls ..” into “Command line” · tap “Enter” · type “ls -la /home; ls -la /home/house 2>/dev/null” into “Command line” · tap “Command line”"
+  ],
+  "said": [],
+  "file": "repairs-inert-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "fund · inert · / · Command line",
+  "scene": "fund",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`fund`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`fund` run 1, Sam: failed, gave up. inert {\"tap\":\"Command line\"}; their last acts: tell · say “Before what it covers, whether there is a fund at all — I don't know that anyone's holding anything. If there isn't, the rule should say so and not describe a pot we'll never fill. On the rest, my shape: it covers the house, not personal shopping (the receipt rule already handles that); someone named holds it and posts the balance monthly; spends under a small amount by whoever's shopping, anything bigger agreed by all three first. Mira, June — is there a fund, and what number?” · say “Mira's shape is right and I'll write it: shared consumables and repairs to shared things, not anyone's own shopping; held by Mira, balance posted monthly in the chat; under £30 buy and post the receipt, £30 or over gets a yes in the chat first. June — before it goes in: is £30 the right line, and does anyone object to Mira holding it? I'd rather have your yes than a rule I can point to that only two of us agreed.” · wait · look · tap “Command line”"
+  ],
+  "said": [
+   "Sam, `fund` run 1: “gave up: June hasn't answered on the £30 line or on Mira holding the fund, so I've stopped short of writing it — I said I'd rather have her yes than a rule only two of us agreed, and that still holds. Eleven rules are live and verified. The real limit on this whole task is that the house's facts live outside canon: the tenancy, the landlord's number, the collection day, whether a bike rack exists, which three days the office is in use, and now whether there's a fund at all. I can write what the house agrees; I can't verify what it doesn't know.”"
+  ],
+  "file": "fund-inert-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:143` holds “Command line”",
+   "demo/xenia/README.md:203` holds “Command line”",
+   "demo/xenia/README.md:209` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:187` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "fund · soft · gave up · /",
+  "scene": "fund",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`fund`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`fund` run 1, Sam: failed, gave up. their last acts: tell · say “Agreed, all of it — one correction before goodnight, since we're all saying it: canon list says eleven, not four. The eleven ids are in my message above; the unwritten ones are the window, the fund, the bikes, and Friday parties. If four is a number you're carrying from a screenshot, don't — I've checked it. And June, your instinct is right that the terminal comes first: eleven rules I wrote and only I can verify is the wrong shape for a house. Goodnight both.” · type “canon list | grep -c \"^can-\"” into “Command line” · tap “Enter” · tell · tell"
+  ],
+  "said": [
+   "Sam, `fund` run 1: “June hasn't answered on the £30 line or on Mira holding the fund, so I've stopped short of writing it — I said I'd rather have her yes than a rule only two of us agreed, and that still holds. Eleven rules are live and verified. The real limit on this whole task is that the house's facts live outside canon: the tenancy, the landlord's number, the collection day, whether a bike rack exists, which three days the office is in use, and now whether there's a fund at all. I can write what the house agrees; I can't verify what it doesn't know.”"
+  ],
+  "file": "fund-said-gave-up",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd`",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "setup · soft · gave up · the record",
+  "scene": "setup",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "the record",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / again, who you are here and what does not count / add \"<text>\" [--scope s] propose a commitment; a rule when its scope ratifies it",
+  "often": [
+   "`setup`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`setup` run 1, June: failed, gave up. their last acts: type “grep -n 'rules live\\|proposed, not yet\\|^[0-9]* open' /tmp/l6.txt\n” into “Command line” · say “What it's for, as I've used it: a place where a rule belongs to all of us, not to whoever remembered it — so \"we said three nights\" stops being a memory we argue about. And it keeps proposals apart from what's actually agreed: 3 live, 8 waiting, 2 open questions. That distinction has held up every time I've checked, and it's why I read things before approving.\n\nWhat it isn't: a calendar, a purse, or a place for a landlord's note. Half our new rules point at things canon can't see — receipts, totals, bookings, a tenancy.\n\nSo: worth keeping if we now go and approve the eight, and build the one shared page the money rules depend on. Otherwise it's a very tidy record of intentions.” · tell · tell · tell · tell"
+  ],
+  "said": [
+   "June, `setup` run 1: “The house's canon was started by Mira before we agreed who should, and the log doesn't hold up: her newest act (can-5f971943ad11) is recorded only as \"ratify majority\", the same as her earlier one, not the policy change she said it was — and `canon why can-5f971943ad11` reports \"no record matching\". `who` reportedly contradicts itself (\"under house\" but \"no scope named for it\"). Sam and Mira raised it; my message pointing out the mismatch got no reply. I won't add anything, grant or accept standing, or set policy on a record that can't explain itself. Needs Mira to account for that act and all three of us to agree how the house decides before any rules are added.”"
+  ],
+  "file": "setup-said-gave-up-the-record",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/src/explain.rs:134` holds “no record matching”",
+   "crates/canon-cli/src/govern.rs:876` holds “no scope named for it”"
+  ]
+ },
+ {
+  "key": "quiet · soft · gave up · /",
+  "scene": "quiet",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`quiet`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`quiet` run 1, Sam: could-not-judge, the scene ran out of time while they were acting; brought back by a message, then said no more. their last acts: say “What it's for, from where I've been standing:\n\nIt's for the things we'd otherwise argue from memory. The noise rule, the bathroom rota, the food rule — those are in force and any of us can point at them instead of at each other. That's the real difference: three things are law and eight things are drafts, and the difference is visible without anyone having to trust a recollection.\n\nIt's for keeping the asking, not just the answer. The cat is the case I'd defend: June wanted one, said no because of my allergy, and canon shows it was asked and refused for a stated reason. Without that, in a year it's \"nobody ever wanted a cat\" or \"Sam vetoed it\" depending on who's telling it. The record keeps the refusal honest in both directions.\n\nIt's for making disagreement survivable. The heating rule names 19 against 21 and says neither of us is overruled. It doesn't win the argument; it stops the argument from being about who won.\n\nAnd it's for catching us out. Half my rounds were spent finding that nothing was recorded — the recycling day, the receipts, the collection date, the deposit. Grepping the log and getting nothing back is a real answer, and a useful one.\n\nWhat it is not: a diary, a judge, or a substitute for tonight's board over a broken window. It doesn't know dates, amounts or who said what first — every rule we wrote that leans on memory is still leaning on us.\n\nHonest caveat: eight pending, none of them held up by a policy anyone adopted. So what it's for is only as good as three people who remember to second each other's drafts.” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `quiet` run 1: “Got cut off mid-step: I was approving Mira's guest proposal (can-f1cb56f697a4) and objecting to my duplicate (can-b974e8cdde11) so one three-nights rule stands. Both are currently pending and each needs one more approval, so as it stands the house has two overlapping guest rules and neither is in force. Also worth knowing: the configured model endpoint (localhost:8080) isn't listening, so `canon check` and `canon draft` will fail, and `canon why` can't find any id in the log — including the positions June asked about.”"
+  ],
+  "file": "quiet-said-gave-up",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "bins · soft · gave up · /",
+  "scene": "bins",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`bins`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`bins` run 1, Sam: passed, did the scene, and said they were done; brought back by a message, then gave up. their last acts: say “What it's for, from where I've been standing:\n\nIt's for the things we'd otherwise argue from memory. The noise rule, the bathroom rota, the food rule — those are in force and any of us can point at them instead of at each other. That's the real difference: three things are law and eight things are drafts, and the difference is visible without anyone having to trust a recollection.\n\nIt's for keeping the asking, not just the answer. The cat is the case I'd defend: June wanted one, said no because of my allergy, and canon shows it was asked and refused for a stated reason. Without that, in a year it's \"nobody ever wanted a cat\" or \"Sam vetoed it\" depending on who's telling it. The record keeps the refusal honest in both directions.\n\nIt's for making disagreement survivable. The heating rule names 19 against 21 and says neither of us is overruled. It doesn't win the argument; it stops the argument from being about who won.\n\nAnd it's for catching us out. Half my rounds were spent finding that nothing was recorded — the recycling day, the receipts, the collection date, the deposit. Grepping the log and getting nothing back is a real answer, and a useful one.\n\nWhat it is not: a diary, a judge, or a substitute for tonight's board over a broken window. It doesn't know dates, amounts or who said what first — every rule we wrote that leans on memory is still leaning on us.\n\nHonest caveat: eight pending, none of them held up by a policy anyone adopted. So what it's for is only as good as three people who remember to second each other's drafts.” · tell · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `bins` run 1: “A save dialog has focus over my terminal and is swallowing keystrokes — Ctrl-C, Tab and typed text don't reach the shell, and its buttons aren't tappable by name. So I couldn't run any verb this round; nothing was written and nothing in canon changed (3 rules live, guest rule still pending). Substantively: June's recycling spec is complete and I'd support it — one name monthly in rotation, away passes to the next and back, out the night before — but it still needs the actual collection day, which I can't verify from here. I'd opened `canon question` as the right place to hold that gap; it can record what the canon doesn't cover. Someone should close or dismiss that dialog before the next step.”"
+  ],
+  "file": "bins-said-gave-up",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
  }
 ]

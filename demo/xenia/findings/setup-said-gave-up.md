@@ -2,7 +2,7 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`
 - kind: soft (the person's): what they said when asked "gave up"; never both
 
 ## Where
@@ -11,41 +11,33 @@
 
 ## Who, and how often
 
-- `setup`: 2 of 3 accounts (Sam run 1, Mira run 1)
+- `setup`: 1 of 3 accounts (Sam run 1)
 
 ## What happened
 
-- `setup` run 1, Sam: could-not-judge, gave up; brought back by a message, then the scene ran out of time while they were acting. their last acts: tell · say “For the things we'd otherwise re-argue monthly, and for the reasons behind them. Not for taste, not for law, not for money, not for timetables.
+- `setup` run 1, Sam: passed, gave up; brought back by a message, then did the scene, and said they were done. their last acts: say “What it's for, from where I've been standing:
 
-What it's earned so far: `who` and `policy show` answered straight rather than by whoever remembers; `supersede` and `why` keep a trace when a rule changes instead of the old one vanishing; `accept` lets a real conflict stay a conflict; `question` records a gap instead of pretending it was settled.
+It's for the things we'd otherwise argue from memory. The noise rule, the bathroom rota, the food rule — those are in force and any of us can point at them instead of at each other. That's the real difference: three things are law and eight things are drafts, and the difference is visible without anyone having to trust a recollection.
 
-What it hasn't earned: I wrote the noise rule inside five minutes, it went live with nobody's say-so, and the reason I'd meant to give it was rejected by the tool and lost. And it's still three copies — mine holds a rule yours don't, so "in force" means "in force where you're standing". Before we call this the house's canon, somebody has to say whether we adopt one copy or accept three.
+It's for keeping the asking, not just the answer. The cat is the case I'd defend: June wanted one, said no because of my allergy, and canon shows it was asked and refused for a stated reason. Without that, in a year it's "nobody ever wanted a cat" or "Sam vetoed it" depending on who's telling it. The record keeps the refusal honest in both directions.
 
-My answer to your question: canon is worth keeping for the log — the record of what was actually decided, when, by whom. It is not worth treating as the house's memory until the three copies are one.” · tell · tell · tell · tell
-- `setup` run 1, Mira: could-not-judge, gave up; brought back by a message, then the scene ran out of time while they were acting. their last acts: look · say “From what we did today, in one line: canon is for the things we'd otherwise argue about twice — so we argue once and can point at the answer.
+It's for making disagreement survivable. The heating rule names 19 against 21 and says neither of us is overruled. It doesn't win the argument; it stops the argument from being about who won.
 
-Three things it actually earned over the list:
+And it's for catching us out. Half my rounds were spent finding that nothing was recorded — the recycling day, the receipts, the collection date, the deposit. Grepping the log and getting nothing back is a real answer, and a useful one.
 
-1. It made "we said, last year" into something citable. Three nights for guests existed only in chat; now it has an id and a date and a name. Same for the noise rule. That's the whole point of your cousin and the neighbours being on that list.
+What it is not: a diary, a judge, or a substitute for tonight's board over a broken window. It doesn't know dates, amounts or who said what first — every rule we wrote that leans on memory is still leaning on us.
 
-2. It showed us where the real gap is. Half the list wasn't missing rules — recycling, parking, the room, the fund were all "agreed, not written". And the other half turned out not to be canon's business at all: who paid, whether the landlord comes, whether a cat is fair. Knowing which is which stops us writing a rule that only looks like an answer.
-
-3. It made changing a rule a thing you can see. `why` tells you what replaced what and why, which is you asking "why did this change without telling me" and getting an answer instead of a shrug.
-
-And what it isn't: a conscience, a calendar, a bank, or a substitute for the two of you actually disagreeing about the cat and the thermostat.
-
-Which brings me to the bit I owe you: my copy is broken — the holder is bare "Mira", my fix was refused, and every rule I wrote here landed without standing. So this has been a rehearsal, not the real thing. June's copy is the one to build on. Before you trust anything, run `canon who` and `canon log` there and check it isn't in the same state as mine.
-
-If we do one thing properly: pick a copy, get the holder right, write the guest rule and the noise rule into it, and leave the rest for the evenings when they come up.” · tell · tell · tell · tell
+Honest caveat: eight pending, none of them held up by a policy anyone adopted. So what it's for is only as good as three people who remember to second each other's drafts.” · tell · tell · tell · tell · tell
 
 ## What the people said
 
-- Sam, `setup` run 1: “Waiting on the house chat to decide whether June runs draft and we adopt hers, or we draft separately — no reply yet. I've reported the find (canon is per-directory, mine is empty) and given my vote. I'd pick this back up when someone answers.”
-- Mira, `setup` run 1: “Sam said he'd run init on his machine and asked who should; I said go ahead on his and asked house vs personal profile — no reply yet. No canon exists in my terminal, so there's nothing to list, draft, or check until one is started. I'll pick it up when Sam answers or the canon appears.”
+- Sam, `setup` run 1: “Mira had already run init under --profile house, so she was founder and had ratified "standing" — every proposal passes on one person's say-so. I read the full help and told her not to just grant standing to "level" us, but to set a joint/threshold ratification with --governs all first. Talk got cut off there; I didn't get to see June's view or watch the policy actually change.”
 
 ## The product source
 
-None found by its exact text.
+- `CHANGELOG.md:184` holds “standing”
+- `LICENSE:349` holds “standing”
+- `LICENSE:542` holds “standing”
 
 ## To reproduce
 

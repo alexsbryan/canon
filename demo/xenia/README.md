@@ -146,34 +146,44 @@ What the accounts say about canon, for the next round:
 
 ## The coliving set
 
-The set of 2026-10-29, one run by `deepseek-flash` (xenia `e095e4e`,
-canon `ab59c50`): sixteen scenes — the setup and fourteen situations —
-in **21.8 minutes**, with **141 of 144 feedback prompts answered**,
-8,973 words and 2 hard faults. 43 accounts passed, 5 were
-could-not-judge (the setup's six-minute cut, and June in guests and
-quiet), none failed. The rates: 6.47 answers/min, 412 words/min, 13.3
-answers per 1M input tokens, $0.00056 an answer.
+The set of 2026-10-29, one run by `deepseek-flash` (xenia `92c99ad`,
+canon `c85c6c3`), the first with the page's Enter and stderr fixes:
+sixteen scenes — the setup and fourteen situations — in **25.8
+minutes**, with **122 of 144 feedback prompts answered**, 9,819 words
+and **no hard faults**. 37 accounts passed, 9 were could-not-judge and
+2 failed. The rates: 4.72 answers/min, 380 words/min, 6.1 answers per
+1M input tokens, $0.00095 an answer. The plants are the admission, and
+p8-wrapped missed, so the set is could-not-judge.
 
 What the group did and said:
 
-- June ran `canon init`; the guests and noise rules went in **before**
-  the grants, so both took on an open canon — "whoever writes first is
-  the house" (June). The setup's cut at six minutes is why the standing
-  was never agreed. The founding fix (a founder's init holds the canon)
-  landed after this run.
-- The three new findings are the setup's `wordy` (Sam) and its give-up
-  (Sam and Mira), and the record's Enter counted inert (June) — the
-  terminal page's chrome, not canon's.
-- The answers' product themes: the open canon and consent (June), a
-  soundness line on `who` (Mira), the reason at `add` and the scattered
-  source (Sam), the actor typo and the missing undo (Mira), `identify`
-  (June), and the valid scopes in the help (June). The fixes for these
-  landed after the run; the next set is their check.
+- With working terminals the house made **31 acts by all three**: Sam 7
+  asserts, 5 positions, 2 retracts, 2 supersedes and 1 question; Mira 4
+  asserts, 3 ratifications, 3 grants, 1 position and 1 question; June 2
+  positions. Mira ran the init and granted the others; the founder held,
+  and the group wrote, superseded and retracted rules. The setup had no
+  hard faults, and Sam passed it; June gave up and Mira ran out of
+  patience at the six-minute cut, with working terminals this time.
+- The three new findings: **the record** (`why` could not resolve a
+  ratification, `log` hid the policy it changed, and `who` contradicted
+  itself — June refused to write on it); **the pending proposal and the
+  endpoint** (two overlapping guest rules, each one approval short, with
+  nothing saying they were near-duplicates; and canon's config named
+  8080 while the reference model is 9741); and **the save dialog** that
+  took Sam's terminal (xenia's, not canon's). The record and the dialog
+  are fixed; the pending-proposal clarity and the endpoint are the next
+  change.
+- The answers' product themes: the policy layers (`ratification` is not
+  `policy`), the queue of proposals each one signature short, the missing
+  dates and receipts, and the rules that point at a page canon cannot
+  see. Guests and chores got 0 answers, heating 3; the other eleven
+  situations got all 9 and the debrief 12. Those two silences are the
+  next read.
 
-One instrument note: Mira's screen "shrank to an unreadable thumbnail"
-and "Run won't execute" — the glance, a fifth-size screenshot, read as
-the screen rather than the terminal's words. That is xenia's, not
-canon's.
+One instrument note: the glance is still a small picture, and the text
+is the screen; the accounts worked from the text when the picture was a
+thumbnail. The set's p8-wrapped miss is the model's variance, not the
+page's.
 
 ## The terminal is real; the keyboard is the page
 
