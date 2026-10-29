@@ -448,3 +448,45 @@ fn help_topics_explain_profiles_and_scopes_and_an_unknown_topic_says_so() {
     assert!(out.contains("no such topic"), "{out}");
     assert!(!nowhere.exists(), "asking wrote nothing");
 }
+
+#[test]
+fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
+    // The June's setup: a ratification id from `log` answered "no record
+    // matching", and the log's "ratify majority" hid which policy changed.
+    let dir = std::env::temp_dir().join(format!("canon-why-act-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (_, log) = canon_as(&canon, "human:june", &["log"]);
+    assert!(
+        log.contains("ratify     standing — A holder's word"),
+        "the log hides the ratification's policy: {log}"
+    );
+    let id = |line: &str| {
+        line.split_whitespace()
+            .next()
+            .unwrap_or_default()
+            .to_string()
+    };
+    let rid = log
+        .lines()
+        .find(|l| l.contains("ratify"))
+        .map(id)
+        .unwrap_or_default();
+    let (code, why) = canon_as(&canon, "human:june", &["why", &rid]);
+    assert_eq!(code, 0, "{why}");
+    assert!(why.contains("ratification"), "{why}");
+    assert!(why.contains("A holder's word"), "{why}");
+    let gid = log
+        .lines()
+        .find(|l| l.contains("grant"))
+        .map(id)
+        .unwrap_or_default();
+    let (code, why) = canon_as(&canon, "human:june", &["why", &gid]);
+    assert_eq!(code, 0, "{why}");
+    assert!(why.contains("holder: human:june"), "{why}");
+    assert!(why.contains("founded this canon"), "{why}");
+}

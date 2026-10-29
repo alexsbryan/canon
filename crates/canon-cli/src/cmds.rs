@@ -933,7 +933,7 @@ pub fn why(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let id = match crate::explain::resolve_why(&st, needle) {
+    let id = match crate::explain::resolve_why(&st, &log, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -1230,9 +1230,11 @@ pub fn log(args: &[String]) -> i32 {
                 Some(sc) => format!("policy     {} over {sc}", rule.name()),
                 None => format!("policy     {}", rule.name()),
             },
-            ActKind::Ratification { rule, scope, .. } => match scope {
-                Some(sc) => format!("ratify     {} over {sc}", rule.name()),
-                None => format!("ratify     {}", rule.name()),
+            ActKind::Ratification {
+                text, rule, scope, ..
+            } => match scope {
+                Some(sc) => format!("ratify     {} over {sc} — {text}", rule.name()),
+                None => format!("ratify     {} — {text}", rule.name()),
             },
             ActKind::Allot {
                 unit, units, scope, ..

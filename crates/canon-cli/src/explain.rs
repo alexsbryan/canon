@@ -128,18 +128,49 @@ pub fn resolve_any(canon: &Canon, needle: &str) -> Result<ActId, String> {
     pick(canon, ids, needle, "record")
 }
 
-/// Resolve anything `why` can explain: a commitment, a question, or a
-/// silence. A silence is an act in the log and the fold keeps it, but it is
-/// neither a rule nor a question, so `why` used to answer its own log's id
-/// with "no record matching" (xenia audit, 2026-10-28).
-pub fn resolve_why(canon: &Canon, needle: &str) -> Result<ActId, String> {
-    let ids = canon
+/// Resolve anything `why` can explain: any act the log holds. A silence was
+/// the first non-rule, non-question id that answered "no record matching"
+/// (2026-10-28); the house audit then hit the same wall with a ratification
+/// and a grant (2026-10-29), so the log is the list now.
+pub fn resolve_why(canon: &Canon, log: &Log, needle: &str) -> Result<ActId, String> {
+    let mut ids: Vec<&ActId> = log.acts().iter().map(|a| &a.id).collect();
+    for id in canon
         .commitments()
         .iter()
         .map(|c| c.id())
         .chain(canon.questions().iter().map(|q| &q.id))
-        .chain(canon.silences().iter().map(|s| &s.act));
-    pick(canon, ids, needle, "record")
+        .chain(canon.silences().iter().map(|s| &s.act))
+    {
+        if !ids.contains(&id) {
+            ids.push(id);
+        }
+    }
+    pick_acts(canon, ids.into_iter(), needle)
+}
+
+fn pick_acts<'a>(
+    canon: &'a Canon,
+    ids: impl Iterator<Item = &'a ActId>,
+    needle: &str,
+) -> Result<ActId, String> {
+    let matches = |id: &ActId| id.as_str() == needle || id.as_str().starts_with(needle);
+    let mut hits: Vec<&ActId> = ids.filter(|id| matches(id)).collect();
+    // An adopted rule is known by its upstream id, which has no local act.
+    if hits.is_empty() {
+        hits = canon
+            .commitments()
+            .iter()
+            .filter(|c| c.from().is_some_and(matches))
+            .map(|c| c.id())
+            .collect();
+    }
+    match hits.len() {
+        1 => Ok(hits[0].clone()),
+        0 => Err(format!("no record matching `{needle}`")),
+        n => Err(format!(
+            "`{needle}` matches {n} records — use more characters"
+        )),
+    }
 }
 
 /// Resolve a question by id or unique prefix.
@@ -216,9 +247,17 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     if let Some(q) = canon.question(id) {
         return Ok(explain_question(canon, q));
     }
-    let c = canon
-        .get(id)
-        .ok_or_else(|| format!("no commitment `{id}`"))?;
+    let c = match canon.get(id) {
+        Some(c) => c,
+        None => {
+            // Any other act in the log: a ratification, a grant, a position,
+            // an adoption. `why` used to stop at rules and questions.
+            if let Some(act) = log.acts().iter().find(|a| &a.id == id) {
+                return Ok(explain_act(act, canon));
+            }
+            return Err(format!("no record matching `{id}`"));
+        }
+    };
 
     let headline = format!("{}  {}", c.id(), c.text());
     let mut lines = vec![format!(
@@ -491,6 +530,41 @@ fn explain_silence(s: &canon_core::Silence) -> Explanation {
                 s.about
             ),
         ],
+    }
+}
+
+/// A governance act as the act that recorded it: who and when, its own
+/// fields, and whether the fold took it. The June's setup: a ratification in
+/// the log was unexplainable, so the house refused the record.
+fn explain_act(act: &canon_core::Act, canon: &Canon) -> Explanation {
+    let kind = serde_json::to_value(&act.kind).unwrap_or(serde_json::Value::Null);
+    let op = kind
+        .get("op")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("act");
+    let mut lines = vec![format!(
+        "written {} by {}",
+        store::ymd(act.ts_unix),
+        person(&act.actor)
+    )];
+    if let serde_json::Value::Object(fields) = &kind {
+        for (k, v) in fields {
+            if k == "op" {
+                continue;
+            }
+            let v = match v {
+                serde_json::Value::String(s) => s.clone(),
+                other => other.to_string(),
+            };
+            lines.push(format!("{k}: {v}"));
+        }
+    }
+    if let Some((_, why)) = canon.ungoverned().iter().find(|(id, _)| id == &act.id) {
+        lines.push(format!("NOT APPLIED: {why}"));
+    }
+    Explanation {
+        headline: format!("{}  {op}", act.id),
+        lines,
     }
 }
 

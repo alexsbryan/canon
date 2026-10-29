@@ -873,7 +873,14 @@ fn who_holds_the_canon(args: &[String]) -> i32 {
         println!("  {}  over {}{until}{bare}", g.actor, g.scope);
     }
     println!("\nthey approve unscoped proposals and govern the canon as a whole;");
-    println!("there is no scope named for it");
+    println!(
+        "what holds it is the widest scope above: {}",
+        scopes
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
     let made = match canon.adopted_at(None, now) {
         Some(r) => format!(
             "{} — set {} by {}",
