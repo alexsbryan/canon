@@ -459,6 +459,9 @@ pub fn init(args: &[String]) -> i32 {
                 "  grant the others: canon grant human:<them> {}",
                 profile.scope()
             );
+            println!(
+                "  sign it: canon identify <your key.pub> — so only your key can decide as you"
+            );
         } else if open {
             println!("  nothing holds this canon: it is open, and any write takes.");
             println!("  hold it: canon grant {founder} {}", profile.scope());

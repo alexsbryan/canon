@@ -865,7 +865,12 @@ fn who_holds_the_canon(args: &[String]) -> i32 {
             Some(h) => format!(" until {}", store::ymd(h)),
             None => String::new(),
         };
-        println!("  {}  over {}{until}", g.actor, g.scope);
+        let bare = if g.actor.contains(':') {
+            String::new()
+        } else {
+            "  (a bare name — not human:".to_string() + &g.actor + ")"
+        };
+        println!("  {}  over {}{until}{bare}", g.actor, g.scope);
     }
     println!("\nthey approve unscoped proposals and govern the canon as a whole;");
     println!("there is no scope named for it");
@@ -880,6 +885,13 @@ fn who_holds_the_canon(args: &[String]) -> i32 {
     };
     println!("rules made under: {made}");
     println!("proposals judged under: {}", canon.policy_for(None).name());
+    // The ledger is careful; the summary above it must say so too.
+    if !canon.ungoverned().is_empty() {
+        println!(
+            "{} governance act(s) written without standing were not applied — `canon log`",
+            canon.ungoverned().len()
+        );
+    }
     0
 }
 
@@ -1008,10 +1020,25 @@ pub fn who(args: &[String]) -> i32 {
 
 // ── canon grant / withdraw ──────────────────────────────────
 
+/// A bare name is a different person: `Mira` is not `human:Mira`. The
+/// group's evening was lost to `grant Mira`; name the mistake before it is
+/// written, and give the line to run.
+fn bare_actor(name: &str, verb: &str) -> Option<String> {
+    if name.contains(':') {
+        return None;
+    }
+    Some(format!(
+        "`{name}` is not an actor — actors are `human:<name>` or `agent:<name>`, and `{name}` is a different person from `human:{name}`. Try `canon {verb} human:{name} …`"
+    ))
+}
+
 pub fn grant(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
         return fail("usage: canon grant <actor> <scope> [--horizon YYYY-MM-DD] [-m \"<why>\"]");
+    }
+    if let Some(e) = bare_actor(pos[0], "grant") {
+        return fail(e);
     }
     let Some(scope) = Scope::new(pos[1]) else {
         return fail(format!("`{}` is not a scope", pos[1]));
@@ -1105,6 +1132,9 @@ pub fn withdraw(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
         return fail("usage: canon withdraw <actor> <scope> [-m \"<why>\"]");
+    }
+    if let Some(e) = bare_actor(pos[0], "withdraw") {
+        return fail(e);
     }
     let Some(scope) = Scope::new(pos[1]) else {
         return fail(format!("`{}` is not a scope", pos[1]));

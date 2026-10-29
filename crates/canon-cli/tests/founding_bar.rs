@@ -375,3 +375,27 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
     let (_, who) = canon_as(&shared, "human:june", &["who"]);
     assert!(who.contains("nobody holds this canon"), "{who}");
 }
+
+#[test]
+fn a_bare_name_is_refused_before_it_is_written_and_who_names_the_refused_acts() {
+    let dir = std::env::temp_dir().join(format!("canon-bare-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(&canon, "human:june", &["grant", "Mira", "house"]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains("human:Mira"), "{out}");
+    let raw = std::fs::read_to_string(canon.join("acts.jsonl")).unwrap();
+    assert!(!raw.contains("\"holder\":\"Mira\""), "{raw}");
+    // A self-grant without holding is written and refused; `who` says so.
+    let (_, out) = canon_as(&canon, "human:sam", &["grant", "human:sam", "house"]);
+    assert!(out.contains("NOT APPLIED"), "{out}");
+    let (_, who) = canon_as(&canon, "human:june", &["who"]);
+    assert!(
+        who.contains("governance act(s) written without standing"),
+        "{who}"
+    );
+}

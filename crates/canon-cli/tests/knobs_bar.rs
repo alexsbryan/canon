@@ -355,6 +355,7 @@ fn init_founds_the_canon_with_the_knobs_on_and_plain_without() {
     );
     assert!(out.contains("human:sam holds this canon (house)"), "{out}");
     assert!(out.contains("grant the others"), "{out}");
+    assert!(out.contains("canon identify"), "{out}");
     let line = last_line(&canon);
     assert_eq!(line["op"], "grant", "{line}");
     assert_eq!(line["holder"], "human:sam", "{line}");
