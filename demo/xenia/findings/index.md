@@ -1,6 +1,6 @@
 # Findings
 
-Last written by the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, the product `df4b66f`. One file each, for a later worker to pick up cold; none is closed. Simulated: a rehearsal, never a people result.
+Last written by the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`. One file each, for a later worker to pick up cold; none is closed. Simulated: a rehearsal, never a people result.
 
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T16-03-37-837Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `d7600a5`, the product `0f15ca8` · [`wordy-a-new-canon`](wordy-a-new-canon.md) · Too many words before acting: a new canon · hard; `june-draft`: 1 of 1 accounts (June run 1)
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T18-55-28-602Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `fc36366`, the product `963e1cd` · [`said-almost-left-a-new-canon`](said-almost-left-a-new-canon.md) · Almost left: a new canon · soft; `june-first-hour`: 1 of 1 accounts (June run 1)
@@ -30,7 +30,7 @@ Last written by the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-35
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T18-55-28-602Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `fc36366`, the product `963e1cd` · [`said-where-they-stopped-the-full-help`](said-where-they-stopped-the-full-help.md) · Where they stopped: the full help · soft; `sam-explore`: 1 of 1 accounts (Sam run 1)
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-28T18-55-28-602Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `fc36366`, the product `963e1cd` · [`wordy-the-terminal`](wordy-the-terminal.md) · Too many words before acting: the terminal · hard; `sam-first-hour`: 1 of 1 accounts (Sam run 1)
 - open · [`setup-wordy`](setup-wordy.md) · Too many words before acting: / · hard; `setup`: 1 of 3 accounts (June run 1)
-- open · [`setup-said-gave-up`](setup-said-gave-up.md) · Gave up: / · soft; `setup`: 2 of 3 accounts (Mira run 1, June run 1)
+- open · [`setup-said-gave-up`](setup-said-gave-up.md) · Gave up: / · soft; `setup`: 1 of 3 accounts (Mira run 1)
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50` · [`fridge-inert-the-record-enter`](fridge-inert-the-record-enter.md) · A tap changed nothing: the record, “Enter” · hard; `fridge`: 1 of 3 accounts (June run 1)
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd` · [`setup-inert-command-line`](setup-inert-command-line.md) · A tap changed nothing: /, “Command line” · hard; `setup`: 1 of 3 accounts (Sam run 1)
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T02-56-03-707Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `ed1d9ea`, the product `74265cd` · [`setup-inert-cat-house-situations-md`](setup-inert-cat-house-situations-md.md) · A tap changed nothing: /, “cat house/situations.md” · hard; `setup`: 1 of 3 accounts (Sam run 1)
@@ -49,4 +49,22 @@ Last written by the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-35
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3` · [`setup-said-gave-up-the-record`](setup-said-gave-up-the-record.md) · Gave up: the record · soft; `setup`: 1 of 3 accounts (June run 1)
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3` · [`quiet-said-gave-up`](quiet-said-gave-up.md) · Gave up: / · soft; `quiet`: 1 of 3 accounts (Sam run 1)
 - open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3` · [`bins-said-gave-up`](bins-said-gave-up.md) · Gave up: / · soft; `bins`: 1 of 3 accounts (Sam run 1)
-- open · [`debrief-said-gave-up`](debrief-said-gave-up.md) · Gave up: / · soft; `debrief`: 1 of 3 accounts (Mira run 1)
+- open · [`bikes-said-reached-for`](bikes-said-reached-for.md) · Reached for: / · soft; `bikes`: 1 of 3 accounts (June run 1)
+- open · [`bins-said-reached-for-the-record`](bins-said-reached-for-the-record.md) · Reached for: the record · soft; `bins`: 1 of 3 accounts (June run 1)
+- open · [`chores-said-reached-for`](chores-said-reached-for.md) · Reached for: / · soft; `chores`: 1 of 3 accounts (June run 1)
+- open · [`debrief-said-reached-for`](debrief-said-reached-for.md) · Reached for: / · soft; `debrief`: 1 of 3 accounts (June run 1)
+- open · [`debrief-said-reached-for-2`](debrief-said-reached-for-2.md) · Reached for: no screen · soft; `debrief`: 1 of 3 accounts (Mira run 1)
+- open · [`debrief-said-gave-up`](debrief-said-gave-up.md) · Gave up: no screen · soft; `debrief`: 1 of 3 accounts (Mira run 1)
+- open · [`fridge-said-reached-for-the-record`](fridge-said-reached-for-the-record.md) · Reached for: the record · soft; `fridge`: 1 of 3 accounts (June run 1)
+- open · [`fund-said-reached-for-the-rules`](fund-said-reached-for-the-rules.md) · Reached for: the rules · soft; `fund`: 1 of 3 accounts (June run 1)
+- open · [`groceries-said-reached-for-the-rules`](groceries-said-reached-for-the-rules.md) · Reached for: the rules · soft; `groceries`: 1 of 3 accounts (June run 1)
+- open · [`groceries-said-reached-for`](groceries-said-reached-for.md) · Reached for: no screen · soft; `groceries`: 1 of 3 accounts (Mira run 1)
+- open · [`guests-said-reached-for`](guests-said-reached-for.md) · Reached for: / · soft; `guests`: 1 of 3 accounts (June run 1)
+- open · [`heating-said-reached-for`](heating-said-reached-for.md) · Reached for: / · soft; `heating`: 1 of 3 accounts (June run 1)
+- open · [`leaving-said-reached-for`](leaving-said-reached-for.md) · Reached for: / · soft; `leaving`: 1 of 3 accounts (June run 1)
+- open · [`office-said-reached-for`](office-said-reached-for.md) · Reached for: / · soft; `office`: 1 of 3 accounts (June run 1)
+- open · [`parties-said-reached-for`](parties-said-reached-for.md) · Reached for: / · soft; `parties`: 1 of 3 accounts (June run 1)
+- open · [`pets-said-reached-for`](pets-said-reached-for.md) · Reached for: / · soft; `pets`: 1 of 3 accounts (June run 1)
+- open · [`quiet-said-reached-for`](quiet-said-reached-for.md) · Reached for: / · soft; `quiet`: 1 of 3 accounts (June run 1)
+- open · [`repairs-said-reached-for`](repairs-said-reached-for.md) · Reached for: / · soft; `repairs`: 1 of 3 accounts (June run 1)
+- open · [`setup-said-gave-up-the-rules`](setup-said-gave-up-the-rules.md) · Gave up: the rules · soft; `setup`: 1 of 3 accounts (June run 1)

@@ -86,7 +86,10 @@
       "brief": "Mira: Sam's cousin wants to stay two weeks. We said three nights at most, but it's only in the group chat from last year.",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -96,7 +99,10 @@
       "brief": "June: The neighbours complained about noise on Tuesday. We need something we can all point to, not just remembering to be quiet.",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -106,7 +112,10 @@
       "brief": "Mira: Nobody has cleaned the bathroom for three weeks. Do we want a rota, or a different answer?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -116,7 +125,10 @@
       "brief": "Sam: The shared shelf is empty again and nobody knows who paid for the last shop.",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -126,7 +138,10 @@
       "brief": "June: My leftovers were eaten. Can we agree what's shared and what's labelled?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -136,7 +151,10 @@
       "brief": "Sam: Recycling night has been missed twice. Who owns it, and what happens when they're away?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -146,7 +164,10 @@
       "brief": "June: Sam likes 21, I like 18, and the bill is shared. We need a rule that doesn't make one of us miserable.",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -156,7 +177,10 @@
       "brief": "Mira: Friday parties versus Saturday early shifts. Can we write down when loud is allowed?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -166,7 +190,10 @@
       "brief": "June: I'd like a cat. Sam is allergic. Mira doesn't want to be the one who decides.",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -176,7 +203,10 @@
       "brief": "Sam: The hall is full of bikes and the second car blocks the drive. Where do they go?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -186,7 +216,10 @@
       "brief": "June: The back window is broken. Who calls the landlord, and what do we do if they don't come?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -196,7 +229,10 @@
       "brief": "Mira: The spare room is an office three days a week. How do the rest of us book it?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -206,7 +242,10 @@
       "brief": "Sam: If one of us moves out, how much notice, and what happens to the deposit?",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -216,7 +255,10 @@
       "brief": "Mira: The house fund: what it covers, who holds it, and how we approve a spend.",
       "feedback": [
         "What did canon make easier here?",
-        "What did you reach for that wasn't there?"
+        {
+          "ask": "What did you reach for that wasn't there?",
+          "bad": "reached for"
+        }
       ],
       "minutes": 2,
       "talk": 100
@@ -226,7 +268,10 @@
     "brief": "Sam: That's the list. Before we stop \u2014 what is canon for, in this house?",
     "feedback": [
       "What did canon make easier over the whole evening?",
-      "What did you reach for that wasn't there?",
+      {
+        "ask": "What did you reach for that wasn't there?",
+        "bad": "reached for"
+      },
       "Would you keep using it?"
     ],
     "minutes": 2,

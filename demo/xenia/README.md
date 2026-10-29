@@ -206,6 +206,13 @@ round is the share-the-hold flow (grants and a ratification rule as part
 of `init`, or one `canon share` command) and a demo seed with the rules
 the draft is meant to find.
 
+Its findings were written again with no one run, once the house file
+marked "What did you reach for that wasn't there?" as a bad moment
+(xenia `2ede7b2`, `221a107`): 21 for the set where it had filed 3, each
+situation's answer its own. Three of June's say `canon check` called the
+noise, leftovers and recycling situations already covered, citing a rule
+that only says where decisions are made.
+
 ## The terminal is real; the keyboard is the page
 
 canon is a terminal program and xenia's stage reads a browser. The bridge is a
