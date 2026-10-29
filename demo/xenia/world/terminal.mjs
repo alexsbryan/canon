@@ -61,7 +61,9 @@ function shellFor(as, home, cwd) {
     }
     return out;
   };
-  proc.stdout.on('data', (chunk) => {
+  // A terminal shows its errors on the terminal: stderr goes through the
+  // same lines as stdout, so a CLI's refusal is read rather than vanishing.
+  const onData = (chunk) => {
     s.buf += strip(chunk.toString()).replace(/\r\n/g, '\n');
     for (;;) {
       const nl = s.buf.indexOf('\n');
@@ -79,8 +81,9 @@ function shellFor(as, home, cwd) {
     // A prompt has no newline. It is sent once the shell has been quiet for a
     // moment, so a half-written line does not flicker the page.
     s.timer = setTimeout(() => { for (const send of s.listeners) send({ partial: s.partial }); }, 80);
-  });
-  proc.stderr.on('data', (chunk) => process.stderr.write(`[${as}] ${chunk}`));
+  };
+  proc.stdout.on('data', onData);
+  proc.stderr.on('data', onData);
   proc.on('exit', () => { for (const send of s.listeners) send({ line: '(the terminal closed)' }); });
   return s;
 }

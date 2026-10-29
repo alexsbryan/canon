@@ -183,10 +183,12 @@ real shell in a PTY, rendered as a terminal page:
 - The shell is `/bin/bash` in a PTY (Python's `pty` module; macOS's `script`
   refuses a piped stdin). canon, the installer, the model client and the rest
   run exactly as they would in a terminal.
-- The page shows the output as text. `look` reads it, `type` fills the command
-  line, `tap` presses Enter. The `Ctrl-C` and `Ctrl-D` buttons are the two
-  keys a story might need. ANSI colour is stripped, so a cue that is only
-  colour is invisible.
+- The page shows the output as text, stdout and stderr together, so a
+  command's refusal is read on the terminal. `look` reads it, `type` fills
+  the command line, `tap` presses Enter, and a `type` whose text ends in a
+  newline presses Enter itself (the senses' `type` says so). The `Ctrl-C`
+  and `Ctrl-D` buttons are the two keys a story might need. ANSI colour is
+  stripped, so a cue that is only colour is invisible.
 - The screen a check sees is the last completed output line
   (`document.body.dataset.last`), not the whole scrollback: a terminal's
   current state is its latest output. The accounts' per-screen counts are that
