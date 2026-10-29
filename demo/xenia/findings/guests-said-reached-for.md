@@ -2,28 +2,32 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / who [<scope>] who may decide this, and under what; / no scope: who holds the canon as a whole
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / exit 0 / {'schema': 'canon-draft-run/v1', 'at': 1793290951, 'endpoint': 'http://localhost:9741/v1', 'model': 'primary', 'served_model': 'deepseek-flash', 'profile': 'house', 'sources': 1, 'chunks': 1, 'candidates': 0, 'dropped': 0, 'unread': 0, 'duplicates': 0, 'kept': 0, 'tensions': 0, 'tension_passes': 0, 'tension_schedule': {'passes': 0, 'batch': 0, 'looks': 0}}
 
 ## Who, and how often
 
-- `guests`: 1 of 3 accounts (June run 1)
+- `guests`: 2 of 3 accounts (Sam run 1, June run 1)
 
 ## What happened
 
-- `guests` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon check "Sam's cousin wants to stay two weeks; we said three nights at most, only in the group chat from last year." 2>&1; echo "---"; canon why can-310218ac19a9
-” into “Command line” · type “canon list; echo "---"; canon log; echo "---"; canon who
-” into “Command line” · say “Mira — the three-nights rule is right, and I'd vote for it. But look at the log: the only grant is `grant human:Mira over house`. Sam and I don't have standing. And the policy you ratified says "a holder's word is a rule at once," so can-0372bd61cf08 went live on your word alone. That's the window I asked us to close, and it's still open — no grants to me or Sam, no ratification change.
+- `guests` run 1, Sam: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: type “canon log 2>&1; echo "---"; canon who 2>&1” into “Command line” · tap “Enter” · say “Granted — `human:Mira over house`, act `can-eaf8f100ea2d`, granted by human:Sam. `canon who` now reads June, Mira, Sam over house; log says 4 acts. So the hold is shared three ways, not mine.
 
-I'm not objecting to the rule or to your running init. I'm saying: grant us, then set ratification (unanimous, or objections block) — and mention the rule so it's on the record as the house's, not yours. I can walk you through `canon grant human:June house` and `canon policy set` if the flags are fiddly. And the source: it's "house group chat, last year" — worth citing as exactly that, since that's all we've got.” · tell · tell · tell
+And you were right on both corrections: I said "no grant" when the syntax was there all along, and I called it my hold alone after I'd already granted June. Noted, and thanks for checking behind me.
+
+Two things still open, for whoever wants them:
+- June owes an `identify <key.pub>` — the grant in the log is only as good as that.
+- `canon draft` is still broken: `xargs: can't run any invocation of 'canon extract'`. No house rules can be drafted until that runs, so if we want a guest rule for your cousin's two weeks, it's `canon add` by hand, plus our votes.” · tell · tell · tell
+- `guests` run 1, June: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: tell · tell · say “Thanks, Mira — that matches what I saw in `canon who`: human:June and human:Sam both over house. So it isn't one person's hold anymore, and that settles the worry I raised. On granting you: `canon grant ` changes the canon's governance, so I won't run it on a guess. The `help` line Sam and you quoted says a name that has bound a key needs that key to sign — so before I grant anything, I'd want to know whether your `human:Mira` name is bound to a key and where that key lives. Sam, you hold house too; do you want to do the grant, or shall I, and with what exact scope?” · tell · tell · tell
 
 ## What the people said
 
-- June, `guests` run 1: “Standing of my own. I could read everything — who, list, log, why, check — but I couldn't put anything into the canon, not even to second a rule I agreed with. The "say" Mira described needs a grant I don't have, and nothing on my side showed a way to ask the canon itself for it. So the only route was through her, by hand.”
+- Sam, `guests` run 1: “A drafter, still. That's the one thing I keep reaching for and it keeps not being there — `xargs` can't invoke `canon extract`, so the tool quietly reads nothing. Everything else I wanted, canon had.”
+- June, `guests` run 1: “A plain answer to "who may grant whom, and do they need a key?" I read a fragment about keys signing names, but nothing that told me whether granting Mira is mine to do. So the safe move was to ask in the chat and not press Enter.”
 
 ## The product source
 
@@ -32,5 +36,5 @@ None found by its exact text.
 ## To reproduce
 
 ```sh
-
+cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
 ```

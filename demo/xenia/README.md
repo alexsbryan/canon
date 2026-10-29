@@ -213,6 +213,19 @@ situation's answer its own. Three of June's say `canon check` called the
 noise, leftovers and recycling situations already covered, citing a rule
 that only says where decisions are made.
 
+## The dossier set
+
+The set of 2026-10-29 (xenia `34ea068`, canon `a5f82d1`,
+`runs/2026-10-29T16-08-41-736Z`, deepseek-flash, one run) is the first
+with a session per person per scene, each opened with what they remember.
+It is could-not-judge on xenia's own plant P14, a flaw of the plant since
+fixed (xenia `10791ca`), so it is a reading, not admitted. Every person
+acted in every scene: could-not-judge fell from 28 of 48 to 6, answers
+from 62 to 129, and the house's input from 6.20M tokens to 4.05M. It
+showed 34 findings, 20 of them new. By their words, 17 of the 30 soft
+ones reach for standing or a grant (only the founder writes), 17 for a
+way to ratify or vote, and 11 for a draft that found nothing.
+
 ## The terminal is real; the keyboard is the page
 
 canon is a terminal program and xenia's stage reads a browser. The bridge is a

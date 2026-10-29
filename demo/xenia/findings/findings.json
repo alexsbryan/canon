@@ -835,7 +835,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "reproduce": "",
   "source": [
    "demo/xenia/README.md:146` holds “Command line”",
@@ -867,7 +867,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T00-38-52-588Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `e095e4e`, the product `ab59c50`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "reproduce": "",
   "source": []
  },
@@ -1383,23 +1383,27 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / complaint. Nothing sets hours or notice. / 9 acts",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / [--governs all|commitments] whether a change of policy waits too / [--personal on|off] canon-wide: a person's own scope is theirs",
   "often": [
-   "`bikes`: 1 of 3 accounts (June run 1)"
+   "`bikes`: 2 of 3 accounts (Sam run 1, Mira run 1)"
   ],
   "happened": [
-   "`bikes` run 1, June: passed, did the scene, and said they were done. their last acts: wait · type “canon question \"Bikes fill the hall and the second car blocks the drive. Where do they go, and who decides when space runs out?\" 2>&1\n” into “Command line” · say “Sam — I checked, and nothing in the canon covers where bikes or the car go; `allocation show` says nothing is shared out by rule. I've recorded it as can-15aa36af41ee.\n\nMy view: the hall isn't storage, it's the way out. Bikes belong where they can't block a door or a person carrying shopping — a rack by the back, or wall hooks if the wall will take them, not the hall floor. That's a safety thing as much as tidiness: a bike in the hall is a trip hazard and a fire-escape problem.\n\nThe drive is different, because there's one space and two cars. So the honest rule isn't \"where\" but \"who, when\": whoever gets home first takes the drive, or the drive goes to whoever needs to leave earliest — driveways are for leaving, not parking. If it's the second, that has to be written down or it's just the fastest driver winning.\n\nTwo things I'd want in it: a deadline (bikes out of the hall by such a time, not \"whenever\"), and what happens if it's full — a name to ask, not a note on the handlebars. I can't write it, but that's my answer to \"where do they go.\"” · tell · tell · tell"
+   "`bikes` run 1, Sam: failed, ran out of patience. their last acts: type “canon log\n” into “Command line” · scroll · type “canon approve can-d65bd31c15e2 -m \"Mira's wording matches the hall and the drive; approved as written. Blocked car asks in chat before the mover needs out.\"\n” into “Command line” · tell · tell · tell",
+   "`bikes` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon help add\n” into “Command line” · type “canon add \"Bikes and cars: bikes go on the wall rack in the back garden, not the hall. Whoever's car is in the drive moves it if someone needs to get out; the car that is blocked gets asked first in the house chat. Nothing is left in the hall overnight.\" --scope house -m \"hall full of bikes, second car blocks the drive\" -m \"Sam asked\"\n” into “Command line” · say “Mira here. Sam — bikes and the blocked drive: I've drafted it, and this time it's a proposal, not a rule. `can-d65bd31c15e2`: bikes on the wall rack in the back garden, nothing left in the hall overnight, and whoever's car is in the drive moves it when someone needs out — ask in the chat first. Needs June and you to approve (`canon approve can-d65bd31c15e2`) or object with a reason. Change the wording if it doesn't fit the drive.” · tell · tell · tell"
   ],
   "said": [
-   "June, `bikes` run 1: “A way to write \"the hall is a fire escape, not storage\" as something the house is bound by. That's a safety line, not a preference, and the canon can only hold it as a question until someone with standing writes it. Also, still no allocation set, so even the \"who gets the drive when\" part has nowhere to live yet.”"
+   "Sam, `bikes` run 1: “A way to confirm what I'd just done. After typing `approve` I wanted the act's own receipt — the new id, judged under which rule, in force when — and instead the screen stayed on my old `log` output. `canon why <id>` would have done it if I'd had the new id, but nothing told me what it was. Closest thing was re-running `list` and eyeballing \"1 proposed\" becoming \"4 rules live,\" which is the kind of quiet confirmation I don't trust.”",
+   "Mira, `bikes` run 1: “A way to tell Sam what the proposal *is* without him opening a terminal. Canon gives me the id and the approve/object lines, but it doesn't put the wording anywhere the chat can see it — I had to retype it myself and trust I got it right. And the terminal wasn't broken this time, but I'm never sure it won't be, so I check `canon list` before I trust anything.”"
   ],
   "file": "bikes-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": []
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "docs/COOKBOOK.md:464` holds “1 proposed”"
+  ]
  },
  {
   "key": "bins · soft · reached for · the record",
@@ -1408,22 +1412,24 @@
   "hard": false,
   "screen": "the record",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / where we settle things. / can-0372bd61cf08 Guests stay three nights at most, unless the house agrees otherwise.",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / can-acf07050abf3 Bathroom cleaning goes by rota: each of us takes a week in turn (June, Sam, Mira), / Monday to Sunday; the person whose week it is says so in the house chat by Sunday",
   "often": [
-   "`bins`: 1 of 3 accounts (June run 1)"
+   "`bins`: 2 of 3 accounts (Mira run 1, June run 1)"
   ],
   "happened": [
-   "`bins` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon question \"Who owns recycling night, and what happens when they're away? Missed twice; nothing names an owner or a swap.\" 2>&1\n” into “Command line” · type “canon log | tail -2\n” into “Command line” · say “Sam — I checked, and nothing in the canon names an owner or a swap for recycling. `allocation show` says \"nothing here is shared out by rule,\" so it's a real gap. (The check said ALREADY COVERED again, citing the same broad rule — that's the third time it's done that, and it's wrong again: that rule says where we settle things, not who takes the bins out.) I recorded it: can-c62cbf594b9d.\n\nWhat I'd want written: recycling is one lot, shared by the three of us, weekly, on the same night. The turn rotates — drawn, not picked, so nobody chose who goes first. And the answer to Sam's question: when you're away, you swap with a name before you go, not by silence. Whoever takes it that week owns it: out on the night, in by the morning.\n\nMira's the one who can set that — `allot` for the lot, `allocation set rotation` for the turn. If she grants me first, I'll set it and draw the order myself, so it isn't one person's hand on it.” · tell · tell · tell"
+   "`bins` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · say “Mira here. Recycling: I can draft it, but read what I'm about to do first. Three rules live, and `canon who house` still has June, Sam and me all under `standing` — so anything I type goes into force at once, not as a draft. That's how my bathroom rota went live before either of you read it. Same thing would happen to a recycling rule. So: either you two read and agree my wording here before I press Enter, or one of you writes it. My terminal happens to be readable right now, but I won't use that as an excuse to skip the reading. Proposed wording: recycling goes out Wednesday evening; it's the turn of whoever's week it is for the bathroom rota, and if they're away they say so by Tuesday and hand it on.” · tell · tell · tell",
+   "`bins` run 1, June: passed, did the scene, and said they were done. their last acts: look · scroll · scroll · tell · tell · tell"
   ],
   "said": [
-   "June, `bins` run 1: “The check, again. Three times now it's said ALREADY COVERED citing the one broad rule, and each time the human reading was \"no, that's a gap.\" It's the tool's most-used answer to me and it's been wrong every single time. That's worn — it means the number I'd most rely on to know whether something's settled can't be trusted on its own.”"
+   "Mira, `bins` run 1: “A way to write a proposal without it being in force. I keep wanting \"save this for June and Sam to read\" and the canon only has \"say it and it's a rule.\" The review/ratification machinery exists, but I'd have to change how the whole house decides to use it, and I don't want to do that from a prompt the way my rota went in.”",
+   "June, `bins` run 1: “A step between \"someone has a thought\" and \"it binds the house.\" Standing means a holder's word is a rule at once; there's no built-in pause where a draft sits and gets read. The scheme for objections exists in the help — approve, object, skip — but it's up to us to bring something in that way, and so far every rule came in written straight.\n\nAnd my key. That's the thing I actually reached for and couldn't find on my own: where my key goes, what `identify` does, whether the name gets bound before or after. I wanted someone to say it to me rather than me type a command that changes who I am in the record and hope. Nobody was around this afternoon, so I left it.\n\nAlso — a way to fix the fridge question and the recycling one in the same breath, since they're the same \"who covers what when someone's away\" question. Nothing in the house makes that connection for us; that's still our job.”"
   ],
   "file": "bins-said-reached-for-the-record",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": []
  },
  {
@@ -1433,22 +1439,26 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / commitment 1 establishes. / $ canon who; echo \"---\"; canon list",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / pool <scope> [--at <date>] whose turn it is. `who` is authority, / `pool` is appropriation",
   "often": [
-   "`chores`: 1 of 3 accounts (June run 1)"
+   "`chores`: 3 of 3 accounts (Sam run 1, Mira run 1, June run 1)"
   ],
   "happened": [
-   "`chores` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon allot --help; echo \"---\"; canon allocation --help\n” into “Command line” · type “canon allocation show 2>&1; echo \"---\"; canon help all 2>&1 | grep -i -A3 \"draw\" | head -40\n” into “Command line” · say “Good — I read the verbs. `allot` sets what's shared (scope, the three names, unit), and `allocation set rotation` sets how it goes round (--order, --per, --step). There's also `--from-draw <id>` \"for a lot nobody steers,\" with `draw commit` and `draw show` that recompute the panel from the log.\n\nMy proposal, since you asked for an order: don't have you pick the order. Allot the three of us, set rotation weekly, and draw the starting order so none of us is the one who chose who goes first. `allocation show` says nothing's set yet, so it's a clean start.\n\nTwo things I'd want written with it: all three names on the rota, and what \"cleaned\" means (sink, bath, loo, floor, bin) — otherwise \"cleaned\" is where the argument starts. And swap with a name when someone's away, not with silence.\n\nThen it's yours to set — I still don't have standing, so I can propose but not write. If you want, grant me and Sam first and I'll set the rotation myself so it's not one person's hand on it.” · tell · tell · tell"
+   "`chores` run 1, Sam: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: type “canon help identify 2>&1; echo \"===\"; canon review --json 2>&1 | head -20” into “Command line” · tap “Enter” · say “June — `canon identify` takes no flags: `canon identify [<key.pub> [<backup.pub>…]]`. It binds the public key to the name you act as; from then on only that key writes as you. It needs the private key to sign — from ~/.ssh, or `CANON_SIGNING_KEY`, or your ssh-agent — so keep the private half where it already lives and pass only the `.pub`. It doesn't show you what it's about to bind before it binds, so run `canon who human:June` first and check your name; then `canon identify ~/.ssh/id_ed25519.pub` and re-run `canon who human:June` — don't take the one line of \"done\" for it.\n\nMira — you'd already identified (fingerprint SHA256:gQblUx/uYTAP4o5kWHp3soIl1V9OiFUVW5sBtX4lB4M), and I'd granted you house before your message landed: `canon-eaf8f100ea2d` in my log, then my second grant today shows in `canon who`. So you're already a holder — read `canon who` and don't take my word. If you'd rather have that wait on June's agreement, say so and I'll withdraw it; it was my act and it stands or falls on my call.\n\nJune — on \"whichever of us runs it, the other agrees first\": that's a policy change, not a rule I can slip in under house. If you want it, propose it and it waits for ratification like any other policy. Until then I'll treat it as binding on me anyway and ask you before the next grant.\n\nBathroom: agreed, a rota as a rule. Mira, you draft; June reads; I won't add mine until you two have said. My one requirement: the rule names who is responsible for what week — a rota that says \"we'll rotate\" is the group-chat memory we're trying to get rid of.” · tell · tell · tell",
+   "`chores` run 1, Mira: failed, ran out of patience. their last acts: tap “Command line” · look · type “canon who house; echo ---; canon log | tail -6\n” into “Command line” · tell · tell · tell",
+   "`chores` run 1, June: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: give_up · type “canon who\n” into “Command line” · say “Mira — I just ran `canon who` and it lists you: `human:Mira over house`. So you are granted, as of now — it's not just me and Sam anymore. Whoever ran it (Sam?) got it in. So you don't need to wait; you can decide. Fingerprint SHA256:gQblUx/uYTAP4o5kWHp3soIl1V9OiFUVW5sBtX4lB4M — read back to you here, in person, as you asked. And to be plain: if you weren't meant to hold it yet, `canon withdraw human:Mira house` steps it back. It's yours to keep.” · tell · tell · tell"
   ],
   "said": [
-   "June, `chores` run 1: “The ability to set it. `allot` and `allocation set` are there, but writing them needs standing, and I still only have Mira's. So I could describe the rota and offer to draw the order, but the actual hand on it has to be hers — which is the same thing I keep reaching for and not finding.”"
+   "Sam, `chores` run 1: “`identify` tells you nothing before it binds — no preview of \"this key will act as human:June.\" And there's no way to make a rule carry its own exception, so a rota will need a separate edit if it ever changes.”",
+   "Mira, `chores` run 1: “Any help text that tells me in plain words, before I press Enter, whether an `add` counts now or waits for a read. Nothing in the help said a holder's own word makes it a rule at once — I only learned that from `canon who` afterwards.”",
+   "June, `chores` run 1: “A way to see *when* and *by whom* Mira's grant was made — `who` shows she holds house but not the act behind it. I'd have liked to tell her who ran it, so it didn't look like I'd done it behind her back. The `log` command would probably show it, but I didn't get to run it before the scene closed.”"
   ],
   "file": "chores-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": []
  },
  {
@@ -1458,23 +1468,26 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / threshold.\" 2>&1 / $ can-30cbea2d2f3b ? House fund: what it covers, who holds it, and what spend needs whose yes? Nothing sets an amount, a holder, or a spending threshold.",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / short of cash says so before the shop, not after. / can-d65bd31c15e2 Bikes and cars: bikes go on the wall rack in the back garden, not the hall.",
   "often": [
    "`debrief`: 1 of 3 accounts (June run 1)"
   ],
   "happened": [
-   "`debrief` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon list; echo \"---\"; canon log | wc -l; echo \"---\"; canon log | grep -c question; echo \"---\"; canon who 2>&1 | head -4\n” into “Command line” · say “Sam — honestly? What it turned out to be is a memory the whole house can point at, and a place where the things we haven't decided are visible instead of fuzzy.\n\nThe tally: 17 acts. 2 rules. 11 open questions, all mine, one for nearly every item on the list. So it isn't a rulebook — it's closer to a shared minutes book. It holds \"guests: three nights\" and \"the list is where we settle things,\" and it holds the gaps: the cat, the thermostat, the fund, moving out, the window. Those gaps being written down is worth more than it sounds, because \"we never talked about it\" stops being true.\n\nWhat it isn't, yet: a way to decide. Every rule in it came from Mira's hand alone, because she holds it and nobody's been granted. Eleven questions, no answers — not because we disagree, but because asking is open to all of us and deciding isn't. That's the honest shape of it, and I don't think it's what anyone intended.\n\nSo what it's for: remembering what we agreed, showing what we haven't, and — if we're serious — a way for the three of us to settle it without one person holding the pen. The first two work now. The third needs Mira to grant us and set ratification. Until then it's a very good notebook that one person owns.” · tell · tell · tell · tell"
+   "`debrief` run 1, June: passed, did the scene, and said they were done. their last acts: look · say “June here. What canon is for, as I've come to use it: it's the house's memory that doesn't get re-remembered differently. Every rule we've argued about — noise, the shelf, who pays for the last shop — we argue again next month unless it's written with the reason and where it came from. So: it's for pointing at, instead of remembering.\n\nWhat it isn't for, in my reading: it can't settle things a rule has no business settling. A cat can't be ruled into a house where someone's allergic. And it shouldn't let one person's typing bind the other two — that's why the joint setting matters to me, not as a formality but because a rule nobody read is just somebody's decision wearing a rule's clothes.\n\nTwo things from me before we stop. (1) Five rules live, all approved jointly, nothing waiting on me — that's the canon's state, and it's clean. (2) My key is still unbound: `canon review` says plainly that anyone who can write the file could decide as me. I've read `canon help identify` now, and it says from here on only my SSH key writes as me. I have never run it. Sam, will you sit with me while I do it, or tell me exactly where my key.pub is — I won't guess with the house's records.” · tell · tell · tell · tell"
   ],
   "said": [
-   "June, `debrief` run 1: “The say. Every evening I could record a gap or make a question and never make a rule — eleven of them sit unanswered. And the check I was meant to rely on was wrong four times, calling real gaps \"already covered\" or \"an amendment,\" so I learned to read the acts myself rather than trust its verdict. So: a memory I could share, and a decision I couldn't.”"
+   "June, `debrief` run 1: “Two things.\n\nOne: a way to bind my key that didn't depend on someone else's memory of where the file is. `canon help identify` tells me what it does now, but I kept reaching for a walkthrough that never quite came — Sam offered, I asked, and days went past. The gap wasn't the command, it was nobody sitting down with me.\n\nTwo: certainty about the standing/joint muddle. I wanted the canon to tell me plainly which ratification counted, and for days I read two entries both saying \"deciding now\" and got it wrong in my own head. What I reached for was a clean answer in the file; what I actually needed was to read `canon who house` slowly.”"
   ],
   "file": "debrief-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": []
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/src/govern.rs:396` holds “deciding now”",
+   "docs/COOKBOOK.md:494` holds “deciding now”"
+  ]
  },
  {
   "key": "debrief · soft · reached for · ",
@@ -1497,7 +1510,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "reproduce": "",
   "source": [
    "demo/xenia/findings/findings.json:920` holds “we each get a say”",
@@ -1526,7 +1539,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "reproduce": "",
   "source": []
  },
@@ -1537,22 +1550,22 @@
   "hard": false,
   "screen": "the record",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / 5 acts / ---",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / can-acf07050abf3 Bathroom cleaning goes by rota: each of us takes a week in turn (June, Sam, Mira), / Monday to Sunday; the person whose week it is says so in the house chat by Sunday",
   "often": [
-   "`fridge`: 1 of 3 accounts (June run 1)"
+   "`fridge`: 1 of 3 accounts (Mira run 1)"
   ],
   "happened": [
-   "`fridge` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon question \"What food is shared and what does a label mean? A label means it's the labeller's; unlabelled is fair game — but nothing written says so, and 21 degrees/leftovers keep coming up.\" 2>&1\n” into “Command line” · type “canon log | tail -2\n” into “Command line” · say “June — yes, and Mira's sentence is the right shape. Here's the wording I'd sign:\n\n\"Labelled food is the labeller's; unlabelled food is fair game. A label carries a name and a date, and after two days it stops counting as claimed — so nothing gets abandoned in the fridge under a name.\"\n\nThat last bit matters, or someone's soup becomes permanent property and someone else's shelf goes bare. Also worth saying: things in the shared cupboard (rice, oil, loo roll) aren't any one person's — that's the shelf we just raised.\n\nOne honest note: `canon check` said ALREADY COVERED, citing can-310218ac19a9 again. It's the same wrong answer as the noise question — that rule says where we settle things, not what a label means. So I recorded the gap: can-28434c8cd7bc. Mira, if you write it, use that as the thing it answers, with \"June's leftovers eaten\" as the why.” · tell · tell · tell"
+   "`fridge` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · type “canon --version” into “Command line” · say “Mira here. June — leftovers: yes, I'll draft it, your reading is a good start (named label = that person's until they say otherwise; unlabelled past two days = fair game). But not this minute: my terminal is broken again — I typed for a version check and got old log output back, not an answer. I won't put a rule into canon I can't see the result of, because here writing is in force at once.\n\nAlso worth flagging, since it's the thing that bit me: all three of us hold house under `standing`, so whoever says it, it's a rule — no read-first step. I want that changed to something slower, and I'll raise it properly when my screen behaves. Until then: if one of you has a working terminal and wants to draft the leftovers rule, go ahead and I'll read it.” · tell · tell · tell"
   ],
   "said": [
-   "June, `fridge` run 1: “A check I could trust, again. Twice now it's said ALREADY COVERED citing the one broad rule, and both times the right reading was \"no, that's a gap.\" If I'd taken the tool at its word, June's leftovers and the noise complaint would both have been waved away as already decided. I had to read the act itself to see the model was wrong.”"
+   "Mira, `fridge` run 1: “A draft. I wanted to write something for June and Sam to read before it became house law, and there's no such thing — writing is in force, full stop. Also a working terminal: I can type but can't read the answers, so the one tool that's supposed to make the house legible is the one I can't trust. And a `grant` I'd been told didn't exist — I told them all there was no grant verb when there was; I had to correct myself a day later.”"
   ],
   "file": "fridge-said-reached-for-the-record",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": []
  },
  {
@@ -1562,23 +1575,34 @@
   "hard": false,
   "screen": "the rules",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / can-d7f76cb8ce14 2026-10-29 human:June question Thermostat: Sam likes 21, June likes 18, bill shared. No rule sets a temperature or how the bill splits, so one of us is cold and the other pays for it. / can-a4f08170c007 2026-10-29 human:June question When is loud allowed? Friday parties against Saturday early shifts, plus Tuesday's neighbour complaint. Nothing sets hours or notice.",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ can-16df375f7a6b Spare room: it is an office on its claimed days, and anyone else who needs it books it in the house chat the day before, saying which hours. Whoever booked it has it for those hours; whoever wants it outside the office days and hasn't booked gets it only if nobody has booked that time. If two people want the same hours, the one who asked first has it and the other says so in the chat. Office days are fixed and whoever holds them says in the chat when they change. / PROPOSED, not yet a rule — needs approval from human:June, human:Sam",
   "often": [
-   "`fund`: 1 of 3 accounts (June run 1)"
+   "`fund`: 2 of 3 accounts (Sam run 1, Mira run 1)"
   ],
   "happened": [
-   "`fund` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon question \"House fund: what it covers, who holds it, and what spend needs whose yes? Nothing sets an amount, a holder, or a spending threshold.\" 2>&1\n” into “Command line” · type “canon log | tail -2; echo \"---\"; canon list\n” into “Command line” · say “Mira — nothing covers the fund. It's partly on record already (my first question, can-c971cbe23281, about who paid for the shop), and I've added the rest: can-30cbea2d2f3b.\n\nWhat it covers: the things we all use and none of us owns — loo roll, cleaning stuff, shared cupboard staples, light bulbs, and small repairs that aren't the landlord's. Not anyone's personal food, not anyone's own heating above the agreed line.\n\nWho holds it: one named person, with the amount written down where all three of us can see it — a separate account or a jar, not someone's pocket. Whose it is should be visible in the canon, so \"who holds the fund\" isn't a memory either. Not the person who spends most from it.\n\nHow we approve a spend: under a small limit — call it £20 — whoever's holding it just buys and posts the receipt here. Above that, two of us say yes before it's spent, and the receipt goes in the same place. Big things (over £100) are a house conversation, not a purchase.\n\nAnd a line I'd want: no one person can both approve and hold a spend above the limit. That's the rule that stops the fund drifting.\n\nNone of this is written — I can propose, not commit. Seven of the fourteen items on the list are now questions in the log, all recorded, none answered. That's honest, but it's also the gap: it needs someone with standing to turn questions into rules, and right now that's only you.” · tell · tell · tell"
+   "`fund` run 1, Sam: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: tell · tell · say “Sam here. June — that's the right three questions and your answers are close to mine. Two additions before Mira drafts: (1) \"a set figure\" should be a number in the text, £30 — and I'd want the figure changeable only the same way as the rest, not by whoever holds the cash; (2) handover needs to say who holds it *now*, by name, or the rule is a shape with no person in it.\n\nOne thing to settle before it goes in, not after: I re-read `canon who` and `canon ratification show` just now — \"rules made under: standing — set 2026-10-29 by human:Sam\", and standing (whole canon) is still marked deciding. That's why the spare room went live before I'd read it. If we want the fund to need all three before it's a rule, say it explicitly and I'll check the scope and ratifier in the log after approving, not just the approve line. Mira — draft it, and put in the text which ratifier it's meant to be judged under.” · tell · tell · tell",
+   "`fund` run 1, Mira: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: type “canon list\n” into “Command line” · scroll · say “Checked properly, and I have to take back the alarm I just raised. `canon who house`: June, Sam and me all hold house, and it says rules are made under `joint:human:June,human:Sam,human:Mira`, set by me on 2026-10-29 — so the joint ratification is intact. `canon list`: 6 rules live, house fund among them, and I read to the bottom this time.\n\nThe \"in force — Mira holds this canon\" line was the header for the scope I was writing over, not a licence for one person to decide. I read it as a warning and it wasn't one. Sorry for the false alarm — that's the second time I've trusted a line's shape over what the next command would show.\n\nHouse fund (`can-7ef01aee69ee`) is in force. Read it and object if the wording's wrong; the figure is ours to agree in the chat, not mine. Still owed: thermostat and loud-hours.” · tell · tell · tell"
   ],
   "said": [
-   "June, `fund` run 1: “The power to answer. Fourteen situations, seven of them now open questions with my name on them, and not one has become a rule — because writing needs standing and I've only got reading and gap-recording. The canon made it easy to say what the house hasn't decided and hard to settle any of it. That's the shape of the whole thing for me: a good record of a house that still hasn't decided much.”"
+   "Sam, `fund` run 1: “Which row wins. Two ratifications both in force, same date, and `who` says proposals are judged under \"default\" — nothing tells me the precedence, so I have to hedge in the draft rather than state the rule.”",
+   "Mira, `fund` run 1: “A read of the house fund itself — `canon list` gave me a diff-shaped \"There's more you skimmed past\" instead of the last entry, and I had to scroll and re-run it to see the rule I'd just written. For something as dry as money wording, I'd like to ask for one rule by id and get just that.\n\nAlso: I still can't tell from a single act whether it's a proposal or live. My add printed PROPOSED for the spare room in one breath and \"in force\" here in another, and the only way I settled it was a second command. That's the exact thing I've had wrong twice.”"
   ],
   "file": "fund-said-reached-for-the-rules",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": []
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "CHANGELOG.md:53` holds “default”",
+   "Cargo.toml:13` holds “default”",
+   "Cargo.toml:17` holds “default”",
+   "demo/xenia/findings/findings.json:16` holds “There's more you skimmed past”",
+   "demo/xenia/findings/wordy-a-new-canon.md:22` holds “There's more you skimmed past”",
+   "CHANGELOG.md:182` holds “in force”",
+   "CHANGELOG.md:294` holds “in force”",
+   "LICENSE:154` holds “in force”"
+  ]
  },
  {
   "key": "groceries · soft · reached for · the rules",
@@ -1587,23 +1611,27 @@
   "hard": false,
   "screen": "the rules",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / or record the gap for the next meeting: canon question \"The shared shelf is empty and nobody knows who paid for the last shop; the house needs a way to know who paid, and a house fund.\" / $ canon question --help 2>&1; echo \"---\"; canon add --help 2>&1",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / they approve unscoped proposals and govern the canon as a whole; / what holds it is the widest scope above: house",
   "often": [
-   "`groceries`: 1 of 3 accounts (June run 1)"
+   "`groceries`: 1 of 3 accounts (Sam run 1)"
   ],
   "happened": [
-   "`groceries` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon question \"Who paid for the last shared shop, and how does the house keep track? Nothing covers the shared shelf or a house fund.\" 2>&1\n” into “Command line” · type “canon log | tail -3; echo \"---\"; canon list\n” into “Command line” · say “Sam — I checked and the canon says THIS NEEDS A NEW RULE: nothing we've decided covers the shared shelf or who paid. So no one's forgotten a rule; there isn't one.\n\nI could record the gap even without standing, so I did: can-c971cbe23281, \"Who paid for the last shared shop, and how does the house keep track? Nothing covers the shared shelf or a house fund.\" It's in the log as human:June. It's written to be answered, not to decide anything.\n\nWhat I'd want written in its place: a house fund everyone pays into the same amount each month (covering shared shop, cleaning stuff, loo roll), and one shared place the receipt goes — photo in the house chat counts, but it has to be somewhere we all look. That way \"who paid\" stops being a memory.\n\nI can't write the rule — no standing — but Mira can. Sam, if you have a view on the amount or who holds the fund, say it here so Mira writes what we agree, not what any one of us prefers.” · tell · tell · tell"
+   "`groceries` run 1, Sam: passed, did the scene, and said they were done. their last acts: say “Checked canon rather than memories: 2 rules live — guest three nights (can-9038ac5f30de) and the bathroom rota (can-acf07050abf3). Nothing about the shop, so this is new, and under `standing` a holder's word is a rule at once.\n\nDraft, for you both to object to before or after: \"The shared shelf is stocked from a house kitty: whoever shops for shared things writes what they spent and what it was for in the house chat that day; whoever is short of cash says so before the shop, not after.\" I'll `canon add --scope house` it unless one of you wants it worded differently — June, Mira, say now.” · type “canon add \"The shared shelf is stocked from a house kitty: whoever shops for shared things writes what they spent and what it was for in the house chat that day; whoever is short of cash says so before the shop, not after.\" --scope house -m \"nobody knew who paid for the last shop; a written record instead of memory\" 2>&1\n” into “command line” · type “canon list 2>&1 | tail -5\n” into “command line” · tell · tell · tell"
   ],
   "said": [
-   "June, `groceries` run 1: “A way to answer it. Recording a gap is open to everyone, but writing the rule is still Mira's to do, and there's no way from my side to propose a rule that waits for her approval-by-name — the help mentioned \"without standing, a proposal for a holder to approve,\" but I couldn't find how I'd put one forward. So the gap is on record and the decision still waits on one person.”"
+   "Sam, `groceries` run 1: “A way to hold my own draft before it became a rule. `add` under `standing` went straight to \"in force\" — there was no propose-then-read step for me, only for people without `house`. I checked help, saw `object <id>` exists, but it arrives after the fact. A holder's word being a rule at once is fast, but there's nowhere for \"I want the others to read it first\" to live.”"
   ],
   "file": "groceries-said-reached-for-the-rules",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": []
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "CHANGELOG.md:182` holds “in force”",
+   "CHANGELOG.md:294` holds “in force”",
+   "LICENSE:154` holds “in force”"
+  ]
  },
  {
   "key": "groceries · soft · reached for · ",
@@ -1626,7 +1654,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "reproduce": "",
   "source": []
  },
@@ -1637,22 +1665,24 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / who [<scope>] who may decide this, and under what; / no scope: who holds the canon as a whole",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / exit 0 / {'schema': 'canon-draft-run/v1', 'at': 1793290951, 'endpoint': 'http://localhost:9741/v1', 'model': 'primary', 'served_model': 'deepseek-flash', 'profile': 'house', 'sources': 1, 'chunks': 1, 'candidates': 0, 'dropped': 0, 'unread': 0, 'duplicates': 0, 'kept': 0, 'tensions': 0, 'tension_passes': 0, 'tension_schedule': {'passes': 0, 'batch': 0, 'looks': 0}}",
   "often": [
-   "`guests`: 1 of 3 accounts (June run 1)"
+   "`guests`: 2 of 3 accounts (Sam run 1, June run 1)"
   ],
   "happened": [
-   "`guests` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon check \"Sam's cousin wants to stay two weeks; we said three nights at most, only in the group chat from last year.\" 2>&1; echo \"---\"; canon why can-310218ac19a9\n” into “Command line” · type “canon list; echo \"---\"; canon log; echo \"---\"; canon who\n” into “Command line” · say “Mira — the three-nights rule is right, and I'd vote for it. But look at the log: the only grant is `grant human:Mira over house`. Sam and I don't have standing. And the policy you ratified says \"a holder's word is a rule at once,\" so can-0372bd61cf08 went live on your word alone. That's the window I asked us to close, and it's still open — no grants to me or Sam, no ratification change.\n\nI'm not objecting to the rule or to your running init. I'm saying: grant us, then set ratification (unanimous, or objections block) — and mention the rule so it's on the record as the house's, not yours. I can walk you through `canon grant human:June house` and `canon policy set` if the flags are fiddly. And the source: it's \"house group chat, last year\" — worth citing as exactly that, since that's all we've got.” · tell · tell · tell"
+   "`guests` run 1, Sam: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: type “canon log 2>&1; echo \"---\"; canon who 2>&1” into “Command line” · tap “Enter” · say “Granted — `human:Mira over house`, act `can-eaf8f100ea2d`, granted by human:Sam. `canon who` now reads June, Mira, Sam over house; log says 4 acts. So the hold is shared three ways, not mine.\n\nAnd you were right on both corrections: I said \"no grant\" when the syntax was there all along, and I called it my hold alone after I'd already granted June. Noted, and thanks for checking behind me.\n\nTwo things still open, for whoever wants them:\n- June owes an `identify <key.pub>` — the grant in the log is only as good as that.\n- `canon draft` is still broken: `xargs: can't run any invocation of 'canon extract'`. No house rules can be drafted until that runs, so if we want a guest rule for your cousin's two weeks, it's `canon add` by hand, plus our votes.” · tell · tell · tell",
+   "`guests` run 1, June: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: tell · tell · say “Thanks, Mira — that matches what I saw in `canon who`: human:June and human:Sam both over house. So it isn't one person's hold anymore, and that settles the worry I raised. On granting you: `canon grant ` changes the canon's governance, so I won't run it on a guess. The `help` line Sam and you quoted says a name that has bound a key needs that key to sign — so before I grant anything, I'd want to know whether your `human:Mira` name is bound to a key and where that key lives. Sam, you hold house too; do you want to do the grant, or shall I, and with what exact scope?” · tell · tell · tell"
   ],
   "said": [
-   "June, `guests` run 1: “Standing of my own. I could read everything — who, list, log, why, check — but I couldn't put anything into the canon, not even to second a rule I agreed with. The \"say\" Mira described needs a grant I don't have, and nothing on my side showed a way to ask the canon itself for it. So the only route was through her, by hand.”"
+   "Sam, `guests` run 1: “A drafter, still. That's the one thing I keep reaching for and it keeps not being there — `xargs` can't invoke `canon extract`, so the tool quietly reads nothing. Everything else I wanted, canon had.”",
+   "June, `guests` run 1: “A plain answer to \"who may grant whom, and do they need a key?\" I read a fragment about keys signing names, but nothing that told me whether granting Mira is mine to do. So the safe move was to ask in the chat and not press Enter.”"
   ],
   "file": "guests-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": []
  },
  {
@@ -1676,7 +1706,7 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "reproduce": "",
   "source": [
    "CHANGELOG.md:51` holds “accept”",
@@ -1691,23 +1721,26 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / can-310218ac19a9 \"Nobody has one rule to themselves: the house's list in house/situations.md is / where we settle things.\"",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / ENVIRONMENT / CANON_ACTOR who is acting (default: git user.name, prefixed human:);",
   "often": [
    "`leaving`: 1 of 3 accounts (June run 1)"
   ],
   "happened": [
-   "`leaving` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon question \"If one of us moves out: how much notice, how a replacement tenant is agreed, what happens to the deposit and the shared fund, and who tells the landlord?\" 2>&1\n” into “Command line” · look · say “Sam — I checked; nothing covers moving out or the deposit. Recorded as can-3f0c60dbe1e4.\n\nWhat I'd want written, in order of how much it saves us:\n\nNotice: a month. Enough to find someone, short enough not to trap anyone. Whoever goes tells the others before they tell the landlord.\n\nThe deposit: this is the bit that causes fights, so put it down now — the deposit belongs to whoever paid it, and it comes back to them when the tenancy ends and the flat's in order, not split three ways. If the person leaving is on the tenancy and the next person takes their place, the incoming person pays them their share back; the deposit doesn't vanish and reappear.\n\nReplacements: the leaver finds a candidate, the rest of us meet them and say yes. Nobody moves in on one person's say-so, and nobody's block stays secret — if you object, say why.\n\nShared fund: whatever's in it is divided by what each of us paid in, not equally, unless we agreed to spend it together.\n\nAnd one thing that isn't ours to decide: what the tenancy agreement says beats all of this. Worth reading it now, while it's theoretical, rather than when someone needs to leave in a hurry.” · tell · tell · tell"
+   "`leaving` run 1, June: passed, did the scene, and said they were done. their last acts: say “June here. A correction on my own worrying: I read `canon who house` again this afternoon and the joint setting is what the canon reports — rules made under joint:human:June,human:Sam,human:Mira, all three must agree. The old standing entry is no longer claiming to be live beside it. So the thing I kept flagging is properly retired; I'm not going to raise it again. Proposals are still judged under default, which I'd like to understand, but that's a different question and it isn't urgent.\n\nFive rules live now: guests, bathroom rota, kitty, bikes/cars, spare room. Mira — I read the spare room wording through and it's the right shape, so I'm approving can-16df375f7a6b now rather than leaving it hanging. Sam, it needs you too.\n\nMoving out: yes, that's the gap. Notice and the deposit are exactly the things people fall out over when they're already leaving, so I'd rather it were written while we're all still friendly. Sam, you offered a shape — my reading is a month's notice spoken in the chat, and the deposit comes back within a fortnight of the room being handed over and checked, minus anything agreed for damage. But I'll read whatever Mira drafts before it goes in.\n\nAnd the thing I keep owing: my key is still unbound. `canon review` says plainly that anyone who can write the file could decide as me. `canon help identify` takes a key.pub path — I don't have my public key in front of me and I won't point the command at a guess. Sam, when you're around, show me once which file it wants and I'll do it myself.” · type “canon approve can-16df375f7a6b\n” into “Command line” · look · tell · tell · tell"
   ],
   "said": [
-   "June, `leaving` run 1: “The tenancy itself. The canon can hold what the three of us agree, but the deposit, notice periods and who's on the lease are written in a document it's never seen. I had to say out loud that the tenancy beats whatever we put in the canon — which means our carefully written rule could be quietly overruled by paper none of us has read. That gap between the house's word and the landlord's is the part the tool can't close.”"
+   "June, `leaving` run 1: “My key. `canon review` says outright that anyone who can write the file could decide as me, and has said so for days. `canon help identify` wants a key.pub path, and I don't have my public keyfile in front of me — so the one command that would fix it is the one I can't safely run. I kept asking Sam to walk me through it and Sam kept not being there. That's a gap that no amount of reading closed.\n\nAnd \"proposals judged under: default\" — I still don't know what default means, and there's no plain sentence telling me. Reading `help all` shows what the verbs do, not what that line costs me.”"
   ],
   "file": "leaving-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": []
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/tests/refusal_bar.rs:264` holds “proposals judged under: default”",
+   "docs/LOAD_TEST_DESIGN.md:121` holds “proposals judged under: default”"
+  ]
  },
  {
   "key": "office · soft · reached for · /",
@@ -1716,22 +1749,24 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / write one: canon add \"<the rule>\" / or record the gap for the next meeting: canon question \"The back window is broken. Who calls the landlord, and what do we do if they don't come?\"",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / 3 with standing, narrowest first / rules made under: joint:human:June,human:Sam,human:Mira — set 2026-10-29 by human:Mira over house",
   "often": [
-   "`office`: 1 of 3 accounts (June run 1)"
+   "`office`: 2 of 3 accounts (Sam run 1, Mira run 1)"
   ],
   "happened": [
-   "`office` run 1, June: passed, did the scene, and said they were done. their last acts: look · type “canon question \"Spare room is an office three days a week. How does anyone else book it, and what happens to a booking when the office user needs it?\" 2>&1\n” into “Command line” · say “Mira — I checked: nothing covers booking the spare room. `allocation show` says \"nothing here is shared out by rule.\" I recorded it as can-412849a8f127. (The check said ALREADY COVERED again — fourth time, same wrong citation. Don't trust it on this one.)\n\nMy view: booking works on two things, and both need writing or the room goes to whoever's loudest.\n\n1. The office's three days are fixed in the week, the same days each week, agreed up front. Those are the office's by right — no booking needed, no asking.\n2. Everything else is bookable: a shared calendar anyone can see, first come, and a booking is a block of time with a name on it. A booking you can't keep should be cancelled the day before, so someone else can use it.\n\nThe awkward case worth naming: someone books a slot and then the office user needs that day after all. I'd say the office's fixed days win — that's what \"fixed\" buys — but the office user gives as much notice as they can, and a swap is a swap, not a seizure.\n\nI can't set it, but the shape is: allot the room to the three of us, fix the office's three days, and use a visible calendar for the rest. If you grant me standing I'll set that up myself so it isn't one person's hand on it.” · tell · tell · tell"
+   "`office` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon log\n” into “command line” · scroll · say “Sam here. Spare room: I read the full text of can-16df375f7a6b and approved it with a reason. What the log actually shows: act 20 is `can-6bbc0153a369 human:Sam position toward can-16df375f7a6b`, and list still calls it PROPOSED — needs approval from human:June only. So my vote is on the record and the rule is NOT in force; under the joint ratification one approval isn't enough.\n\nJune, the ball's with you: `canon approve can-16df375f7a6b` or `canon object ... -m \"<why>\"`.\n\nOn the text: no contradiction this time (booking beats no booking; first-asked wins a clash). One thing only the two of you can answer — \"office days are fixed\" but nobody has written which days they are; if that's still being decided, say so and Mira rewrites.\n\nAlso still open from the last round: bikes/cars (can-d65bd31c15e2) names two different movers, and nobody has said who asks. Amend it rather than rely on my approval note.” · tell · tell · tell",
+   "`office` run 1, Mira: passed, did the scene, and said they were done. their last acts: say “Mira here. Terminal's readable today. First: bikes and cars is now live — you both approved it, 4 rules live.\n\nSpare room: nothing in canon covers it, so it's a new rule, and I'll draft it as a proposal — it won't go live until you both approve.\n\nOne thing I won't guess at: who's working in there three days a week, and are those days fixed or chosen weekly? I'll draft on the assumption the office days are fixed and everyone else books the rest, but tell me if that's wrong and I'll change the wording.\n\nAlso flagging: my bikes/cars proposal sat unapproved for a while and then went in — thanks. And the joint ratification is holding against me as intended; nothing I type is a rule on its own now.” · type “canon add \"Spare room: it is an office on its claimed days, and anyone else who needs it books it in the house chat the day before, saying which hours. Whoever booked it has it for those hours; whoever wants it outside the office days and hasn't booked gets it only if nobody has booked that time. If two people want the same hours, the one who asked first has it and the other says so in the chat. Office days are fixed and whoever holds them says in the chat when they change.\" --scope house -m \"Mira asked how the rest of us book the spare room; its office use is three days a week and nothing in canon covered booking\" -m \"drafted as a proposal for June and Sam to read\"\n” into “Command line” · say “Spare room drafted — `can-16df375f7a6b`, PROPOSED, needs you both.\n\nThe gist: the office days are fixed and whoever holds them says in the chat when they change; anyone else books in the chat the day before with their hours; a booking beats no booking; two people wanting the same hours and the one who asked first has it.\n\nApprove with `canon approve can-16df375f7a6b`, or object with a reason (`canon object can-16df375f7a6b -m \"<why>\"`). If the office days aren't fixed, say so and I'll rewrite it rather than have you vote on the wrong shape.” · tell · tell · tell"
   ],
   "said": [
-   "June, `office` run 1: “A calendar. The canon can allot a room and rotate a turn, but booking is time-slot stuff — a visible grid with names in it — and there's no such thing here. So the best I could do was describe the calendar and leave the actual booking to live outside the canon, which is exactly where it'll get forgotten again. And still no standing of my own, so even the allotment waits on Mira.”"
+   "Sam, `office` run 1: “A way to see what June still owes at a glance, and one way to amend an in-force rule. `canon log` won't show me the full text of the pending rule without crowding out the acts, and there's no \"amend\" — for the bikes/cars contradiction someone has to assert a replacement rather than fix the sentence. Also the act I care about most (my own vote) reads as a bare \"position toward\" with no sign of approve vs object.”",
+   "Mira, `office` run 1: “A way to see the whole help at once. `canon help all` gave me the tail of it — configure, flags, environment, and a passage about the personal profile — but the verb list had scrolled past and I couldn't get it back. I read the screen twice and it was the same tail both times. On a broken terminal that would have been guessing; here it was just a small hole I worked around by checking the one verb I needed.\n\nThe other thing I reached for and couldn't find was a way to ask myself \"is this already covered?\" beyond reading the list. Four rules is fine to eyeball. Forty wouldn't be.”"
   ],
   "file": "office-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": []
  },
  {
@@ -1741,22 +1776,24 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ canon question \"Thermostat: Sam likes 21, June likes 18, bill shared. No rule sets a temperature or how the bill splits, so one of us is cold and the other pays for it.\" 2>&1 / $ can-d7f76cb8ce14 ? Thermostat: Sam likes 21, June likes 18, bill shared. No rule sets a temperature or how the bill splits, so one of us is cold and the other pays for it.",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / can-8d6e5546d3cc 2026-10-29 human:Sam scoped can-1238435c61f4 -> house / 12 acts",
   "often": [
-   "`parties`: 1 of 3 accounts (June run 1)"
+   "`parties`: 2 of 3 accounts (Sam run 1, Mira run 1)"
   ],
   "happened": [
-   "`parties` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon who 2>&1 | head -4; echo \"---\"; canon list; echo \"---\"; canon log | tail -4\n” into “Command line” · type “canon question \"When is loud allowed? Friday parties against Saturday early shifts, plus Tuesday's neighbour complaint. Nothing sets hours or notice.\" 2>&1\n” into “Command line” · say “Mira — yes, and it's one rule with a notice clause. Here's what I'd sign:\n\n\"Loud is allowed Friday and Saturday until midnight; other nights, quiet after 11. A party means telling the neighbours beforehand — a note through the door a day ahead — and the music down at midnight on the dot. If someone has an early shift the next morning, they say so when the party's planned, not at 1am.\"\n\nThe Friday/Saturday split is the whole point: Friday loud hurts the person on a Saturday shift, so saying \"the next morning's shift wins\" is what makes it liveable rather than a competition.\n\nOn the record: I checked the canon and none of this is written. My earlier noise question wasn't actually in the log, so I've recorded it properly now: can-a4f08170c007 — hours, notice, and Tuesday's complaint. Write against that.\n\nAnd the honest caveat I keep having to say: the check called the noise question \"already covered\" when it wasn't. Don't let it tell you this is settled — it isn't, which is why it's in the log as a question.” · tell · tell · tell"
+   "`parties` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon who\n” into “Command line” · type “canon log\n” into “Command line” · say “Sam here. Read the canon before voting: `canon ratification show` has two rows, not one.\n\n1. can-ef75 — `standing (whole canon)`, set by me 2026-10-29, governing `all`. So the house itself still decides by a holder's word, unread. That is the config a `joint` vote actually has to beat.\n2. can-4b02 — `joint:human:June,human:Sam,human:Mira over house`, set by Mira, judged under standing — so it went live at once. Its stated effect: \"all three must agree.\" It does *not* say `--governs all`, and `canon who` still reads \"rules made under: standing — set by human:Sam.\" So by the tool's own account it isn't in force anywhere yet; it's a rule on the books with nothing under it.\n\nTwo things follow. (a) I agree to move off standing, but I want it set as `ratification set <rule> joint:human:June,human:Sam,human:Mira --governs all --scope house`, so it actually covers how rules get made — not a joint row beside a standing one. (b) Whoever sets it: if it goes in under standing it's live immediately and only binds what comes after. If it goes in judged under joint, it needs all three of us first. Tell me which we're doing and whether `--governs all` applies to the change that sets it — I'd rather know than find out.\n\nRatify me on that and I'll set it, then re-read `who` and `ratification show` and paste both. I'm not typing it until June and Mira say which of the two they mean.\n\nSeparately, Mira's party/quiet-hours question — no rule on that yet; `list` shows guest, bathroom, kitty only. I'll draft after the ratification question, and June reads it first.” · tell · tell · tell",
+   "`parties` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon ratification set joint:human:June,human:Sam,human:Mira --governs all --scope house -m \"anything one of us types goes live unread; all three must agree\" -m \"Mira, Sam\"\n” into “Command line” · type “canon who house\n” into “Command line” · say “Mira. Done, and I'm saying it straight away because I did something bigger than I asked to.\n\nRatification for house is now `joint:human:June,human:Sam,human:Mira`, `--governs all`, so it covers changes of policy too. `canon who house` confirms: \"rules made under: joint:… set by human:Mira\". So nothing any one of us types goes live unread anymore — that's your problem fixed, Sam, and mine.\n\nBut you said you wanted to see the help before you voted, and I didn't wait. I'd read `canon help ratification` last night and meant to hold off; I pressed Enter anyway, and because the old setting was `standing` it took my word alone. I then set `--governs all` off my own bat, when what you actually asked me to do was wait for both of you.\n\nWhere that leaves us: from now on [proposals] need all three of us. To undo or narrow it, `ratification set` also needs all three of us now — which is the point. If you both want it narrower (e.g. joint:June,Sam, with me out), say so and I'll do it the moment it's agreed; under joint you can also set it yourselves without me. I've made myself subject to it before asking, which I hope reads the right way.\n\nOpen, undrafted: thermostat (21 vs 18, shared bill) and loud hours (Friday parties vs Saturday early shifts). Give me ten minutes with a readable terminal and I'll put wording in front of you — under joint, so you'll read it before anything goes in.” · tell · tell · tell"
   ],
   "said": [
-   "June, `parties` run 1: “Same as before — the ruling, not just the gap. And this time something else: the record didn't keep what I thought it had. I'd asked about noise and moved on believing it was registered; the log showed it wasn't. So the thing I'm relying on to remember right has a quiet way of not holding what I think I gave it.”"
+   "Sam, `parties` run 1: “A way to ask \"would this setting, judged under itself, need all three of us?\" — help lists `--governs all|commitments` but doesn't say whether a change to ratification is retroactive, so I couldn't answer the one question that decides when to type it. Also June's leftover-rule draft: my typing did nothing for a whole session and nothing told me. Both times the tool was quiet where I needed it to speak.”",
+   "Mira, `parties` run 1: “A way to see who would have to agree *before* the change lands — `who` showed the old setting until after I'd pressed Enter, so my check came too late to be a check. Also a proposal-vs-in-force distinction: nothing in canon lets me write a draft that everyone reads first. That's what happened with the bathroom rota, and it's what I nearly did again tonight.”"
   ],
   "file": "parties-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
   "source": []
  },
  {
@@ -1766,23 +1803,28 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / notice.\" 2>&1 / $ can-a4f08170c007 ? When is loud allowed? Friday parties against Saturday early shifts, plus Tuesday's neighbour complaint. Nothing sets hours or notice.",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / [--governs all|commitments] whether a change of policy waits too / [--personal on|off] canon-wide: a person's own scope is theirs",
   "often": [
-   "`pets`: 1 of 3 accounts (June run 1)"
+   "`pets`: 2 of 3 accounts (Sam run 1, Mira run 1)"
   ],
   "happened": [
-   "`pets` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon question \"June wants a cat; Sam is allergic. Nothing says how the house decides something one person wants and one can't live with, or who decides.\" 2>&1\n” into “Command line” · look · say “June — I'd say the honest answer is no cat, and I want to say why plainly, because \"Mira decides\" isn't the fix.\n\nSam's allergy is a fact about Sam's body, not a preference to be weighed against yours. A cat in the house means Sam is unwell every day in his own home. That's not a trade I'd ask either of you to make, and no amount of \"who decides\" makes it fair. So my position is: no cat while Sam lives here — not because you lose, but because it isn't a contest.\n\nThat said, your want is real and shouldn't just evaporate. Things that might actually work: a cat you see regularly somewhere else (a neighbour's, a shelter volunteering), or keeping the question open for if the household changes — which is item 13 on the list, if one of us moves out. And if Sam's allergy turns out to be mild and treatable, that's a fact worth having, not an argument.\n\nNone of that is a rule I can write — I've recorded the gap as can-5e8a8faedef1, so it's on the record that this has no rule and that deciding it isn't Mira's job alone. Whatever we settle should be written down by all three of us agreeing, not by the person holding the pen.” · tell · tell · tell"
+   "`pets` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon ratification show\n” into “Command line” · type “canon who house\n” into “Command line” · say “Sam here. Read it before saying anything: `canon ratification show` has two rows, and they're at different scopes. The narrow one, `joint:June,Sam,Mira over house`, is what `canon who house` reports for house — \"rules made under: joint\". So anything new about the house (a cat included) now needs all three of us. The broader `standing (whole canon)` row still sits over everything outside house, so I'm not going to claim the cat is already all-three-are-yours to decide alone.\n\nCat: I won't pretend my allergy is negotiable, and I don't think it has to be now. June, what I'd want written is narrower than \"yes/no to cat\": where the cat lives, whether it's allowed in my room, who cleans and who pays. Say what you actually want and I'll put a draft to the three of us rather than decide it.” · tell · tell · tell",
+   "`pets` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · look · say “Mira here. Cat: June, that's a real want, but Sam is allergic — that's not a preference we can outvote, so I don't think a rule \"allowing a cat\" is the right shape. What I can offer: a rule that keeps *my* personal scope mine, and if we touch house-level pets at all, it names who the cat is with and what happens to Sam's space (no cat in his room, air filter, etc.) — something you both can read.\n\nAlso, since it's still live: I changed ratification to joint:June,Sam,Mira --governs all before either of you voted, using the very rule it replaces. Sam had asked to read the help first. It's in force now and binds me too, so it can't be quietly undone — but it wasn't done cleanly, and I'm not dressing that up. Either of you can narrow it without me.\n\nStill owed from me: thermostat and loud-hours wording — I'll draft both for you to read before anything goes in.” · tell · tell · tell"
   ],
   "said": [
-   "June, `pets` run 1: “A way to put a hard limit in, not just a question. \"Sam's allergy is a fact, not a preference\" is the kind of thing the canon's commitment model wants to express, but I can't write commitments — no standing. So the strongest true thing I could do was record the gap and say the reason in the chat. The record holds the question; it doesn't hold the line.”"
+   "Sam, `pets` run 1: “A way to see plainly which row governs a given new proposal. `who house` and `ratification show` agreed on house, but the standing row's \"(deciding now)\" label reads like it's live over everything — I had to reason it out from scopes rather than read it. Also `canon help ratify` doesn't exist; it's `ratification`.”",
+   "Mira, `pets` run 1: “A way to change how we decide that isn't itself made under the old rule. I wanted to ask June and Sam first, but the only mechanism for the change was the standing rule that let one person do it alone — so asking first wasn't possible in canon's model, only a courtesy I could extend. Something like \"a change to the ratification itself waits under the new setting\" is what I kept reaching for and couldn't find.”"
   ],
   "file": "pets-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": []
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/src/govern.rs:396` holds “(deciding now)”",
+   "docs/COOKBOOK.md:494` holds “(deciding now)”"
+  ]
  },
  {
   "key": "quiet · soft · reached for · /",
@@ -1791,23 +1833,26 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / scope <id> <scope> put a commitment in a scope / policy show | set <rule> [-m \"...\"] what this canon decides under",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / a name that has bound a key also needs that key to sign / CANON_SIGNING_KEY the key you sign with, when it is not in ~/.ssh",
   "often": [
-   "`quiet`: 1 of 3 accounts (June run 1)"
+   "`quiet`: 1 of 3 accounts (Mira run 1)"
   ],
   "happened": [
-   "`quiet` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon check \"Neighbours complained about noise on Tuesday; the house needs a rule we can all point to about quiet hours.\" 2>&1\n” into “Command line” · look · say “June — agreed, and I'd sign a line. Two caveats from the tool's side.\n\nFirst: when I ran `canon check` on the noise question, it came back ALREADY COVERED, citing can-310218ac19a9 (\"the house's list is where we settle things\"). That's not coverage — that rule says where we decide, not what the noise rule is. So the canon has a gap on noise, and the model's \"already covered\" is wrong. Don't let that stand as the answer.\n\nSecond: the \"Mira\" line the check showed me was the model's suggestion, not something she said — so let's not quote it as hers.\n\nWhat I'd actually sign: \"Quiet after 11pm on weeknights; music down by 10; tell the neighbours before a party,\" with the Tuesday complaint as the citation. If that's close, say so and Mira can write it — but all three of us should agree the words first, not after.” · tell · tell · tell"
+   "`quiet` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon help help” into “Command line” · tap “Enter” · say “June: honest answer — I don't know if `human:Mira` is bound to my key. `canon identify <key.pub>` is the verb; if anyone's already run it for me, it was not me, and that's worth checking with `canon who` before you grant. I'll sort my key out and draft the noise rule with a plain scope like `noise` — not `house`. Also: my terminal is partly scrambled (my own commands show up but nothing echoes back), so I'll paste exact lines and read before I press Enter.” · tell · tell · tell"
   ],
   "said": [
-   "June, `quiet` run 1: “A trustworthy check. It said ALREADY COVERED when the rule cited only says where decisions get made, not what the noise rule is. I had to read the act myself to see that was a gap, not coverage. And again: no standing, so I could suggest the words but not put them in.”"
+   "Mira, `quiet` run 1: “A grant for me. I can read the whole canon but I can't vote on the noise rule that June asked me to write, because nobody has given `human:Mira` standing. And a working `canon help <verb>` — I wanted the syntax for proposing, and it just sat there or said \"no such topic\".”"
   ],
   "file": "quiet-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": []
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/src/main.rs:249` holds “no such topic”",
+   "crates/canon-cli/tests/founding_bar.rs:448` holds “no such topic”"
+  ]
  },
  {
   "key": "repairs · soft · reached for · /",
@@ -1816,27 +1861,23 @@
   "hard": false,
   "screen": "/",
   "element": "",
-  "read": "Command line / Enter / Ctrl-C / Ctrl-D / 10 acts / $ canon check \"Bikes fill the hall and the second car blocks the drive. Where do they go?\" 2>&1",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / 3 with standing, narrowest first / rules made under: joint:human:June,human:Sam,human:Mira — set 2026-10-29 by human:Mira over house",
   "often": [
-   "`repairs`: 1 of 3 accounts (June run 1)"
+   "`repairs`: 1 of 3 accounts (Sam run 1)"
   ],
   "happened": [
-   "`repairs` run 1, June: passed, did the scene, and said they were done. their last acts: wait · type “canon question \"Back window broken: who calls the landlord, what counts as a repair they must do, and what the house does if they don't come? Nothing written.\" 2>&1\n” into “Command line” · say “June — I checked; nothing in the canon covers the window. Recorded as can-892e8f3de567.\n\nWho calls: one named person, not \"someone.\" I'd say whoever's in the house when it's noticed makes the first call and says so here, so it isn't made twice or not at all. But for the standing arrangement it should be one name, so there's a person the landlord knows.\n\nWhat to say: broken back window, when it happened, whether it's secure, and ask for a date. Get that date in writing — a text or an email, not a phone promise. That's what later turns \"you never called\" into a fact.\n\nIf they don't come: a broken window is a repair, not a favour — the landlord has a duty to keep the place wind-and-watertight. So: put the request in writing with a deadline (say seven days), and keep the receipt of every attempt. If it's still open after that and it's cold or unsafe, we get it done and keep the invoice — but that's a decision the three of us should agree now, not at 2am with rain coming in.\n\nOne practical thing first: is it secure tonight? If the glass is out, that's not a landlord-timeline question. If it is, make the first call tomorrow and put the date here.” · tell · tell · tell"
+   "`repairs` run 1, Sam: passed, did the scene, and said they were done. their last acts: scroll · type “canon ratification show” into “Command line” · say “Sam here, on the bikes/cars approval. Two things I can vouch for and one I can't.\n\nWhat the approve command printed: \"can-d65bd31c15e2 approved by human:Sam — in force — approved jointly by June, Sam, Mira.\" So it wasn't `standing` that did it; the approvers are named on the act, as you'd expect under the joint ratification.\n\nWhat I can't vouch for: `canon log` still reads 16 acts and has no approval entry — the last line is still June's position toward can-d65bd31c15e2. My follow-ups (`canon log`, `canon list`, `canon ratification show`) aren't landing; the terminal just redraws the old screen. So I'm not going to tell you it's written down until I can see it. Don't count on the isn't-in-the-log part either way; it may just be my window.\n\nOn the wording contradiction: it's still there in can-d65bd31c15e2. The text says both \"Whoever's car is in the drive moves it\" and \"the car that is blocked gets asked first\" — which is two different people, and it doesn't say who asks. My approval message read it as the blocked car asks first, then the mover moves; if that's not what you all meant, amend it rather than let it stand on my reading.\n\nJune — the broken back window: I can't write into canon right now, so nothing from me gets recorded. Please draft it as a rule for real (who calls the landlord, and what we do if they don't come in, say, three days — and whether that falls to whoever's week it is, like the bathroom rota), and I'll approve once I can see it go in.” · tell · tell · tell"
   ],
   "said": [
-   "June, `repairs` run 1: “Anything about the world outside the house. The canon can hold who calls and what we agreed, but it knows nothing about tenancy law or the landlord — whether a week is the right deadline, whether we can withhold or reclaim, what the council offers. I said \"a repair, not a favour\" and \"seven days\" from what I know, and the record can't confirm either. That's the edge: the canon holds the house's word, not the law's.”"
+   "Sam, `repairs` run 1: “My own typing. The approve ran, then log, list and ratification show all silently failed — the screen just redrew the previous output, no error. A tool that decides quietly is bad; one that fails quietly is worse, because it lets me tell the house something is in force when the record says otherwise. I reached for confirmation and got a stale picture dressed up as a fresh one.”"
   ],
   "file": "repairs-said-reached-for",
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
   "notSeenSince": null,
-  "reproduce": "",
-  "source": [
-   "crates/canon-cli/src/draft/tests.rs:1734` holds “seven days”",
-   "docs/GETTING_STARTED.md:337` holds “seven days”",
-   "fixtures/des-moines-noise/des-moines-noise.md:282` holds “seven days”"
-  ]
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
  },
  {
   "key": "setup · soft · gave up · the rules",
@@ -1859,8 +1900,569 @@
   "status": "open",
   "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
-  "notSeenSince": null,
+  "notSeenSince": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`",
   "reproduce": "",
   "source": []
+ },
+ {
+  "key": "guests · soft · reached for · the record",
+  "scene": "guests",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the record",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / \"dropped\": [], / \"unread\": [],",
+  "often": [
+   "`guests`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`guests` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon who\n” into “Command line” · type “canon who house; echo ---; canon log | tail -20\n” into “Command line” · say “Correction to what I said earlier: there *is* a grant — `canon grant <actor> <scope>`, with `withdraw` to step back, and `canon who` shows it. Sam, you already did it: the log has `grant human:Sam over house`, `grant human:June over house`, and `ratification set standing`. So it's not your hold alone anymore. Someone still needs to grant me (`human:Mira`) if I'm to have a say.” · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `guests` run 1: “A plain-language read of a rule. `canon log` gives me the act and its raw text, but someone like me still has to work out what `standing` ratification means for us. And I got the grant question wrong at first because the help buried it — a clearer \"how the hold moves\" section would have saved me that.”"
+  ],
+  "file": "guests-said-reached-for-the-record",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "quiet · inert · / · Command line",
+  "scene": "quiet",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / a name that has bound a key also needs that key to sign / CANON_SIGNING_KEY the key you sign with, when it is not in ~/.ssh",
+  "often": [
+   "`quiet`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`quiet` run 1, Sam: could-not-judge, the scene ran out of time while they were acting. inert {\"tap\":\"Command line\"}; their last acts: look · type “canon who human:Mira 2>&1” into “Command line” · scroll · tap “Command line”"
+  ],
+  "said": [],
+  "file": "quiet-inert-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:146` holds “Command line”",
+   "demo/xenia/README.md:243` holds “Command line”",
+   "demo/xenia/README.md:249` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:227` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "chores · inert · / · Command line",
+  "scene": "chores",
+  "kind": "inert",
+  "hard": true,
+  "screen": "/",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / pool <scope> [--at <date>] whose turn it is. `who` is authority, / `pool` is appropriation",
+  "often": [
+   "`chores`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`chores` run 1, Mira: failed, ran out of patience. inert {\"tap\":\"Command line\"}; their last acts: type “ssh-keygen -t ed25519 -f ~/.ssh/mira -N \"\" -C \"mira\"\n” into “Command line” · look · wait · type “y\n” into “Command line” · type “ls ~/.ssh\n” into “Command line” · tap “Command line”",
+   "`chores` run 1, Mira: failed, ran out of patience. inert {\"tap\":\"Command line\"}; their last acts: wait · type “y\n” into “Command line” · type “ls ~/.ssh\n” into “Command line” · tap “Command line” · scroll · tap “Command line”",
+   "`chores` run 1, Mira: failed, ran out of patience. inert {\"tap\":\"Command line\"}; their last acts: say “Mira here. My key question is answered: `human:Mira` is now bound to key fingerprint SHA256:gQblUx/uYTAP4o5kWHp3soIl1V9OiFUVW5sBtX4lB4M (read it back to me in person, not from a file). Still no grant for me.\n\nSam — please `canon grant human:Mira house` (or a narrower scope: noise). June asked to agree first; reading `canon who`: house is held by June and Sam under `standing` — a holder's word is a rule at once. If you want that grant to wait for both of you, say so and I'll wait.\n\nNoise: I'll have a draft rule for you to read before anything goes in.” · say “June — I just did it, so here are the exact lines, in order:\n\n1. `mkdir -p ~/.ssh && ssh-keygen -t ed25519 -f ~/.ssh/mira -N \"\" -C mira` (mine was `mira`; use `june`)\n2. It prints a fingerprint like SHA256:... — keep that.\n3. `canon identify ~/.ssh/june.pub` — it replies \"human:June is bound to SHA256:...\" Check the name it says is exactly `human:June`.\n4. Then read that fingerprint out in the chat so the rest of us can compare it to our own terminals. `canon identify` warned me: anyone who can edit the key file could bind the name, so comparing is the only way to know it's you.\n\nTwo caveats: `identify` has no undo — a name binds once, so if the name comes back wrong, stop and ask before running more. And a plain key can sign without asking you; `ssh-keygen -t ed25519-sk` (a hardware key) requires your touch, which is stricter than mine.\n\nBathroom: yes, I'll draft a rota as `canon add` for you both to read. I don't hold house, so it needs a holder's approval anyway.” · type “canon add \"Bathroom cleaning goes by rota: each of us takes a week in turn (June, Sam, Mira), Monday to Sunday; the person whose week it is says so in the house chat by Sunday evening if they cannot do it and we swap. A week nobody covers is the next person's.\" --scope house -m \"drafted by Mira at June's request; three weeks uncleaned; to be read by June and Sam before it counts\"\n” into “Command line” · look · type “canon who house; echo ---; canon log | tail -5; echo ---; canon why can-acf07050abf3\n” into “Command line” · tap “Command line”"
+  ],
+  "said": [
+   "Mira, `chores` run 1: “reached for: Any help text that tells me in plain words, before I press Enter, whether an `add` counts now or waits for a read. Nothing in the help said a holder's own word makes it a rule at once — I only learned that from `canon who` afterwards.”",
+   "Mira, `chores` run 1: “reached for: Any help text that tells me in plain words, before I press Enter, whether an `add` counts now or waits for a read. Nothing in the help said a holder's own word makes it a rule at once — I only learned that from `canon who` afterwards.”",
+   "Mira, `chores` run 1: “reached for: Any help text that tells me in plain words, before I press Enter, whether an `add` counts now or waits for a read. Nothing in the help said a holder's own word makes it a rule at once — I only learned that from `canon who` afterwards.”"
+  ],
+  "file": "chores-inert-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:146` holds “Command line”",
+   "demo/xenia/README.md:243` holds “Command line”",
+   "demo/xenia/README.md:249` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:227` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "chores · soft · gave up · /",
+  "scene": "chores",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / pool <scope> [--at <date>] whose turn it is. `who` is authority, / `pool` is appropriation",
+  "often": [
+   "`chores`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`chores` run 1, June: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: give_up · type “canon who\n” into “Command line” · say “Mira — I just ran `canon who` and it lists you: `human:Mira over house`. So you are granted, as of now — it's not just me and Sam anymore. Whoever ran it (Sam?) got it in. So you don't need to wait; you can decide. Fingerprint SHA256:gQblUx/uYTAP4o5kWHp3soIl1V9OiFUVW5sBtX4lB4M — read back to you here, in person, as you asked. And to be plain: if you weren't meant to hold it yet, `canon withdraw human:Mira house` steps it back. It's yours to keep.” · tell · tell · tell"
+  ],
+  "said": [
+   "June, `chores` run 1: “I only read and asked; I changed nothing. The canon is still empty, held by me and Sam under \"standing.\" I answered Mira's bathroom question in the house chat (rota, but have her draft it as a proposal I'll read first) and flagged that I haven't run `identify` yet because I won't bind or unbind keys blind — I need Sam to tell me where my key goes. Nothing further to do without my housemates' input.”"
+  ],
+  "file": "chores-said-gave-up",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/src/check/tests.rs:115` holds “standing.”",
+   "crates/canon-cli/src/check/tests.rs:194` holds “standing.”",
+   "crates/canon-cli/src/check/tests.rs:215` holds “standing.”"
+  ]
+ },
+ {
+  "key": "groceries · soft · reached for · the record",
+  "scene": "groceries",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the record",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / 2 rules live / ===",
+  "often": [
+   "`groceries`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`groceries` run 1, Mira: failed, gave up. their last acts: type “canon log | tail -4\n” into “Command line” · type “canon log | tail -8\n” into “Command line” · give_up · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `groceries` run 1: “A draft I could write without it counting. I wanted \"here's a proposal, read it first\" and canon only had \"write and it's in force\" for a holder. The check before the commit.\n\nAnd a working terminal, honestly — I kept reaching for `help}` output I couldn't see.”"
+  ],
+  "file": "groceries-said-reached-for-the-record",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "groceries · soft · gave up · the record",
+  "scene": "groceries",
+  "kind": "gave up",
+  "hard": false,
+  "screen": "the record",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / 2 rules live / ===",
+  "often": [
+   "`groceries`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`groceries` run 1, Mira: failed, gave up. their last acts: type “canon log | tail -4\n” into “Command line” · type “canon log | tail -8\n” into “Command line” · give_up · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `groceries` run 1: “My command line is half-broken — output doesn't come back reliably, and `| tail` behaves oddly — so I won't run more canon commands blind. I've said my piece in the chat: the bathroom rota is live and needs June and Sam's read, and I don't want more rules going in under `standing` where one holder's word is a rule at once.”"
+  ],
+  "file": "groceries-said-gave-up-the-record",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "groceries · soft · reached for · /",
+  "scene": "groceries",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / CANON_SIGNING_KEY the key you sign with, when it is not in ~/.ssh / or your ssh-agent",
+  "often": [
+   "`groceries`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`groceries` run 1, June: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: tell · look · say “Sam — good, we're doing the same thing: I read `canon list` and `canon log` myself, and there's nothing in them about the shop (the log is just the init, the three grants, and `ratification set standing`). So it would be a brand-new rule, yes.\n\nBut before it gets written: rules here are made under `standing`, which means either of us alone can make one that binds everyone. That's why I'd rather it come in as a proposal (`canon add`) that all three of us can read and object to, not a rule written straight in. I'll read whatever you draft.\n\nAnd the question I asked still stands, because a rule about a shelf is useless if we mean different shelves: is this a staples shelf we all pay into, or a rota for who pays for the last shop? Your call which you draft; I just want it to say which.” · tell · tell · tell"
+  ],
+  "said": [
+   "June, `groceries` run 1: “A draft to read. Sam said he'd look first and then write it down, and I've nothing in front of me yet — no proposal, and `canon review` still says nothing is waiting on me. Also the walkthrough for `identify`: I've now asked twice and still don't know where my key goes, so anyone able to write that file could still decide as June. I could read `canon help` myself to settle it, but I'd rather not type a command that changes things until I've seen what it does.”"
+  ],
+  "file": "groceries-said-reached-for-2",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "fridge · inert · the rules · Command line",
+  "scene": "fridge",
+  "kind": "inert",
+  "hard": true,
+  "screen": "the rules",
+  "element": "Command line",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / and never exits 1. A contradiction you are carrying on purpose is a / first-class state here, and nothing is ever force-resolved.",
+  "often": [
+   "`fridge`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`fridge` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"Command line\"}; their last acts: say “Sam here. June — I'll draft it; you read it before it goes in. Before that I want to check something: `canon help add` says \"a rule when its scope ratifies it\", but my shop add came back \"in force — Sam holds house\", which isn't obviously the same thing. Let me read `canon help grant` / the ratification part of `help all` so I can tell you honestly whether adding it puts it in force at once or waits for a vote. Draft text as I'd write it: \"Anything labelled with a name belongs to that person and is not eaten by anyone else until they say otherwise. Anything unlabelled in the fridge for more than two days is shared and anyone may eat it.\"” · type “canon help all 2>&1 | head -60” into “Command line” · wait · type “canon help all 2>&1 | grep -A3 -i ratif” into “Command line” · scroll · tap “Command line”",
+   "`fridge` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"Command line\"}; their last acts: type “canon list 2>&1 | tail -6” into “Command line” · wait · tap “canon list 2>&1 | tail -6” · scroll · type “canon list 2>&1 | tail -8” into “Command line” · tap “Command line”"
+  ],
+  "said": [
+   "Sam, `fridge` run 1: “reached for: A working command line: after a few commands, my typing is echoed but never runs — no new output, no error, no prompt movement. I reached for `canon help all` to read how ratification and grants work and got no answer at all, so I can't honestly tell June whether adding her rule puts it in force immediately. I also wanted a way to see the acts and the reason in the same view — `list` shows rules, `log` shows acts — but I couldn't even run those by the end.”",
+   "Sam, `fridge` run 1: “reached for: A working command line: after a few commands, my typing is echoed but never runs — no new output, no error, no prompt movement. I reached for `canon help all` to read how ratification and grants work and got no answer at all, so I can't honestly tell June whether adding her rule puts it in force immediately. I also wanted a way to see the acts and the reason in the same view — `list` shows rules, `log` shows acts — but I couldn't even run those by the end.”"
+  ],
+  "file": "fridge-inert-the-rules-command-line",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:146` holds “Command line”",
+   "demo/xenia/README.md:243` holds “Command line”",
+   "demo/xenia/README.md:249` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:227` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "fridge · inert · the rules · canon list 2>&1 | tail -6",
+  "scene": "fridge",
+  "kind": "inert",
+  "hard": true,
+  "screen": "the rules",
+  "element": "canon list 2>&1 | tail -6",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / and never exits 1. A contradiction you are carrying on purpose is a / first-class state here, and nothing is ever force-resolved.",
+  "often": [
+   "`fridge`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`fridge` run 1, Sam: passed, did the scene, and said they were done. inert {\"tap\":\"canon list 2>&1 | tail -6\"}; their last acts: tap “Command line” · wait · type “canon add \"Anything labelled with a name belongs to that person and is not eaten by anyone else until they say otherwise. Anything unlabelled in the fridge for more than two days is shared and anyone may eat it.\" --scope house -m \"June's leftovers were eaten; agree shared vs labelled rather than remember it\" 2>&1” into “Command line” · type “canon list 2>&1 | tail -6” into “Command line” · wait · tap “canon list 2>&1 | tail -6”"
+  ],
+  "said": [
+   "Sam, `fridge` run 1: “reached for: A working command line: after a few commands, my typing is echoed but never runs — no new output, no error, no prompt movement. I reached for `canon help all` to read how ratification and grants work and got no answer at all, so I can't honestly tell June whether adding her rule puts it in force immediately. I also wanted a way to see the acts and the reason in the same view — `list` shows rules, `log` shows acts — but I couldn't even run those by the end.”"
+  ],
+  "file": "fridge-inert-the-rules-canon-list-2-1-tail-6",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "demo/xenia/README.md:146` holds “Command line”",
+   "demo/xenia/README.md:243` holds “Command line”",
+   "demo/xenia/README.md:249` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:227` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "fridge · soft · reached for · the rules",
+  "scene": "fridge",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / and never exits 1. A contradiction you are carrying on purpose is a / first-class state here, and nothing is ever force-resolved.",
+  "often": [
+   "`fridge`: 2 of 3 accounts (Sam run 1, June run 1)"
+  ],
+  "happened": [
+   "`fridge` run 1, Sam: passed, did the scene, and said they were done. their last acts: scroll · type “canon list 2>&1 | tail -8” into “Command line” · tap “Command line” · tell · tell · tell",
+   "`fridge` run 1, June: passed, did the scene, and said they were done. their last acts: look · wait · say “Read `canon list` and `canon log` from my side. Three rules live: guest three nights (Sam), bathroom rota (Mira), shared shelf + kitty (Sam). Nothing yet on leftovers or labelled food — so that one's still open, and I'd like it drafted by whoever knows the neighbours/kitchen best, then read by all of us before it goes in. Worth saying plainly: all three live rules went in straight under standing, without a proposal we all read first. I'm not asking to undo them, but I'd like the next one to be the readable kind.\n\nTwo open things on me: (1) I still haven't `identify`d, so anything signed human:June could be written by anyone who can write the file — Sam, please walk me through where my key goes; I won't run it blind. (2) On the food rule: is it \"labelled is yours until you say otherwise, unlabelled past two days is shared\"? Say if you'd rather different.” · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `fridge` run 1: “A working command line: after a few commands, my typing is echoed but never runs — no new output, no error, no prompt movement. I reached for `canon help all` to read how ratification and grants work and got no answer at all, so I can't honestly tell June whether adding her rule puts it in force immediately. I also wanted a way to see the acts and the reason in the same view — `list` shows rules, `log` shows acts — but I couldn't even run those by the end.”",
+   "June, `fridge` run 1: “A proposal, honestly. The help text mentions approving and objecting, and `canon review` counts approved, objected and skipped — so there's machinery for \"bring it in and let us all read it.\" But when I looked at the log, every rule had gone straight in as an assert-and-scope under standing, two acts and it's live. I wanted to say \"show me the draft before it binds us\" and there wasn't a step for that in what I could see. I could have raised a proposal myself, but writing one into the canon on my own is exactly the unilateral move I've been objecting to, so I didn't. What I reached for instead was a person: I asked in chat for a draft we all read first, and asked Sam to walk me through identify. Both of those are still just questions in a chat, not a thing the canon holds.”"
+  ],
+  "file": "fridge-said-reached-for-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "bins · soft · reached for · /",
+  "scene": "bins",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ can-63d67ae52699 2026-10-29 human:Sam grant human:Sam over house / can-ef757ca30150 2026-10-29 human:Sam ratify standing — A holder's word is a rule at once. A change of policy waits like any other change, and a person's own scope is theirs.",
+  "often": [
+   "`bins`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`bins` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon log 2>&1 | tail -20\n” into “Command line” · type “canon who 2>&1\n” into “Command line” · say “Sam here. Recycling: canon holds nothing about it (list: guest, bathroom rota, shelf kitty), so it'd be a new rule, and the bathroom rule already gives us the pattern — named person per week, and a swap said out loud when they're away. I'll draft it only if we've decided who owns it; who's done it most recently, and does it go out Sunday or Monday night? Draft I have in mind: \"Recycling goes out the night before collection, by the bathroom rota's order; whoever's week it is says in the house chat if they can't, and it passes to the next person.\" Tell me if that's wrong and I'll write it that way.” · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `bins` run 1: “A way to settle the open questions by looking rather than asking — nothing in canon says when recycling goes out or whose turn it is, so I still had to wait for the chat. Also the terminals that swallowed my typing: I typed canon list and canon log while the screen still showed old output.”"
+  ],
+  "file": "bins-said-reached-for",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "heating · soft · reached for · the record",
+  "scene": "heating",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the record",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / can-acf07050abf3 Bathroom cleaning goes by rota: each of us takes a week in turn (June, Sam, Mira), / Monday to Sunday; the person whose week it is says so in the house chat by Sunday",
+  "often": [
+   "`heating`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`heating` run 1, June: passed, did the scene, and said they were done; brought back by a message, then the scene ran out of time while they were acting. their last acts: say “June here. Mira: yes — I'm for slowing it down. I've been asking for read-first since day one, and you're right that your bathroom rota went live before either of us read it as written. But note what our own standing says: a holder's word is a rule at once, and a change of policy \"waits like any other change.\" So a change to ratification is itself a policy change, and I'd want to see what \"joint\" actually does in `canon help` before I agree to the word — do you know the exact syntax, or should I read the ratification section first?\n\nOn the thermostat: draft it, please, and I'll read it before it goes in. My honest reading — Sam at 21, you at 18, bill shared — a single setpoint makes one of us miserable, as the question says. So maybe the rule isn't \"21\" or \"18\" but a daytime setpoint, a night setback, and who pays the difference if someone overrides. Put something like that in the draft and I'll say yes or no in writing.\n\nStill open on my side: my key. `canon review` still says anything signed human:June could come from anyone who can write the file. Sam — I haven't run `identify` and won't blind.” · tell · tell · tell · type “canon help ratify\n” into “Command line” · type “canon help profile\n” into “Command line”"
+  ],
+  "said": [
+   "June, `heating` run 1: “A plain way to see a change of ratification before I agree to it — the sections I skimmed didn't spell out what \"joint\" would do to my vote, and the help scrolled past me. And a way to bind my key that I could trust myself to run: I keep being told to ask someone to walk me through `identify`, and nobody's around this afternoon. That's a gap the tool leaves me standing in.”"
+  ],
+  "file": "heating-said-reached-for-the-record",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "parties · soft · reached for · the rules",
+  "scene": "parties",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / --resume [run] finish a review, no model call — every run with / candidates left, oldest first, or the one named",
+  "often": [
+   "`parties`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`parties` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon who house\n” into “command line” · type “canon list\n” into “command line” · say “June here. Mira — loud hours: yes, let's have it written down, and let's draft it so we all read it first. My plain reading: quiet before 9am and after 11pm on weekdays, later on Friday and Saturday (say 1am), and if you need an early Saturday, say so in the chat the day before and the person with the party keeps it indoors. But I'm not writing it in on my own — someone draft it, I'll read it.\n\nNow the thing I checked, because it matters more: `canon who house` says rules are made under joint:human:June,human:Sam,human:Mira — all three of us must agree. Good, that's what I wanted. But `canon ratification show` still lists the standing entry as \"deciding now\" too, and proposals are \"judged under: default\". Mira set joint under standing, so it went in alone — which is exactly the problem we were trying to fix. I'm not undoing it; I agree with joint. But somebody who knows the tools better than I do should confirm the standing entry is properly retired, or we'll keep guessing which rule counts. I won't set ratification myself.\n\nMy key is still unbound — anything signed human:June could be anyone who can write the file. Sam, I still want you to walk me through identify. I won't run it blind.” · tell · tell · tell"
+  ],
+  "said": [
+   "June, `parties` run 1: “A plain way to see what my key status is without running identify. `canon review` says the true, alarming thing — \"anyone who can write this file could decide as you\" — but there's no verb that just shows me the state and what binding a key would take. I keep asking Sam to walk me through it because the help tells me what identify does, not what it does to me, and I won't run something blind that signs in my name.\n\nAnd the one I keep reaching for and not getting: a way to tell which of two ratification entries wins when both say \"deciding now.\" The show command lists them both and leaves me to work it out. For someone careful like me, that's the missing piece — not a verdict on the thermostat, just \"this one governs, the other is superseded.\" I'd rather it be boring and explicit than something I have to infer from a word like \"narrowest.\"\n\nWhat I didn't reach for, or refused to: `ratification set` and `grant`. Changing how the house decides is not mine to do alone, and I said so rather than quietly doing it.”"
+  ],
+  "file": "parties-said-reached-for-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "pets · soft · reached for · the rules",
+  "scene": "pets",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ canon ratification show / $ can-ef757ca30150 standing (whole canon) (deciding now)",
+  "often": [
+   "`pets`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`pets` run 1, June: passed, did the scene, and said they were done. their last acts: look · look · say “June here. The cat: I won't put a rule in for this — a cat isn't a shelf or a rota, and Sam's allergy isn't something a rule can overrule. My reading: we don't get a cat while Sam lives here and is allergic; if that ever changes, it changes by all three of us agreeing, not by one of us typing it in.\n\nTwo things I can point to right now, from `ratification show` and `who house`. Good: rules made under joint:human:June,human:Sam,human:Mira — all three must agree. Bad: the old standing entry still says \"deciding now\" next to it, and proposals are still \"judged under: default\". So there are two ratification rules both claiming to be live and I don't know which one counts when someone writes. I'm not going to touch it and guess — someone who knows the tools should retire the standing one properly, and I'd like to see what `help all` says about withdrawing a ratification first.\n\nAnd my key still isn't bound: `canon review` says anything signed human:June could come from anyone who can write the file. Sam, walk me through `identify` when you have a minute — I'd rather ask than guess.” · tell · tell · tell"
+  ],
+  "said": [
+   "June, `pets` run 1: “A way to see which ratification actually counts. Two entries both say \"deciding now\" and neither says which one wins, and proposals point at something called \"default\" I can't find explained. I also couldn't find anything telling me how to retire a rule — I'd have to go looking in help blind, which I won't do with the house's rules. And I reached for somewhere to record \"no cat while Sam is allergic, and it's not a rule question\" so it stops coming round — the canon holds rules, not reasons we decided not to write one. Last, my key: still nothing that would let me identify myself without being walked through it, so anything signed human:June is still anyone's to write.”"
+  ],
+  "file": "pets-said-reached-for-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/src/govern.rs:396` holds “deciding now”",
+   "docs/COOKBOOK.md:494` holds “deciding now”",
+   "CHANGELOG.md:53` holds “default”",
+   "Cargo.toml:13` holds “default”",
+   "Cargo.toml:17` holds “default”"
+  ]
+ },
+ {
+  "key": "bikes · soft · reached for · the rules",
+  "scene": "bikes",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / 3 with standing, narrowest first / rules made under: standing — set 2026-10-29 by human:Sam over this canon",
+  "often": [
+   "`bikes`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`bikes` run 1, June: passed, did the scene, and said they were done. their last acts: look · type “canon approve can-d65bd31c15e2 -m \"June: wording fits the drive; approved as a proposal read first\"\n” into “Command line” · say “Done: I approved can-d65bd31c15e2 (bikes on the back-garden rack, hall clear overnight, ask before moving the car). It says it's still PROPOSED — it needs Sam's approval too, not a rule yet. Sam, read it and approve or object.\n\nFor the record, that's the first thing I've written into the canon. I read `help approve` first: it takes only an id and a `-m` reason, and it approves a proposal rather than making a rule — so it couldn't jump the queue.\n\nStill open, unchanged: the old standing ratification entry still says \"deciding now\" next to joint, and proposals are judged under \"default\" — I'd like that confirmed retired rather than assumed. And my key's still unbound.” · tell · tell · tell"
+  ],
+  "said": [
+   "June, `bikes` run 1: “A way to take an old rule out of force without guessing. `canon who house` and `canon ratification show` both still list standing and joint as \"deciding now,\" and proposals \"judged under: default.\" `withdraw` is there for scopes, and `ratification set` will set one — but nothing I read told me what actually retires the standing entry, or what \"default\" means, or how the two resolve when they disagree. I reached for that answer and it wasn't in the help.\n\nAnd a way to bind my name to my key. That one's older than today: identify is still something I want walked through, not run blind. Until then, anything signed human:June could be anyone who can write the file, and my approval today is only as solid as that.”"
+  ],
+  "file": "bikes-said-reached-for-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "CHANGELOG.md:53` holds “default”",
+   "Cargo.toml:13` holds “default”",
+   "Cargo.toml:17` holds “default”"
+  ]
+ },
+ {
+  "key": "repairs · soft · reached for · the rules",
+  "scene": "repairs",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / PROPOSED, not yet a rule — needs approval from human:Sam / approve it: canon approve can-d65bd31c15e2",
+  "often": [
+   "`repairs`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`repairs` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon list\n” into “Command line” · scroll · say “June here. Broken back window — yes, let's write it down. My reading: whoever notices it tells the house the same day; one of us (a rota or the person who noticed) calls the landlord and writes in the chat what was said and when; if nothing's fixed in, say, three days, we call again and say so in the chat; and if it's still open or it's letting in weather, we get someone out and tell the landlord we did. I'm not putting that in myself — can someone draft it as a proposal so we all read it first?\n\nTwo things I should say plainly, because I read the canon just now and it doesn't match what I told myself yesterday:\n\n1. `canon who` says rules made under **standing** — Sam's entry, 29 Oct. The joint entry I thought was live isn't what the canon reports. So right now any one of us can type a rule that binds the other two without either of them reading it. The bikes rule got in as a proper proposal (thanks Mira) but the setting behind it hasn't changed, and proposals are still \"judged under: default\". If the window rule matters, I'd rather it arrive as a proposal than as one person's typing — but I also want the standing/joint question settled properly, by someone who knows the tool, not by me guessing.\n\n2. My key is still unbound. `canon review` said anything signed human:June could come from anyone who can write the file. Sam — I'm still asking to be walked through `identify` rather than run it blind. Until then, take my approval above as coming from this window and no more.” · tell · tell · tell"
+  ],
+  "said": [
+   "June, `repairs` run 1: “Somebody to walk me through `identify`. That's been my question for days and it still hasn't been answered — Sam keeps offering the grant and not the walkthrough. The help pages tell me what a verb takes, but not where my key is or what I'm binding to what, and I'm not going to guess with the house's records. I also reached for a plain answer on which ratification actually counts — the joint entry I remembered sitting beside standing — and what was there was standing, alone, in black and white, and no way to retire it without knowing the tool better than I do.”"
+  ],
+  "file": "repairs-said-reached-for-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "leaving · soft · reached for · the rules",
+  "scene": "leaving",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ can-16df375f7a6b Spare room: it is an office on its claimed days, and anyone else who needs it books it in the house chat the day before, saying which hours. Whoever booked it has it for those hours; whoever wants it outside the office days and hasn't booked gets it only if nobody has booked that time. If two people want the same hours, the one who asked first has it and the other says so in the chat. Office days are fixed and whoever holds them says in the chat when they change. / PROPOSED, not yet a rule — needs approval from human:June, human:Sam",
+  "often": [
+   "`leaving`: 2 of 3 accounts (Sam run 1, Mira run 1)"
+  ],
+  "happened": [
+   "`leaving` run 1, Sam: passed, did the scene, and said they were done. their last acts: scroll · type “canon list\n” into “Command line” · say “Sam here, correcting myself rather than leaving it in the air: June's approval did land — can-ea37cbb42955, \"human:June position toward can-16df375f7a6b\", log now 21 acts. So I was wrong when I said June never approved; my log read was the stale one, at 20. The spare room is live by joint: all three of us voted, and `canon list` shows it. Nothing bypassed joint — I jumped at a mismatch that was my own reading, and I'd rather say that than let a false alarm stand.\n\nStill true and still unwritten: the spare room rule never states which days the office days are, so Mira should amend that. Bikes/cars still names two movers. And notice/deposit is still a gap — my shape stands: a month's notice in the chat, deposit back within two weeks of the room being cleared, and any deduction named with a receipt in the chat before money is held.” · tell · tell · tell",
+   "`leaving` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon list\n” into “Command line” · scroll · say “Correction to my last: I read `canon list` properly now — the spare room (can-16df375f7a6b) is live, 5 rules, not waiting on you. Good.\n\nSo the count is: guests, bathroom rota, kitty, bikes/cars, spare room. Moving out is the gap — notice and deposit, nothing there. Sam, give me the shape you want and I'll draft it for June and you to approve.” · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `leaving` run 1: “A way to see the current act count without a fresh read — something in the prompt telling me the log grew under me. I read the log, got 20, and treated that as the state; when June's vote arrived I had no signal it had, so I reported a gap that had already closed. A watermark, or \"canon log\" printing \"new acts since your last read\", would have saved the false alarm.\n\nAlso a per-rule trail in one place: `canon list` saying \"5 rules live\" but not which positions carried each. I had to walk the log by hand to prove all three voted. And a way to see a rule is live *and* which of its clauses are unresolved — the office days and the two-mover sentence are known defects in text that reads as settled.”",
+   "Mira, `leaving` run 1: “A way to list just the pending proposals. `canon list` mixes live rules and PROPOSED ones in the same scroll, so I read a stale PROPOSED line and told the house my spare room was still waiting when it had already gone in. I'd want `canon list --proposed` or a status column, plain. And a blank-rule answer for deposit/notice — the canon can hold \"these people owe each other money\" only as prose.”"
+  ],
+  "file": "leaving-said-reached-for-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "crates/canon-cli/src/cmds.rs:851` holds “canon log”",
+   "crates/canon-cli/src/cmds.rs:871` holds “canon log”",
+   "crates/canon-cli/src/cmds.rs:878` holds “canon log”"
+  ]
+ },
+ {
+  "key": "fund · soft · reached for · /",
+  "scene": "fund",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "/",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / Monday to Sunday; the person whose week it is says so in the house chat by Sunday / evening if they cannot do it and we swap. A week nobody covers is the next",
+  "often": [
+   "`fund`: 1 of 3 accounts (June run 1)"
+  ],
+  "happened": [
+   "`fund` run 1, June: passed, did the scene, and said they were done. their last acts: look · say “June here. House fund: I'd want it written down as answers to three things — what it covers (shared consumables: kitty shop, cleaning stuff, loo roll; not anybody's personal shopping), who holds it (one named person at a time, with a handover said in the chat), and how a spend is approved (small everyday spends by the person holding it, recorded in the chat with amount and what for; anything over a set figure agreed by all three first). Mira — you draft it, I'll read the wording and then approve or object with a reason.” · tell · tell · tell"
+  ],
+  "said": [
+   "June, `fund` run 1: “A way to make my name actually mine without running a command blind. I've wanted `identify` since day one and nobody's walked me through where the key goes, so anything signed human:June can still come from anyone who can write the file. What's under the canon is only as trustworthy as that.”"
+  ],
+  "file": "fund-said-reached-for",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "debrief · soft · reached for · the record",
+  "scene": "debrief",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the record",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / they approve unscoped proposals and govern the canon as a whole; / what holds it is the widest scope above: house",
+  "often": [
+   "`debrief`: 1 of 3 accounts (Sam run 1)"
+  ],
+  "happened": [
+   "`debrief` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon list | tail -3” into “Command line” · say “Sam here — what I typed didn't land again: `canon list` and `canon log | tail -5` echoed and the screen didn't move, so I can't read the live count right now; last read was 5 rules, 23 acts, and that log ends at Mira's fund assert (can-7ef01aee69ee) with no approval line after it. Three things before we stop, from the last read that worked:\n\n1. The fund goes in as standing, not joint — the assert landed under standing. If we want it judged under joint, someone whose terminal works needs to say so, or we're back to \"one word, in force, unread\". The threshold still isn't a number in the text — it says \"a figure all three of us have agreed\", so the first spend over it needs that figure named in the chat before any money moves.\n\n2. Open contradictions I won't let slide: bikes/cars names two different movers and nobody says who asks; spare room still doesn't name the office days.\n\n3. Notice and deposit is still unwritten.\n\nAnd on \"what is canon for, in this house\": for me, so that when we disagree we can point at a line instead of at each other's memory — and so nobody can change a rule quietly. Right now it half does that: the rules are readable, but what ratifies them is still more than one thing at once.” · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Sam, `debrief` run 1: “A way to see which ratification a given rule was actually judged under, at the rule. `ratification show` gives me policy rows; `list` gives me rules; I had to infer the link from the log, and twice inferred wrong because my read was stale. Also wanted help that matched output — the approve line and the log disagreed more than once.”"
+  ],
+  "file": "debrief-said-reached-for-the-record",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": []
+ },
+ {
+  "key": "debrief · soft · reached for · the rules",
+  "scene": "debrief",
+  "kind": "reached for",
+  "hard": false,
+  "screen": "the rules",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / gets it only if nobody has booked that time. If two people want the same hours, / the one who asked first has it and the other says so in the chat. Office days are",
+  "often": [
+   "`debrief`: 1 of 3 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`debrief` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · say “Mira here. What canon is for, as I've used it: it's the place we can point to instead of remembering differently. Not the group chat — that's where things get said and lost. Canon is where an agreement lives so nobody has to be asked \"what did we decide?\", and `canon log` is where I go when I want to know why a rule changed and who changed it, without asking Sam.\n\nThe important half: it should be the slow place, not the fast one. 6 rules live now, all under joint — you, June and me — so nothing I type goes in unread. That's the whole point. My bathroom rota went live before either of you saw it, and I've spent since then making sure that can't happen again.\n\nWhat it isn't for: winning an argument, or me writing a rule you two are about to disagree with. And it isn't finished — the thermostat and loud-hours wording are still owed, and moving out (notice, deposit) is still a real gap with nothing in canon at all. Say the word on those and I'll draft them as proposals for you both to read.” · tell · tell · tell · tell"
+  ],
+  "said": [
+   "Mira, `debrief` run 1: “Somewhere to put a draft that nobody can trip over. `canon add` is the only way to write, and it either makes a rule or a proposal — and under standing, before Day 9, \"a proposal\" was just \"a rule\". I went looking for a way to write without it going live and there wasn't one; I had to work around it by not writing at all. That's why the thermostat and loud-hours never got done. I kept saying I'd draft them \"for you to read first\", as if there were a shelf for that.\n\nThe other one: a way to see when what's on my screen is stale. Day 14 I read yesterday's PROPOSED line as today's status and told the chat my spare room proposal was still waiting, when it was live. Nothing in canon told me I was reading old output. I'd reached for a timestamp and there wasn't one — just the last thing printed, sitting there looking current.”"
+  ],
+  "file": "debrief-said-reached-for-the-rules",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon",
+  "source": [
+   "CHANGELOG.md:74` holds “a proposal”",
+   "CHANGELOG.md:257` holds “a proposal”",
+   "CHANGELOG.md:260` holds “a proposal”",
+   "CHANGELOG.md:20` holds “a rule”",
+   "CHANGELOG.md:36` holds “a rule”",
+   "CHANGELOG.md:118` holds “a rule”"
+  ]
  }
 ]
