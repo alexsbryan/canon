@@ -144,6 +144,37 @@ What the accounts say about canon, for the next round:
   "Enter" — are the terminal page's, not canon's: the box is already
   focused, and a tap on its label changes nothing the stage can see.
 
+## The coliving set
+
+The set of 2026-10-29, one run by `deepseek-flash` (xenia `e095e4e`,
+canon `ab59c50`): sixteen scenes — the setup and fourteen situations —
+in **21.8 minutes**, with **141 of 144 feedback prompts answered**,
+8,973 words and 2 hard faults. 43 accounts passed, 5 were
+could-not-judge (the setup's six-minute cut, and June in guests and
+quiet), none failed. The rates: 6.47 answers/min, 412 words/min, 13.3
+answers per 1M input tokens, $0.00056 an answer.
+
+What the group did and said:
+
+- June ran `canon init`; the guests and noise rules went in **before**
+  the grants, so both took on an open canon — "whoever writes first is
+  the house" (June). The setup's cut at six minutes is why the standing
+  was never agreed. The founding fix (a founder's init holds the canon)
+  landed after this run.
+- The three new findings are the setup's `wordy` (Sam) and its give-up
+  (Sam and Mira), and the record's Enter counted inert (June) — the
+  terminal page's chrome, not canon's.
+- The answers' product themes: the open canon and consent (June), a
+  soundness line on `who` (Mira), the reason at `add` and the scattered
+  source (Sam), the actor typo and the missing undo (Mira), `identify`
+  (June), and the valid scopes in the help (June). The fixes for these
+  landed after the run; the next set is their check.
+
+One instrument note: Mira's screen "shrank to an unreadable thumbnail"
+and "Run won't execute" — the glance, a fifth-size screenshot, read as
+the screen rather than the terminal's words. That is xenia's, not
+canon's.
+
 ## The terminal is real; the keyboard is the page
 
 canon is a terminal program and xenia's stage reads a browser. The bridge is a
