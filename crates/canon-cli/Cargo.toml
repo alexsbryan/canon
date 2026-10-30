@@ -19,3 +19,6 @@ ureq = { workspace = true }
 ignore = { workspace = true }
 clap = { workspace = true }
 getrandom = { workspace = true }
+
+[dev-dependencies]
+canon-contract = { path = "../canon-contract" }

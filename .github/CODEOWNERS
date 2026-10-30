@@ -22,6 +22,7 @@
 # is a promise to them, not just to this repository. `adequacy_bar` gates a
 # new op mechanically; what it cannot judge is whether the op should exist.
 /docs/SPEC.md                   @alexsbryan
+/contract/                      @alexsbryan
 /crates/canon-core/src/act.rs   @alexsbryan
 
 # --- The fold --------------------------------------------------------------

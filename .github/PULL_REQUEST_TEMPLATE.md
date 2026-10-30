@@ -15,16 +15,11 @@ seconds. ./scripts/install-git-hooks.sh wires it to `git push`.
 
 <!-- However you convinced yourself it works — a test you added, a command you ran, output you pasted. Rough is fine. -->
 
-## Contract evidence
+## Contract changes
 
-<!-- Link the Contract compatibility result or target/contract-report.json.
-The gate computes the outcome against its pinned baseline; no author-selected
-classification is needed. If proposing a new contract, explain the changed
-promises and link the old-record migration/reinterpretation tests. -->
-
-Evidence:
-Proposed contract changes, if any:
-Migration or reinterpretation tests, if needed:
+<!-- Did contract/ change? Say why. Its diff is the record: a verb or flag
+gone, a public item of the core changed, a record that reads differently. A
+record that reads differently needs a migration or reinterpretation test. -->
 
 ## Notes for reviewers
 

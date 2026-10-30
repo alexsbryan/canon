@@ -117,7 +117,6 @@ What both of them check:
 | `cargo clippy --all-targets -- -D warnings` | no warnings, not a ratchet — the tree is small enough to keep at zero |
 | `cargo test --workspace` | example, regression, fixture, and generated law checks |
 | `./scripts/core-boundary.sh` | isolated `no_std` core compilation and approved runtime dependencies/features |
-| `python3 scripts/contract-check.py` | compatibility evidence against a pinned, independently preserved standard |
 | `./scripts/docs-gate.sh` | every repository path a narrative document links to still resolves |
 
 Two of those tests are worth calling out, because they gate the *design*
@@ -146,14 +145,11 @@ bars run by hand.
 
 ## What makes a change easy to merge
 
-Link the **contract evidence** from `target/contract-report.json` or the
-**Contract compatibility** CI check. The gate computes preservation, extension,
-breaking, or not-established against its pinned standard; you do not choose a
-label. It runs baseline-owned checks against your implementation, compares old
-record behavior, and compiles old consumers. For a proposed contract adoption,
-name the changed promises and include migration or reinterpretation tests.
-[The contract](./CONTRACT.md#changing-the-contract) explains the coverage and
-how an independently selected baseline is adopted.
+If `contract/` changed, say why. Its diff is what changed in canon's promises:
+a verb or flag gone, a public item of the core changed, a record that reads
+differently. A record that reads differently needs a migration or
+reinterpretation test. [The contract](./CONTRACT.md#changing-the-contract)
+says how the files are kept.
 
 Not a checklist — just what tends to earn a quick yes.
 

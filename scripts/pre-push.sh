@@ -53,8 +53,6 @@ gate "core boundary"    ./scripts/core-boundary.sh
 gate "lean"             python3 ./scripts/lean_check.py
 gate "clippy"           cargo clippy --workspace --all-targets -- -D warnings
 gate "tests"            cargo test --workspace
-gate "contract checker" python3 -m unittest discover -s scripts/tests -p 'test_contract_check.py'
-gate "compatibility"    python3 ./scripts/contract-check.py
 gate "docs links"       ./scripts/docs-gate.sh
 # The ledger, checked against git by the tool itself: every commit that
 # touched .canon/acts.jsonl added lines and nothing else, none of them dated
@@ -72,9 +70,8 @@ if [ ${#failed[@]} -ne 0 ]; then
     echo "  rustfmt      cargo fmt --all"
     echo "  clippy       cargo clippy --workspace --all-targets --fix"
     echo "  tests        cargo test --workspace -- --nocapture"
-    echo "  compatibility python3 scripts/contract-check.py   (target/contract-report.json)"
-    echo "               judged against the pin origin/main holds; adopting a new"
-    echo "               standard: CANON_CONTRACT_BASELINE=<sha> ./scripts/pre-push.sh"
+    echo "               a contract/ difference is a change to the contract: if it is meant,"
+    echo "               CANON_BLESS=1 cargo test rewrites contract/, and the diff is the record"
     echo "  docs links   ./scripts/docs-gate.sh   (names the file and line)"
     echo "  lean         python3 scripts/lean_check.py   (cut first; a raise is the operator's)"
     echo "  ledger       ./target/debug/canon witness   (names the commit and the act)"

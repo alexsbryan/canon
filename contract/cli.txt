@@ -1,0 +1,48 @@
+accept  --revisit -m  |
+add  --cite --scope -m  |
+adopt  --carry --except -m  | --allow-remote --dry-run --paste --rebase
+allocation  --from-draw --order --per --scope --step -m  |
+allot  --count --named --unit -m  |
+approve  -m  |
+check  --about --amends --scope  | --allow-remote --irreversible --json
+config    |
+decide  --authority --citing --outcome -m  |
+diff    | --json --propose --upstream
+dismiss  -m  |
+draft  --as --continue --from --max-chunks --replay --since  | --accept-all --allow-remote --dry-run --from-git --include-ignored --json --resume --yes
+draw  --after --secret -m  | --json
+grant  --horizon -m  |
+guard  --check --slack  | --apply
+horizon  -m  |
+identify    |
+init  --profile  | --open --plain
+list  --out  | --check --json --markdown
+log    | --json
+mcp    |
+merge-driver    |
+object  -m  |
+open    | --json
+overdue    | --json
+policy  --entrench --graduated --objections --of --scope -m  | --by-about --cautious --json --no-repair
+pool  --at  | --json
+position  --citing -m  | --against --toward
+question  --from-proposal  |
+rank    |
+ratification  --governs --personal --scope -m  | --json
+replay  --entrench --expect --graduated --objections --of --out --policy --profile --ratification --scenario --write-scenario  | --brief --by-about --cautious --json --no-repair
+retract  -m  |
+review  --scope  | --json
+scope    |
+second    |
+share    |
+silence  -m  |
+supersede  --scope -m  |
+tensions    | --allow-remote --json
+ui    |
+undo  -m  |
+upgrade    | --paste
+voice    |
+who    | --json
+why    | --json
+withdraw  --ask -m  |
+witness  --base --slack  | --gate --json

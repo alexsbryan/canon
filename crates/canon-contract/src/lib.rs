@@ -1,14 +1,62 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! Development-only syntax inspection. syn supplies the parser; compatibility
-//! is established by baseline-owned consumers and tests, not by syntax alone.
+//! canon's contract, as files in `contract/` that the tests hold the code to.
+//!
+//! **The declaration is in the tree, and a change to it is a diff.** What
+//! canon-core offers (`api.txt`), what the CLI takes (`cli.txt`), and what the
+//! fixtures decide and mint (`records/`) are checked in. A test that finds the
+//! code and the file apart fails in the commit that moved them apart. When the
+//! change is meant, `CANON_BLESS=1 cargo test` rewrites the files, and an
+//! agent's edit or bless of `contract/` asks the operator first
+//! (`.claude/hooks/contract-guard.py`): the decision is made at the edit, not
+//! by a later verdict.
 
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use quote::{quote, ToTokens};
-use syn::spanned::Spanned;
+use quote::ToTokens;
 use syn::visit_mut::VisitMut;
-use syn::{Fields, Item, Visibility};
+use syn::{Item, Visibility};
+
+/// The repository root, where `contract/` lives.
+pub fn root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+}
+
+/// Hold `actual` to the checked-in `contract/<name>`, or with `CANON_BLESS`
+/// set, write it there.
+pub fn golden(name: &str, actual: &str) {
+    let path = root().join("contract").join(name);
+    if std::env::var_os("CANON_BLESS").is_some() {
+        std::fs::create_dir_all(path.parent().expect("contract/ has a parent")).unwrap();
+        std::fs::write(&path, actual).unwrap();
+        return;
+    }
+    let expected = std::fs::read_to_string(&path).unwrap_or_default();
+    if expected != actual {
+        let gone = expected
+            .lines()
+            .filter(|l| !actual.lines().any(|a| a == *l));
+        let new = actual
+            .lines()
+            .filter(|l| !expected.lines().any(|e| e == *l));
+        let diff: Vec<String> = gone
+            .map(|l| format!("- {l}"))
+            .chain(new.map(|l| format!("+ {l}")))
+            .take(40)
+            .collect();
+        panic!(
+            "contract/{name} is not what the code does:\n{}\n\nIf the change is meant, \
+             `CANON_BLESS=1 cargo test` rewrites it, and the diff is the record.",
+            diff.join("\n")
+        );
+    }
+}
+
+/// [`surface`] as `contract/api.txt` holds it: one item per line.
+pub fn api(src: &Path) -> String {
+    let surface = surface(src).unwrap_or_else(|e| panic!("reading {}: {e}", src.display()));
+    surface.iter().map(|(k, v)| format!("{k}  {v}\n")).collect()
+}
 
 struct StripDocs;
 
@@ -45,10 +93,11 @@ fn public(vis: &Visibility) -> bool {
     matches!(vis, Visibility::Public(_))
 }
 
-fn inspect(src: &Path) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+/// canon-core's public surface: each exported name, module, and public item
+/// of a public module, with its signature or definition, docs stripped.
+pub fn surface(src: &Path) -> Result<BTreeMap<String, String>, Box<dyn std::error::Error>> {
     let root = syn::parse_file(&std::fs::read_to_string(src.join("lib.rs"))?)?;
     let mut surface = BTreeMap::new();
-    let mut consumer = String::from("#![allow(dead_code, unused_imports)]\n");
     for item in &root.items {
         if let Item::Use(export) = item {
             if public(&export.vis) {
@@ -83,7 +132,6 @@ fn inspect(src: &Path) -> Result<serde_json::Value, Box<dyn std::error::Error>> 
         surface.insert(format!("module::{name}"), "public module".into());
         let mut file = syn::parse_file(&std::fs::read_to_string(src.join(format!("{name}.rs")))?)?;
         StripDocs.visit_file_mut(&mut file);
-        consumer.push_str(&format!("mod {name} {{\nuse canon_core::*;\nuse canon_core::{name}::*;\nuse std::collections::{{BTreeMap, BTreeSet}};\n"));
         for item in file.items {
             match item {
                 Item::Struct(value) if public(&value.vis) => {
@@ -91,69 +139,11 @@ fn inspect(src: &Path) -> Result<serde_json::Value, Box<dyn std::error::Error>> 
                         format!("{name}::{}", value.ident),
                         value.to_token_stream().to_string(),
                     );
-                    let ident = &value.ident;
-                    let module_name = &module.ident;
-                    let (generics, types, clause) = value.generics.split_for_impl();
-                    let mut accesses = Vec::new();
-                    for (i, field) in value.fields.iter().enumerate() {
-                        if public(&field.vis) {
-                            let member = field
-                                .ident
-                                .clone()
-                                .map(syn::Member::Named)
-                                .unwrap_or_else(|| syn::Member::Unnamed(syn::Index::from(i)));
-                            let ty = &field.ty;
-                            accesses.push(quote!(let _: &#ty = &value.#member;));
-                        }
-                    }
-                    let function = syn::Ident::new(&format!("fields_{ident}"), ident.span());
-                    consumer.push_str(
-                        &quote!(#[allow(non_snake_case)] fn #function #generics
-                        (value: canon_core::#module_name::#ident #types) #clause { #(#accesses)* })
-                        .to_string()
-                        .replace("crate ::", "canon_core ::"),
-                    );
                 }
                 Item::Enum(value) if public(&value.vis) => {
                     surface.insert(
                         format!("{name}::{}", value.ident),
                         value.to_token_stream().to_string(),
-                    );
-                    let ident = &value.ident;
-                    let module_name = &module.ident;
-                    let (generics, types, clause) = value.generics.split_for_impl();
-                    let arms: Vec<_> = value
-                        .variants
-                        .iter()
-                        .map(|variant| {
-                            let variant_name = &variant.ident;
-                            let fields = match &variant.fields {
-                                Fields::Named(fields) => {
-                                    let names =
-                                        fields.named.iter().map(|f| f.ident.as_ref().unwrap());
-                                    quote!({ #(#names: _,)* })
-                                }
-                                Fields::Unnamed(fields) => {
-                                    let ignore = fields.unnamed.iter().map(|_| quote!(_));
-                                    quote!((#(#ignore,)*))
-                                }
-                                Fields::Unit => quote!(),
-                            };
-                            quote!(canon_core::#module_name::#ident::#variant_name #fields => {})
-                        })
-                        .collect();
-                    let wildcard = value
-                        .attrs
-                        .iter()
-                        .any(|a| a.path().is_ident("non_exhaustive"))
-                        .then(|| quote!(_ => {}));
-                    let function = syn::Ident::new(&format!("variants_{ident}"), ident.span());
-                    consumer.push_str(
-                        &quote!(#[allow(non_snake_case)] fn #function #generics
-                        (value: canon_core::#module_name::#ident #types) #clause {
-                            match value { #(#arms,)* #wildcard }
-                        })
-                        .to_string(),
                     );
                 }
                 Item::Fn(value) if public(&value.vis) => {
@@ -225,10 +215,8 @@ fn inspect(src: &Path) -> Result<serde_json::Value, Box<dyn std::error::Error>> 
                 _ => {}
             }
         }
-        consumer.push_str("\n}\n");
     }
-    consumer.push_str("\n#[test] fn baseline_consumer_compiles() {}\n");
-    Ok(serde_json::json!({"surface": surface, "consumer": consumer}))
+    Ok(surface)
 }
 
 fn exports(tree: &syn::UseTree, prefix: &str, surface: &mut BTreeMap<String, String>) {
@@ -259,87 +247,13 @@ fn exports(tree: &syn::UseTree, prefix: &str, surface: &mut BTreeMap<String, Str
     }
 }
 
-fn test_item(item: &Item) -> bool {
-    let attrs = match item {
-        Item::Mod(value) => &value.attrs,
-        Item::ExternCrate(value) => &value.attrs,
-        _ => return false,
-    };
-    attrs
-        .iter()
-        .any(|a| a.to_token_stream().to_string().replace(' ', "") == "#[cfg(test)]")
-}
-
-fn range(source: &str, item: &Item) -> std::ops::Range<usize> {
-    let span = item.span();
-    let offset = |position: proc_macro2::LineColumn| {
-        source
-            .split_inclusive('\n')
-            .take(position.line - 1)
-            .map(str::len)
-            .sum::<usize>()
-            + position.column
-    };
-    offset(span.start())..offset(span.end())
-}
-
-fn transplant(baseline: &str, candidate: &str) -> syn::Result<String> {
-    let old = syn::parse_file(baseline)?;
-    let new = syn::parse_file(candidate)?;
-    let mut output = candidate.to_string();
-    let mut removals: Vec<_> = new
-        .items
-        .iter()
-        .filter(|i| test_item(i))
-        .map(|i| range(candidate, i))
-        .collect();
-    removals.sort_by_key(|r| r.start);
-    for removal in removals.into_iter().rev() {
-        output.replace_range(removal, "");
-    }
-    for item in old.items.iter().filter(|i| test_item(i)) {
-        output.push('\n');
-        output.push_str(&baseline[range(baseline, item)]);
-        output.push('\n');
-    }
-    Ok(output)
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<_> = std::env::args().skip(1).collect();
-    match args.as_slice() {
-        [command, path] if command == "inspect" => println!("{}", inspect(Path::new(path))?),
-        [command, baseline, candidate, output] if command == "transplant" => {
-            let merged = transplant(&std::fs::read_to_string(baseline)?, &std::fs::read_to_string(candidate)?)?;
-            std::fs::write(output, merged)?;
-        }
-        _ => return Err("usage: canon-contract inspect <src> | transplant <baseline.rs> <candidate.rs> <output.rs>".into()),
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
-    fn candidate_cannot_replace_the_baseline_tests() {
-        let old = "fn implementation() {}\n#[cfg(test)] mod tests { #[test] fn law() { assert!(false); } }";
-        let new =
-            "fn implementation() { /* new */ }\n#[cfg(test)] mod tests { #[test] fn law() {} }";
-        let merged = transplant(old, new).unwrap();
-        assert!(merged.contains("/* new */"));
-        assert!(merged.contains("assert!(false)"));
-        assert!(!merged.contains("fn law() {}"));
-    }
-
-    #[test]
-    fn transplant_keeps_production_text_and_handles_unicode_before_tests() {
-        let old = "// café\n#[cfg(test)] extern crate std;\n#[cfg(test)] mod tests {}";
-        let new = "// café\nfn live() {}";
-        let merged = transplant(old, new).unwrap();
-        assert!(merged.starts_with(new));
-        syn::parse_file(&merged).unwrap();
-        assert!(merged.contains("extern crate std;"));
+    fn canon_cores_public_surface_is_the_checked_in_one() {
+        super::golden(
+            "api.txt",
+            &super::api(&super::root().join("crates/canon-core/src")),
+        );
     }
 }

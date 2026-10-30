@@ -64,6 +64,7 @@ dependencies = [
 name = "canon-cli"
 version = "0.5.0"
 dependencies = [
+ "canon-contract",
  "canon-core",
  "clap",
  "getrandom 0.3.4",
@@ -77,9 +78,7 @@ dependencies = [
 name = "canon-contract"
 version = "0.5.0"
 dependencies = [
- "proc-macro2",
  "quote",
- "serde_json",
  "syn 2.0.119",
 ]
 

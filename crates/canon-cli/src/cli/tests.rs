@@ -323,3 +323,22 @@ fn a_refusal_nobody_anticipated_keeps_claps_words() {
     assert!(!said.starts_with("error: "), "{said}");
     assert!(!said.is_empty());
 }
+
+#[test]
+fn every_verb_and_flag_is_the_checked_in_one() {
+    // What a person can type is part of the contract: a verb or flag that
+    // goes is a line gone from contract/cli.txt, in the same diff.
+    let mut lines: Vec<String> = VERBS
+        .iter()
+        .map(|(verb, valued, switches, _)| {
+            let mut valued = valued.to_vec();
+            let mut switches = switches.to_vec();
+            valued.sort_unstable();
+            switches.sort_unstable();
+            let line = format!("{verb}  {}  | {}", valued.join(" "), switches.join(" "));
+            format!("{}\n", line.trim_end())
+        })
+        .collect();
+    lines.sort();
+    canon_contract::golden("cli.txt", &lines.concat());
+}
