@@ -1144,7 +1144,7 @@ pub fn give(
 pub fn withdraw(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail("usage: canon withdraw <actor> <scope> [-m \"<why>\"]");
+        return fail("usage: canon withdraw <actor> <scope> [-m \"<why>\"] [--ask \"<question>\"]");
     }
     if let Some(e) = bare_actor(pos[0], "withdraw") {
         return fail(e);
@@ -1152,6 +1152,13 @@ pub fn withdraw(args: &[String]) -> i32 {
     let Some(scope) = Scope::new(pos[1]) else {
         return fail(format!("`{}` is not a scope", pos[1]));
     };
+    let ask = flag(args, "--ask").filter(|q| !q.trim().is_empty());
+    if ask.is_some() && pos[0] != store::actor() {
+        return fail(format!(
+            "--ask leaves your own question as you go; {} is not you, and nothing was written",
+            pos[0]
+        ));
+    }
     let (d, _, _) = match load() {
         Ok(v) => v,
         Err(e) => return fail(e),
@@ -1166,9 +1173,43 @@ pub fn withdraw(args: &[String]) -> i32 {
     ) {
         // Standing somebody else down takes standing over the scope, and
         // the fold said so while this printed success anyway.
-        Ok(act) => crate::cmds::governed(&d, &act.id, || {
+        Ok(act) => match crate::cmds::governed(&d, &act.id, || {
             println!("{} no longer holds {scope}, or anything under it", pos[0])
-        }),
+        }) {
+            0 => ask_on_the_way_out(&d, ask),
+            refused => refused,
+        },
+        Err(e) => fail(e),
+    }
+}
+
+/// The question a leaver never raised, written by `anonymous`.
+///
+/// **The thing a leaver knows is the thing nobody else will ever learn.** By
+/// the time somebody is going, raising it costs a confrontation they have no
+/// reason to accept, so `withdraw <you> <scope> --ask` leaves it behind
+/// without a name. `Question` is exempt from the attribution check (asking is
+/// not adjudicating), so it is no unattended decision.
+///
+/// **The unattribution is thin and this says so.** It lands beside a
+/// withdrawal that carries a name, in the same second; a tool that implied it
+/// was untraceable would be lying about something that could cost somebody.
+fn ask_on_the_way_out(d: &std::path::Path, ask: Option<&str>) -> i32 {
+    let Some(question) = ask else { return 0 };
+    let act = Act::new(
+        ActKind::Question {
+            text: question.to_string(),
+            proposal: None,
+        },
+        store::now(),
+        canon_core::ANONYMOUS,
+    );
+    match store::append(d, &act) {
+        Ok(()) => {
+            println!("{}  ? {question}", act.id);
+            println!("  recorded without your name; it sits next to your withdrawal in the log, so treat the anonymity as thin.");
+            0
+        }
         Err(e) => fail(e),
     }
 }
@@ -1639,76 +1680,6 @@ fn overruled(
             )
         }
         _ => String::new(),
-    }
-}
-
-// ── canon leave ─────────────────────────────────────────────
-
-/// Step out of a scope, and leave the question behind.
-///
-/// **The thing a leaver knows is the thing nobody else will ever learn.** By
-/// the time somebody is going, raising it costs them a confrontation they have
-/// no reason to accept — so it goes unsaid, and the group loses its single
-/// best-informed critique at the exact moment it is offered for free.
-///
-/// This writes two acts: the withdrawal, which is the pre-exit signal read as
-/// a first-class move rather than as an absence, and an unattributed question.
-///
-/// **The unattribution is thin and this says so.** The question carries no
-/// name, but it lands in the log beside a withdrawal that does, in the same
-/// second. That is worth having anyway — a norm of asking on the way out is
-/// worth more than the anonymity — but a tool that implied it was untraceable
-/// would be lying about something that could cost somebody.
-pub fn leave(args: &[String]) -> i32 {
-    let pos = positionals(args);
-    let Some(raw) = pos.first() else {
-        return fail("usage: canon leave <scope> [-m \"<the question you never raised>\"]");
-    };
-    let Some(scope) = Scope::new(raw) else {
-        return fail(format!("`{raw}` is not a scope"));
-    };
-    let (d, _, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let me = store::actor();
-    if let Err(e) = write(
-        &d,
-        ActKind::Withdraw {
-            holder: me.clone(),
-            scope: scope.clone(),
-            rationale: flag(args, "--why").unwrap_or_default().to_string(),
-        },
-    ) {
-        return fail(e);
-    }
-    println!("{me} no longer holds {scope}");
-    let Some(question) = flag(args, "-m").filter(|q| !q.trim().is_empty()) else {
-        println!("\n  the thing you know and nobody else will learn:");
-        println!("    canon leave {scope} -m \"<it>\"   (recorded without your name)");
-        return 0;
-    };
-    // Written by `anonymous`, so the record carries no name. `Question` is
-    // exempt from the attribution check by design — asking is not
-    // adjudicating — so this does not show up as an unattended decision.
-    let act = Act::new(
-        ActKind::Question {
-            text: question.to_string(),
-            proposal: None,
-        },
-        store::now(),
-        canon_core::ANONYMOUS,
-    );
-    match store::append(&d, &act) {
-        Ok(()) => {
-            println!("{}  ? {question}", act.id);
-            println!("  recorded without your name.");
-            println!(
-                "  it sits next to your withdrawal in the log, so treat the anonymity as thin."
-            );
-            0
-        }
-        Err(e) => fail(e),
     }
 }
 

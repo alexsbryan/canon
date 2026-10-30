@@ -7,6 +7,16 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Removed
+
+- `canon rebase --onto <url>@<gen>` is `canon adopt <url>@<gen> --rebase
+  --dry-run`: the same reading, printed, nothing written. The move and its
+  preview now read one divergence the same way.
+- `canon leave <scope> -m "<question>"` is `canon withdraw <you> <scope>
+  --ask "<question>"`.
+- `canon draft`'s measurement arm: `--samples`, `--k`, `--refold` and
+  `--live-from`. `--replay <run.json>` plays a whole recorded run as before.
+
 ### Changes
 
 - `canon adopt <url>` no longer leaves its clone of the lineage where

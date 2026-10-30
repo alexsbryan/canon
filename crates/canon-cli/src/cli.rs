@@ -33,7 +33,7 @@ use clap::{Arg, ArgAction, Command};
 
 /// Verb, the flags that take a value, and the flags that do not.
 #[rustfmt::skip]
-const VERBS: &[(&str, &[&str], &[&str])] = &[
+pub(crate) const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("init", &["--profile"], &["--plain", "--open"]),
     ("add", &["--scope", "-m", "--cite"], &[]),
     ("review", &["--scope"], &["--json"]),
@@ -51,7 +51,7 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("question", &["--from-proposal"], &[]),
     ("who", &[], &["--json"]),
     ("grant", &["--horizon", "-m"], &[]),
-    ("withdraw", &["-m"], &[]),
+    ("withdraw", &["--ask", "-m"], &[]),
     ("scope", &[], &[]),
     ("policy", &["--entrench", "--graduated", "--objections", "--of", "--scope", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"]),
     ("ratification", &["--governs", "--personal", "--scope", "-m"], &["--json"]),
@@ -66,7 +66,6 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("draw", &["--after", "--secret", "-m"], &["--json"]),
     ("silence", &["-m"], &[]),
     ("voice", &[], &[]),
-    ("leave", &["--why", "-m"], &[]),
     ("second", &[], &[]),
     ("replay", &["--entrench", "--expect", "--graduated", "--objections", "--of", "--out", "--policy", "--profile", "--ratification", "--scenario", "--write-scenario"], &["--brief", "--by-about", "--cautious", "--json", "--no-repair"]),
     ("open", &[], &["--json"]),
@@ -75,10 +74,9 @@ const VERBS: &[(&str, &[&str], &[&str])] = &[
     ("identify", &[], &[]),
     ("mcp", &[], &[]),
     ("share", &[], &[]),
-    ("adopt", &["--carry", "--except", "-m"], &["--allow-remote", "--paste", "--rebase"]),
+    ("adopt", &["--carry", "--except", "-m"], &["--allow-remote", "--dry-run", "--paste", "--rebase"]),
     ("diff", &[], &["--json", "--propose", "--upstream"]),
     ("upgrade", &[], &["--paste"]),
-    ("rebase", &["--onto"], &["--allow-remote", "--json"]),
     ("merge-driver", &[], &[]),
     ("tensions", &[], &["--allow-remote", "--json"]),
     ("config", &[], &[]),
@@ -305,10 +303,9 @@ fn command(verb: &'static str, valued: &[&'static str], switches: &[&'static str
 /// has no better word than "value".
 fn value_name(flag: &str) -> &'static str {
     match flag {
-        "--continue" | "--expect" | "--from" | "--out" | "--onto" | "--refold" | "--replay" => {
-            "path"
-        }
-        "-m" | "--why" => "why",
+        "--continue" | "--expect" | "--from" | "--out" | "--refold" | "--replay" => "path",
+        "-m" => "why",
+        "--ask" => "question",
         "--scope" | "--of" => "scope",
         "--except" => "id",
         "--after" | "--horizon" | "--revisit" | "--at" | "--since" => "date",

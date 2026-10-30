@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! `canon rebase --onto <url>@<gen>` — carrying your law onto a different base.
+//! The rebase reading behind `canon adopt <url>@<gen> --rebase`: carrying
+//! your law onto a different base.
 //!
 //! Three-way, like every rebase: the seed you adopted, the law you wrote on
 //! top of it, and the base you want to land on. The first two are pure
@@ -9,24 +10,21 @@
 //! model call — affordable because a canon that fits in a chat message fits
 //! in a context window.
 //!
-//! **It emits a proposal and writes nothing.** Every carried change comes out
-//! as a command the person running it can read, edit, or ignore; a conflict
-//! comes out marked and with no command at all. Nothing auto-resolves, and
-//! anything they do run is authored by them — which is the point, because
-//! after a rebase the law is theirs to answer for. `canon adopt
-//! <url>@<gen> --rebase` makes the move itself once this reading has no
-//! conflict in it ([`obstacles`]).
+//! **`--dry-run` prints it as a proposal and writes nothing.** Every carried
+//! change comes out as a command the person can read, edit, or ignore; a
+//! conflict comes out marked and with no command at all. Nothing
+//! auto-resolves. Without `--dry-run` the move is made only once the reading
+//! leaves nothing for a person ([`obstacles`]), and every act it writes is
+//! authored by whoever runs it — after a rebase the law is theirs to answer
+//! for.
 //!
 //! The number that matters is the first line: **how much of your law survives
 //! before you commit to the move.**
 
 use canon_core::{ActId, Canon, Divergence, Fate, Snapshot, SnapshotCommitment};
 use serde::Deserialize;
-use serde_json::{json, Value};
 
-use crate::cmds::{fail, flag, has};
-use crate::lineage;
-use crate::model::{self, Client, ModelError, Schema};
+use crate::model::{Client, ModelError, Schema};
 
 const SYSTEM: &str = "\
 You are checking whether changes someone made to a set of rules still apply \
@@ -405,28 +403,42 @@ impl Obstacle {
     }
 }
 
-/// What a rebase onto `base` leaves for a person: each change it marks as a
-/// conflict, and each change nothing placed. `canon adopt --rebase` moves a
-/// canon only when every one is empty or carried by the person.
-///
-/// The same reading `rebase` prints, so the move refuses exactly where the
-/// proposal would say "decide this one yourself". A model's reply here can
-/// only refuse the move; nothing it says is written.
-pub(crate) fn obstacles(
+/// The rebase reading: each change this canon made to what it inherited, and
+/// where the model placed it on the new base. One model call, made once, so
+/// the move and its dry run say the same thing.
+pub(crate) struct Reading {
+    changes: Vec<Change>,
+    landed: Vec<Landed>,
+}
+
+pub(crate) fn read(
     client: impl FnOnce() -> Result<Client, ModelError>,
     d: &Divergence,
     canon: &Canon,
     seed: &Snapshot,
     base: &Base,
-) -> Result<Vec<Obstacle>, ModelError> {
+) -> Result<Reading, ModelError> {
     let changes = describe(d, canon);
     let landed = land(client, &changes, seed, base)?;
+    Ok(Reading { changes, landed })
+}
+
+/// The reading as a proposal a person reads before moving: `canon adopt
+/// <url>@<gen> --rebase --dry-run`.
+pub(crate) fn proposal(r: &Reading, seed: &Snapshot, target: &Snapshot) -> String {
+    render(seed, target, &r.changes, &r.landed)
+}
+
+/// What the reading leaves for a person: each change it marks as a conflict,
+/// and each change nothing placed. `canon adopt --rebase` moves a canon only
+/// when every one is empty or carried by the person, so the move refuses
+/// exactly where the proposal says "decide this one yourself". A model's reply
+/// here can only refuse the move; nothing it says is written.
+pub(crate) fn obstacles(r: &Reading, base: &Snapshot) -> Vec<Obstacle> {
+    let (changes, landed) = (&r.changes, &r.landed);
     let mut out = Vec::new();
     for l in landed.iter().filter(|l| l.verdict == Verdict::Conflicts) {
-        let against = l
-            .target
-            .and_then(|n| base.snapshot.commitments.get(n - 1))
-            .cloned();
+        let against = l.target.and_then(|n| base.commitments.get(n - 1)).cloned();
         let onto = against
             .as_ref()
             .map(|c| format!("\n    against {}  \"{}\"", c.id, c.text))
@@ -463,92 +475,7 @@ pub(crate) fn obstacles(
             ),
         });
     }
-    Ok(out)
-}
-
-pub fn run(args: &[String]) -> i32 {
-    let Some(onto) = flag(args, "--onto") else {
-        return fail("usage: canon rebase --onto <url>@<generation>");
-    };
-    let (dir, _, canon) = match crate::cmds::load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let seed = match lineage::load_seed(&dir) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
-    let (url, generation) = match onto.rsplit_once('@') {
-        Some((u, g)) if !u.is_empty() && !g.contains('/') && !g.contains(':') => (u, Some(g)),
-        _ => (onto, None),
-    };
-    let (target, target_log) = match lineage::fetch(&dir, url, generation) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-
-    let d = match lineage::diverged(&dir, &seed, &canon) {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
-    let changes = describe(&d, &canon);
-    if changes.is_empty() {
-        println!(
-            "nothing to rebase — this canon has not changed anything it inherited from {}@{}.",
-            seed.lineage, seed.generation
-        );
-        println!(
-            "  `canon upgrade {}` takes the newer generation directly.",
-            generation.unwrap_or("<gen>")
-        );
-        return 0;
-    }
-
-    let allow_remote = has(args, "--allow-remote");
-    let base = Base {
-        snapshot: &target,
-        log: Some(&target_log),
-    };
-    let landed = match land(
-        || model::client_for(&dir, allow_remote),
-        &changes,
-        &seed,
-        &base,
-    ) {
-        Ok(v) => v,
-        Err(e) => return model::report(e),
-    };
-
-    if has(args, "--json") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&payload(&target, &landed)).unwrap_or_default()
-        );
-    } else {
-        print!("{}", render(&seed, &target, &changes, &landed));
-    }
-    // Exit 1 when something conflicts, so a script can tell a clean rebase
-    // from one needing a person. Not 2: the changes are not unaddressed, they
-    // are addressed and they collide.
-    if landed.iter().any(|l| l.verdict == Verdict::Conflicts) {
-        return 1;
-    }
-    0
-}
-
-fn payload(target: &Snapshot, landed: &[Landed]) -> Value {
-    json!({
-        "onto": { "lineage": target.lineage, "generation": target.generation },
-        "changes": landed
-            .iter()
-            .map(|l| json!({
-                "change": l.change.did,
-                "fate": l.verdict.label().to_ascii_lowercase(),
-                "target": l.target.and_then(|n| target.commitments.get(n - 1)).map(|c| c.id.to_string()),
-                "because": l.because,
-            }))
-            .collect::<Vec<_>>(),
-    })
+    out
 }
 
 fn render(seed: &Snapshot, target: &Snapshot, changes: &[Change], landed: &[Landed]) -> String {

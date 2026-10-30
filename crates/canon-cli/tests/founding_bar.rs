@@ -545,3 +545,43 @@ fn voice_lists_standing_as_the_house_holds_it() {
     let (_, out) = canon_as(&dir, "human:alex", &["voice", "human:mal"]);
     assert!(out.contains("has not put anything in this canon"), "{out}");
 }
+
+#[test]
+fn a_leaver_leaves_their_question_without_their_name_and_only_their_own() {
+    // `canon leave` was a verb of its own for a withdrawal and a question;
+    // it is `withdraw <you> <scope> --ask` now.
+    let dir = fresh("ask");
+    canon_as(&dir, "human:alex", &["grant", "human:alex", "house"]);
+    tick();
+    canon_as(&dir, "human:alex", &["grant", "human:bo", "house.kitchen"]);
+    tick();
+    let before = canon_as(&dir, "human:bo", &["log", "--json"]).1;
+    let (code, out) = canon_as(
+        &dir,
+        "human:bo",
+        &["withdraw", "human:alex", "house", "--ask", "Why?"],
+    );
+    assert_ne!(code, 0, "{out}");
+    assert_eq!(canon_as(&dir, "human:bo", &["log", "--json"]).1, before);
+
+    let (code, out) = canon_as(
+        &dir,
+        "human:bo",
+        &[
+            "withdraw",
+            "human:bo",
+            "house.kitchen",
+            "--ask",
+            "Who waters the plants?",
+        ],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("no longer holds house.kitchen"), "{out}");
+    assert!(out.contains("recorded without your name"), "{out}");
+    let log = canon_as(&dir, "human:bo", &["log", "--json"]).1;
+    let asked = log
+        .lines()
+        .find(|l| l.contains("Who waters the plants?"))
+        .unwrap_or_else(|| panic!("no question in:\n{log}"));
+    assert!(asked.contains(r#""actor":"anonymous""#), "{asked}");
+}

@@ -108,7 +108,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | Record what the group decided | `canon decide "guest room request" --outcome supported --authority act -m "Dana ruled; the guest stays to Friday."` |
 | Mark a rule as a principle, not a convention | `canon rank can-ffc1 principle` |
 | What someone raised, and what came of it | `canon voice human:dana` |
-| Leave a room, and leave a question behind | `canon leave house.kitchen -m "Who waters the plants while I'm gone?"` |
+| Leave a room, and leave a question behind | `canon withdraw human:you house.kitchen --ask "Who waters the plants while I'm gone?"` |
 | Make it so only your key can write as you | `canon identify ~/.ssh/id_ed25519_sk.pub` |
 | Who you are here, and what doesn't count | `canon identify` |
 
@@ -174,9 +174,9 @@ of the model is what moves quality here. Measure yours with
 A canon is a file; you can fork one, carry your own rules onto a different
 base, and diff the two. `canon share` prints a pasteable snapshot, `canon
 adopt --paste` forks one, and a newer block piped into `canon upgrade
---paste` takes its next generation. `canon rebase --onto <url>` proposes how
-your rules land on a different base (*model*, only for what the base does not
-settle word for word), and `canon adopt <url>@<gen> --rebase` makes the move,
+--paste` takes its next generation. `canon adopt <url>@<gen> --rebase --dry-run`
+proposes how your rules land on a different base (*model*, only for what the
+base does not settle word for word), and without `--dry-run` it makes the move,
 keeping your own record and refusing where the proposal would mark a
 conflict. `canon mcp` serves the same verbs to an agent over MCP.
 

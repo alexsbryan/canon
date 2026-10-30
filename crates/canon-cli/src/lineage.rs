@@ -825,8 +825,8 @@ pub fn upgrade(args: &[String]) -> i32 {
             println!("  `canon diff --upstream` shows where this canon now stands against it.");
         } else {
             println!(
-                "  `canon rebase --onto {source}@{}` proposes how to carry your law onto the new \
-                 base.",
+                "  `canon adopt {source}@{} --rebase --dry-run` proposes how to carry your law onto \
+                 the new base.",
                 next.generation
             );
         }

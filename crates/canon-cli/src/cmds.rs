@@ -13,65 +13,18 @@ use crate::store;
 
 // ── plumbing ────────────────────────────────────────────────
 
-/// Flags that take a value, so [`positionals`] does not read the value as one.
+/// Does `flag` take a value, so [`positionals`] does not read the value as one?
 ///
-/// One list rather than a `matches!` per call site: a flag added in one place
-/// and forgotten in the other makes its VALUE look like a positional
-/// argument, which is how `--scope house.kitchen` becomes a proposal called
-/// "house.kitchen".
-const VALUED: &[&str] = &[
-    "-m",
-    "--about",
-    "--after",
-    "--cite",
-    "--as",
-    "--amends",
-    "--authority",
-    "--citing",
-    "--commit",
-    "--count",
-    "--endpoint",
-    "--entrench",
-    "--except",
-    "--expect",
-    "--from",
-    "--from-proposal",
-    "--governs",
-    "--graduated",
-    "--horizon",
-    "--k",
-    "--live-from",
-    "--max-chunks",
-    "--objections",
-    "--of",
-    "--out",
-    "--secret",
-    "--why",
-    "--onto",
-    "--outcome",
-    "--policy",
-    "--profile",
-    "--ratification",
-    "--refold",
-    "--replay",
-    "--revisit",
-    "--samples",
-    "--scenario",
-    "--scope",
-    "--named",
-    "--unit",
-    "--order",
-    "--from-draw",
-    "--step",
-    "--per",
-    "--personal",
-    "--at",
-    "--since",
-    "--base",
-    "--slack",
-    "--check",
-    "--write-scenario",
-];
+/// Read from the verb table in [`crate::cli`] rather than kept beside it: a
+/// list here drifted from the table (it lacked `--carry` and `--continue` and
+/// carried two flags no verb takes), and a flag missing from it makes its
+/// VALUE look like a positional, which is how `--scope house.kitchen` becomes
+/// a proposal called "house.kitchen".
+fn takes_value(flag: &str) -> bool {
+    crate::cli::VERBS
+        .iter()
+        .any(|(_, valued, _)| valued.contains(&flag))
+}
 
 pub fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter()
@@ -102,7 +55,7 @@ pub fn positionals(args: &[String]) -> Vec<&str> {
             skip = false;
             continue;
         }
-        if VALUED.contains(&a.as_str()) {
+        if takes_value(a) {
             skip = true;
             continue;
         }

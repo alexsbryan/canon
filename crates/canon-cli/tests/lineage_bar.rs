@@ -437,6 +437,37 @@ fn a_fork_moves_onto_a_family_canon_and_keeps_its_own_record() {
 }
 
 #[test]
+fn a_dry_run_prints_the_rebase_reading_and_writes_nothing() {
+    // `rebase --onto` was this reading as a verb of its own, read from a
+    // divergence the move itself did not use. It is the move's dry run now.
+    let base = scratch("move-dry");
+    let (ersilia, fam) = the_family(&base);
+    let url = format!("{}@g1", fam.display());
+    let log = ok(&ersilia, &["log", "--json"]);
+
+    let e = endpoint("conflicts");
+    let (code, out) = canon_at(
+        &ersilia,
+        Some(&e),
+        &["adopt", &url, "--rebase", "--dry-run"],
+    );
+    assert_eq!(code, 1, "a conflict left for a person exits 1:\n{out}");
+    assert!(out.contains("rebase proposal"), "{out}");
+    assert!(out.contains("decide this one yourself"), "{out}");
+
+    let e = endpoint("carries");
+    let (code, out) = canon_at(
+        &ersilia,
+        Some(&e),
+        &["adopt", &url, "--rebase", "--dry-run"],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("Nothing has been written"), "{out}");
+
+    assert_eq!(ok(&ersilia, &["log", "--json"]), log);
+}
+
+#[test]
 fn a_move_the_rebase_would_mark_as_a_conflict_is_refused_and_writes_nothing() {
     let base = scratch("move-conflict");
     let (ersilia, fam) = the_family(&base);

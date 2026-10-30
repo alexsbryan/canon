@@ -45,7 +45,7 @@ milliseconds, with **no model and no endpoint**. If it prints Ostrom's
 eight principles as a table, your build is good.
 
 A model is only needed for four verbs — `draft`, `check`, `tensions`,
-`rebase` — and only those need an endpoint. Everything else, which is most
+`adopt --rebase` — and only those need an endpoint. Everything else, which is most
 of the tool, is pure. [The README](../README.md#how-it-works)
 draws the line.
 

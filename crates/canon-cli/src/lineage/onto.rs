@@ -2,9 +2,9 @@
 //! `canon adopt <url>@<gen> --rebase`: move a canon that already descends
 //! from one lineage onto another, keeping its own record.
 //!
-//! `rebase --onto` proposes and writes nothing, `adopt` refused a canon that
-//! already descends from a lineage, and `upgrade` takes only newer
-//! generations of the same one, so nothing completed the move. Re-adopting
+//! `adopt` refused a canon that already descends from a lineage, and
+//! `upgrade` takes only newer generations of the same one, so nothing
+//! completed the move. `--dry-run` prints the reading and writes nothing. Re-adopting
 //! into a fresh canon throws away what the fork decided: its ratified
 //! additions, its retractions, the positions taken on them.
 //!
@@ -23,7 +23,7 @@
 //!   alone, is retracted, as `upgrade` does when upstream withdraws one.
 //!
 //! **It refuses wherever the rebase would report a conflict**, through the
-//! same reading [`crate::rebase::obstacles`] gives, and wherever the base
+//! reading [`crate::rebase::obstacles`] judges, and wherever the base
 //! reworded a rule this canon had already changed. Every act it writes is
 //! authored by the person who runs it.
 
@@ -81,7 +81,7 @@ pub(super) fn onto(
         snapshot: target,
         log: target_log,
     };
-    let stops = match rebase::obstacles(
+    let reading = match rebase::read(
         || model::client_for(dir, allow_remote),
         &d,
         canon,
@@ -98,6 +98,13 @@ pub(super) fn onto(
             return model::report(e);
         }
     };
+    let stops = rebase::obstacles(&reading, target);
+    if crate::cmds::has(args, "--dry-run") {
+        print!("{}", rebase::proposal(&reading, &seed, target));
+        // 1 while something is left for a person, so a script can tell a
+        // clean move from one that would refuse.
+        return i32::from(!stops.is_empty());
+    }
     let carries = match carried_anyway(&stops, &carry, why) {
         Ok(c) => c,
         Err(e) => return fail(e),
@@ -126,8 +133,8 @@ pub(super) fn onto(
         };
         return fail(format!(
             "not moved onto {}@{}: the rebase leaves {} change(s) for a person, and nothing \
-             was written.\n\n{}\n\n  `canon rebase --onto {source}@{}` prints the whole \
-             reading.{through}",
+             was written.\n\n{}\n\n  `canon adopt {source}@{} --rebase --dry-run` prints \
+             the whole reading.{through}",
             target.lineage,
             target.generation,
             left.len(),

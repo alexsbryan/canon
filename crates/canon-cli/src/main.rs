@@ -128,6 +128,7 @@ GOVERN                                        (no model needed)
                                          no scope: who holds the canon as a whole
   grant <actor> <scope> [--horizon <d>]  give someone standing
   withdraw <actor> <scope>               step back from a scope, or stand down
+           [--ask \"<question>\"]         yours: leave the question, without your name
   scope <id> <scope>                     put a commitment in a scope
   policy show | set <rule> [-m \"...\"]    what this canon decides under
   ratification show | set <rule>         how a proposal becomes a rule, per scope:
@@ -158,7 +159,6 @@ GOVERN                                        (no model needed)
   guard show | git [--apply]             what defends this ledger from outside the
                                          fold, and what each guard cannot see
   voice [<actor>]                        what someone raised, and what came of it
-  leave <scope> [-m \"<question>\"]        step out, and leave the question behind
   second <question-id>                   add your weight to a question, without your name
   replay [<dir>] [--policy <rule>]       re-decide this canon\'s own record;
                                          --policy asks what another rule
@@ -167,16 +167,16 @@ GOVERN                                        (no model needed)
          [--write-scenario <f>]          write out the derived ones to edit
          [--expect <f>]                  check the answers against this file
 
-LINEAGE                             (git optional; only rebase needs a model)
+LINEAGE                     (git optional; only adopt --rebase needs a model)
   share                                  a pasteable snapshot
   adopt <url>[@gen] | --paste            fork someone else's canon
         [--except <id>,… -m \"<why>\"]       retract these as they arrive
         <url>@<gen> --rebase             move a canon that descends from one
                                          lineage onto another, keeping its record
               [--carry <id> -m \"<why>\"]     carry a conflict anyway, as your ruling
+              [--dry-run]                print the reading, write nothing
   diff --upstream [--propose]            how you have diverged from your seed
   upgrade <gen> | --paste                take a newer generation
-  rebase --onto <url>@<gen>              carry your law onto a different base
   merge-driver %O %A %B                  git merge driver; run it for setup
 
 ADJUDICATE                                    (needs an endpoint)
@@ -307,7 +307,6 @@ fn main() {
         "draw" => draw_cmd::run(rest),
         "silence" => govern::silence(rest),
         "voice" => govern::voice(rest),
-        "leave" => govern::leave(rest),
         "second" => govern::second(rest),
         "replay" => replay::run(rest),
         "witness" => guard::witness(rest),
@@ -319,7 +318,6 @@ fn main() {
         "adopt" => lineage::adopt(rest),
         "diff" => lineage::diff(rest),
         "upgrade" => lineage::upgrade(rest),
-        "rebase" => rebase::run(rest),
         "merge-driver" => lineage::merge_driver(rest),
         "tensions" => tensions::run(rest),
         "config" => cmds::config(rest),
@@ -418,14 +416,12 @@ mod tests {
             "draw",
             "silence",
             "voice",
-            "leave",
             "second",
             "replay",
             "share",
             "adopt",
             "diff",
             "upgrade",
-            "rebase",
             "tensions",
             "config",
             "draft",
