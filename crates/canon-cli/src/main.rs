@@ -274,61 +274,14 @@ fn main() {
         // this tool declines to do, and exits the same way.
         Err(report) => std::process::exit(cmds::fail(report)),
     }[..];
-    let code = match cmd.as_str() {
-        "init" => cmds::init(rest),
-        "add" => cmds::add(rest),
-        "approve" => cmds::approve(rest),
-        "object" => cmds::object(rest),
-        "review" => review::run(rest),
-        "ui" => ui::run(rest),
-        "list" => cmds::list(rest),
-        "why" => cmds::why(rest),
-        "supersede" => cmds::supersede(rest),
-        "retract" => cmds::retract(rest),
-        "accept" => cmds::accept(rest),
-        "dismiss" => cmds::dismiss(rest),
-        "undo" => cmds::undo(rest),
-        "log" => cmds::log(rest),
-        "question" => cmds::question(rest),
-        "who" => govern::who(rest),
-        "grant" => govern::grant(rest),
-        "withdraw" => govern::withdraw(rest),
-        "scope" => govern::scoped(rest),
-        "policy" => govern::policy(rest),
-        "ratification" => govern::ratification(rest),
-        "allot" => govern::allot(rest),
-        "allocation" => govern::allocation(rest),
-        "pool" => govern::pool(rest),
-        "position" => govern::position(rest),
-        "decide" => govern::decide(rest),
-        "rank" => govern::rank(rest),
-        "horizon" => govern::horizon(rest),
-        "overdue" => govern::overdue(rest),
-        "draw" => draw_cmd::run(rest),
-        "silence" => govern::silence(rest),
-        "voice" => govern::voice(rest),
-        "second" => govern::second(rest),
-        "replay" => replay::run(rest),
-        "witness" => guard::witness(rest),
-        "guard" => guard::guard(rest),
-        "identify" => identify::run(rest),
-        "open" => cmds::open(rest),
-        "mcp" => mcp::serve(),
-        "share" => lineage::share(rest),
-        "adopt" => lineage::adopt(rest),
-        "diff" => lineage::diff(rest),
-        "upgrade" => lineage::upgrade(rest),
-        "merge-driver" => lineage::merge_driver(rest),
-        "tensions" => tensions::run(rest),
-        "config" => cmds::config(rest),
-        "draft" => draft::run(rest),
-        "check" => check::run(rest),
-        "--version" | "-V" => {
+    let code = match cli::VERBS.iter().find(|(v, ..)| v == cmd) {
+        Some((.., run)) => run(rest),
+        None if cmd == "--version" || cmd == "-V" => {
             println!("canon {}", env!("CARGO_PKG_VERSION"));
             0
         }
-        other => {
-            eprintln!("error: unknown command `{other}`\n");
+        None => {
+            eprintln!("error: unknown command `{cmd}`\n");
             print!("{HELP}");
             2
         }
@@ -384,52 +337,7 @@ mod tests {
         // The long help is allowed to be long. It is NOT allowed to be
         // incomplete — a verb nobody can find is a verb nobody uses, and the
         // short list only works if the full one is actually full.
-        for verb in [
-            "init",
-            "add",
-            "approve",
-            "object",
-            "list",
-            "why",
-            "supersede",
-            "retract",
-            "accept",
-            "dismiss",
-            "undo",
-            "log",
-            "question",
-            "open",
-            "who",
-            "grant",
-            "withdraw",
-            "scope",
-            "policy",
-            "ratification",
-            "allot",
-            "allocation",
-            "pool",
-            "position",
-            "decide",
-            "rank",
-            "horizon",
-            "overdue",
-            "draw",
-            "silence",
-            "voice",
-            "second",
-            "replay",
-            "share",
-            "adopt",
-            "diff",
-            "upgrade",
-            "tensions",
-            "config",
-            "draft",
-            "check",
-            "mcp",
-            "witness",
-            "guard",
-        ] {
+        for (verb, ..) in crate::cli::VERBS {
             assert!(
                 HELP_ALL.contains(verb),
                 "`{verb}` dispatches but is in no help text"

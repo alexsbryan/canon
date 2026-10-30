@@ -585,3 +585,16 @@ fn a_leaver_leaves_their_question_without_their_name_and_only_their_own() {
         .unwrap_or_else(|| panic!("no question in:\n{log}"));
     assert!(asked.contains(r#""actor":"anonymous""#), "{asked}");
 }
+
+#[test]
+fn a_verb_nobody_declared_is_refused_with_the_short_help() {
+    // Dispatch reads cli::VERBS; a name outside it reaches no handler.
+    let dir = fresh("unknown");
+    let (code, out) = canon_as(&dir, "human:alex", &["frobnicate"]);
+    assert_eq!(code, 2, "{out}");
+    assert!(out.contains("unknown command `frobnicate`"), "{out}");
+    assert!(out.contains("canon help all"), "{out}");
+    let (code, out) = canon_as(&dir, "human:alex", &["--version"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.starts_with("canon "), "{out}");
+}

@@ -74,7 +74,7 @@ fn every_flag_the_code_reads_is_declared() {
     // documented command. So the suite fails first.
     let declared: std::collections::BTreeSet<&str> = VERBS
         .iter()
-        .flat_map(|(_, valued, switches)| valued.iter().chain(switches.iter()).copied())
+        .flat_map(|(_, valued, switches, _)| valued.iter().chain(switches.iter()).copied())
         .collect();
 
     let src = root().join("crates/canon-cli/src");
@@ -163,7 +163,7 @@ fn every_command_line_in_the_documentation_still_parses() {
             let Some((verb, rest)) = tokens.split_first() else {
                 continue;
             };
-            if !VERBS.iter().any(|(v, _, _)| v == verb) {
+            if !VERBS.iter().any(|(v, ..)| v == verb) {
                 continue;
             }
             checked += 1;

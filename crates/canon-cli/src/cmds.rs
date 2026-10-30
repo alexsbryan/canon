@@ -23,7 +23,7 @@ use crate::store;
 fn takes_value(flag: &str) -> bool {
     crate::cli::VERBS
         .iter()
-        .any(|(_, valued, _)| valued.contains(&flag))
+        .any(|(_, valued, ..)| valued.contains(&flag))
 }
 
 pub fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {

@@ -31,57 +31,62 @@
 
 use clap::{Arg, ArgAction, Command};
 
-/// Verb, the flags that take a value, and the flags that do not.
+/// A verb's handler: its arguments, checked, to an exit code.
+pub(crate) type Run = fn(&[String]) -> i32;
+
+/// Verb, the flags that take a value, the flags that do not, and what runs
+/// it. The one list: `main` dispatches from it, [`check`] parses by it, and the
+/// help test reads it, so a verb cannot be in one and missing from another.
 #[rustfmt::skip]
-pub(crate) const VERBS: &[(&str, &[&str], &[&str])] = &[
-    ("init", &["--profile"], &["--plain", "--open"]),
-    ("add", &["--scope", "-m", "--cite"], &[]),
-    ("review", &["--scope"], &["--json"]),
-    ("ui", &[], &[]),
-    ("approve", &["-m"], &[]),
-    ("object", &["-m"], &[]),
-    ("list", &["--out"], &["--check", "--json", "--markdown"]),
-    ("why", &[], &["--json"]),
-    ("supersede", &["--scope", "-m"], &[]),
-    ("retract", &["-m"], &[]),
-    ("accept", &["--revisit", "-m"], &[]),
-    ("dismiss", &["-m"], &[]),
-    ("undo", &["-m"], &[]),
-    ("log", &[], &["--json"]),
-    ("question", &["--from-proposal"], &[]),
-    ("who", &[], &["--json"]),
-    ("grant", &["--horizon", "-m"], &[]),
-    ("withdraw", &["--ask", "-m"], &[]),
-    ("scope", &[], &[]),
-    ("policy", &["--entrench", "--graduated", "--objections", "--of", "--scope", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"]),
-    ("ratification", &["--governs", "--personal", "--scope", "-m"], &["--json"]),
-    ("allot", &["--count", "--named", "--unit", "-m"], &[]),
-    ("allocation", &["--from-draw", "--order", "--per", "--scope", "--step", "-m"], &[]),
-    ("pool", &["--at"], &["--json"]),
-    ("position", &["--citing", "-m"], &["--against", "--toward"]),
-    ("decide", &["--authority", "--citing", "--outcome", "-m"], &[]),
-    ("rank", &[], &[]),
-    ("horizon", &["-m"], &[]),
-    ("overdue", &[], &["--json"]),
-    ("draw", &["--after", "--secret", "-m"], &["--json"]),
-    ("silence", &["-m"], &[]),
-    ("voice", &[], &[]),
-    ("second", &[], &[]),
-    ("replay", &["--entrench", "--expect", "--graduated", "--objections", "--of", "--out", "--policy", "--profile", "--ratification", "--scenario", "--write-scenario"], &["--brief", "--by-about", "--cautious", "--json", "--no-repair"]),
-    ("open", &[], &["--json"]),
-    ("witness", &["--base", "--slack"], &["--gate", "--json"]),
-    ("guard", &["--check", "--slack"], &["--apply"]),
-    ("identify", &[], &[]),
-    ("mcp", &[], &[]),
-    ("share", &[], &[]),
-    ("adopt", &["--carry", "--except", "-m"], &["--allow-remote", "--dry-run", "--paste", "--rebase"]),
-    ("diff", &[], &["--json", "--propose", "--upstream"]),
-    ("upgrade", &[], &["--paste"]),
-    ("merge-driver", &[], &[]),
-    ("tensions", &[], &["--allow-remote", "--json"]),
-    ("config", &[], &[]),
-    ("draft", &["--as", "--continue", "--from", "--k", "--live-from", "--max-chunks", "--out", "--refold", "--replay", "--samples", "--since"], &["--accept-all", "--allow-remote", "--dry-run", "--from-git", "--include-ignored", "--json", "--resume", "--yes"]),
-    ("check", &["--about", "--amends", "--scope"], &["--allow-remote", "--irreversible", "--json"]),
+pub(crate) const VERBS: &[(&str, &[&str], &[&str], Run)] = &[
+    ("init", &["--profile"], &["--plain", "--open"], crate::cmds::init),
+    ("add", &["--scope", "-m", "--cite"], &[], crate::cmds::add),
+    ("review", &["--scope"], &["--json"], crate::review::run),
+    ("ui", &[], &[], crate::ui::run),
+    ("approve", &["-m"], &[], crate::cmds::approve),
+    ("object", &["-m"], &[], crate::cmds::object),
+    ("list", &["--out"], &["--check", "--json", "--markdown"], crate::cmds::list),
+    ("why", &[], &["--json"], crate::cmds::why),
+    ("supersede", &["--scope", "-m"], &[], crate::cmds::supersede),
+    ("retract", &["-m"], &[], crate::cmds::retract),
+    ("accept", &["--revisit", "-m"], &[], crate::cmds::accept),
+    ("dismiss", &["-m"], &[], crate::cmds::dismiss),
+    ("undo", &["-m"], &[], crate::cmds::undo),
+    ("log", &[], &["--json"], crate::cmds::log),
+    ("question", &["--from-proposal"], &[], crate::cmds::question),
+    ("who", &[], &["--json"], crate::govern::who),
+    ("grant", &["--horizon", "-m"], &[], crate::govern::grant),
+    ("withdraw", &["--ask", "-m"], &[], crate::govern::withdraw),
+    ("scope", &[], &[], crate::govern::scoped),
+    ("policy", &["--entrench", "--graduated", "--objections", "--of", "--scope", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"], crate::govern::policy),
+    ("ratification", &["--governs", "--personal", "--scope", "-m"], &["--json"], crate::govern::ratification),
+    ("allot", &["--count", "--named", "--unit", "-m"], &[], crate::govern::allot),
+    ("allocation", &["--from-draw", "--order", "--per", "--scope", "--step", "-m"], &[], crate::govern::allocation),
+    ("pool", &["--at"], &["--json"], crate::govern::pool),
+    ("position", &["--citing", "-m"], &["--against", "--toward"], crate::govern::position),
+    ("decide", &["--authority", "--citing", "--outcome", "-m"], &[], crate::govern::decide),
+    ("rank", &[], &[], crate::govern::rank),
+    ("horizon", &["-m"], &[], crate::govern::horizon),
+    ("overdue", &[], &["--json"], crate::govern::overdue),
+    ("draw", &["--after", "--secret", "-m"], &["--json"], crate::draw_cmd::run),
+    ("silence", &["-m"], &[], crate::govern::silence),
+    ("voice", &[], &[], crate::govern::voice),
+    ("second", &[], &[], crate::govern::second),
+    ("replay", &["--entrench", "--expect", "--graduated", "--objections", "--of", "--out", "--policy", "--profile", "--ratification", "--scenario", "--write-scenario"], &["--brief", "--by-about", "--cautious", "--json", "--no-repair"], crate::replay::run),
+    ("open", &[], &["--json"], crate::cmds::open),
+    ("witness", &["--base", "--slack"], &["--gate", "--json"], crate::guard::witness),
+    ("guard", &["--check", "--slack"], &["--apply"], crate::guard::guard),
+    ("identify", &[], &[], crate::identify::run),
+    ("mcp", &[], &[], |_| crate::mcp::serve()),
+    ("share", &[], &[], crate::lineage::share),
+    ("adopt", &["--carry", "--except", "-m"], &["--allow-remote", "--dry-run", "--paste", "--rebase"], crate::lineage::adopt),
+    ("diff", &[], &["--json", "--propose", "--upstream"], crate::lineage::diff),
+    ("upgrade", &[], &["--paste"], crate::lineage::upgrade),
+    ("merge-driver", &[], &[], crate::lineage::merge_driver),
+    ("tensions", &[], &["--allow-remote", "--json"], crate::tensions::run),
+    ("config", &[], &[], crate::cmds::config),
+    ("draft", &["--as", "--continue", "--from", "--k", "--live-from", "--max-chunks", "--out", "--refold", "--replay", "--samples", "--since"], &["--accept-all", "--allow-remote", "--dry-run", "--from-git", "--include-ignored", "--json", "--resume", "--yes"], crate::draft::run),
+    ("check", &["--about", "--amends", "--scope"], &["--allow-remote", "--irreversible", "--json"], crate::check::run),
 ];
 
 /// Did somebody ask a verb what it does? `main` answers before dispatch, so
@@ -100,7 +105,7 @@ pub fn wants_help(rest: &[String]) -> bool {
 /// it, so the two cannot disagree. `None` for a verb this table does not
 /// know.
 pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
-    let (name, valued, switches) = VERBS.iter().find(|(v, _, _)| *v == verb)?;
+    let (name, valued, switches, _) = VERBS.iter().find(|(v, ..)| *v == verb)?;
     // A verb's entry is a line at two spaces that opens with its name, and
     // every deeper-indented line under it.
     let mut out = String::new();
@@ -153,7 +158,7 @@ pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
 /// request for help, which `main` answers with [`help_for`] instead of
 /// dispatching.
 pub fn check(verb: &str, rest: &[String]) -> Result<Vec<String>, String> {
-    let Some((name, valued, switches)) = VERBS.iter().find(|(v, _, _)| *v == verb) else {
+    let Some((name, valued, switches, _)) = VERBS.iter().find(|(v, ..)| *v == verb) else {
         return Ok(rest.to_vec());
     };
     if wants_help(rest) {
