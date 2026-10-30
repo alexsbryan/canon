@@ -89,6 +89,8 @@ function shellFor(as, home, cwd, env = {}) {
   return s;
 }
 
+// Enter on an empty command line sends a bare newline, as a keyboard's does: a
+// pager's "press RETURN" or a `read` waits for one.
 const PAGE = (as) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Terminal</title>
 <style>
 html,body{margin:0;background:#111;color:#e8e8e8;font:14px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
@@ -108,7 +110,7 @@ function append(text){last=null;const d=document.createElement('div');d.classNam
 function partial(text){if(!last){last=document.createElement('div');last.className='line';out.appendChild(last);}last.textContent=text;bottom();}
 new EventSource('/events?as=${encodeURIComponent(as)}').onmessage=(e)=>{const m=JSON.parse(e.data);if('line' in m)append(m.line);else if('partial' in m)partial(m.partial);};
 async function post(path, body){await fetch(path,{method:'POST',body:body ?? ''});}
-async function submit(){const text=cmd.value;if(!text.trim())return;cmd.value='';const line='$ '+text;if(last){last.textContent=line;last=null;}else{const d=document.createElement('div');d.className='line';d.textContent=line;out.appendChild(d);}bottom();await post('/cmd?as=${encodeURIComponent(as)}',text);cmd.focus();}
+async function submit(){const text=cmd.value;cmd.value='';const line='$ '+text;if(last){last.textContent=line;last=null;}else{const d=document.createElement('div');d.className='line';d.textContent=line;out.appendChild(d);}bottom();await post('/cmd?as=${encodeURIComponent(as)}',text);cmd.focus();}
 document.getElementById('enter').onclick=submit;
 document.getElementById('ctrl-c').onclick=()=>post('/key?as=${encodeURIComponent(as)}&key=c');
 document.getElementById('ctrl-d').onclick=()=>post('/key?as=${encodeURIComponent(as)}&key=d');
