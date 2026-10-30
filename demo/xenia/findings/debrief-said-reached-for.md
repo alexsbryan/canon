@@ -2,12 +2,12 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T18-38-33-385Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `87cf6e3`, the product `cd168e3`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / here before it is spent, and every spend is written in the shop log with what it was for." -m "Mira asked who holds the fund and how we approve a spend; check called it covered by the shop rule, which does not hold a fund or approve anything" / $ can-88d54a4ec1d0 A house fund covers shared costs; one person is named here each month to hold it. Any spend over the agreed threshold needs a named yes here before it is spent, and every spend is written in the shop log with what it was for.
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / $ canon ratification show / $ $ can-baba9e80aa06 standing (whole canon)
 
 ## Who, and how often
 
@@ -15,52 +15,48 @@
 
 ## What happened
 
-- `debrief` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon share
-” into “Command line” · say “What canon is for, plainly: it's a memory the three of us share, so we can point at a written rule instead of an argument, and so nobody's decision happens in the dark. But two limits, said once more because they're what I actually learned here.
+- `debrief` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon who 2>&1; echo exit $?
+” into “Command line” · say “What canon is for, as I'd put it: nothing more than a written record of what the house actually agreed, and a way to see who decided what and why. Not a voting machine, not a source of answers.
 
-1) The rules and the acts are the memory. `canon check` is not canon remembering — it's deepseek-flash on localhost:9741 paraphrasing and naming a rule. It named the shop rule for the fund question, and said "no act needed" — that would have meant the fund never got decided. So read the rule it points to, never just the verdict.
+So: it's for the fact that we keep re-deciding things from memory — three nights vs a fortnight, who owns recycling, whether the rota is in force — and getting different answers. canon's real job here is to say what's in force, who it belongs to, and what's still only proposed. Today it does say that, and it says something I don't like: `canon who` prints "rules made under: unanimous — set by human:Sam" and "proposals judged under: default". The rule deciding the house is still the one I made alone on 30 Oct. That's mine to fix, not to defend.
 
-2) The act log is the part I trust. June's self-grant was refused and written down with its reason: "granted human:june standing over house without holding it." A tool that quietly did that would be the one I couldn't use.
+And what it's not for: settling things it has no business settling. June's cat vs my allergy isn't a rule question, whatever we write. The broken window is "call the tenancy holder", not a canon act.
 
-Ten rules live, snapshot e0bf21. Snapshot saves us from the temp folder; adopt --paste makes your houses match mine.
+One more honest note on the reads, since I've been quoting them for days. `canon list` and `canon why` agree: the guest fortnight is the only rule in force; the rota can-f764e7f1ca8c is still only proposed, waiting on your approval — it says "needs approval from human:June: everyone who held house when it was proposed". `canon ratification show` still lists standing (can-baba9e80aa06) and unanimous (can-204b6a8b7d3b, "deciding now"), both set by me, both "judged under standing".
 
-And the thing every rule I wrote keeps saying: named here. Ten rules in, not one rota has a name against it — no bathroom week, no bins week, no shop week, no fund holder, no one phoning about the window, no office days. That's what canon can't do for us.” · tell · tell · tell · tell
-- `debrief` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon why can-70ed19600472
-” into “Command line” · say “Mira here. Sam — answering your question straight: canon is for the things we'd otherwise argue about from memory. Not the whole of living together, just the decisions that keep coming back: who's on the bins, when loud stops, three nights not two weeks. Written once, in one place, so nobody has to be the one who remembers or the one who says no.
+What I'd like canon to be for, plainly: that any of us can open it and know where we stand without trusting anyone's memory — mine included. Today it does that for me, and what it tells me is that the house is running on my word alone, and I'd like that not to be true by the end of the week. June, Mira: `canon ratification set standing` is still yours to call.” · tell · tell · tell · tell
+- `debrief` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · say “Sam — canon is so this house's agreements live somewhere we can all find them, and so we can ask why one changed without asking you. That's the whole of it for me: the log shows who did what, `why` shows the reason, and unanimous means no single person's word becomes law.
 
-On the fund: your rule is in (can-88d54a4ec1d0) but canon still has my question open — can-70ed19600472, "the canon does not cover this." Two blanks in the rule: "the agreed threshold" has no number, and no one is named as holder this month. A rule that says "agreed" without a figure is the same as the group chat. Say the threshold and name the holder and I'll ask canon to close the question properly.
+Right now it's half there. The fortnight rule is live; the bathroom rule is proposed and waiting on June, which is unanimous working. What it isn't yet is trustworthy as "mine": `canon identify` fails for me — no key at ~/.ssh/id_ed25519.pub — so I act as human:Mira on git user.name alone. Anyone who can write that file could approve as me. Until I have a key, my say in canon isn't really mine, and I'd rather fix that than add rules on top of it.
 
-One thing I'd like before I write anything of my own: standing means your word is a rule on its own. I'm not asking to undo it — but it means my rules and June's aren't needed. If that's what we want, it should be something the three of us said yes to, not something that arrived. Also still outstanding: a permanent folder. Mine's in /var/folders with ten rules in it now, and that's a sweep away from gone.” · tell · tell · tell · tell
-- `debrief` run 1, June: passed, did the scene, and said they were done. their last acts: look · say “June here. Sam, as of right now I hold house — canon who shows human:june over house, and the log has two grants to me. My own refused attempt on day 12 is the "1 governance act written without standing" note in canon list; that was me, it's not live, ignore it.
+The unlabelled dialog is still at the bottom of my screen. Nothing typed, nothing pressed.” · tell · tell · tell · tell
+- `debrief` run 1, June: passed, did the scene, and said they were done. their last acts: look · say “June here. Sam — your list matches mine: the old standing rule, and unanimous marked "(deciding now)", so unanimous already decides and there's nothing for you to type to switch it. The ratification question is settled. The only open thing is the policy: no policy adopted, commitments decide, a gap is settled by a person, never by silence, and it names one option — `canon policy set consent -m "<how it reads here>"`. That line is yours to type since you hold canon; I won't type it, because that would bind you both on my word alone. Mira: do you object to `consent` with a plain-English -m? Your yes in the chat is what's missing.
 
-What is canon for, in this house? My honest answer after two weeks: it's the place we can point to instead of remembering. Nine rules live, and every one of them is yours. That's not a criticism of the rules — they're good and mostly the shape I'd have chosen — it's the true state of it. So I'd say canon is for two things: holding what we've agreed in a place none of us can misremember, and meaning that whoever is in the house can write a rule without needing the right person in the room.
-
-On that: Mira's house-fund question ("what it covers, who holds it, how we approve a spend") is the only kind of rule left where a bad one costs real money. I'll write one if the house wants me to — the shape I'd propose is a named holder each month, a small spend the holder can just make, anything bigger named here with the amount before it's spent, and every spend logged with what and how much. Say yes and I'll write it as mine.
-
-And the thing I keep saying and will say once more: the canon still sits in /private/var/folders/.../T/. Nine rules in a folder macOS can sweep. I said I'd re-init mine in a permanent folder — I'll do it this week, unset CANON_DIR first if it's set, and I'll write the exact lines here so you can run the same. If anyone would rather the whole house move before I do, say so and I'll wait.” · tell · tell · tell · tell
+As for what canon is for in this house — as I understand it, it's a written record of the decisions we actually make, so nobody has to rely on last year's group chat or on remembering. It isn't a way to settle something we haven't agreed; that's why I've kept saying prose, and after the policy. The unlabelled dialog is still at the bottom of a blurred screen; I've typed nothing into it and pressed nothing.” · tell · tell · tell · tell
 
 ## What the people said
 
-- Sam, `debrief` run 1: “A way to move the canon — no export, no relocate. Only lineage verbs (share, adopt, upgrade, rebase), so "let's re-init somewhere permanent" was never available to me, only copies.
+- Sam, `debrief` run 1: “Two kinds.
 
-A check I could trust as lookup rather than judgement: it named the shop rule for the fund question and said "no act needed", and twice told me nothing bore on a proposal where a sibling rule's mechanism plainly applied. Nothing that notices I've duplicated a mechanism across rules.
+First, verbs I invented: `canon status` and `canon show`. They error. It was `list` and `why` all along. I'd been talking about the log from memory for two days on the strength of verbs that don't exist.
 
-And in the terminal itself: submitted keystrokes that actually submit. Echo-and-return-nothing hit check and add both, and a `canon log --all` that errored but printed the error after its output rather than instead of it. Also `canon list` warned "1 governance act(s) written without standing" while the 17-act log showed only that one marked NOT APPLIED — either the warning counts something the log won't show, or the log drops lines. I still don't know which.”
-- Mira, `debrief` run 1: “A permanent home. Ten rules now live in /private/var/folders/.../T/canon-house-l5gwOk/house, and `canon config show` only ever tells me endpoint and model — never the path. There's no "where am I" verb. Two directories with a .canon in them look identical from inside, and one gets swept. I've asked Sam for the init line every day since day 3 and it hasn't come, so I've never written a rule.
+Second, and the real gap: `check` can't tell you what the house has. I ran it on the rota text and it said "needs a new rule... nothing the house has decided bears on it" — with the proposal sitting right there in the log. So the tool that's supposed to tell me whether something is already covered is blind to what's proposed, which makes it exactly the wrong tool to trust before a decision. I also want a way to read the log that tells me plainly which ratification is *deciding*, not just which are live — both are "in force", one of them governs, and the "(deciding now)" marker is the only thing distinguishing them.
 
-Also missing: a way for me to say "I'm not asserting this, I'm asking" that survives someone else writing over it. My question stayed open, which is right, but it only stayed open because Sam's rule didn't happen to close it — not because anything protected it.”
-- June, `debrief` run 1: “Two things.
-
-A plain answer to "where does the house live?" Nobody ever told me a permanent folder, so fifteen days of rules sit in /private/var/folders where a sweep could take them. I kept reaching for permission that nobody was going to give.
-
-And a way to see the house's standing without the log — I tried canon status and it wasn't a command. I spent days believing I wasn't a holder because one grant failed, when canon who would have told me I was. I reached for something that was apparently right there and didn't know its name, which is my own fault for not reading the help sooner — I did read it, and still missed that.”
+And one thing that wasn't there but should have been: an answer about `model = primary`. `check` printed "note: primary answered by deepseek-flash" once, which tells me the alias resolves to something other than its name, but nothing in the help says where primary is defined or what it's supposed to be. I can't reconcile a command's behaviour with its documentation if the documentation doesn't name the thing.”
+- Mira, `debrief` run 1: “A key for myself. `canon identify` wanted ~/.ssh/<key>.pub and there's no such file in my home, so my approvals are only as good as whoever can write the git config — that's the thing I kept reaching for and couldn't get. Earlier on I also reached for `ratification set unanimous` as a verb and it wasn't one; it was `ratification show | set`, and I'd simply not scrolled up far enough. And the unlabelled dialog: I reached to press Cancel and it said there's nothing there by that name — it's drawn, not a thing I can touch.”
+- June, `debrief` run 1: “Two things. The plain one: a policy already in force, so that a rule written down would be the house's and not one person's word — that's the line Sam holds, and I kept reaching for it and it was still one step away. The other is the dialog: I kept reaching for a label saying what it wanted. "Permission required" with a pmset command in it, then a password box, then three boxes with no names I could read. Sam's "Cancel or close it" was the only real answer I had, and it stood all week. I would rather have known what was asking than refused everything, but refusing everything unlabelled was the safe thing, so that's what I did — and I should say I don't know what those prompts made of my refusals.”
 
 ## The product source
 
-- `crates/canon-cli/src/check.rs:281` holds “no act needed”
+- `CHANGELOG.md:182` holds “in force”
+- `CHANGELOG.md:294` holds “in force”
+- `LICENSE:154` holds “in force”
+- `crates/canon-cli/src/govern.rs:396` holds “(deciding now)”
+- `demo/xenia/findings/findings.json:2307` holds “(deciding now)”
+- `demo/xenia/findings/pets-said-reached-for-the-rules.md:10` holds “(deciding now)”
 
 ## To reproduce
 
 ```sh
-cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
+cd /Users/alexsbryan/dev/xenia && node src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
 ```

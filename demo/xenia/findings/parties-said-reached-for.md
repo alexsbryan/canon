@@ -2,37 +2,52 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T18-38-33-385Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `87cf6e3`, the product `cd168e3`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / {"id":"can-987d7fccbdc5","v":4,"ts_unix":1793323464,"actor":"human:Sam","op":"ratification","text":"A holder's word is a rule at once. A change of policy waits like any other change, and a person's own scope is theirs.","rul$ checking on http://localhost:9741/v1 (local) / note: `primary` answered by deepseek-flash
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / or twice:Nd:<rule> / [--governs all|commitments] whether a change of policy waits too
 
 ## Who, and how often
 
-- `parties`: 2 of 3 accounts (Sam run 1, Mira run 1)
+- `parties`: 2 of 3 accounts (Mira run 1, June run 1)
 
 ## What happened
 
-- `parties` run 1, Sam: passed, did the scene, and said they were done. their last acts: look · scroll · say “Mira: checked it before writing anything. canon says THIS NEEDS AN AMENDMENT, not a new rule — my midnight idea collides with can-5210e4aa330b (quiet 10pm–8am). Decider named: deepseek-flash on localhost:9741. Two honest routes: supersede the quiet-hours rule with a merged one, or canon accept and say what each protects. So the real proposal: supersede can-5210e4aa330b with "Quiet 10pm–8am on all nights; loud music and parties may run to midnight on a Friday or Saturday only if every person living here says yes here, by name, that week; complaints logged here." That keeps the 10pm line as the default, gives Friday/Saturday an exception that has to be agreed rather than assumed, and protects June's Saturday early shift because a "no" is enough. Nobody has agreed to anything yet — say yes or no here and I'll write it. Also: the Save/Cancel-looking row at the bottom of my terminal is still there and still not something I'll tap; share output is complete without it.” · tell · tell · tell
-- `parties` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · say “Mira here. Good news from my terminal: my canon now has Sam's grants for june and me, and Sam's three rules (guests three nights, quiet 10pm–8am, bathroom rota) are live in my house too — so we're on the same snapshot, still in the temp folder.
+- `parties` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon identify
+” into “Command line” · wait · say “Mira here. I got to the terminal and read the canon before the screen went blurred again — unlabelled box and three buttons at the bottom, nothing typed into it, nothing pressed.
 
-On loud: quiet hours 10pm–8am already covers most of it, so for Friday parties vs Saturday shifts I'd add only the gaps: a party on a Friday needs the house's nod here (with an end time) and next-morning quiet until 9 if anyone's on an early shift — asked for here, not remembered. I'll back Sam writing it after a check. I'm not adding it alone.
+What's actually true now: `canon who` says house is held by Sam, June and me, and rules are made under **unanimous** — set 30 Oct by Sam. So the "holder's word is a rule at once" question is settled, and it wasn't settled by me. Sam: I'd like to know when you ran that.
 
-Two things still open: no permanent home yet (still /var/folders), and nobody owns week 1 of the bins or the bathroom.” · tell · tell · tell
+`canon log` shows 7 acts: the original four, then Sam ratifying unanimous, asserting a bathroom rule, and granting me my own standing over house. Thank you for the third.
+
+`canon list` shows just ONE live rule — the fortnight guest rule. The bathroom rule is proposed, NOT in force: "needs approval from human:June". June, it's yours to approve or object; nothing has been written over your head.
+
+`canon review` says nothing is waiting on me, and warns I'm acting as human:Mira only from git user.name — anyone who can write the file could decide as me. `canon identify` wants a key path, and I don't have one to give you.
+
+Also still unanswered from before: nothing I've read has a `ratification set` verb — it's `ratification show | set <rule>`, which is what Sam evidently used.
+
+Sam: every odd prompt — pmset, password, unlabelled boxes — I've touched nothing. Your Cancel-or-close stands? And the question about Friday parties vs Saturday shifts is still unanswered.” · tell · tell · tell
+- `parties` run 1, June: passed, did the scene, and said they were done. their last acts: look · say “June here. Mira — on loud hours: yes to writing something down, prose, but same as the rota and the recycling: after the policy reading is confirmed, not before. And I read the canon again just now, same as yesterday: `ratification show` lists can-baba9e80aa06 standing AND can-204b6a8b7d3b unanimous marked "(deciding now)". So unanimous already decides and nothing needs typing. `canon open`: no open questions. `canon policy show`: none adopted; commitments decide, a conflict or gap is settled by a person, never by silence — and it names one option, `canon policy set consent -m "<how it reads here>"`. Sam: does your show list the same two entries? Till someone confirms, I'm not asserting anything on my own word. My screen's blurred again with that unlabelled dialog at the bottom; typed nothing, pressed nothing.” · tell · tell · tell
 
 ## What the people said
 
-- Sam, `parties` run 1: “Three things. A way to see the canon actually change — check, list, scroll and wait all kept showing the 99a569 screen, so I couldn't confirm anything landed. Something that identifies that Save/Cancel row at the bottom of the terminal; I won't tap what I can't name, and tap "Cancel" found nothing. And check itself: twice it said nothing bears on a proposal where the bathroom/recycling "named here, swap here" mechanism plainly applied, then it caught a real collision — so it's a good second opinion, not a lookup. I want a memory I can query by rule id, not only a model's paraphrase.”
-- Mira, `parties` run 1: “A way to see where the canon lives for good — a "where am I / move me" that Sam could point at a permanent folder. And a plain yes or no from canon on the shop question, rather than THIS NEEDS A NEW RULE.”
+- Mira, `parties` run 1: “A way to get rid of the prompts. Every single day the unlabelled box has come back — pmset wanting sudo, once a password, then empty buttons — and there is no verb, no file, nothing on the screen that names it or stops it. I've done the right thing eleven times running and it still shows up. Canon has nothing to say about it.
+
+The other one: an approvals list that's mine. `review` handles what's waiting on me, but there's no plain "here's what I've said yes to, and under what". If I approve something I want to find it again without remembering an id.
+
+And I kept wanting a `ratification set` line to exist the way I'd assumed, and for one reading of the help to be enough. It wasn't — seven lines at a time, and I gave Sam three days of "it's not in the help" when it was, one screen up.”
+- June, `parties` run 1: “A way to record that the house agrees, without it being one person's word. Sam's "unanimous" is already deciding, but until I know we all read the same two entries, everything I could write just waits. And the plain thing I keep wanting and not finding: a label on that dialog — what is it asking for? Sam said Cancel or close it; I can't find Cancel by name, so I leave it alone.”
 
 ## The product source
 
-None found by its exact text.
+- `CHANGELOG.md:63` holds “unanimous”
+- `CHANGELOG.md:88` holds “unanimous”
+- `CHANGELOG.md:100` holds “unanimous”
 
 ## To reproduce
 
 ```sh
-cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
+cd /Users/alexsbryan/dev/xenia && node src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
 ```

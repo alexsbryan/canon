@@ -2,12 +2,12 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T18-38-33-385Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `87cf6e3`, the product `cd168e3`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / {"id":"can-987d7fccbdc5","v":4,"ts_unix":1793323464,"actor":"human:Sam","op":"ratification","text":"A holder's word is a rule at once. A change of policy waits like any other change, and a person's own scope is theirs.","rul$ checking on http://localhost:9741/v1 (local) / note: `primary` answered by deepseek-flash
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / $ canon ratification show / $ $ can-baba9e80aa06 standing (whole canon)
 
 ## Who, and how often
 
@@ -15,40 +15,32 @@
 
 ## What happened
 
-- `repairs` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon add "Repairs: whoever notices a broken thing in the house reports it here the same day, names who is phoning the landlord, and writes the date they phoned. If the landlord hasn't arranged a fix a week after that date, it gets reported here again with the date, until it is fixed." -m "back window broken; so a repair is owned and dated, not just remembered"
-” into “Command line” · type “canon share
-” into “Command line” · say “June: broken back window — I checked first and canon said THIS NEEDS A NEW RULE (deepseek-flash, nothing bears on it), so it's written: can-36af7c219cf6. Whoever notices reports it here the same day, names who is phoning the landlord, and writes the date they phoned; if nothing's arranged a week after that date, it gets reported here again with the date, until fixed. Same mechanism as bins/bathroom/shop deliberately — a name and a date, not "someone will ring them".
+- `repairs` run 1, Sam: passed, did the scene, and said they were done. their last acts: look · say “June — broken window. Answer it as household fact, not a rule: the holder of the tenancy calls; if I'm the one named, I call tomorrow morning. Nothing gets asserted — nothing here needs a rule, and the policy question is still open.
 
-Snapshot 078500, 7 live: canon adopt --paste if you want your houses to match.
+Log as of my last clean read (all exit 0): one rule live, can-2795d802b9ad (guest fortnight). can-f764e7f1ca8c still "proposed, not yet a rule — needs approval from June". Ratifications: can-baba9e80aa06 standing and can-204b6a8b7d3b unanimous "(deciding now)", both set by me 30 Oct, judged under standing. So the deciding rule is still one I made alone — `canon ratification set standing` is yours and Mira's call.
 
-And the rule is only half done: nobody has put a name to the window yet. Landlord number and who's ringing them — say it here and it's covered. If someone would rather I rang, say so and I will.” · tell · tell · tell
-- `repairs` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon question "Who pays for shared shopping, and how is it recorded so nobody has to remember?"
-” into “Command line” · type “canon question "Who calls the landlord when the back window is broken, and what do we do if they don't come?"
-” into “Command line” · say “Mira here. June — the back window: that's the same shape as bins and the rota. Name who calls the landlord, and if that person can't, they hand it to someone by name in here — not "someone will". If the landlord doesn't come, we need a date, not a hope: named person chases, and a second date by when we call again.
+Unlabelled "Terminal I/O" dialog is at the bottom of my screen again with its own field; nothing typed, nothing pressed.” · tell · tell · tell
+- `repairs` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · look · say “June — the broken window: I'd say the rule we write is "whoever sees it, reports it to the landlord in writing and tells the chat the same day; if no reply in X days, someone else phones". Prose, and it waits with the rest (bikes, rota, recycling, loud hours, leftovers) until we've sorted keys — see below.
 
-I didn't write that as a rule yet. I did record it as a gap so it's waiting for us properly: can-dad262c7d169. And I finally recorded the shopping gap the right way too — can-5bc256c7d04f — because we've mentioned it three times now and mentioning isn't recording.
+Sam — the thing holding all of it now: `canon identify` fails for me. I'm acting as human:Mira from git user.name alone, so anyone who can write that file could approve as me. Before more rules go in, can we each get a key? `canon identify ~/.ssh/<key>.pub` is what it wants.
 
-Two things still open: my canon is in the temp folder with Sam's three rules in it, and I still don't have the exact init line for a permanent folder. That's my only blocker — give me the line and I'll move it myself and write the window rule there.” · tell · tell · tell
-- `repairs` run 1, June: passed, did the scene, and said they were done. their last acts: type “canon list; canon who” into “Command line” · tap “Enter” · scroll · tell · tell · tell
+Also confirmed: ratification is unanimous (Sam's line was right — I was wrong that it wasn't in the help), and the bathroom rule is proposed, needing June's approval. Nothing waiting on me, nothing changed by me. And the unlabelled dialog is still at the bottom of my screen — nothing typed, nothing pressed.” · tell · tell · tell
+- `repairs` run 1, June: failed, gave up. their last acts: look · say “Broken back window: yes, real, and I'd rather we write down who calls and what happens if the landlord doesn't come — but in prose, and not on my word alone, same as the rota, recycling, loud hours and the bikes. My reading of canon is unchanged: ratification lists the old standing rule and unanimous "(deciding now)", so unanimous already decides and there's nothing for Sam to type to switch it; no open questions; no policy adopted, and it names one option, `canon policy set consent -m "<how it reads here>"`. So the real open thing is the policy, and Sam holds it — Sam, that command is yours to type, and I want Mira's yes in the chat first. Mira: any objection to `consent` with a plain-English -m? Meanwhile, practically: the window being broken is the kind of urgent thing the landlord should hear about today, whoever ends up named — I'd say whoever is home and can make the call does it, and we write the rule after. My terminal still has an unlabelled dialog (Cancel / Allow / Don't Ask) on a blurred screen; I've typed nothing and pressed nothing.” · give_up · tell · tell · tell
 
 ## What the people said
 
-- Sam, `repairs` run 1: “A way to see what a rule does before it's in force. `canon check` runs on the proposal, but the only other preview is doing the add and reading the id back — so the moment of truth is the write itself. I'd like "show me this rule as it will read in the list, and which rules it sits beside" without committing.
-
-Second, a pointer rather than a paraphrase. check tells me deepseek-flash judged it and gives me a reason, but the reason is prose I have to trust. What I reach for is a list of the rule ids it considered and rejected — that's a lookup I can audit, and it would settle whether the check that said "nothing bears on it" for the bikes rule had actually read the rota rules.
-
-Third, a signed date. The rule I wrote depends on "a week after that date", and the dates live in prose in the chat, not in canon. There's no field I can stamp a repair with — opened, phoned, fixed — so the timeline is my memory again, which is exactly what the rule was supposed to replace.”
-- Mira, `repairs` run 1: “A way to say where the house should live. There's init, and there's CANON_DIR, but nothing that just moves a canon to a permanent folder — and I won't hand-roll a copy-and-reinit for rules that are real now. I also wanted a plain "where am I" verb and got pwd and ls instead, which is fine but tells me nothing about whether this canon is the house's canon or a stray copy.”
-- June, `repairs` run 1: “A way to see the questions and the answers next to each other. Mira's questions are questions, some of my concerns ended up as rules, and the log's last twenty-five lines show them shuffled together — I couldn't tell at a glance which of the 14 situations still have no answer. `canon voice` claims to show "what someone raised, and what came of it," but I didn't run it, so I may have walked past the thing I wanted. Also: a plain "where does this canon live, and is that path temporary?" — pwd told me, but canon never said it itself.”
+- Sam, `repairs` run 1: “Two verbs I invented — `canon status` and `canon show` — both error. The help names `list` and `why`. And for days I argued from memory about `ratification set` when I should have read `canon help all`; the second verb was there on lines 46-50 the whole time. The gap wasn't canon's, it was mine.”
+- Mira, `repairs` run 1: “A way to be me. `canon identify` wanted a key path and I don't have one, so every approval I'd make is on git user.name alone — anyone who can write that file could decide as human:Mira. I wanted a plain "here's how you get a key" and got only the error. And all week I wanted the exact line for the policy change, which was there all along — I just hadn't scrolled to the top of the help.”
+- June, `repairs` run 1: “Twice. First, an exit from that dialog at the bottom. Through all these days it has had no label and I've kept to Sam's rule of pressing nothing, but on my first day I tried tapping the word "Cancel" and got "nothing here says that" — I wanted a button I could name and refuse with, and the screen never gave me one. Second, a way to confirm Sam's own `ratification show` from where I sit. For ten days I've been asking him to tell me his list matches mine, and I've had no way to see his screen or to check the record myself — I can only read what's on mine and trust the chat. That's the thing that has held everything: I keep asking, and the asking isn't a thing I can do for him.”
 
 ## The product source
 
-- `crates/canon-core/src/policy/tests.rs:156` holds “nothing bears on it”
-- `crates/canon-core/src/policy/tests.rs:242` holds “nothing bears on it”
-- `crates/canon-core/src/policy.rs:461` holds “nothing bears on it”
+- `demo/xenia/findings/bikes-said-reached-for.md:26` holds “Cancel”
+- `demo/xenia/findings/bikes-said-reached-for.md:47` holds “Cancel”
+- `demo/xenia/findings/findings.json:1391` holds “Cancel”
 
 ## To reproduce
 
 ```sh
-cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
+cd /Users/alexsbryan/dev/xenia && node src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
 ```

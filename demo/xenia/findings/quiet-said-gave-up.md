@@ -1,37 +1,29 @@
 # Gave up: /
 
-- status: open, not seen since the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`
+- status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T04-22-47-865Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `92c99ad`, the product `c85c6c3`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T18-38-33-385Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `87cf6e3`, the product `cd168e3`
 - kind: soft (the person's): what they said when asked "gave up"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / $ / $
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / undo <act-id> [-m "<reason>"] revert an act — yours, or one you hold / question "<text>" record what the canon does not cover
 
 ## Who, and how often
 
-- `quiet`: 1 of 3 accounts (Sam run 1)
+- `quiet`: 1 of 3 accounts (June run 1)
 
 ## What happened
 
-- `quiet` run 1, Sam: could-not-judge, the scene ran out of time while they were acting; brought back by a message, then said no more. their last acts: say “What it's for, from where I've been standing:
+- `quiet` run 1, June: failed, gave up. their last acts: look · say “June here. My screen is back to a normal canon command line — no foggy dialog at the bottom, no unlabelled boxes. So I'm treating that odd prompt as gone for now, and I still haven't pressed anything on it.
 
-It's for the things we'd otherwise argue from memory. The noise rule, the bathroom rota, the food rule — those are in force and any of us can point at them instead of at each other. That's the real difference: three things are law and eight things are drafts, and the difference is visible without anyone having to trust a recollection.
+Sam: before I do anything about the noise complaint, note two things on my side. (1) "June, in the house chat" shows up as if I wrote the noise message — I didn't; that's the first I've heard of a Tuesday complaint. Worth knowing that what's shown as said by me isn't always mine. (2) Nothing about noise is in canon yet. That wants prose from all three of us, and the ratification is still standing, so anything asserted now is my word alone — exactly what we agreed to fix first.
 
-It's for keeping the asking, not just the answer. The cat is the case I'd defend: June wanted one, said no because of my allergy, and canon shows it was asked and refused for a stated reason. Without that, in a year it's "nobody ever wanted a cat" or "Sam vetoed it" depending on who's telling it. The record keeps the refusal honest in both directions.
-
-It's for making disagreement survivable. The heating rule names 19 against 21 and says neither of us is overruled. It doesn't win the argument; it stops the argument from being about who won.
-
-And it's for catching us out. Half my rounds were spent finding that nothing was recorded — the recycling day, the receipts, the collection date, the deposit. Grepping the log and getting nothing back is a real answer, and a useful one.
-
-What it is not: a diary, a judge, or a substitute for tonight's board over a broken window. It doesn't know dates, amounts or who said what first — every rule we wrote that leans on memory is still leaning on us.
-
-Honest caveat: eight pending, none of them held up by a policy anyone adopted. So what it's for is only as good as three people who remember to second each other's drafts.” · tell · tell · tell · tell · tell
+So my question stands: does Mira say yes to unanimous? Once she does, I'm happy to run `canon ratification set unanimous` myself if Sam prefers not to. Until then I'm reading help, not typing.” · give_up · tell · tell · tell
 
 ## What the people said
 
-- Sam, `quiet` run 1: “Got cut off mid-step: I was approving Mira's guest proposal (can-f1cb56f697a4) and objecting to my duplicate (can-b974e8cdde11) so one three-nights rule stands. Both are currently pending and each needs one more approval, so as it stands the house has two overlapping guest rules and neither is in force. Also worth knowing: the configured model endpoint (localhost:8080) isn't listening, so `canon check` and `canon draft` will fail, and `canon why` can't find any id in the log — including the positions June asked about.”
+- June, `quiet` run 1: “The scene won't take further messages, and I won't change canon policy alone. My screen is a normal canon command line again — the foggy dialog with unlabelled boxes is gone, untouched. I read the help and left things as they were: I didn't run `ratification set unanimous`, because Sam proposed it and Mira hasn't yet said yes, and swapping one person's standing word for another's is the thing we agreed to stop. I also didn't assert anything about the Tuesday noise complaint, though it appeared in the chat as if I wrote it — noise belongs in situations.md as prose, written by all three of us, not asserted in Sam's standing-word era by me. What's left: Mira's yes, then the ratification change, then the guest rule re-asserted under it, then the prose list together. Nothing in canon was changed by me.”
 
 ## The product source
 
@@ -40,5 +32,5 @@ None found by its exact text.
 ## To reproduce
 
 ```sh
-cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
+cd /Users/alexsbryan/dev/xenia && node src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
 ```

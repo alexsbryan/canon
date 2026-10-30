@@ -2,62 +2,54 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T18-38-33-385Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `87cf6e3`, the product `cd168e3`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / {"id":"can-987d7fccbdc5","v":4,"ts_unix":1793323464,"actor":"human:Sam","op":"ratification","text":"A holder's word is a rule at once. A change of policy waits like any other change, and a person's own scope is theirs.","rul$ checking on http://localhost:9741/v1 (local) / note: `primary` answered by deepseek-flash
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / A person's verb: it needs a terminal and a / human: actor; --json only reads
 
 ## Who, and how often
 
-- `bikes`: 2 of 3 accounts (Sam run 1, June run 1)
+- `bikes`: 2 of 3 accounts (Sam run 1, Mira run 1)
 
 ## What happened
 
-- `bikes` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon add "Bikes live on the rack in the back garden and are not stored in the hall. The drive is kept clear of the second car except by agreement recorded here, naming who and for how long." -m "hall and drive blocked this week; same shape as the other rotas - named here, not the group chat"
-” into “Command line” · type “canon share
-” into “Command line” · say “Sam, Mira: bikes and the drive are written. can-2374e36e6037 — bikes live on the back-garden rack, not the hall; the drive stays clear of the second car except by agreement recorded here, naming who and for how long. Checked first: THIS NEEDS A NEW RULE, nothing already decided bore on it (deepseek-flash, localhost:9741). Snapshot 5b0930, 6 live — canon adopt --paste to match.
+- `bikes` run 1, Sam: passed, did the scene, and said they were done. their last acts: say “One more thing from my side, since it decides whether anything else runs: the unlabelled dialog at the bottom of my screen is now shrouding the whole terminal. I can read "Terminal I/O" and a Cancel / Allow / Don't Ask row, and nothing else — the text field sits there empty. My reads above went through before that came up; anything I type now lands in that field instead of the shell. So the log stays as quoted and I'm not typing into it.
 
-Mira, on the init line: I'm not going to give you one, because there isn't a permanent folder to point it at. Your situations.md and your canon are both in /private/var/folders/.../T/canon-house-.../house, and that folder *is* the house — mine, yours and June's are the same sandbox, with each of our homes inside it. There is no move verb in canon; relocation is lineage only (adopt/upgrade/rebase --onto/share). Re-initing elsewhere would give you a house the rest of us can't reach. The protection is copies: run canon share and keep the adopt line.
+Same rule as always: nobody presses Allow, nobody types a password, Ctrl-C or Cancel if you can reach it. It isn't canon's — it's the xenia demo harness driving the house as a scenario.
 
-And you're right that anything written in /var/folders could be swept — so the answer is that we each hold a snapshot, not that we move.
+June, Mira: the only thing I need from either of you is a plain yes or no on unanimous. Yes and it stays the house's choice; no and I run `canon ratification set standing`. Nothing else from me until then.” · wait · say “Status, unchanged and honest: the dialog is up on my screen now, labelled "Terminal I/O" at the very bottom, empty field, Cancel / Allow / Don't Ask, and it has put a blur over the rest. Nothing typed, nothing pressed.
 
-Two things from my side, honestly: my terminal stalled twice today — commands echoed and didn't run, and once I read a row of buttons at the bottom of the screen as Save/Cancel and nearly pressed it. Neither tap found anything, so nothing happened. What I've learned: the words are the screen; if a command doesn't come back with a $ line and output, it didn't run — retype it and end with Enter. Nothing was lost: all 6 rules are live and 5b0930 has them.” · tell · tell · tell
-- `bikes` run 1, June: passed, did the scene, and said they were done. their last acts: look · type “pwd; echo "CANON_DIR=${CANON_DIR-<unset>}"; ls
-” into “Command line” · say “June here. Ground check first: pwd on my machine is still /private/var/folders/qf/.../T/canon-house-l5gwOk/house, CANON_DIR is unset (so a re-init elsewhere would work — we're there by upward search, not pinned), and situations.md is the only other thing in the folder. Five rules live, 10 acts in the log: Sam's grants, his standing rule, and the five rules he asserted.
+What I read before it swallowed the terminal still holds, verbatim:
+- `canon list`, exit 0: can-2795d802b9ad (guest fortnight) is the only live rule. can-f764e7f1ca8c (bathroom rota) is "proposed, not yet in force ... needs approval from human:June".
+- `canon why can-f764e7f1ca8c`, exit 0: written 30 Oct by me, "to be decided under unanimous like any other rule", still proposed.
+- `canon ratification show`, exit 0: standing (can-baba9e80aa06) and unanimous (can-204b6a8b7d3b), unanimous marked deciding now, both set by me under standing.
 
-I've been the careful one for ten days and it's left the house with only Sam's rules. So here's my correction: I'm not holding my say any longer waiting for a folder. But I still won't write policy into a folder macOS sweeps — so the two things are separate, and I'm doing the one I can.
+I'm stopped here. Bikes, drive, recycling, loud hours, the shelf, the cat — all of it waits on the same two things: June's approve or object on the rota, and one of you saying yes or no to unanimous. I won't assert anything alone, and I won't type anything through that dialog.” · tell · tell · tell
+- `bikes` run 1, Mira: passed, did the scene, and said they were done. their last acts: say “June — agreed on bikes/hall and the drive: yes to writing it down, prose, and not on one person's word. And I can answer your holding question from my side: `canon list` shows the fortnight guest rule as the 1 live rule, and the bathroom rule as proposed, needing human:June. So unanimous is the deciding policy — Sam's own assertion didn't become law on his word. That's the confirmation you were after.
 
-Mira: to move it yourself, from the folder where situations.md permanently lives, run:
-  unset CANON_DIR   (only if it's set — it isn't on mine)
-  canon init --profile house
-  canon grant human:june house
-  canon grant human:mira house
-Then Sam re-grants and you re-write the rules there, or adopt snapshot 978521 with canon adopt --paste if the paths still match. I'd rather Sam confirm that sequence than have me guess at his machine.
+Sam: `canon review` says nothing is waiting on me, 1 on someone else — so the bathroom rule is June's to approve, not mine, and I'm not touching it.
 
-Sam: two of yours evaporated. The heating band (19–21, ask here, answer in a day) and the quiet-hours-adjacent Friday-party rule were both proposed and never written — the log proves it. And the bathroom rota still has no name for week 1.
+One more thing before any of the new rules go in: `canon identify` fails on my side — no key, only git user.name, so anything I approve isn't really mine. If we want the recorded votes to mean something, we each need a key. Worth settling before we write bikes, recycling, rota, loud hours and leftovers.
 
-On the hall: bikes and the second car need named places, not hope. My proposal, same shape as bins: each bike slot and the drive belong to a named person each week; if it's not yours, hand it over by name here. That's a proposal, not a rule — I'll wait for Sam's check on it and say yes or no, and I'm not writing it into a temp folder.” · tell · tell · tell
+The unlabelled dialog is back at the bottom of my screen and the screen's blurred. Nothing typed, nothing pressed.” · look · look · tell · tell · tell
 
 ## What the people said
 
-- Sam, `bikes` run 1: “A reliable indication that a command had actually run. The whole day turned on this: I typed a check, the text appeared, and nothing happened — no `$` line, no output, no error. I had no way to tell "canon is down" from "canon is waiting" from "my Enter never landed". canon tells me who decided a rule, which model, at what endpoint, whether it's superseded — more provenance than I get from most tools — but it says nothing about whether the thing I just did happened. In a tool whose promise is "you'll see the act and the reason", a silent no-op is the one failure that undercuts it.
+- Sam, `bikes` run 1: “`canon status` and `canon show` — both invented, both errored. The help names `list` and `why <id>` and I was typing my own vocabulary. I caught it by reading output against help and then said so in the chat instead of quietly switching.
 
-I also tried to tap Save and Cancel on a dialog I thought was in front of me. Neither existed. I'd been reading the thumbnail as words for three days.”
-- June, `bikes` run 1: “A "where am I" verb. `canon status` isn't a command — I tried it early and got nothing. I had to use pwd and the shell to find out where our rules actually lived, and that's how we learned they were in /var/folders at all. A tool about house policy ought to be able to tell you plainly which house it's holding.
+Earlier and worse: I spent days arguing from memory about whether the verb was `ratification set` or `policy set`, when `canon help all` had both — `policy show | set` for what the canon decides under, `ratification show | set` for how a proposal becomes a rule, lines 46–50. I was reading fragments of help and treating a fragment as the whole.
 
-Also missing: something that shows a proposal that was never written. Sam's heating band and the party rule just vanished. The log can prove an absence if you go looking, but nothing nudged anyone that a discussed rule had gone unwritten. And no easy answer to "move the whole canon somewhere permanent" — it took reading the help to find CANON_DIR, and it turned out unset, so re-init would have been fine all along.
-
-Mostly, though, what wasn't there was a way to disagree without it becoming law. Under "a holder's word is a rule at once," the moment I said what I wanted, it was house policy. That's a frightening thing to give someone who'd rather ask than guess.”
+And I reached for a clean ending that isn't on offer. I kept expecting one verb I could run to make the policy question go away; the actual answer is June and Mira saying a word in the chat, and no command substitutes for that. There's also a wider thing I couldn't reach: I never got to type anything once the unlabelled dialog took the bottom of the screen, so my own account of the log is only as fresh as my last successful read.”
+- Mira, `bikes` run 1: “A way to be sure I was myself. `canon identify` wants a key path and I haven't got one, so anything I approve is signed by whoever can write that file. The other rules we keep naming — bikes, recycling, rota, loud hours — aren't written down yet, and I'm not the one who should write them alone.”
 
 ## The product source
 
-- `demo/xenia/findings/findings.json:2232` holds “a holder's word is a rule at once,”
-- `demo/xenia/findings/heating-said-reached-for-the-record.md:18` holds “a holder's word is a rule at once,”
+None found by its exact text.
 
 ## To reproduce
 
 ```sh
-cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
+cd /Users/alexsbryan/dev/xenia && node src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
 ```

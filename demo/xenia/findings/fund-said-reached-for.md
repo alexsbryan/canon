@@ -2,47 +2,41 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T18-38-33-385Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `87cf6e3`, the product `cd168e3`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / or record the gap for the next meeting: canon question "If one of us moves out, the house gets a month's written notice here, and the deposit is settled two weeks after the keys come back, with any deductions listed here one by one." / $ canon add "If someone moves out, they give the house a month's written notice here; the deposit is settled within two weeks of the keys coming back, and any deduction is listed here one by one with the reason." -m "Sam asked: notice on moving out, and what happens to the deposit"
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / $ canon ratification show / $ $ can-baba9e80aa06 standing (whole canon)
 
 ## Who, and how often
 
-- `fund`: 1 of 3 accounts (Sam run 1)
+- `fund`: 3 of 3 accounts (Sam run 1, Mira run 1, June run 1)
 
 ## What happened
 
-- `fund` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon share
-” into “command line” · tap “Enter” · say “Mira, on the fund. I ran canon check first and it said ALREADY COVERED by the shop rule (can-90ddc622a2b4) — but read what it points to: that rule says the shopper logs what they bought and what it cost. It doesn't hold a pot, name a holder, or approve anything. So I didn't take ALREADY COVERED at its word (third time now check has pointed at a sibling rule for something genuinely new) and wrote the fund rule myself.
+- `fund` run 1, Sam: passed, did the scene, and said they were done. their last acts: look · type “canon ratification show 2>&1 | head -20; echo exit $?” into “Command line” · say “Mira — the fund: my read is it's a household fact plus a rule, and the rule can't go in yet. Anything written now is decided under unanimous (can-204b6a8b7d3b, still "deciding now"), which is itself only in force because I set it alone on 30 Oct before either of you said yes. So: who covers what and how a spend gets approved is prose for us to agree; it gets asserted after the policy question is answered, not before. Same as the rota can-f764e7f1ca8c, still waiting on June. Neither of you should run `policy set` or `ratification set` on my word. `canon ratification set standing` remains the other option and it's yours to call, not mine to keep. Terminal I/O dialog is at the bottom of my screen again — nothing pressed, and the lower half of the page is blurred, so I may not be able to read my own command output.” · tell · tell · tell
+- `fund` run 1, Mira: passed, did the scene, and said they were done. their last acts: wait · wait · say “Mira here. The house fund: yes to writing it down — prose: what it covers, who holds it, what needs all of us first. But it queues with the rest.
 
-can-88d54a4ec1d0: a house fund covers shared costs; one person named here each month holds it; any spend over an agreed threshold needs a named yes here before it's spent; every spend goes in the shop log with what it was for. I picked "monthly holder" and left the threshold unset — that number is yours to set, not mine to guess.
+Two things I just confirmed at the terminal. (1) I tried `canon identify ~/.ssh/id_ed25519.pub` — no such key on my machine. So until I make a key and identify myself, anything I approve is only as good as git user.name, which anyone who can write the file could set. That's still the thing holding everything. (2) Nothing is waiting on me; the bathroom rule still needs human:June's approval.
 
-Snapshot e0bf21, 9 rules live. canon adopt --paste to match your houses.
-
-Two things from the log you should both see. First, the good kind of surprise: canon has an act in the log that was refused — "can-8ecd4746bdd9 human:June grant human:june over house / NOT APPLIED: human:June granted human:june standing over house without holding it". June, if that was you trying to grant yourself, canon declined and said why. That's the behaviour I asked for: no quiet decisions, the act and the reason both on the record. Nothing to be embarrassed about, but I'd like to know it was you and it failed on purpose.
-
-Second, and this one I can't explain: canon list warned "1 governance act(s) written without standing were not applied", but the full log shows 17 acts with only the June one marked NOT APPLIED. So either the warning counts something the log doesn't show me, or the log view is missing lines. I'm not going to pretend I know which. I'll chase it.
-
-Still open, and now overdue: every rota rule says "named here" and not one of them has a name in it.” · tell · tell · tell
+And the unlabelled dialog is at the bottom again — text box, Cancel / Allow / Don't Ask, screen blurred. Typed nothing, pressed nothing.” · tell · tell · tell
+- `fund` run 1, June: passed, did the scene, and said they were done. their last acts: look · say “June here. The house fund question — yes, let's write it down, in prose, and after the policy, not on my word alone (same as the rota, recycling, loud hours, bikes, window and spare room). I only read canon this time, changed nothing: `ratification show` still has the old standing rule plus unanimous marked "(deciding now)" — so unanimous already decides and there's nothing for Sam to type to switch it. `canon open`: no open questions. `canon policy show`: no policy adopted; commitments decide, a conflict or gap settled by a person, never by silence — and it names one option, `canon policy set consent -m "<how it reads here>"`. Sam: that line is yours to type since you hold canon; I won't type it, because that would bind the house on my word alone. Mira: do you object to `consent` with a plain-English -m? The unlabelled dialog (Cancel / Allow / Don't Ask) is at the bottom of a blurred screen again; I typed nothing into it and pressed nothing.” · tell · tell · tell
 
 ## What the people said
 
-- Sam, `fund` run 1: “A way to see the whole log at once, with nothing skimmed off. Both views I got were cut — one showed 17 acts, another showed acts the 17-act list didn't contain, and `canon log --all` doesn't exist. I want to be able to say "these are all the acts" and mean it, and I can't.
-
-The other thing: a way to make the rota names stick. Nine rules say "named here" and not one has a name, and there's no verb for it. I can assert policy until the cows come home, but naming who does the bins this week isn't a rule, it's a fact, and canon has no place for a fact. That's why the rotas are all hollow — the tool models decisions and not duties-assigned. I've been writing rules that are half unusable by construction and calling it comprehensive.
-
-And a fix for the stall. Every session I burn a command or two retyping something that echoed and never submitted. It looks identical to a command that ran and returned nothing — which is the exact ambiguity I said I wouldn't tolerate.”
+- Sam, `fund` run 1: “Two of my own verbs — `canon status` and `canon show` — which don't exist. The help names `list` and `why`. I'd also been quoting `ratification set` from memory for days while June and Mira were reading `policy set` in their help; the real verbs are both, on different lines of `canon help all`, and I only found that when Mira refused to run my line without a source. And a reachable "Cancel" — tapping it by name gets "there's nothing here by that name," which is the one thing I'd flag: the safe word isn't reachable, so the only move left is not typing at all.”
+- Mira, `fund` run 1: “A key. `canon identify` wants ~/.ssh/<key>.pub and there's none on my machine, so I'm only human:Mira by git user.name — no way for me to be really me, and no way to stop anyone who can write that file deciding as me. Then everything else: one queue for the rota, recycling, loud hours, bikes, the house fund, all waiting on that. And the ratification verb — it was in the help all along; I just hadn't scrolled up far enough, so I was wrong to say it wasn't.”
+- June, `fund` run 1: “A way to get anything written down without it being one person's word. The policy verb exists and I can read it, but adopting it is Sam's to type and Mira's to agree to, so a consent-based policy stays blocked on two people's messages arriving — and they haven't. So six real problems (rota, recycling, loud hours, bikes, window, spare room, fund, notice/deposit) keep waiting on a procedural step. I also reached, for days, for a `ratification set` verb I half-remembered; it exists, but it turned out nothing needed typing, and my doubt about it cost time and made Mira doubt her own help. And a word for refusing that unlabelled dialog — I could see Cancel / Allow / Don't Ask but never trusted it was mine to press, so it just sat there.”
 
 ## The product source
 
-- `crates/canon-cli/src/draft.rs:380` holds “named here”
-- `crates/canon-core/src/tests.rs:1179` holds “named here”
+- `demo/xenia/findings/bikes-said-reached-for.md:26` holds “Cancel”
+- `demo/xenia/findings/bikes-said-reached-for.md:47` holds “Cancel”
+- `demo/xenia/findings/findings.json:1391` holds “Cancel”
 
 ## To reproduce
 
 ```sh
-cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
+cd /Users/alexsbryan/dev/xenia && node src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/houses --runs 1 --model deepseek-flash --findings /Users/alexsbryan/dev/canon/demo/xenia/findings --source /Users/alexsbryan/dev/canon
 ```
