@@ -1406,7 +1406,7 @@ pub fn dedupe(
 /// only what a run that did not choose folds at, so the artifact it writes is
 /// coherent on its own.
 pub fn majority(samples: usize) -> usize {
-    samples / 2 + 1
+    canon_core::Bar::MAJORITY.needed(samples)
 }
 
 /// Fold N readings of the same passages into the findings enough of them agree

@@ -1453,37 +1453,37 @@ pub fn voice(args: &[String]) -> i32 {
     // Standing this actor was given, and rulings they made on pairs. Neither
     // is something the actor "put in" — a grant is somebody else's act — but
     // both are the answer to "what is this member's record", and for an agent
-    // that question is the whole reason to ask.
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs() as i64)
-        .unwrap_or(0);
-    let mut held: Vec<String> = Vec::new();
+    // that question is the whole reason to ask. Grants as the fold kept them,
+    // so one given without standing, or ended by a withdrawal over a wider
+    // scope, reads as the house reads it.
+    let now = store::now();
+    let held: Vec<String> = canon
+        .grants()
+        .iter()
+        .filter(|g| g.actor == who)
+        .map(|g| {
+            let end = match (g.withdrawn_at, g.horizon) {
+                (Some(w), _) => format!(", ended {}", store::ymd(w)),
+                (None, Some(h)) if g.lapsed(now) => format!(" until {}, lapsed", store::ymd(h)),
+                (None, Some(h)) => format!(" until {}", store::ymd(h)),
+                (None, None) => ", no end date".to_string(),
+            };
+            let by = log
+                .acts()
+                .iter()
+                .find(|a| a.id == g.act)
+                .map_or("", |a| &a.actor);
+            format!(
+                "  over {}, granted by {} on {}{end}",
+                g.scope,
+                crate::explain::person(by),
+                store::ymd(g.granted_at)
+            )
+        })
+        .collect();
     let mut rulings: Vec<String> = Vec::new();
     for act in log.acts().iter() {
         match &act.kind {
-            canon_core::ActKind::Grant {
-                holder,
-                scope,
-                horizon,
-                ..
-            } if *holder == who => {
-                let withdrawn = log.acts().iter().any(|w| {
-                    matches!(&w.kind, canon_core::ActKind::Withdraw { holder: h, scope: s, .. }
-                        if *h == who && s == scope && w.ts_unix >= act.ts_unix)
-                });
-                let end = match (withdrawn, horizon) {
-                    (true, _) => ", since withdrawn".to_string(),
-                    (false, Some(h)) if *h < now => format!(" until {}, lapsed", store::ymd(*h)),
-                    (false, Some(h)) => format!(" until {}", store::ymd(*h)),
-                    (false, None) => ", no end date".to_string(),
-                };
-                held.push(format!(
-                    "  over {scope}, granted by {} on {}{end}",
-                    crate::explain::person(&act.actor),
-                    store::ymd(act.ts_unix)
-                ));
-            }
             canon_core::ActKind::Dismiss { a, b, rationale } if act.actor == who => {
                 let outside = canon.ungoverned().iter().any(|(x, _)| x == &act.id);
                 // The verdict on one line, the two rules named under it, and
@@ -1735,7 +1735,7 @@ pub fn second(args: &[String]) -> i32 {
         return fail("usage: canon second <question-id>");
     };
     let me = store::actor();
-    if !me.starts_with("human:") {
+    if canon_core::Person::of(&me).is_none() {
         return fail(format!(
             "{me} cannot second a question — agents draft, ask and cite; seconding is a person's"
         ));

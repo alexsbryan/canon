@@ -387,7 +387,7 @@ impl Prompt for Terminal {
 /// somebody deciding as you is `canon identify`. `--json` reads and decides
 /// nothing, so it is not behind this door.
 pub fn door(terminal: bool, actor: &str, from: &str) -> Result<(), String> {
-    if !actor.starts_with("human:") {
+    if canon_core::Person::of(actor).is_none() {
         return Err(format!(
             "`canon review` decides as a person, and {actor} (from {from}) is not one; \
              `canon review --json` lists what is waiting"

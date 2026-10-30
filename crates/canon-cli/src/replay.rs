@@ -1418,7 +1418,7 @@ fn scene_line(s: &Step) -> String {
             .map(|a| {
                 a.iter()
                     .filter_map(Value::as_str)
-                    .map(|x| x.trim_start_matches("human:").to_string())
+                    .map(|x| x.trim_start_matches(canon_core::person::PREFIX).to_string())
                     .collect::<Vec<_>>()
                     .join(", ")
             })

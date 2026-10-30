@@ -586,7 +586,7 @@ pub enum Governs {
 /// not hold a corner.
 pub fn personal_owner(scope: &Scope) -> Option<&str> {
     let root = scope.as_str().split('.').next()?;
-    (root.len() > "human:".len() && root.starts_with("human:")).then_some(root)
+    (root.len() > crate::person::PREFIX.len() && crate::Person::of(root).is_some()).then_some(root)
 }
 
 /// When personal scopes were honoured, as the canon-wide ratification rule

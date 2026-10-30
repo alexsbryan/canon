@@ -520,3 +520,28 @@ fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
     assert!(why.contains("holder: human:june"), "{why}");
     assert!(why.contains("founded this canon"), "{why}");
 }
+
+#[test]
+fn voice_lists_standing_as_the_house_holds_it() {
+    // `voice` read grants from the raw log: a grant refused for want of
+    // standing was listed as held, and a withdrawal over a wider scope did
+    // not end the narrower grant under it.
+    let dir = fresh("voice");
+    canon_as(&dir, "human:alex", &["grant", "human:alex", "house"]);
+    tick();
+    canon_as(&dir, "human:alex", &["grant", "human:bo", "house.kitchen"]);
+    tick();
+    let (_, out) = canon_as(&dir, "human:mal", &["grant", "human:mal", "house.garden"]);
+    assert!(out.contains("NOT APPLIED"), "{out}");
+    tick();
+    canon_as(&dir, "human:alex", &["withdraw", "human:bo", "house"]);
+
+    let (code, out) = canon_as(&dir, "human:alex", &["voice", "human:bo"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("over house.kitchen, granted by alex"), "{out}");
+    assert!(out.contains(", ended "), "{out}");
+    assert!(!out.contains("no end date"), "{out}");
+
+    let (_, out) = canon_as(&dir, "human:alex", &["voice", "human:mal"]);
+    assert!(out.contains("has not put anything in this canon"), "{out}");
+}

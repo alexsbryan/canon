@@ -44,7 +44,9 @@ pub fn named(canon: &Canon, id: &ActId) -> String {
 /// A person by name. `human:` is the format's business, not the reader's;
 /// an agent keeps its prefix because "agent:helper" is the fact.
 pub fn person(actor: &str) -> &str {
-    actor.strip_prefix("human:").unwrap_or(actor)
+    actor
+        .strip_prefix(canon_core::person::PREFIX)
+        .unwrap_or(actor)
 }
 
 /// What follows "refused" on a line that says so: " by Kai", then ", <date>"
@@ -501,14 +503,14 @@ pub fn person_in(text: &str) -> String {
     // name a scope that does not exist.
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
-    while let Some(i) = rest.find("human:") {
+    while let Some(i) = rest.find(canon_core::person::PREFIX) {
         out.push_str(&rest[..i]);
-        let after = &rest[i + "human:".len()..];
+        let after = &rest[i + canon_core::person::PREFIX.len()..];
         let word = after
             .find(|c: char| c.is_whitespace() || matches!(c, ',' | ';' | ')' | '`'))
             .map_or(after, |end| &after[..end]);
         if word.trim_end_matches('.').contains('.') {
-            out.push_str("human:");
+            out.push_str(canon_core::person::PREFIX);
         }
         rest = after;
     }

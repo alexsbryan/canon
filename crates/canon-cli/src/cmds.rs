@@ -421,7 +421,7 @@ pub fn init(args: &[String]) -> i32 {
     // An agent cannot seat itself, so its founding waits for a person;
     // `--open` is the old shared start, and writes there are unguarded.
     let founder = store::actor();
-    let granted = if plain || open || !founder.starts_with("human:") {
+    let granted = if plain || open || canon_core::Person::of(&founder).is_none() {
         false
     } else {
         let scope = match canon_core::Scope::new(profile.scope()) {
@@ -468,13 +468,13 @@ pub fn init(args: &[String]) -> i32 {
             println!("  hold it: canon grant {founder} {}", profile.scope());
         }
         println!("  a holder's word is a rule at once; to need everyone: canon ratification set unanimous");
-        match store::actor().strip_prefix("human:") {
+        match store::actor().strip_prefix(canon_core::person::PREFIX) {
             Some(name) => {
                 println!("  policy changes wait like rules do, and human:{name}.… is yours alone")
             }
             None => println!("  policy changes wait like rules do"),
         }
-        if !store::actor().starts_with("human:") {
+        if canon_core::Person::of(&store::actor()).is_none() {
             println!(
                 "  written by {}, so it waits for a person to approve it",
                 store::actor()
