@@ -12,7 +12,7 @@ import re
 import sys
 from pathlib import Path
 
-CAPS = {"canon-core": 4817, "canon-cli": 15767, "canon-contract": 304}
+CAPS = {"canon-core": 4817, "canon-cli": 15297, "canon-contract": 304}
 
 TEST_FILE = re.compile(r"(^|/)tests?(_\w+)?\.rs$|_tests?\.rs$|(^|/)testing\.rs$|(^|/)tests/")
 TEST_MOD = re.compile(r"^\s*#\[cfg\(test\)\]\s*$")
