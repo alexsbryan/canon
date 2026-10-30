@@ -12,8 +12,8 @@
 # the pure code below those calls can be re-scored in seconds.
 #
 # WHAT IT JUDGES: anything downstream of a model call — the citation cut, the
-# silence guard, the quantity guard, the fold, the convergence threshold, the
-# tension rendering, the scorer itself.
+# silence guard, the quantity guard, the fold, the tension rendering, the
+# scorer itself.
 #
 # WHAT IT CANNOT JUDGE, and refuses rather than fudging: a change to the CALLS.
 # A different prompt, schema, chunking or pass count makes the recording the

@@ -174,8 +174,7 @@ pub fn report(e: ModelError) -> i32 {
 /// The REPLY is what is worth keeping. Everything canon does after a call —
 /// cutting a citation from the passage the model pointed at, refusing a
 /// silence with no reason, refusing a rule that states a number its citation
-/// does not, folding duplicates, thresholding a convergence — is pure code
-/// over this string. Recording it makes every one of those testable against
+/// does not, folding duplicates — is pure code over this string. Recording it makes every one of those testable against
 /// real model output at zero cost.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TapeEntry {
@@ -189,7 +188,7 @@ pub struct TapeEntry {
     /// already naming its stage, this just keeps the name.
     ///
     /// Defaulted, so a tape recorded before stages were labelled still plays
-    /// end to end — it simply cannot be cut at a stage.
+    /// end to end — it simply cannot be checked by stage.
     #[serde(default)]
     pub stage: String,
     pub raw: String,
@@ -226,18 +225,7 @@ fn is_ok_status(s: &u16) -> bool {
 #[derive(Debug)]
 pub enum Tape {
     Record(std::cell::RefCell<Vec<TapeEntry>>),
-    /// Playing back, optionally only up to a stage.
-    ///
-    /// `live_from` is what makes an arm on a LATE stage cheap. The stages
-    /// above it come off the tape; from that stage on the calls are real. A
-    /// comparison arm is 10 of ~36 calls, so it costs about five minutes
-    /// instead of twenty — and unlike a full replay it CAN judge a changed
-    /// prompt, because the changed stage is actually run.
-    Play {
-        entries: std::cell::RefCell<std::collections::VecDeque<TapeEntry>>,
-        live_from: Option<String>,
-        live: std::cell::Cell<bool>,
-    },
+    Play(std::cell::RefCell<std::collections::VecDeque<TapeEntry>>),
 }
 
 impl Tape {
@@ -245,19 +233,15 @@ impl Tape {
         Tape::Record(std::cell::RefCell::new(Vec::new()))
     }
 
-    pub fn play(entries: Vec<TapeEntry>, live_from: Option<String>) -> Self {
-        Tape::Play {
-            entries: std::cell::RefCell::new(entries.into()),
-            live_from,
-            live: std::cell::Cell::new(false),
-        }
+    pub fn play(entries: Vec<TapeEntry>) -> Self {
+        Tape::Play(std::cell::RefCell::new(entries.into()))
     }
 
     /// What was recorded, in order.
     pub fn entries(&self) -> Vec<TapeEntry> {
         match self {
             Tape::Record(v) => v.borrow().clone(),
-            Tape::Play { entries, .. } => entries.borrow().iter().cloned().collect(),
+            Tape::Play(entries) => entries.borrow().iter().cloned().collect(),
         }
     }
 }
@@ -682,21 +666,11 @@ impl Client {
             // shape it was recorded in.
             wire: Wire::of(endpoint),
             api_key: None,
-            tape: Some(std::rc::Rc::new(Tape::play(entries, None))),
+            tape: Some(std::rc::Rc::new(Tape::play(entries))),
             busy_streak: Default::default(),
             served: Default::default(),
             max_tokens: None,
         }
-    }
-
-    /// Play a tape on a LIVE client, going real from `live_from` onward.
-    ///
-    /// The client keeps its configured endpoint because the calls from the cut
-    /// stage on are genuine. This is the loop for iterating on a late stage:
-    /// the comparison stage is 10 of ~36 calls, so an arm on it costs the 10.
-    pub fn playing(mut self, entries: Vec<TapeEntry>, live_from: Option<String>) -> Self {
-        self.tape = Some(std::rc::Rc::new(Tape::play(entries, live_from)));
-        self
     }
 
     /// A leg's view of this client: same endpoint, same model, SAME tape.
@@ -734,71 +708,57 @@ impl Client {
         // different endpoint, or the same ones in a different order, is not
         // the build this tape recorded, and a number scored from it would be
         // about neither — so it refuses instead of substituting (§18.3).
-        if let Some(Tape::Play {
-            entries,
-            live_from,
-            live,
-        }) = self.tape.as_deref()
-        {
-            // Once the cut stage is reached the tape is done and every call
-            // from here is real — including the rest of THIS stage's calls.
-            if !live.get() && live_from.as_deref() == Some(stage) {
-                live.set(true);
+        if let Some(Tape::Play(entries)) = self.tape.as_deref() {
+            let entry = entries
+                .borrow_mut()
+                .pop_front()
+                .ok_or_else(|| ModelError::Malformed {
+                    detail: format!(
+                        "the tape is exhausted: this build asked for a `{path}` call \
+                             the recording does not have. A change to the CALL SEQUENCE \
+                             cannot be judged by replay — re-run it live."
+                    ),
+                    raw: String::new(),
+                })?;
+            if entry.path != path {
+                return Err(ModelError::Malformed {
+                    detail: format!(
+                        "tape out of step: this build asked for `{path}` where the \
+                         recording has `{}`. Replay judges pure code over recorded \
+                         model output; the calls themselves must match.",
+                        entry.path
+                    ),
+                    raw: String::new(),
+                });
             }
-            if !live.get() {
-                let entry =
-                    entries
-                        .borrow_mut()
-                        .pop_front()
-                        .ok_or_else(|| ModelError::Malformed {
-                            detail: format!(
-                                "the tape is exhausted: this build asked for a `{path}` call \
-                                 the recording does not have. A change to the CALL SEQUENCE \
-                                 cannot be judged by replay — re-run it live, or cut the tape \
-                                 above the stage you changed with `--live-from`."
-                            ),
-                            raw: String::new(),
-                        })?;
-                if entry.path != path {
-                    return Err(ModelError::Malformed {
-                        detail: format!(
-                            "tape out of step: this build asked for `{path}` where the \
-                             recording has `{}`. Replay judges pure code over recorded \
-                             model output; the calls themselves must match.",
-                            entry.path
-                        ),
-                        raw: String::new(),
-                    });
-                }
-                // A stage label only checks when the recording HAS one: tapes
-                // written before stages were labelled carry `""`, and refusing
-                // those would retire evidence that is still perfectly good for
-                // a full replay.
-                if !entry.stage.is_empty() && entry.stage != stage {
-                    return Err(ModelError::Malformed {
-                        detail: format!(
-                            "tape out of step: the `{stage}` stage asked, but the recording \
-                             has a `{}` call here.",
-                            entry.stage
-                        ),
-                        raw: String::new(),
-                    });
-                }
-                // A recorded refusal is replayed AS a refusal. Anything else
-                // would make the replay a different run from the one taped.
-                if entry.status != 200 {
-                    return Err(ModelError::Refused {
-                        status: entry.status,
-                        detail: cap(&entry.raw),
-                    });
-                }
-                let parsed: Value =
-                    serde_json::from_str(&entry.raw).map_err(|e| ModelError::Malformed {
-                        detail: format!("recorded reply is not JSON: {e}"),
-                        raw: cap(&entry.raw),
-                    })?;
-                return Ok((parsed, entry.raw));
+            // A stage label only checks when the recording HAS one: tapes
+            // written before stages were labelled carry `""`, and refusing
+            // those would retire evidence that is still perfectly good for
+            // a full replay.
+            if !entry.stage.is_empty() && entry.stage != stage {
+                return Err(ModelError::Malformed {
+                    detail: format!(
+                        "tape out of step: the `{stage}` stage asked, but the recording \
+                         has a `{}` call here.",
+                        entry.stage
+                    ),
+                    raw: String::new(),
+                });
             }
+            // A recorded refusal is replayed AS a refusal. Anything else
+            // would make the replay a different run from the one taped.
+            if entry.status != 200 {
+                return Err(ModelError::Refused {
+                    status: entry.status,
+                    detail: cap(&entry.raw),
+                });
+            }
+            let parsed: Value =
+                serde_json::from_str(&entry.raw).map_err(|e| ModelError::Malformed {
+                    detail: format!("recorded reply is not JSON: {e}"),
+                    raw: cap(&entry.raw),
+                })?;
+            return Ok((parsed, entry.raw));
         }
         let url = format!("{}/{path}", self.endpoint);
         let mut waited = Duration::ZERO;

@@ -85,7 +85,7 @@ pub(crate) const VERBS: &[(&str, &[&str], &[&str], Run)] = &[
     ("merge-driver", &[], &[], crate::lineage::merge_driver),
     ("tensions", &[], &["--allow-remote", "--json"], crate::tensions::run),
     ("config", &[], &[], crate::cmds::config),
-    ("draft", &["--as", "--continue", "--from", "--k", "--live-from", "--max-chunks", "--out", "--refold", "--replay", "--samples", "--since"], &["--accept-all", "--allow-remote", "--dry-run", "--from-git", "--include-ignored", "--json", "--resume", "--yes"], crate::draft::run),
+    ("draft", &["--as", "--continue", "--from", "--max-chunks", "--replay", "--since"], &["--accept-all", "--allow-remote", "--dry-run", "--from-git", "--include-ignored", "--json", "--resume", "--yes"], crate::draft::run),
     ("check", &["--about", "--amends", "--scope"], &["--allow-remote", "--irreversible", "--json"], crate::check::run),
 ];
 
@@ -308,13 +308,13 @@ fn command(verb: &'static str, valued: &[&'static str], switches: &[&'static str
 /// has no better word than "value".
 fn value_name(flag: &str) -> &'static str {
     match flag {
-        "--continue" | "--expect" | "--from" | "--out" | "--refold" | "--replay" => "path",
+        "--continue" | "--expect" | "--from" | "--out" | "--replay" => "path",
         "-m" => "why",
         "--ask" => "question",
         "--scope" | "--of" => "scope",
         "--except" => "id",
         "--after" | "--horizon" | "--revisit" | "--at" | "--since" => "date",
-        "--count" | "--k" | "--samples" | "--max-chunks" | "--step" => "n",
+        "--count" | "--max-chunks" | "--step" => "n",
         _ => "value",
     }
 }

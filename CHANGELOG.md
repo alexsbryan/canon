@@ -14,8 +14,14 @@ renames that heading to the version, and its section becomes the release notes
   preview now read one divergence the same way.
 - `canon leave <scope> -m "<question>"` is `canon withdraw <you> <scope>
   --ask "<question>"`.
-- `canon draft`'s measurement arm: `--samples`, `--k`, `--refold` and
-  `--live-from`. `--replay <run.json>` plays a whole recorded run as before.
+- `draft` no longer takes `--samples`, `--refold`, `--k` or `--live-from`.
+  They measured extraction (several readings of each passage, folded by
+  agreement) and cut a recording at a stage to re-run only the stages after
+  it; neither served drafting a canon. `canon draft --replay <run.json>`
+  still replays a whole recorded run, and a run that was killed or failed
+  after extraction is finished with `--continue <run.json>`. Run files
+  written with `samples` still read. `scripts/converge-sweep.sh` is gone
+  with them, and so is `draft --out`, which only `--refold` read.
 
 ### Changes
 

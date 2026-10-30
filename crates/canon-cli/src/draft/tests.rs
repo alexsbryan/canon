@@ -79,7 +79,6 @@ fn review_context_is_the_recorded_passage_only_when_the_quote_still_fits() {
             source: candidate.source.clone(),
             kind: candidate.kind,
             because: String::new(),
-            sample: 0,
         }],
         ..Default::default()
     };
@@ -332,7 +331,6 @@ fn candidate(text: &str) -> Candidate {
         source: "house.md:1-2".into(),
         kind: Kind::Rule,
         because: String::new(),
-        sample: 0,
     }
 }
 
@@ -347,19 +345,6 @@ fn candidate_citing(text: &str, quote: &str) -> Candidate {
     Candidate {
         quote: self::quote(quote),
         ..candidate(text)
-    }
-}
-
-/// One reading's finding: which sample said it, and the words it cited.
-fn read(sample: usize, quote: &str, text: &str) -> Candidate {
-    Candidate {
-        text: text.into(),
-        quote: self::quote(quote),
-        chunk: 0,
-        source: "house.md:1-2".into(),
-        kind: Kind::Rule,
-        because: String::new(),
-        sample,
     }
 }
 
@@ -938,7 +923,6 @@ fn in_flight(chunks: Vec<Chunk>, candidates: Vec<Candidate>) -> DraftRun {
         tension_passes_unread: Vec::new(),
         tension_schedule: None,
         failed: None,
-        samples: 1,
         stopped_after: None,
         checkpoint: None,
         replayed_from: None,
@@ -1030,49 +1014,18 @@ fn a_recording_with_a_hole_in_it_is_refused_rather_than_replayed() {
     // passage — and the only thing that noticed was a stage label
     // mismatching on the very last call. Had the hole been in the LAST
     // chunk, nothing would have noticed at all.
-    let why = tape_hole("ckpt.json", 103, 104, 1).expect("refused");
+    let why = tape_hole("ckpt.json", 103, 104).expect("refused");
     assert!(why.contains("103 extraction call(s) where 104"), "{why}");
     assert!(why.contains("hole"), "{why}");
 
-    // A complete recording passes, at one sample or many.
-    assert_eq!(tape_hole("r.json", 104, 104, 1), None);
-    assert_eq!(tape_hole("r.json", 312, 104, 3), None);
-    assert!(
-        tape_hole("r.json", 311, 104, 3).is_some(),
-        "a hole at 3 samples too"
-    );
+    // A complete recording passes, and one with a call too many is refused
+    // too: the extra reply would be read in place of the next stage's.
+    assert_eq!(tape_hole("r.json", 104, 104), None);
+    assert!(tape_hole("r.json", 105, 104).is_some(), "an extra call too");
 
     // A recording made before calls carried stage labels cannot be checked
     // this way, and is left alone rather than refused on no evidence.
-    assert_eq!(tape_hole("old.json", 0, 104, 1), None);
-}
-
-#[test]
-fn a_cut_needs_something_on_both_sides_unless_the_run_was_killed() {
-    // A cut has to leave calls on the tape AND calls to actually make. A
-    // stage the recording never called leaves nothing live, so the run comes
-    // back a full replay wearing a live label.
-    let have = ["commitments", "quantities"];
-    assert_eq!(cut_refusal("r.json", "quantities", &have, None), None);
-
-    let why = cut_refusal("r.json", "tensions", &have, None).expect("refused");
-    assert!(why.contains("no `tensions` stage"), "{why}");
-    assert!(
-        why.contains("commitments, quantities"),
-        "names what it has: {why}"
-    );
-
-    let why = cut_refusal("old.json", "tensions", &[], None).expect("refused");
-    assert!(why.contains("before calls carried a stage label"), "{why}");
-
-    // And the inversion. A checkpoint's tape stops where the run was killed,
-    // so the stage worth going live from is exactly the one it lacks —
-    // refusing it is what made the founding run's saved hour unusable.
-    assert_eq!(
-        cut_refusal("ckpt.json", "tensions", &have, Some("dedupe")),
-        None,
-        "a checkpoint may be cut at the stage it never reached"
-    );
+    assert_eq!(tape_hole("old.json", 0, 104), None);
 }
 
 #[test]
@@ -1098,9 +1051,7 @@ fn a_killed_run_leaves_its_work_in_a_checkpoint() {
         Some("extract"),
         "and it says which stage it got through"
     );
-    // The tape is the half that makes the kill cheap: with the replies on
-    // disk, `--live-from support` re-runs everything below extraction without
-    // paying the endpoint for it a second time.
+    // The replies are kept with the extraction they produced.
     assert_eq!(got.tape.len(), 1, "the replies ride along");
 }
 
@@ -1477,347 +1428,33 @@ fn one_line_longer_than_the_target_is_left_whole() {
     assert_eq!(chunks.len(), 1, "{} chunk(s)", chunks.len());
 }
 
-// ── the convergence fold ────────────────────────────────────
-//
-// `converge` is the whole instrument of the fast-slot arm, so it is tested
-// for the ways it could flatter the arm, not only for the ways it could
-// crash. Every one of these is a way a fold could manufacture agreement.
-
-#[test]
-fn a_finding_two_readings_agree_on_survives_a_majority_fold() {
-    let cands = vec![
-        read(
-            0,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours begin at 11:00 pm.",
-        ),
-        read(
-            1,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours start at 11 pm.",
-        ),
-    ];
-    let (groups, kept) = converge(&cands, majority(2));
-    assert_eq!(kept, vec![0], "the two readings are one finding");
-    assert_eq!(groups, vec![vec![0, 1]], "and the fold says so");
-}
-
-#[test]
-fn a_finding_only_one_reading_saw_falls_out_at_k_two_and_stands_at_k_one() {
-    let cands = vec![
-        read(
-            0,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours begin at 11:00 pm.",
-        ),
-        read(
-            1,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours start at 11 pm.",
-        ),
-        read(
-            2,
-            "guests may stay two consecutive nights",
-            "Guests may stay two nights.",
-        ),
-    ];
-    assert_eq!(
-        converge(&cands, 2).1,
-        vec![0],
-        "a lone sighting is not agreement"
-    );
-    assert_eq!(
-        converge(&cands, 1).1,
-        vec![0, 2],
-        "at k=1 every sighting stands"
-    );
-}
-
-#[test]
-fn one_reading_saying_it_twice_is_one_vote_not_two() {
-    // Two failures at once, both seen on real output. A model that returns
-    // the same rule twice in one reply would clear a k=2 bar by itself, and
-    // the curve would measure repetition rather than agreement — so the two
-    // never share a group. And chunk 19 of the 2026-08-24 baseline states two
-    // obligations in ONE sentence ("permitted only if every member approves"
-    // and "kept out of the bedroom of any member who objects"), so both cite
-    // the same words while being different rules: at k=1 both must stand.
-    let cands = vec![
-        read(
-            0,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours begin at 11:00 pm.",
-        ),
-        read(
-            0,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours bind guests too.",
-        ),
-    ];
-    assert!(converge(&cands, 2).1.is_empty(), "one reading is one vote");
-    assert_eq!(
-        converge(&cands, 1).1,
-        vec![0, 1],
-        "one reading's two findings are two findings, not one repeated"
-    );
-    assert!(
-        converge(&cands, 1).0.is_empty(),
-        "and nothing folded, so nothing is reported as folded"
-    );
-}
-
-#[test]
-fn the_survivor_is_the_earliest_reading_not_the_wordiest() {
-    // Shopping for the longest wording would inflate an anchor score that is
-    // matched by phrase — the fold would be choosing its own grade.
-    let cands = vec![
-        read(0, "twenty gallons", "Tank capacity is twenty gallons."),
-        read(
-            1,
-            "twenty gallons",
-            "The shared tank capacity is twenty gallons, measured at the inlet.",
-        ),
-    ];
-    let (_, kept) = converge(&cands, 2);
-    assert_eq!(kept, vec![0]);
-    assert_eq!(cands[kept[0]].text, "Tank capacity is twenty gallons.");
-}
-
-#[test]
-fn a_citation_that_merely_contains_another_is_a_different_finding() {
-    // **Measured on the 27B baseline artifact of 2026-08-24, which is why
-    // this reads the way it does.** The fold matched on containment first,
-    // and on that run it ate two real rules: chunk 12's "quiet hours apply to
-    // the backyard" cites the whole resolving paragraph, which CONTAINS the
-    // sentence chunk 12's second rule cites, so the two folded into one. A
-    // fold that eats findings depresses every k on the curve, and the curve
-    // would have been read as the fast slot reading badly.
-    let cands = vec![
-        read(
-            0,
-            "following complaints the house resolved that quiet hours begin at 11:00 pm",
-            "Quiet hours apply outdoors too.",
-        ),
-        read(
-            1,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours begin at 11pm.",
-        ),
-    ];
-    assert!(
-        converge(&cands, 2).1.is_empty(),
-        "one span sitting inside another is not two readings agreeing"
-    );
-    assert_eq!(
-        converge(&cands, 1).1,
-        vec![0, 1],
-        "at k=1 both findings stand"
-    );
-    assert!(
-        converge(&cands, 1).0.is_empty(),
-        "and neither was folded into the other"
-    );
-}
-
-#[test]
-fn whitespace_and_case_do_not_split_one_finding_in_two() {
-    let cands = vec![
-        read(
-            0,
-            "Quiet   hours\nbegin at 11:00 PM",
-            "Quiet hours begin at 11pm.",
-        ),
-        read(
-            1,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours start at 11pm.",
-        ),
-    ];
-    assert_eq!(converge(&cands, 2).1, vec![0]);
-}
-
-#[test]
-fn two_kinds_over_one_sentence_are_two_findings() {
-    // A rule and an open question about the same words are different acts,
-    // and folding them would let a question vote for a rule.
-    let mut q = read(1, "the allotment", "Who looks after the allotment?");
-    q.kind = Kind::Question;
-    let cands = vec![
-        read(0, "the allotment", "The allotment is tended weekly."),
-        q,
-    ];
-    assert!(
-        converge(&cands, 2).1.is_empty(),
-        "different kinds never vote for each other"
-    );
-}
-
-#[test]
-fn the_same_words_in_two_passages_are_two_findings() {
-    let mut b = read(
-        1,
-        "quiet hours begin at 11:00 pm",
-        "Quiet hours begin at 11pm.",
-    );
-    b.chunk = 4;
-    let cands = vec![
-        read(
-            0,
-            "quiet hours begin at 11:00 pm",
-            "Quiet hours begin at 11pm.",
-        ),
-        b,
-    ];
-    assert!(
-        converge(&cands, 2).1.is_empty(),
-        "agreement is per passage — two passages saying it is not two readings of one"
-    );
-}
-
-#[test]
-fn a_group_of_one_is_not_reported_as_a_fold() {
-    let cands = vec![read(0, "twenty gallons", "Tank is twenty gallons.")];
-    let (groups, kept) = converge(&cands, 1);
-    assert_eq!(kept, vec![0]);
-    assert!(groups.is_empty(), "folding nothing is not a fold");
-}
-
-#[test]
-fn majority_is_more_than_half_the_readings() {
-    assert_eq!(majority(1), 1);
-    assert_eq!(majority(2), 2);
-    assert_eq!(majority(3), 2);
-    assert_eq!(majority(4), 3);
-    assert_eq!(majority(5), 3);
-}
-
-// ── refold: the curve is replay, and it refuses what it cannot fold ──
-
-/// Build a convergence artifact on disk and hand back its directory.
-fn convergence_run(dir: &str, samples: usize, cands: Vec<Candidate>) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(dir);
-    let _ = std::fs::remove_dir_all(&d);
-    std::fs::create_dir_all(&d).unwrap();
-    // One passage holding every quote the readings cite, so the run reads
-    // back: a run file's quotes must be in their passages.
-    let mut quotes: Vec<&str> = cands.iter().map(|c| c.quote.as_str()).collect();
-    quotes.dedup();
-    let passage = Chunk {
-        id: 0,
-        source: "house.md:1-2".into(),
-        heading: None,
-        text: quotes.join("\n"),
-        said_at: None,
-        by_line: false,
-    };
-    let mut run = in_flight(vec![passage], cands);
-    run.samples = samples;
-    run.stopped_after = Some(format!("extract: --samples {samples}"));
-    std::fs::write(d.join("run-1.json"), serde_json::to_string(&run).unwrap()).unwrap();
-    d
-}
-
 fn args(v: &[&str]) -> Vec<String> {
     v.iter().map(|s| s.to_string()).collect()
 }
 
 #[test]
-fn refold_rewrites_kept_at_the_k_it_was_asked_for_and_calls_no_model() {
-    // No Mock, no endpoint, no config: a refold that needed one could not run
-    // on the artifacts of a sweep whose server has since been repointed.
-    let d = convergence_run(
-        "canon-refold-k",
-        2,
-        vec![
-            read(0, "twenty gallons", "Tank is twenty gallons."),
-            read(1, "twenty gallons", "The tank holds twenty gallons."),
-            read(0, "seven-day notice", "Notice is seven days."),
-        ],
-    );
-    let out = d.join("k2");
-    let code = refold(
-        &args(&[
-            "--refold",
-            d.to_str().unwrap(),
-            "--k",
-            "2",
-            "--out",
-            out.to_str().unwrap(),
-        ]),
-        d.to_str().unwrap(),
-    );
-    assert_eq!(code, 0);
-
-    let v: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(out.join("run-1.json")).unwrap()).unwrap();
-    assert_eq!(
-        v["kept"].as_array().unwrap().len(),
-        1,
-        "only the agreed finding survives k=2"
-    );
-    assert_eq!(
-        v["candidates"].as_array().unwrap().len(),
-        3,
-        "every reading is kept as evidence"
-    );
-    assert!(
-        v["stopped_after"].as_str().unwrap().contains("k=2"),
-        "the k travels with the artifact: {}",
-        v["stopped_after"]
-    );
-}
-
-#[test]
-fn refold_refuses_a_k_no_fold_could_reach() {
-    // The failure it prevents: k=2 over one reading folds to nothing, and a
-    // reachability of zero would be published as a finding about k rather
-    // than as an impossible question.
-    let d = convergence_run(
-        "canon-refold-impossible",
-        1,
-        vec![read(0, "twenty gallons", "Tank is twenty gallons.")],
-    );
-    let code = refold(
-        &args(&["--refold", d.to_str().unwrap(), "--k", "2"]),
-        d.to_str().unwrap(),
-    );
-    assert_eq!(
-        code, 2,
-        "asking one reading for two votes is refused, not answered"
-    );
-}
-
-#[test]
-fn refold_without_a_k_is_refused_rather_than_defaulted() {
-    let d = convergence_run(
-        "canon-refold-no-k",
-        3,
-        vec![read(0, "twenty gallons", "Tank is twenty gallons.")],
-    );
-    let code = refold(
-        &args(&["--refold", d.to_str().unwrap()]),
-        d.to_str().unwrap(),
-    );
-    assert_eq!(code, 2, "a fold threshold is never guessed for you");
-}
-
-#[test]
-fn a_run_written_before_samples_existed_reads_as_one_reading() {
-    // Every artifact in fixtures/ predates this field. If it defaulted to 0,
-    // `majority` would ask for 1 vote from 0 readings and the old runs would
-    // silently refold to nothing.
+fn a_run_written_with_several_readings_still_reads() {
+    // Runs recorded while `--samples` existed carry `samples` and a `sample`
+    // on each candidate. Neither is read any more, and neither may refuse the
+    // file: `--resume` and `--replay` still open them.
     let old = serde_json::json!({
         "schema": "canon-draft-run/v1",
         "at": 1, "endpoint": "http://x/v1", "model": "primary", "profile": "house",
-        "sources": [], "chunks": [], "candidates": [], "dropped": [],
-        "duplicates": [], "kept": [], "tensions": []
+        "sources": ["house.md"],
+        "chunks": [{"id": 0, "source": "house.md:1-1", "text": "Quiet after ten."}],
+        "candidates": [{
+            "text": "Quiet after ten.", "quote": "Quiet after ten.",
+            "chunk": 0, "source": "house.md:1-1", "sample": 2
+        }],
+        "dropped": [], "duplicates": [], "kept": [0], "tensions": [],
+        "samples": 3
     });
     let run = serde_json::from_value::<DraftRun<String>>(old)
         .unwrap()
         .bound()
         .unwrap();
-    assert_eq!(run.samples, 1);
-    assert_eq!(run.stopped_after, None);
+    assert_eq!(run.candidates.len(), 1);
+    assert_eq!(run.kept, vec![0]);
 }
 
 // ── being pointed somewhere, and coming back empty ──────────

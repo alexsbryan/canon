@@ -516,45 +516,6 @@ fn a_tape_whose_calls_went_elsewhere_refuses() {
 }
 
 #[test]
-fn a_tape_cut_at_a_stage_plays_above_it_and_goes_live_from_it() {
-    // The loop this exists for: the comparison stage is 10 of ~36 calls, so an
-    // arm on it should cost the 10 and not the 36. Everything above `tensions`
-    // comes off the tape; `tensions` itself is a real call to the mock.
-    let mock = Mock::spawn(vec![(
-        200,
-        completion(&json!({ "pairs": ["live"] }).to_string()),
-    )]);
-    let tape = vec![TapeEntry {
-        path: "chat/completions".into(),
-        stage: "commitments".into(),
-        raw: completion(&json!({ "pairs": ["taped"] }).to_string()),
-        status: 200,
-    }];
-    let client = mock.client().playing(tape, Some("tensions".into()));
-
-    let above: Pairs = client
-        .complete_json("s", "u", "commitments", &SCHEMA)
-        .unwrap();
-    assert_eq!(
-        above.pairs,
-        vec!["taped".to_string()],
-        "above the cut: the tape answers"
-    );
-
-    let at: Pairs = client.complete_json("s", "u", "tensions", &SCHEMA).unwrap();
-    assert_eq!(
-        at.pairs,
-        vec!["live".to_string()],
-        "at the cut: the endpoint answers"
-    );
-    assert_eq!(
-        mock.requests().len(),
-        1,
-        "and only the live stage cost a call"
-    );
-}
-
-#[test]
 fn a_stage_label_that_disagrees_with_the_recording_refuses() {
     let tape = vec![TapeEntry {
         path: "chat/completions".into(),
