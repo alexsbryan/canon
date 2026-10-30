@@ -50,6 +50,7 @@ gate() {
 echo "pre-push:"
 gate "rustfmt"          cargo fmt --all --check
 gate "core boundary"    ./scripts/core-boundary.sh
+gate "lean"             python3 ./scripts/lean_check.py
 gate "clippy"           cargo clippy --workspace --all-targets -- -D warnings
 gate "tests"            cargo test --workspace
 gate "contract checker" python3 -m unittest discover -s scripts/tests -p 'test_contract_check.py'
@@ -75,6 +76,7 @@ if [ ${#failed[@]} -ne 0 ]; then
     echo "               judged against the pin origin/main holds; adopting a new"
     echo "               standard: CANON_CONTRACT_BASELINE=<sha> ./scripts/pre-push.sh"
     echo "  docs links   ./scripts/docs-gate.sh   (names the file and line)"
+    echo "  lean         python3 scripts/lean_check.py   (cut first; a raise is the operator's)"
     echo "  ledger       ./target/debug/canon witness   (names the commit and the act)"
     echo
     echo "  Genuinely stuck and need the push? git push --no-verify — then say"
