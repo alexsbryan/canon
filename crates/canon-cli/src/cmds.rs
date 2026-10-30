@@ -467,6 +467,7 @@ pub fn init(args: &[String]) -> i32 {
             println!("  nothing holds this canon: it is open, and any write takes.");
             println!("  hold it: canon grant {founder} {}", profile.scope());
         }
+        println!("  a holder's word is a rule at once; to need everyone: canon ratification set unanimous");
         match store::actor().strip_prefix("human:") {
             Some(name) => {
                 println!("  policy changes wait like rules do, and human:{name}.… is yours alone")

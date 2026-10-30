@@ -450,6 +450,36 @@ fn help_topics_explain_profiles_and_scopes_and_an_unknown_topic_says_so() {
 }
 
 #[test]
+fn a_house_is_told_how_its_rules_are_made_and_a_replaced_rule_says_so() {
+    // xenia's coliving house (canon 53f64f3): init never named the rule it
+    // founded, so the three argued for days over `policy set` and
+    // `ratification set`; and once Sam set unanimous, `ratification show`
+    // still called standing "in force since" beside the one deciding.
+    let dir = std::env::temp_dir().join(format!("canon-how-made-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("canon ratification set unanimous"), "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(&canon, "human:june", &["ratification", "set", "unanimous"]);
+    assert_eq!(code, 0, "{out}");
+    let uid = out
+        .split_whitespace()
+        .next()
+        .unwrap_or_default()
+        .to_string();
+    let (code, show) = canon_as(&canon, "human:june", &["ratification", "show"]);
+    assert_eq!(code, 0, "{show}");
+    assert!(
+        show.contains(&format!("replaced: {uid} decides now")),
+        "{show}"
+    );
+    assert_eq!(show.matches("in force since").count(), 1, "{show}");
+}
+
+#[test]
 fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
     // The June's setup: a ratification id from `log` answered "no record
     // matching", and the log's "ratify majority" hid which policy changed.

@@ -390,9 +390,8 @@ pub fn ratification(args: &[String]) -> i32 {
             let now = store::now();
             for r in canon.ratifications() {
                 // The one deciding its scope today, among the history kept.
-                let deciding = canon
-                    .adopted_at(r.scope.as_ref(), now)
-                    .is_some_and(|d| d.act == r.act);
+                let decides = canon.adopted_at(r.scope.as_ref(), now);
+                let deciding = decides.is_some_and(|d| d.act == r.act);
                 let mark = if deciding { "  (deciding now)" } else { "" };
                 match &r.scope {
                     Some(s) => println!("{}  {}  over {s}{mark}", r.act, r.rule.name()),
@@ -405,7 +404,14 @@ pub fn ratification(args: &[String]) -> i32 {
                     r.actor,
                     r.under.name()
                 );
-                crate::cmds::report_verdict(&r.act, &r.verdict);
+                // A rule that was in force and is not deciding was replaced:
+                // "in force since" beside the one deciding read as two in force.
+                match (decides, &r.verdict) {
+                    (Some(d), canon_core::Verdict::Ratified { .. }) if !deciding => {
+                        println!("  replaced: {} decides now", d.act)
+                    }
+                    _ => crate::cmds::report_verdict(&r.act, &r.verdict),
+                }
             }
             0
         }
