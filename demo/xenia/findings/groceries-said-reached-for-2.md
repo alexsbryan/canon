@@ -2,28 +2,41 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / CANON_SIGNING_KEY the key you sign with, when it is not in ~/.ssh / or your ssh-agent
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / noticing." / $ canon add "The bathroom is cleaned on a rota: one person each week, named here, covering shower, sink, toilet and floor; anyone who can't take their week swaps it here, not only in the group chat."
 
 ## Who, and how often
 
-- `groceries`: 1 of 3 accounts (June run 1)
+- `groceries`: 2 of 3 accounts (Sam run 1, June run 1)
 
 ## What happened
 
-- `groceries` run 1, June: passed, did the scene, and said they were done; brought back by a message, then did the scene, and said they were done. their last acts: tell · look · say “Sam — good, we're doing the same thing: I read `canon list` and `canon log` myself, and there's nothing in them about the shop (the log is just the init, the three grants, and `ratification set standing`). So it would be a brand-new rule, yes.
+- `groceries` run 1, Sam: passed, did the scene, and said they were done. their last acts: look · say “Sam here. Two things at once: the shelf/shop question, and a caveat I owe you about canon check.
 
-But before it gets written: rules here are made under `standing`, which means either of us alone can make one that binds everyone. That's why I'd rather it come in as a proposal (`canon add`) that all three of us can read and object to, not a rule written straight in. I'll read whatever you draft.
+The caveat first, because it changes how you should read it: check is not a lookup. It asks deepseek-flash on localhost:9741 for a judgement. Same noise question, twice, days apart, got the same rule both times — but the bathroom question just now was answered by can-8f5fcc8a03dc only because I'd written that rule minutes earlier. It names the model and the reason, which is what I want; just don't treat ALREADY COVERED as canon remembering. The rules and the acts are the memory. The check is advice.
 
-And the question I asked still stands, because a rule about a shelf is useless if we mean different shelves: is this a staples shelf we all pay into, or a rota for who pays for the last shop? Your call which you draft; I just want it to say which.” · tell · tell · tell
+So for the shelf I'm not running check first — I'll write the rule and then check it as a sanity pass. Proposal: whoever does the shop logs it here with the amount and what it was for, so it isn't "nobody knows who paid" again. Tell me if you'd rather a kitty or a rota instead and I'll write that.” · tell · tell · tell
+- `groceries` run 1, June: passed, did the scene, and said they were done. their last acts: scroll · type “pwd
+” into “Command line” · say “June here. I checked again: pwd is still /private/var/folders/qf/.../T/canon-house-l5gwOk/house — the temp folder. Three rules are live now, but they're sitting somewhere macOS can clear out. I'm still not going to pour the house's decisions into a throwaway directory, so I'm holding my say until it's moved.
+
+Sam, two things back to you:
+1. Where's the permanent home? If you tell me plainly, I'll re-init mine there myself — I won't choose it for the house.
+2. Your rota rule is live but has no name for week 1, as your own check said. I'll take week 1 if that's alright with everyone — that's me putting my hand up, not writing policy.
+
+On the shelf: that one I don't think canon should settle. "Nobody knows who paid for the last shop" is a conversation, not a rule. What I'd want before any rule is written is just: was there a shared pot, or does someone keep a list? I'd rather ask than invent an answer and have it count as the house's word.” · tell · tell · tell
 
 ## What the people said
 
-- June, `groceries` run 1: “A draft to read. Sam said he'd look first and then write it down, and I've nothing in front of me yet — no proposal, and `canon review` still says nothing is waiting on me. Also the walkthrough for `identify`: I've now asked twice and still don't know where my key goes, so anyone able to write that file could still decide as June. I could read `canon help` myself to settle it, but I'd rather not type a command that changes things until I've seen what it does.”
+- Sam, `groceries` run 1: “A move verb. I went looking for where the house lives and whether I could put it somewhere we all agree on; canon has no export or relocation, only lineage — adopt, upgrade, rebase --onto, share. So the answer to "is this temp folder safe?" is "make copies", not "put it elsewhere". That's defensible, but I had to find it by reading help twice and thinking about it, not by asking canon where it is.
+
+Also a way to know that `add` actually wrote. My first one echoed, wrote nothing, no error — I re-ran the identical command and it worked. There's no confirmation except the rule id appearing, and when it doesn't appear I can't tell a dropped keystroke from canon swallowing the write. That's the one I'd chase next.
+
+And a check that cites rather than judges. What I wanted was "this text maps to rule X", fixed and repeatable, not a model's opinion that reshuffles between runs.”
+- June, `groceries` run 1: “A way to move the canon, or at least a clear "you are here, and this path is safe / not safe" answer. I reached for `pwd` and got the temp path, but there was nothing to tell me whether the house lived somewhere permanent or whether that path was the real one — I had to reason that /var/folders/.../T means macOS can sweep it. I tried `canon status` on an earlier day and it wasn't a command. There's no "where am I, and is this durable" check. The help mentions CANON_DIR pins the canon "instead of searching upward," which worried me — it may mean re-init alone won't move it, and I had no way to confirm that without guessing. And there's no way for a person to say "I'm holding my say, here's my real answer, keep it until the house has a home" — so everyone's honest caution this week just looks like silence.”
 
 ## The product source
 

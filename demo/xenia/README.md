@@ -226,6 +226,15 @@ showed 34 findings, 20 of them new. By their words, 17 of the 30 soft
 ones reach for standing or a grant (only the founder writes), 17 for a
 way to ratify or vote, and 11 for a draft that found nothing.
 
+## The set after the waits
+
+The set of 2026-10-30 (xenia `d2df323`, canon `7d1ae8e`,
+`runs/2026-10-30T01-15-58-238Z`, deepseek-flash, one run) passed: every
+plant came back as it must. A wait no longer holds the stage, and no call
+follows the stage's thanks. It showed 33 findings, 16 of them new;
+could-not-judge was 9 of 48, with one never-ran, most of them parts that ran out of
+minutes while the person whose clock was furthest behind acted alone.
+
 ## The terminal is real; the keyboard is the page
 
 canon is a terminal program and xenia's stage reads a browser. The bridge is a

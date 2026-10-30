@@ -2,12 +2,12 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / 3 with standing, narrowest first / rules made under: joint:human:June,human:Sam,human:Mira — set 2026-10-29 by human:Mira over house
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / FLAGS / --json machine-readable on stdout; logs go to stderr
 
 ## Who, and how often
 
@@ -15,37 +15,36 @@
 
 ## What happened
 
-- `office` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon log
-” into “command line” · scroll · say “Sam here. Spare room: I read the full text of can-16df375f7a6b and approved it with a reason. What the log actually shows: act 20 is `can-6bbc0153a369 human:Sam position toward can-16df375f7a6b`, and list still calls it PROPOSED — needs approval from human:June only. So my vote is on the record and the rule is NOT in force; under the joint ratification one approval isn't enough.
+- `office` run 1, Sam: passed, did the scene, and said they were done. their last acts: scroll · say “Spare room: written and in force — can-0f7b320f0eea. Office three days a week; on the other days anyone in the house books it here, by name and day; a day already claimed for office use wins. Checked before writing: THIS NEEDS A NEW RULE, decider deepseek-flash on localhost:9741, so I read the reason it gave rather than taking ALREADY COVERED on faith.
 
-June, the ball's with you: `canon approve can-16df375f7a6b` or `canon object ... -m "<why>"`.
+Snapshot e0eb12, 8 live. Mira, June — canon adopt --paste to make your houses match.
 
-On the text: no contradiction this time (booking beats no booking; first-asked wins a clash). One thing only the two of you can answer — "office days are fixed" but nobody has written which days they are; if that's still being decided, say so and Mira rewrites.
+Two things for the record. First, a stall: my `canon check` echoed and did nothing — no "checking on …" line, no answer — until I retyped it with an explicit Enter. Same shape as the silent `add` from the bathroom rule days ago. If a canon command echoes and returns nothing, don't believe the screen: retype and submit it again. Second, the screen came back with a row of buttons at the bottom again; last time I finally tapped those and both said "there's nothing here that says that" — my mis-reading, not a decision sitting there waiting to be made. I'm still not tapping unidentified things.
 
-Also still open from the last round: bikes/cars (can-d65bd31c15e2) names two different movers, and nobody has said who asks. Amend it rather than rely on my approval note.” · tell · tell · tell
-- `office` run 1, Mira: passed, did the scene, and said they were done. their last acts: say “Mira here. Terminal's readable today. First: bikes and cars is now live — you both approved it, 4 rules live.
+Next: the spare room needs its office days named, and nobody has yet put a name to this week's bins, bathroom or shop. The rules say "named here" and every one of them is still waiting for a name.” · look · tell · tell · tell
+- `office` run 1, Mira: passed, did the scene, and said they were done. their last acts: scroll · type “canon config show
+” into “Command line” · say “Mira here. Two things from reading the log.
 
-Spare room: nothing in canon covers it, so it's a new rule, and I'll draft it as a proposal — it won't go live until you both approve.
+1) The spare room: same shape as the rota — a shared week, booked by name here. Proposal: office Mon/Wed/Fri, and anyone needing it another day books it by name here with the date; if you can't take your booking, hand it to a named person here. I'm not adding it myself — add it if you agree.
 
-One thing I won't guess at: who's working in there three days a week, and are those days fixed or chosen weekly? I'll draft on the assumption the office days are fixed and everyone else books the rest, but tell me if that's wrong and I'll change the wording.
-
-Also flagging: my bikes/cars proposal sat unapproved for a while and then went in — thanks. And the joint ratification is holding against me as intended; nothing I type is a rule on its own now.” · type “canon add "Spare room: it is an office on its claimed days, and anyone else who needs it books it in the house chat the day before, saying which hours. Whoever booked it has it for those hours; whoever wants it outside the office days and hasn't booked gets it only if nobody has booked that time. If two people want the same hours, the one who asked first has it and the other says so in the chat. Office days are fixed and whoever holds them says in the chat when they change." --scope house -m "Mira asked how the rest of us book the spare room; its office use is three days a week and nothing in canon covered booking" -m "drafted as a proposal for June and Sam to read"
-” into “Command line” · say “Spare room drafted — `can-16df375f7a6b`, PROPOSED, needs you both.
-
-The gist: the office days are fixed and whoever holds them says in the chat when they change; anyone else books in the chat the day before with their hours; a booking beats no booking; two people wanting the same hours and the one who asked first has it.
-
-Approve with `canon approve can-16df375f7a6b`, or object with a reason (`canon object can-16df375f7a6b -m "<why>"`). If the office days aren't fixed, say so and I'll rewrite it rather than have you vote on the wrong shape.” · tell · tell · tell
+2) June — your grant didn't take. The log says "NOT APPLIED: human:June granted human:june standing over house without holding it." You can't grant yourself; Sam has to do it. Worth fixing before the next rule.” · tell · tell · tell
 
 ## What the people said
 
-- Sam, `office` run 1: “A way to see what June still owes at a glance, and one way to amend an in-force rule. `canon log` won't show me the full text of the pending rule without crowding out the acts, and there's no "amend" — for the bikes/cars contradiction someone has to assert a replacement rather than fix the sentence. Also the act I care about most (my own vote) reads as a bare "position toward" with no sign of approve vs object.”
-- Mira, `office` run 1: “A way to see the whole help at once. `canon help all` gave me the tail of it — configure, flags, environment, and a passage about the personal profile — but the verb list had scrolled past and I couldn't get it back. I read the screen twice and it was the same tail both times. On a broken terminal that would have been guessing; here it was just a small hole I worked around by checking the one verb I needed.
+- Sam, `office` run 1: “A way to see that a command actually ran. The worst thing all week wasn't a wrong answer — it was silence. `canon add` echoed and wrote nothing once, and today `canon check` echoed and answered nothing. Both times the screen looked like a finished command with the output scrolled off. I want the tool to say "submitted" or "no output, nothing happened", so I don't have to infer from an absence.
 
-The other thing I reached for and couldn't find was a way to ask myself "is this already covered?" beyond reading the list. Four rules is fine to eyeball. Forty wouldn't be.”
+Second, a way to know who's holding a role and whether a name has actually been filled in. Every rule I've written says "named here", and not one person is named anywhere. canon can tell me a rule is in force but not that its instruction is unexecuted. A "3 rules waiting for a name" count would be more useful to this house than another verdict from check.
+
+Third, and I've asked for it since day one: a move or export. The temp folder is the house, I've made my peace with that, and copies via share/adopt are the real protection — but "the protection is copies" is a workaround I'd rather not still be explaining on day twelve.”
+- Mira, `office` run 1: “A path. `canon config show` told me endpoint and model but not where the canon actually lives, so I still can't confirm whether my house is the temp folder or has moved. I also wanted a plain "where am I / is this permanent" check and the exact init line for a permanent home — neither was on the screen. And I reached for a way to look at "my" house versus the shared one; the log reads as one, so I couldn't tell if my temp copy has Sam's rules or only Sam's does.”
 
 ## The product source
 
-None found by its exact text.
+- `demo/xenia/findings/findings.json:174` holds “submitted”
+- `demo/xenia/findings/findings.json:690` holds “submitted”
+- `demo/xenia/findings/findings.json:691` holds “submitted”
+- `crates/canon-cli/src/draft.rs:380` holds “named here”
+- `crates/canon-core/src/tests.rs:1179` holds “named here”
 
 ## To reproduce
 

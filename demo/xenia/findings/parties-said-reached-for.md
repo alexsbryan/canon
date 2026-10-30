@@ -2,12 +2,12 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / can-8d6e5546d3cc 2026-10-29 human:Sam scoped can-1238435c61f4 -> house / 12 acts
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / {"id":"can-987d7fccbdc5","v":4,"ts_unix":1793323464,"actor":"human:Sam","op":"ratification","text":"A holder's word is a rule at once. A change of policy waits like any other change, and a person's own scope is theirs.","rul$ checking on http://localhost:9741/v1 (local) / note: `primary` answered by deepseek-flash
 
 ## Who, and how often
 
@@ -15,34 +15,17 @@
 
 ## What happened
 
-- `parties` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon who
-” into “Command line” · type “canon log
-” into “Command line” · say “Sam here. Read the canon before voting: `canon ratification show` has two rows, not one.
+- `parties` run 1, Sam: passed, did the scene, and said they were done. their last acts: look · scroll · say “Mira: checked it before writing anything. canon says THIS NEEDS AN AMENDMENT, not a new rule — my midnight idea collides with can-5210e4aa330b (quiet 10pm–8am). Decider named: deepseek-flash on localhost:9741. Two honest routes: supersede the quiet-hours rule with a merged one, or canon accept and say what each protects. So the real proposal: supersede can-5210e4aa330b with "Quiet 10pm–8am on all nights; loud music and parties may run to midnight on a Friday or Saturday only if every person living here says yes here, by name, that week; complaints logged here." That keeps the 10pm line as the default, gives Friday/Saturday an exception that has to be agreed rather than assumed, and protects June's Saturday early shift because a "no" is enough. Nobody has agreed to anything yet — say yes or no here and I'll write it. Also: the Save/Cancel-looking row at the bottom of my terminal is still there and still not something I'll tap; share output is complete without it.” · tell · tell · tell
+- `parties` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · say “Mira here. Good news from my terminal: my canon now has Sam's grants for june and me, and Sam's three rules (guests three nights, quiet 10pm–8am, bathroom rota) are live in my house too — so we're on the same snapshot, still in the temp folder.
 
-1. can-ef75 — `standing (whole canon)`, set by me 2026-10-29, governing `all`. So the house itself still decides by a holder's word, unread. That is the config a `joint` vote actually has to beat.
-2. can-4b02 — `joint:human:June,human:Sam,human:Mira over house`, set by Mira, judged under standing — so it went live at once. Its stated effect: "all three must agree." It does *not* say `--governs all`, and `canon who` still reads "rules made under: standing — set by human:Sam." So by the tool's own account it isn't in force anywhere yet; it's a rule on the books with nothing under it.
+On loud: quiet hours 10pm–8am already covers most of it, so for Friday parties vs Saturday shifts I'd add only the gaps: a party on a Friday needs the house's nod here (with an end time) and next-morning quiet until 9 if anyone's on an early shift — asked for here, not remembered. I'll back Sam writing it after a check. I'm not adding it alone.
 
-Two things follow. (a) I agree to move off standing, but I want it set as `ratification set <rule> joint:human:June,human:Sam,human:Mira --governs all --scope house`, so it actually covers how rules get made — not a joint row beside a standing one. (b) Whoever sets it: if it goes in under standing it's live immediately and only binds what comes after. If it goes in judged under joint, it needs all three of us first. Tell me which we're doing and whether `--governs all` applies to the change that sets it — I'd rather know than find out.
-
-Ratify me on that and I'll set it, then re-read `who` and `ratification show` and paste both. I'm not typing it until June and Mira say which of the two they mean.
-
-Separately, Mira's party/quiet-hours question — no rule on that yet; `list` shows guest, bathroom, kitty only. I'll draft after the ratification question, and June reads it first.” · tell · tell · tell
-- `parties` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon ratification set joint:human:June,human:Sam,human:Mira --governs all --scope house -m "anything one of us types goes live unread; all three must agree" -m "Mira, Sam"
-” into “Command line” · type “canon who house
-” into “Command line” · say “Mira. Done, and I'm saying it straight away because I did something bigger than I asked to.
-
-Ratification for house is now `joint:human:June,human:Sam,human:Mira`, `--governs all`, so it covers changes of policy too. `canon who house` confirms: "rules made under: joint:… set by human:Mira". So nothing any one of us types goes live unread anymore — that's your problem fixed, Sam, and mine.
-
-But you said you wanted to see the help before you voted, and I didn't wait. I'd read `canon help ratification` last night and meant to hold off; I pressed Enter anyway, and because the old setting was `standing` it took my word alone. I then set `--governs all` off my own bat, when what you actually asked me to do was wait for both of you.
-
-Where that leaves us: from now on [proposals] need all three of us. To undo or narrow it, `ratification set` also needs all three of us now — which is the point. If you both want it narrower (e.g. joint:June,Sam, with me out), say so and I'll do it the moment it's agreed; under joint you can also set it yourselves without me. I've made myself subject to it before asking, which I hope reads the right way.
-
-Open, undrafted: thermostat (21 vs 18, shared bill) and loud hours (Friday parties vs Saturday early shifts). Give me ten minutes with a readable terminal and I'll put wording in front of you — under joint, so you'll read it before anything goes in.” · tell · tell · tell
+Two things still open: no permanent home yet (still /var/folders), and nobody owns week 1 of the bins or the bathroom.” · tell · tell · tell
 
 ## What the people said
 
-- Sam, `parties` run 1: “A way to ask "would this setting, judged under itself, need all three of us?" — help lists `--governs all|commitments` but doesn't say whether a change to ratification is retroactive, so I couldn't answer the one question that decides when to type it. Also June's leftover-rule draft: my typing did nothing for a whole session and nothing told me. Both times the tool was quiet where I needed it to speak.”
-- Mira, `parties` run 1: “A way to see who would have to agree *before* the change lands — `who` showed the old setting until after I'd pressed Enter, so my check came too late to be a check. Also a proposal-vs-in-force distinction: nothing in canon lets me write a draft that everyone reads first. That's what happened with the bathroom rota, and it's what I nearly did again tonight.”
+- Sam, `parties` run 1: “Three things. A way to see the canon actually change — check, list, scroll and wait all kept showing the 99a569 screen, so I couldn't confirm anything landed. Something that identifies that Save/Cancel row at the bottom of the terminal; I won't tap what I can't name, and tap "Cancel" found nothing. And check itself: twice it said nothing bears on a proposal where the bathroom/recycling "named here, swap here" mechanism plainly applied, then it caught a real collision — so it's a good second opinion, not a lookup. I want a memory I can query by rule id, not only a model's paraphrase.”
+- Mira, `parties` run 1: “A way to see where the canon lives for good — a "where am I / move me" that Sam could point at a permanent folder. And a plain yes or no from canon on the shop question, rather than THIS NEEDS A NEW RULE.”
 
 ## The product source
 

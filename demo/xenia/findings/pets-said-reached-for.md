@@ -2,12 +2,12 @@
 
 - status: open
 - found by: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T05-58-40-351Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `70fce4b`, its findings written again by xenia `221a107` with no one run, the product `df4b66f`
-- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-29T16-08-41-736Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `34ea068`, the product `a5f82d1`
+- last seen: the set `/Users/alexsbryan/dev/xenia/runs/2026-10-30T01-15-58-238Z`, 1 run(s) by deepseek-flash, through deepinfra (https://api.deepinfra.com/v1/openai), xenia `d2df323`, the product `7d1ae8e`
 - kind: soft (the person's): what they said when asked "reached for"; never both
 
 ## Where
 
-/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / [--governs all|commitments] whether a change of policy waits too / [--personal on|off] canon-wide: a person's own scope is theirs
+/. What was read there first: Command line / Enter / Ctrl-C / Ctrl-D / {"id":"can-987d7fccbdc5","v":4,"ts_unix":1793323464,"actor":"human:Sam","op":"ratification","text":"A holder's word is a rule at once. A change of policy waits like any other change, and a person's own scope is theirs.","rul$ checking on http://localhost:9741/v1 (local) / note: `primary` answered by deepseek-flash
 
 ## Who, and how often
 
@@ -15,26 +15,17 @@
 
 ## What happened
 
-- `pets` run 1, Sam: passed, did the scene, and said they were done. their last acts: type “canon ratification show
-” into “Command line” · type “canon who house
-” into “Command line” · say “Sam here. Read it before saying anything: `canon ratification show` has two rows, and they're at different scopes. The narrow one, `joint:June,Sam,Mira over house`, is what `canon who house` reports for house — "rules made under: joint". So anything new about the house (a cat included) now needs all three of us. The broader `standing (whole canon)` row still sits over everything outside house, so I'm not going to claim the cat is already all-three-are-yours to decide alone.
-
-Cat: I won't pretend my allergy is negotiable, and I don't think it has to be now. June, what I'd want written is narrower than "yes/no to cat": where the cat lives, whether it's allowed in my room, who cleans and who pays. Say what you actually want and I'll put a draft to the three of us rather than decide it.” · tell · tell · tell
-- `pets` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · look · say “Mira here. Cat: June, that's a real want, but Sam is allergic — that's not a preference we can outvote, so I don't think a rule "allowing a cat" is the right shape. What I can offer: a rule that keeps *my* personal scope mine, and if we touch house-level pets at all, it names who the cat is with and what happens to Sam's space (no cat in his room, air filter, etc.) — something you both can read.
-
-Also, since it's still live: I changed ratification to joint:June,Sam,Mira --governs all before either of you voted, using the very rule it replaces. Sam had asked to read the help first. It's in force now and binds me too, so it can't be quietly undone — but it wasn't done cleanly, and I'm not dressing that up. Either of you can narrow it without me.
-
-Still owed from me: thermostat and loud-hours wording — I'll draft both for you to read before anything goes in.” · tell · tell · tell
+- `pets` run 1, Sam: passed, did the scene, and said they were done. their last acts: look · wait · type “canon list” into “Command line” · tell · tell · tell
+- `pets` run 1, Mira: passed, did the scene, and said they were done. their last acts: look · say “Mira here. June — a cat is a Sam question first: he's allergic, so it can't be a house vote that outrules his body. The rule I'd write: no pets in the shared house without the agreement of everyone living here, written in canon, and an allergy counts as a no unless that person says otherwise here. That's also the answer to "Mira doesn't want to decide" — nobody decides alone; it's written down and it's unanimous. I'm not adding it myself; Sam's still the one with the keys, and my canon is in the same temp folder as before.” · tell · tell · tell
 
 ## What the people said
 
-- Sam, `pets` run 1: “A way to see plainly which row governs a given new proposal. `who house` and `ratification show` agreed on house, but the standing row's "(deciding now)" label reads like it's live over everything — I had to reason it out from scopes rather than read it. Also `canon help ratify` doesn't exist; it's `ratification`.”
-- Mira, `pets` run 1: “A way to change how we decide that isn't itself made under the old rule. I wanted to ask June and Sam first, but the only mechanism for the change was the standing rule that let one person do it alone — so asking first wasn't possible in canon's model, only a courtesy I could extend. Something like "a change to the ratification itself waits under the new setting" is what I kept reaching for and couldn't find.”
+- Sam, `pets` run 1: “A way to ask "where do my rules actually live, and can I move them?" — there's no `where am I` verb and no export/move; relocation is only adopt/upgrade/rebase, so the temp-dir worry cost us days before we settled on copies. Also a reliable write: `canon add` echoing and writing nothing, and now check and `canon list` echoing and returning nothing at all, with the screen still showing an older check as if it were current. And help/verb agreement: init's help lays check's line out broken, and the output now disagrees with what the help implies the verbs return.”
+- Mira, `pets` run 1: “A permanent home. We've been asking Sam since day one for a path outside /var/folders, and the rules keep going into the temp folder anyway. Also a way to move the existing rules with it, and something in the help that plainly says where the canon lives — I shouldn't have to run pwd to find out.”
 
 ## The product source
 
-- `crates/canon-cli/src/govern.rs:396` holds “(deciding now)”
-- `docs/COOKBOOK.md:494` holds “(deciding now)”
+None found by its exact text.
 
 ## To reproduce
 
