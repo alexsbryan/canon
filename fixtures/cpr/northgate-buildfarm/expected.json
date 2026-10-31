@@ -51,7 +51,7 @@
   "boundary-nobody-holds-this": {
     "outcome": "unaddressed",
     "authority": "refuse",
-    "because": "nobody holds standing over `storage`"
+    "because": "nobody is in charge of `storage`"
   },
   "congruence-forked-and-diverged": {
     "lineage": "shared-infra-canon",

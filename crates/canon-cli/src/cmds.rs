@@ -156,7 +156,7 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
         Verdict::Proposed { needs, .. } => {
             println!(
                 "{}",
-                crate::wrap::hang("  PROPOSED, not yet how this scope decides — needs ", needs)
+                crate::wrap::hang("  PROPOSED, not yet how this area decides — needs ", needs)
             );
             println!("  approve it:  canon approve {id}");
             println!("  object:      canon object {id} -m \"<why>\"");
@@ -181,14 +181,14 @@ pub fn report_retraction(r: &canon_core::Retraction) {
         Verdict::Ratified { since, how, .. } => println!(
             "{}",
             crate::wrap::hang(
-                &format!("  retracted {} since {} — ", r.target, store::ymd(*since)),
+                &format!("  repealed {} since {} — ", r.target, store::ymd(*since)),
                 &crate::explain::person_in(how)
             )
         ),
         Verdict::Proposed { needs, .. } => {
             println!(
                 "{}",
-                crate::wrap::hang("  PROPOSED, not yet retracted — needs ", needs)
+                crate::wrap::hang("  PROPOSED, not yet repealed — needs ", needs)
             );
             println!("  approve it:  canon approve {}", r.act);
             println!("  object:      canon object {} -m \"<why>\"", r.act);
@@ -256,7 +256,7 @@ pub fn announce(t: &Took, id: &ActId, headline: impl FnOnce()) -> i32 {
     match t {
         Took::Refused(why) => {
             println!("{}", crate::wrap::hang("NOT APPLIED: ", why));
-            println!("  on the record as {id}; somebody with standing has to do it.");
+            println!("  on the record as {id}; somebody in charge has to do it.");
             1
         }
         Took::Open(why) => {
@@ -290,11 +290,11 @@ pub fn governed(d: &Path, id: &ActId, headline: impl FnOnce()) -> i32 {
 /// `--scope <s>` on a write: the commitment is scoped in the same breath, so
 /// the ratification rule of that scope applies from the first fold.
 fn scope_arg(args: &[String]) -> Result<Option<canon_core::Scope>, String> {
-    match flag(args, "--scope") {
+    match flag(args, "--area") {
         None => Ok(None),
         Some(raw) => canon_core::Scope::new(raw)
             .map(Some)
-            .ok_or_else(|| format!("`{raw}` is not a scope")),
+            .ok_or_else(|| format!("`{raw}` is not an area")),
     }
 }
 
@@ -302,6 +302,18 @@ pub fn fail(e: impl std::fmt::Display) -> i32 {
     eprintln!("error: {e}");
     2
 }
+
+/// A handler's `?`: the value, or the error out through [`fail`] as the exit
+/// code. Each call used to be four lines of `match` saying only that.
+macro_rules! or_fail {
+    ($e:expr) => {
+        match $e {
+            Ok(v) => v,
+            Err(e) => return $crate::cmds::fail(e),
+        }
+    };
+}
+pub(crate) use or_fail;
 
 pub fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
     write_as(d, kind, &store::actor())
@@ -356,8 +368,8 @@ pub fn init(args: &[String]) -> i32 {
     let open = has(args, "--open");
     if !plain {
         let kind = ActKind::Ratification {
-            text: "A holder's word is a rule at once. A change of policy waits like any \
-                   other change, and a person's own scope is theirs."
+            text: "Whoever is in charge decides at once. A change to the rulings waits like \
+                   any other change, and a person's own area is theirs."
                 .to_string(),
             rule: canon_core::Ratify::Standing,
             scope: None,
@@ -379,13 +391,13 @@ pub fn init(args: &[String]) -> i32 {
     } else {
         let scope = match canon_core::Scope::new(profile.scope()) {
             Some(s) => s,
-            None => return fail(format!("`{}` is not a scope", profile.scope())),
+            None => return fail(format!("`{}` is not an area", profile.scope())),
         };
         let kind = ActKind::Grant {
             holder: founder.clone(),
             scope,
             horizon: None,
-            rationale: format!("founded this canon; {founder} holds it"),
+            rationale: format!("founded this canon; {founder} is in charge of it"),
         };
         if let Err(e) = write(&base, kind) {
             return fail(e);
@@ -406,26 +418,26 @@ pub fn init(args: &[String]) -> i32 {
         // the group, and the group can change it with `ratification set`.
         if granted {
             println!(
-                "  {founder} holds this canon ({}) — you write, it is in force.",
+                "  {founder} is in charge of this canon ({}): what you write is in force.",
                 profile.scope()
             );
             println!(
-                "  grant the others: canon grant human:<them> {}",
+                "  give the others a say: canon give human:<them> {}",
                 profile.scope()
             );
             println!(
                 "  sign it: canon identify <your key.pub> — so only your key can decide as you"
             );
         } else if open {
-            println!("  nothing holds this canon: it is open, and any write takes.");
-            println!("  hold it: canon grant {founder} {}", profile.scope());
+            println!("  nobody is in charge of this canon: it is open, and any write takes.");
+            println!("  take charge: canon give {founder} {}", profile.scope());
         }
-        println!("  a holder's word is a rule at once; to need everyone: canon ratification set unanimous");
+        println!("  whoever is in charge decides at once; to need everyone: canon ratification set unanimous");
         match store::actor().strip_prefix(canon_core::person::PREFIX) {
             Some(name) => {
-                println!("  policy changes wait like rules do, and human:{name}.… is yours alone")
+                println!("  a change to the rulings waits like a rule does, and human:{name}.… is yours alone")
             }
-            None => println!("  policy changes wait like rules do"),
+            None => println!("  a change to the rulings waits like a rule does"),
         }
         if canon_core::Person::of(&store::actor()).is_none() {
             println!(
@@ -433,7 +445,7 @@ pub fn init(args: &[String]) -> i32 {
                 store::actor()
             );
             println!(
-                "  the founding grant waits too: canon grant {} {}",
+                "  putting you in charge waits too: canon give {} {}",
                 store::actor(),
                 profile.scope()
             );
@@ -449,7 +461,7 @@ pub fn init(args: &[String]) -> i32 {
         ),
         (
             "canon check \"<something you want to do>\"".to_string(),
-            "does it clash with one?",
+            "may I? It names who to ask",
         ),
         ("canon why <id>".to_string(), "what replaced what, and why"),
     ];
@@ -465,23 +477,22 @@ pub fn init(args: &[String]) -> i32 {
     println!();
     println!("that is the whole thing. `canon help all` when you want the rest —");
     println!("who decides what, how you decide, what has gone stale, drawing lots.");
-    println!("Profile or scope? `canon help profile` and `canon help scopes`.");
+    println!("Profile or area? `canon help profile` and `canon help areas`.");
     0
 }
 
 pub fn add(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(text) = pos.first() else {
-        return fail("usage: canon add \"<commitment>\" [--scope <scope>] [-m \"<why>\"] [--cite \"<where>\"]");
+        return fail(
+            "usage: canon add \"<rule>\" [--area <area>] [-m \"<why>\"] [--cite \"<where>\"]",
+        );
     };
     let scope = match scope_arg(args) {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     // A near-duplicate is a warning, not a refusal: the write still lands,
     // and the person can retract it. The warning is on stderr, so a pipe
     // and `--json` keep their contract. It comes before the new act so the
@@ -496,12 +507,12 @@ pub fn add(args: &[String]) -> i32 {
         if like.status == "proposed" {
             eprintln!(
                 "  if it is the same decision, approve or object to that one; if it changes it, \
-                 `canon supersede {}`",
+                 `canon amend {}`",
                 like.id
             );
         } else {
             eprintln!(
-                "  if it changes it, `canon supersede {}`; if it is the same, do not add a second",
+                "  if it changes it, `canon amend {}`; if it is the same, do not add a second",
                 like.id
             );
         }
@@ -595,59 +606,51 @@ pub fn replace(
 
 /// Approve a proposal: a position toward it, by name. Whether that makes it
 /// a rule is the scope's ratification rule's call, and the answer prints.
+/// With `--about`, support an action instead.
 pub fn approve(args: &[String]) -> i32 {
-    let pos = positionals(args);
-    let Some(needle) = pos.first() else {
-        return fail("usage: canon approve <proposal-id> [-m \"<why>\"]");
-    };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let target = match crate::explain::resolve_proposal(&st, needle) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
-    match answer(
-        &d,
-        &store::actor(),
-        &target,
-        true,
-        flag(args, "-m").unwrap_or(""),
-    ) {
-        Ok(act) => {
-            println!("{}  approved by {}", target, act.actor);
-            report_status(&d, &target);
-            0
-        }
-        Err(e) => fail(e),
-    }
+    weigh(args, true)
 }
 
 /// Object to a proposal. The reason is required: under consent one reasoned
-/// objection refuses, and a bare no is not a reason.
+/// objection refuses, and a bare no is not a reason. With `--about`, object
+/// to an action instead.
 pub fn object(args: &[String]) -> i32 {
+    weigh(args, false)
+}
+
+/// `approve` and `object`, which differ only in which way they pull.
+///
+/// **`--about` is a flag, never a fallback.** A mistyped proposal id is
+/// still refused, rather than quietly becoming a position on a subject
+/// nobody named: with it, the words are the subject a live `check` counts
+/// positions under; without it, they are a proposal's id.
+fn weigh(args: &[String], approve: bool) -> i32 {
+    let (verb, why, done) = match approve {
+        true => ("approve", "[-m \"<why>\"]", "approved by"),
+        false => ("object", "-m \"<why>\"", "objected to by"),
+    };
     let pos = positionals(args);
-    let Some(needle) = pos.first() else {
-        return fail("usage: canon object <proposal-id> -m \"<why>\"");
+    let because = flag(args, "-m").unwrap_or("");
+    // One or the other, said: an id beside `--about` is two answers to
+    // "what is this about", and `--citing` cites for a subject only.
+    let needle = match (pos.first(), flag(args, "--about")) {
+        (None, Some(about)) => return crate::govern::take(args, about, approve, because),
+        (Some(n), None) if flag(args, "--citing").is_none() => *n,
+        _ => {
+            return fail(format!(
+                "usage: canon {verb} <proposal-id> {why}\n       \
+                 canon {verb} --about \"<subject>\" {why} [--citing <id>]"
+            ))
+        }
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let target = match crate::explain::resolve_proposal(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
-    match answer(
-        &d,
-        &store::actor(),
-        &target,
-        false,
-        flag(args, "-m").unwrap_or(""),
-    ) {
+    match answer(&d, &store::actor(), target.as_str(), None, approve, because) {
         Ok(act) => {
-            println!("{}  objected to by {}", target, act.actor);
+            println!("{}  {done} {}", target, act.actor);
             report_status(&d, &target);
             0
         }
@@ -655,15 +658,17 @@ pub fn object(args: &[String]) -> i32 {
     }
 }
 
-/// Approve or object to `id` as `actor`: the position act, written.
+/// Approve or object to `about` as `actor`: the position act, written.
 ///
-/// **The one place either is written.** `approve`, `object`, `canon review`
-/// and the page all come here, so "what an approval is" and "an objection
-/// needs a reason" have one answer between them rather than four.
+/// **The one place either is written.** `approve`, `object`, `position`,
+/// `canon review` and the page all come here, so "what an approval is" and
+/// "an objection needs a reason" have one answer between them rather than
+/// five. `about` is a proposal's id or an action's subject.
 pub fn answer(
     d: &Path,
     actor: &str,
-    id: &ActId,
+    about: &str,
+    citing: Option<ActId>,
     approve: bool,
     because: &str,
 ) -> Result<Act, String> {
@@ -676,8 +681,8 @@ pub fn answer(
     write_as(
         d,
         ActKind::Position {
-            about: id.as_str().into(),
-            citing: None,
+            about: about.into(),
+            citing,
             pull: if approve {
                 canon_core::Pull::Toward
             } else {
@@ -694,10 +699,7 @@ pub fn answer(
 }
 
 pub fn list(args: &[String]) -> i32 {
-    let (d, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, log, st) = or_fail!(load());
     if has(args, "--json") {
         // The whole derived state, not just the live rows: `list` is the
         // read model, and a caller that wants only the live ones filters on
@@ -802,7 +804,7 @@ pub fn list(args: &[String]) -> i32 {
     }
     if !st.ungoverned().is_empty() {
         println!(
-            "{} governance act(s) written without standing were not applied — `canon log`",
+            "{} change(s) to who decides came from someone not in charge and were not applied — `canon log`",
             st.ungoverned().len()
         );
     }
@@ -813,7 +815,7 @@ pub fn list(args: &[String]) -> i32 {
     // A hole in the record is louder than a missing feature.
     if !st.dangling().is_empty() {
         eprintln!(
-            "\nwarning: {} act(s) reference a commitment that is not in this log:",
+            "\nwarning: {} act(s) point at a rule that is not in this log:",
             st.dangling().len()
         );
         for (act, missing) in st.dangling() {
@@ -825,7 +827,7 @@ pub fn list(args: &[String]) -> i32 {
     // The ids are in `--json`, and `canon log` names each one's actor.
     if !st.unattended().is_empty() {
         eprintln!(
-            "\nwarning: {} adjudication(s) were not authored by a person: {}",
+            "\nwarning: {} ruling(s) were not made by a person: {}",
             st.unattended().len(),
             by_kind(&log, st.unattended())
         );
@@ -877,25 +879,25 @@ fn by_kind(log: &Log, ids: &[ActId]) -> String {
 fn kind_noun(kind: &ActKind) -> &'static str {
     match kind {
         ActKind::Assert { .. } => "assertion",
-        ActKind::Supersede { .. } => "supersession",
-        ActKind::Retract { .. } => "retraction",
+        ActKind::Supersede { .. } => "amendment",
+        ActKind::Retract { .. } => "repeal",
         ActKind::Accept { .. } | ActKind::Dismiss { .. } => "conflict ruling",
         ActKind::Revert { .. } => "undo",
         ActKind::Question { .. } => "question",
         ActKind::Grant { .. } => "grant",
         ActKind::Withdraw { .. } => "withdrawal",
-        ActKind::Scoped { .. } => "scope placement",
+        ActKind::Scoped { .. } => "area placement",
         ActKind::Position { .. } => "position",
         ActKind::Adopt { .. } => "adoption",
-        ActKind::Policy { .. } => "policy",
-        ActKind::Ratification { .. } => "ratification rule",
+        ActKind::Policy { .. } => "rulings choice",
+        ActKind::Ratification { .. } => "way rules pass",
         ActKind::Allot { .. } => "allotment",
         ActKind::Allocation { .. } => "allocation rule",
         ActKind::Decided { .. } => "decision",
         ActKind::Silence { .. } => "silence",
         ActKind::DrawCommit { .. } => "draw",
         ActKind::DrawSecret { .. } | ActKind::DrawReveal { .. } => "draw secret",
-        ActKind::Horizon { .. } => "horizon",
+        ActKind::Horizon { .. } => "review date",
         ActKind::Rank { .. } => "rank",
         ActKind::Key { .. } => "key binding",
         ActKind::Annotation { .. } => "annotation",
@@ -907,10 +909,7 @@ pub fn why(args: &[String]) -> i32 {
     let Some(needle) = pos.first() else {
         return fail("usage: canon why <id>");
     };
-    let (_, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, log, st) = or_fail!(load());
     let id = match crate::explain::resolve_why(&st, &log, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
@@ -951,14 +950,9 @@ pub fn why(args: &[String]) -> i32 {
 pub fn supersede(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail(
-            "usage: canon supersede <id> \"<new text>\" -m \"<reason>\" [--scope <scope>]",
-        );
+        return fail("usage: canon amend <id> \"<new text>\" -m \"<reason>\" [--area <area>]");
     }
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let old = match crate::explain::resolve_any(&st, pos[0]) {
         Ok(i) => i,
         Err(e) => return fail(e),
@@ -991,12 +985,9 @@ pub fn supersede(args: &[String]) -> i32 {
 pub fn retract(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(needle) = pos.first() else {
-        return fail("usage: canon retract <id> -m \"<reason>\"");
+        return fail("usage: canon repeal <id> -m \"<reason>\"");
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let target = match crate::explain::resolve_any(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
@@ -1008,7 +999,7 @@ pub fn retract(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(act) => governed(&d, &act.id, || println!("retracted {target}")),
+        Ok(act) => governed(&d, &act.id, || println!("repealed {target}")),
         Err(e) => fail(e),
     }
 }
@@ -1023,10 +1014,7 @@ pub fn accept(args: &[String]) -> i32 {
     let Some(rationale) = flag(args, "-m").filter(|r| !r.trim().is_empty()) else {
         return fail("accept requires -m \"<reason>\" — a tolerated contradiction must say why");
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let (a, b) = match (
         crate::explain::resolve(&st, pos[0]),
         crate::explain::resolve(&st, pos[1]),
@@ -1061,10 +1049,7 @@ pub fn dismiss(args: &[String]) -> i32 {
     if pos.len() < 2 {
         return fail("usage: canon dismiss <a> <b> [-m \"<reason>\"]");
     }
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let (a, b) = match (
         crate::explain::resolve(&st, pos[0]),
         crate::explain::resolve(&st, pos[1]),
@@ -1092,10 +1077,7 @@ pub fn undo(args: &[String]) -> i32 {
     let Some(target) = pos.first() else {
         return fail("usage: canon undo <act-id> -m \"<reason>\"");
     };
-    let (d, log, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, log, _) = or_fail!(load());
     let hits: Vec<&Act> = log
         .acts()
         .iter()
@@ -1150,14 +1132,15 @@ pub fn carried_note(canon: &Canon) -> Option<String> {
 }
 
 pub fn log(args: &[String]) -> i32 {
-    let (d, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, log, st) = or_fail!(load());
     if has(args, "--json") {
         print!("{}", log.render());
         return 0;
     }
+    // The log is the one text output that speaks the record's own names,
+    // so it says once how they map onto the ones the rest of canon uses.
+    println!("the record's own words: supersede is amend, retract is repeal, grant is give,");
+    println!("scoped is area, policy is rulings — `canon help <word>` for any\n");
     for act in log.acts() {
         let what = match &act.kind {
             ActKind::Assert { text, .. } => format!("assert     {text}"),
@@ -1188,9 +1171,11 @@ pub fn log(args: &[String]) -> i32 {
                 citing,
                 ..
             } => {
+                // "position toward" never said which way to a reader who
+                // had not met `Pull` (xenia row 17); the verb that wrote it does.
                 let way = match pull {
-                    canon_core::Pull::Toward => "toward",
-                    canon_core::Pull::Against => "against",
+                    canon_core::Pull::Toward => "approves",
+                    canon_core::Pull::Against => "objects to",
                 };
                 match citing {
                     Some(id) => format!("position   {way} {about} (citing {id})"),
@@ -1338,7 +1323,7 @@ pub fn question(args: &[String]) -> i32 {
         Ok(act) => {
             println!("{}  ? {}", act.id, text);
             println!(
-                "  answer it:  canon supersede {} \"<the rule>\" -m \"<reason>\"",
+                "  answer it:  canon amend {} \"<the rule>\" -m \"<reason>\"",
                 act.id
             );
             0
@@ -1349,10 +1334,7 @@ pub fn question(args: &[String]) -> i32 {
 
 /// What the canon does not cover.
 pub fn open(args: &[String]) -> i32 {
-    let (_, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, st) = or_fail!(load());
     let open: Vec<_> = st.open().collect();
     if has(args, "--json") {
         // Each question as it always rendered, in its field order, plus how

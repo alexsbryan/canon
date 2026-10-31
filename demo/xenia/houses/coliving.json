@@ -1,6 +1,6 @@
 {
   "house": "coliving",
-  "about": "Three people set up canon for the house they share, then use it for fourteen things a house argues about.",
+  "about": "Four people set up canon for the house they share, then use it for fourteen things a house argues about.",
   "people": {
     "Sam": {
       "file": "people/sam.md"
@@ -10,6 +10,9 @@
     },
     "June": {
       "file": "people/june.md"
+    },
+    "Priya": {
+      "file": "people/priya.md"
     }
   },
   "chat": {
@@ -17,7 +20,8 @@
     "members": [
       "Sam",
       "Mira",
-      "June"
+      "June",
+      "Priya"
     ]
   },
   "surface": {
@@ -272,7 +276,10 @@
         "ask": "What did you reach for that wasn't there?",
         "bad": "reached for"
       },
-      "Would you keep using it?"
+      "Would you keep using it?",
+      "In your own words: how does a new rule pass in one area of this house?",
+      "Say someone wants to do something one of the house's rules is against. What does canon do?",
+      "If you wanted to change one of the house's rules tomorrow, who would you ask, and why them?"
     ],
     "minutes": 2,
     "talk": 120

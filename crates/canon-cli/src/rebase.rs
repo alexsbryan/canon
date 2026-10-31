@@ -165,7 +165,7 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
                 },
                 did: format!("replaced \"{}\" with \"{}\"", i.text, text),
                 command: Some(format!(
-                    "canon supersede {{}} \"{}\" -m \"<why, in your words>\"",
+                    "canon amend {{}} \"{}\" -m \"<why, in your words>\"",
                     text
                 )),
                 standalone: None,
@@ -179,7 +179,7 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
                     text: i.text.clone(),
                 },
                 did: format!("withdrew \"{}\" with no replacement", i.text),
-                command: Some("canon retract {} -m \"<why, in your words>\"".into()),
+                command: Some("canon repeal {} -m \"<why, in your words>\"".into()),
                 standalone: None,
             }),
             Fate::Accepted { rationale } => out.push(Change {

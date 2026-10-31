@@ -696,7 +696,7 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
     b.push_str("<main>");
     b.push_str(&format!("<h1>{}</h1>", esc(&waiting_line(mine.len()))));
     if mine.is_empty() {
-        b.push_str("<p class=\"quiet\">When someone proposes a rule for a room you hold, it appears here for you to approve or object to.</p>");
+        b.push_str("<p class=\"quiet\">When someone proposes a rule for an area you are in charge of, it appears here for you to approve or object to.</p>");
     }
     let touch = canon_core::sign::verify(log.acts())
         .bindings
@@ -974,7 +974,7 @@ fn identify_page(ctx: &Ctx, error: Option<String>) -> Response {
     {
         b.push_str(&format!("<h1>You are identified as {person}.</h1>"));
         if bound.contested {
-            b.push_str("<p>Two keys have been bound to this name, so nothing signed under it counts. Write under a new name and ask a holder to grant it.</p>");
+            b.push_str("<p>Two keys have been bound to this name, so nothing signed under it counts. Write under a new name and ask someone in charge to put it in charge.</p>");
         } else {
             b.push_str("<p>What you write under this name counts only if one of these keys signed it:</p><ul class=\"keys\">");
             for k in &bound.keys {
@@ -1110,7 +1110,7 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
              <form method=\"post\" action=\"/retract\">{hidden}\
              <label>Why it should go, which everyone will see<textarea name=\"because\" required rows=\"2\"></textarea></label>\
              <button class=\"object\">Take it away</button></form></details></div>\
-             <p class=\"meta\">If you do not hold this rule's room, a change is put to whoever does.</p>",
+             <p class=\"meta\">If you are not in charge of this rule's area, a change is put to whoever is.</p>",
             esc(text)
         ));
     }

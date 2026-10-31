@@ -182,7 +182,9 @@ fn tool_descriptors() -> Vec<Value> {
                     "proposal": {
                         "type": "string",
                         "description": "The proposal to judge, as you would say it out loud.",
-                    }
+                    },
+                    "about": { "type": "string", "description": "Its subject, if not its words." },
+                    "scope": { "type": "string", "description": "Where it happens: house.kitchen." }
                 },
                 "required": ["proposal"],
                 "additionalProperties": false,
@@ -227,7 +229,7 @@ fn call(name: &str, args: &Value) -> Value {
         "canon_list" => render_list(&dir, args),
         "canon_open" => render_open(&dir),
         "canon_why" => render_why(&dir, arg.unwrap_or_default()),
-        "canon_check" => render_check(&dir, arg.unwrap_or_default()),
+        "canon_check" => render_check(&dir, arg.unwrap_or_default(), args),
         _ => unreachable!("validated above"),
     };
     match rendered {
@@ -271,10 +273,9 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     }
     let scope = match obj.get("scope") {
         None => None,
-        Some(Value::String(raw)) => Some(
-            canon_core::Scope::new(raw)
-                .ok_or_else(|| format!("`{raw}` is not a scope: use a dotted path"))?,
-        ),
+        Some(Value::String(raw)) => Some(canon_core::Scope::new(raw).ok_or_else(|| {
+            format!("`{raw}` is not an area: use a dotted path like `house.kitchen`")
+        })?),
         _ => return Err("canon_list scope must be a string".into()),
     };
     let query = match obj.get("query") {
@@ -298,7 +299,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     };
     let live: Vec<_> = canon.active().collect();
     if live.is_empty() {
-        return Ok("This canon has no commitments yet.".into());
+        return Ok("This canon has no rules yet.".into());
     }
     if live.len() > 50 && obj.is_empty() {
         let mut counts: BTreeMap<String, usize> = BTreeMap::new();
@@ -309,13 +310,13 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
                 .unwrap_or("(unscoped)");
             *counts.entry(key.to_string()).or_default() += 1;
         }
-        let mut out = format!("{} in force. By scope:\n", live.len());
+        let mut out = format!("{} in force. By area:\n", live.len());
         let omitted = counts.len().saturating_sub(30);
         for (scope, n) in counts.into_iter().take(30) {
             out.push_str(&format!("  {scope}  {n}\n"));
         }
         if omitted > 0 {
-            out.push_str(&format!("  …and {omitted} more scope(s)\n"));
+            out.push_str(&format!("  …and {omitted} more area(s)\n"));
         }
         out.push_str("Use canon_list(scope, query, limit, offset) to browse rules, and canon_why(id) for history.");
         return Ok(out);
@@ -334,16 +335,16 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     if filtered.is_empty() {
         let mut filters = Vec::new();
         if let Some(s) = &scope {
-            filters.push(format!("scope `{s}`"));
+            filters.push(format!("area `{s}`"));
         }
         if let Some(q) = &query {
             filters.push(format!("query `{q}`"));
         }
-        return Ok(format!("No commitments match {}.", filters.join(" and ")));
+        return Ok(format!("No rules match {}.", filters.join(" and ")));
     }
     if offset >= filtered.len() {
         return Ok(format!(
-            "Offset {offset} is past the {} matching commitment(s). Start again at offset 0.",
+            "Offset {offset} is past the {} matching rule(s). Start again at offset 0.",
             filtered.len()
         ));
     }
@@ -355,7 +356,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
         out.push_str(&format!("\n{} in force.", filtered.len()));
     } else {
         out.push_str(&format!(
-            "\nShowing {}-{} of {} matching commitment(s).",
+            "\nShowing {}-{} of {} matching rule(s).",
             offset.min(filtered.len()) + usize::from(offset < filtered.len()),
             offset.saturating_add(limit).min(filtered.len()),
             filtered.len()
@@ -375,7 +376,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     // A hole in the record is louder than a missing feature (§18.3).
     if !canon.dangling().is_empty() {
         out.push_str(&format!(
-            "\nWARNING: {} act(s) reference a commitment absent from this log.",
+            "\nWARNING: {} act(s) point at a rule absent from this log.",
             canon.dangling().len()
         ));
     }
@@ -411,23 +412,28 @@ fn render_open(dir: &Path) -> Result<String, String> {
 ///
 /// Still a read: it writes no act. An agent that concludes something should
 /// be recorded says so in chat, as a command a person can run.
-fn render_check(dir: &Path, proposal: &str) -> Result<String, String> {
+fn render_check(dir: &Path, proposal: &str, args: &Value) -> Result<String, String> {
+    // The CLI's own flags, so the two surfaces read a subject and a scope
+    // one way.
+    let argv: Vec<String> = [("about", "--about"), ("scope", "--area")]
+        .iter()
+        .filter_map(|(k, f)| Some([f.to_string(), args.get(*k)?.as_str()?.to_string()]))
+        .flatten()
+        .collect();
+    let attrs = crate::check::attributes(&argv, proposal)?;
     let canon = store::read(dir)?.derive();
     if canon.active().next().is_none() {
-        return Err(
-            "This canon has no commitments yet, so there is nothing to check against.".into(),
-        );
+        return Err("This canon has no rules yet, so there is nothing to check against.".into());
     }
     let profile = crate::profile::Profile::load(dir)?;
     let client = crate::model::client_for(dir, false).map_err(|e| e.to_string())?;
     let (standing, refused) =
-        crate::check::assess(&client, &canon, proposal).map_err(|e| e.to_string())?;
-    // The canon's own rule, so an agent is told what the community decided
-    // rather than what shipped.
-    let attrs = canon_core::Attributes::about(proposal).at(store::now());
-    let decision = canon_core::Policy::decide(canon.policy_for(None), &standing, &attrs, &canon);
-    let silence = canon.silence_about(proposal);
-    let mut out = crate::check::render(profile, &canon, &standing, &decision, silence);
+        crate::check::assess(&client, &canon, proposal, &attrs.about).map_err(|e| e.to_string())?;
+    // The canon's own rule for this scope, so an agent is told what the
+    // room decided rather than what shipped.
+    let rule = canon.policy_for(attrs.scope.as_ref());
+    let decision = canon_core::Policy::decide(rule, &standing, &attrs, &canon);
+    let mut out = crate::check::render(profile, &canon, &standing, &decision, &attrs);
     // Refusals travel to the agent too. A shorter answer with no explanation
     // is indistinguishable from a canon that had less to say.
     if !refused.is_empty() {

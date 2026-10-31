@@ -143,10 +143,7 @@ fn a_conflict_is_marked_and_gets_no_command() {
         .split("\n\n")
         .find(|b| b.contains("CONFLICTS"))
         .expect("a conflict block");
-    assert!(
-        !conflict_block.contains("canon supersede"),
-        "{conflict_block}"
-    );
+    assert!(!conflict_block.contains("canon amend"), "{conflict_block}");
     assert!(conflict_block.contains("decide this one yourself"));
     assert!(text.contains("1 of 2 of your changes carry"));
     assert!(text.contains("Nothing has been written"));
@@ -164,9 +161,7 @@ fn a_carried_change_names_the_exact_command_against_the_new_base() {
     let landed = map_changes(&mock.client(), &changes, &seed, &t).unwrap();
     let text = render(&seed, &t, &changes, &landed);
     assert!(
-        text.contains(
-            "canon supersede can-tg0000000001 \"Quiet hours run 10pm-7am on weeknights.\""
-        ),
+        text.contains("canon amend can-tg0000000001 \"Quiet hours run 10pm-7am on weeknights.\""),
         "{text}"
     );
 }
@@ -188,7 +183,7 @@ fn a_mapping_pointing_at_a_rule_that_does_not_exist_is_dropped_not_aimed_nearby(
     );
     // With no target it cannot print a command, so nothing runnable is offered.
     let text = render(&seed, &t, &changes, &landed);
-    assert!(!text.contains("canon supersede can-"), "{text}");
+    assert!(!text.contains("canon amend can-"), "{text}");
 }
 
 #[test]

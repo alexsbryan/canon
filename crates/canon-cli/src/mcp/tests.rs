@@ -175,7 +175,7 @@ fn small_canons_still_list_their_rules_and_large_canons_show_an_index() {
     }
     let canon = Log::from_acts(acts.clone()).derive();
     let index = list_of(&canon, &json!({})).unwrap();
-    assert!(index.contains("60 in force. By scope:"));
+    assert!(index.contains("60 in force. By area:"));
     assert!(index.contains("house.kitchen  30"));
     assert!(index.contains("(unscoped)  30"));
     assert!(
@@ -190,10 +190,7 @@ fn small_canons_still_list_their_rules_and_large_canons_show_an_index() {
     assert!(second.contains("Rule 59 about the kitchen"));
     assert!(!second.contains("Rule 58 about the kitchen"));
     let empty = list_of(&canon, &json!({"scope": "garden", "query": "never"})).unwrap();
-    assert!(
-        empty.contains("scope `garden` and query `never`"),
-        "{empty}"
-    );
+    assert!(empty.contains("area `garden` and query `never`"), "{empty}");
     let past_end = list_of(&canon, &json!({"offset": 60})).unwrap();
     assert!(past_end.contains("past the 60 matching"), "{past_end}");
     assert!(list_of(&canon, &json!({"limit": 0})).is_err());

@@ -1,7 +1,7 @@
 {
   "a-boundary-nobody-holds": {
     "authority": "refuse",
-    "because": "subsidiarity: nobody holds standing over `allotment`",
+    "because": "subsidiarity: nobody is in charge of `allotment`",
     "cites": [],
     "outcome": "unaddressed",
     "refused": 0,
@@ -107,7 +107,7 @@
   },
   "carried-once-and-waiting-for-the-garden-to-change-hands": {
     "by": "human:juno",
-    "detail": "someone who did not hold house.garden on 2026-04-03 to be granted it, then a second approval",
+    "detail": "someone not in charge of house.garden on 2026-04-03 to be put in charge, then a second approval",
     "rule": "twice:turnover:standing",
     "status": "proposed"
   },
@@ -119,13 +119,13 @@
   },
   "kit-joins-and-the-second-vote-opens": {
     "by": "human:juno",
-    "detail": "a second time, since 2026-05-01: approval from one person who holds house.garden",
+    "detail": "a second time, since 2026-05-01: approval from one person in charge of house.garden",
     "rule": "twice:turnover:standing",
     "status": "proposed"
   },
   "kitchen-decided-by-a-cook": {
     "authority": "act",
-    "because": "subsidiarity: `house.kitchen` is held by agent:helper, human:dana, human:sam — including you",
+    "because": "subsidiarity: in charge of `house.kitchen`: agent:helper, human:dana, human:sam — including you",
     "cites": [
       "can-1de7b517b436"
     ],
@@ -137,7 +137,7 @@
   },
   "kitchen-not-decided-by-a-non-cook": {
     "authority": "ask-one",
-    "because": "subsidiarity: `house.kitchen` is held by agent:helper, human:dana, human:sam — not you",
+    "because": "subsidiarity: in charge of `house.kitchen`: agent:helper, human:dana, human:sam — not you",
     "cites": [
       "can-1de7b517b436"
     ],
@@ -347,7 +347,7 @@
   },
   "the-same-two-cannot-carry-it-twice": {
     "by": "human:juno",
-    "detail": "someone who did not hold house.garden on 2026-04-03 to be granted it, then a second approval",
+    "detail": "someone not in charge of house.garden on 2026-04-03 to be put in charge, then a second approval",
     "rule": "twice:turnover:standing",
     "status": "proposed"
   },

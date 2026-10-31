@@ -18,6 +18,10 @@ mod explain;
 mod govern;
 mod guard;
 mod identify;
+// The integration tests' list of jargon, read by the help test too.
+#[cfg(test)]
+#[path = "../tests/jargon/mod.rs"]
+mod jargon;
 mod lineage;
 mod locate;
 mod mcp;
@@ -32,6 +36,7 @@ mod review;
 mod seen;
 mod similar;
 mod sources;
+mod status;
 mod store;
 mod subject;
 mod tensions;
@@ -43,30 +48,36 @@ mod wrap;
 
 /// What a new person is shown.
 ///
-/// **Six verbs, because the other forty-one are the reason this does not
+/// **Eight lines of verbs, because the rest are the reason this does not
 /// spread.** A tool somebody has to be introduced to twice is one that stops
-/// at the person who installed it. Everything past `check` is something a
+/// at the person who installed it. Everything past these is something a
 /// group grows into — most never will — and it is one command away.
+/// `approve`, `object` and `repeal` share a line because a house lives on
+/// them from its first proposal, and xenia's student (row 17) used them
+/// blind for days.
 const HELP: &str = "\
 canon — the rules you already have, and what was decided about them
 
   init [--profile personal|code|house]   start one in this directory
   draft --from <folder>                  read what you already have
   add \"<text>\" [-m <why>] [--cite <where>] write one down, with why it is one and where it came from
-  check \"<proposal>\"                     does it clash with one? A model does the
-                                         reading: canon config set endpoint <url>
-  list                                   what is live now
-  why <id>                               what replaced what, when, and why; a silence too
-  log                                    the raw acts, oldest first
+  check \"<something you want to do>\"     may I? It names the rule in the way, and
+                                         who to ask
+  list                                   what is live now, and what waits on whom
+  approve <id> · object <id> -m <why>    yes or no to a proposal; `repeal <id>`
+                                         takes a rule, or your own proposal, away
+  why <id> · log                         what replaced what, and why; every act in order
 
 Nobody writes one of these a rule at a time. `draft` reads a folder — any text
 in it — or a pipe: `cat whatever | canon draft --from - --dry-run --json`.
-
 `draft`/`check` need a model (`canon config set endpoint <url>`); the rest folds a text file.
 
   canon help all    who decides what, how you decide, what has gone stale,
                     forking and merging, drawing lots, the agent surface
 ";
+
+/// What a bare `canon` adds to the short help where there is no canon yet.
+const START: &str = "\nnot in a canon: `canon init` starts one here.\n";
 
 /// The two things a reader asks before their first write: which profile
 /// they founded, and what a scope is. `canon help profile` used to print
@@ -77,8 +88,8 @@ const TOPICS: &[(&str, &str)] = &[
         "THE THREE PROFILES\n\n  personal  a person's own journal: what has a stake, and which\n            way it pulls; never a verdict, never exit 1.\n  code      a codebase's principles: verdict-shaped, because CI reads\n            exit codes.\n  house     a household's rules: which act a proposal needs.\n\n  `canon init` defaults to personal; `canon init --profile <p>` picks one.\n  The profile changes the words and the verdicts, not the record.\n",
     ),
     (
-        "scopes",
-        "SCOPES\n\n  A scope is a dotted path: `house`, `house.quiet`, `repo.defaults`.\n  A grant over `house` covers `house.quiet` and everything under it; a\n  grant over `house.quiet` covers only the quiet corner. The whole canon's\n  scope is the profile's own: `house`, `repo` or `personal`.\n\n  `canon who` names the scopes that hold the canon; `canon grant <actor>\n  <scope>` gives standing over one; `canon help grant` has the flags.\n",
+        "areas",
+        "AREAS\n\n  An area is a dotted path: `house`, `house.quiet`, `repo.defaults`.\n  Whoever is in charge of `house` is in charge of `house.quiet` and all\n  under it; whoever is in charge of `house.quiet` has only the quiet corner.\n  The whole canon's area is the profile's own: `house`, `repo` or `personal`.\n\n  `canon who` says who is in charge of the canon; `canon give <actor> <area>`\n  puts someone in charge of one; `canon help give` has the flags.\n",
     ),
 ];
 
@@ -90,99 +101,105 @@ USAGE
   canon <command> [args]
 
 RECORD                                        (no model needed)
-  init [--profile personal|code|house]  start a canon here: its founder holds it
-       [--plain]                         without the v4 knobs (policy changes that
-                                         wait, personal scopes), for older readers
+  init [--profile personal|code|house]  start a canon here, with you in charge of it
+       [--plain]                         without the v4 knobs (changes to the rulings
+                                         that wait, personal areas), for older readers
        [--open]                          the old shared start: any write takes
-                                         until someone holds it
+                                         until someone is in charge
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
-  add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
-  review [--scope s] [--json]            what is waiting on you, a scope at a time; offers
-                                         you standing over a scope nobody holds yet.
+  add \"<text>\" [--area a]               propose a rule; it is one once its area passes it
+  review [--area a] [--json]             what is waiting on you, an area at a time; offers
+                                         you charge of an area nobody is in charge of yet.
                                          A person's verb: it needs a terminal and a
                                          human: actor; --json only reads
   ui                                     canon as a page on this machine: decide, propose,
                                          change or take away a rule, leave something
                                          unwritten, identify yourself
   approve <id> [-m \"<why>\"]             approve a proposal, by name
+          --about \"<subject>\"           or support an action [--citing <id>]
   object <id> -m \"<why>\"                object to one; the reason is required
+         --about \"<subject>\"            or object to an action; `check` counts it
+                                         (what `position` did)
   list                                   what is live now, and what is proposed
        --markdown [--out <f> [--check]]  the same, as a document for readers without
                                          canon; --check fails when <f> is stale
   why <id>                               what this replaced, when, and why; a silence or question shows its act
-  supersede <id> \"<text>\" -m \"<reason>\"  replace a commitment
-  retract <id> -m \"<reason>\"             withdraw one, no replacement; an upstream id
-                                         names what was inherited from it. Without
-                                         standing, a proposal for a holder to approve
-  accept <a> <b> -m \"<reason>\"           carry a contradiction knowingly
-  dismiss <a> <b> [-m \"<reason>\"]        not actually a conflict
-  undo <act-id> [-m \"<reason>\"]          revert an act — yours, or one you hold
+  amend <id> \"<text>\" -m \"<reason>\"      change a rule's words, and say why
+  repeal <id> -m \"<reason>\"              take a rule away, no replacement; an id from the
+                                         canon you copied names a rule you got from it.
+                                         Not in charge? It goes to whoever is, as a proposal
+  accept <a> <b> -m \"<reason>\"           keep two rules that conflict, on purpose
+  dismiss <a> <b> [-m \"<reason>\"]        not a real conflict
+  undo <act-id> [-m \"<reason>\"]          take back an act — yours, or one in your area
   question \"<text>\"                      record what the canon does not cover
   open                                   the open questions
   log                                    the raw acts
   mcp                                    serve the agent surface on stdio
 
 GOVERN                                        (no model needed)
-  who [<scope>]                          who may decide this, and under what;
-                                         no scope: who holds the canon as a whole
-  grant <actor> <scope> [--horizon <d>]  give someone standing
-  withdraw <actor> <scope>               step back from a scope, or stand down
+  who [<area>]                           who's in charge here, and how rules pass;
+                                         no area: who's in charge of the whole canon
+  give <actor> <area> [--until <d>]      put someone in charge of an area, until <d>
+  withdraw <actor> <area>                step back from an area, or take someone off it
            [--ask \"<question>\"]         yours: leave the question, without your name
-  scope <id> <scope>                     put a commitment in a scope
-  policy show | set <rule> [-m \"...\"]    what this canon decides under
-  ratification show | set <rule>         how a proposal becomes a rule, per scope:
-                                         standing, joint:a,b, threshold:n/m (n approve,
-                                         m objecting stop it), majority, unanimous,
-                                         share:60% or share:2/3 (that share of who holds
-                                         it), consent:Nd, twice:turnover:<rule>
-                                         or twice:Nd:<rule>
-       [--governs all|commitments]       whether a change of policy waits too
-       [--personal on|off]               canon-wide: a person's own scope is theirs
-  allot <scope> --named a,b,c            what this commons has to share
-  allocation set rotation --scope s      how it goes round: --step, --per, --order
+  area <id> <area>                       put a rule in an area
+  rulings show | set <rule> [-m \"...\"]   how actions are judged here
+  ratification show | set <rule>         how rules pass here, area by area: `standing`
+                                         (whoever is in charge says yes), `joint:a,b`,
+                                         `threshold:n/m` (n yes pass it, m no stop it),
+                                         `majority`, `unanimous`, `share:60%` or
+                                         `share:2/3` (that share of those in charge),
+                                         `consent:Nd` (passes unless someone objects
+                                         within N days), `twice:turnover:<rule>` or
+                                         `twice:Nd:<rule>` (must pass twice)
+       [--governs all|rules]             whether a change to the rulings waits too
+       [--personal on|off]               canon-wide: a person's own area is theirs
+  allot <area> --named a,b,c             what this commons has to share
+  allocation set rotation --area s       how it goes round: --step, --per, --order
                                          or --from-draw <id> for a lot nobody steers
-  pool <scope> [--at <date>]             whose turn it is. `who` is authority,
-                                         `pool` is appropriation
-  position \"<about>\" --against|--toward  a vote, an objection, a second
-  decide \"<about>\" --outcome --authority record what the group decided
+  pool <area> [--at <date>]              whose turn it is. `who` says who decides,
+                                         `pool` who gets what
+  decide \"<about>\" allow|deny -m \"<why>\" record what the group decided
+         --outcome <o> --authority <a>   the long form, as `check --json` says it
          [--citing <id>,…]               the rules it turned on; a ladder counts by them
-  rank <id> <rank>                       a principle, not a convention
-  horizon <act-id> <YYYY-MM-DD>          look at this again by then
-  overdue                                what has gone past its date
-  draw commit <scope> <seats> --after    announce a lot nobody can steer
+  rank <id> principle                    constitutional: harder to change than a rule
+                                         ranked `convention`
+  revisit <act-id> <YYYY-MM-DD>          set a review date: look at this again by then
+  overdue                                what is past its review date
+  draw commit <area> <seats> --after     announce a lot nobody can steer
   draw seal | open <draw-id>             your secret, before and after
   draw show <draw-id>                    the panel, recomputed from the log
-  silence \"<subject>\" -m \"<why>\"         unwritten on purpose, not by neglect
+  silence \"<subject>\" -m \"<why>\"         left unwritten on purpose, not by neglect
   witness [--base <ref>] [--gate]        the ledger checked against git: append-only,
                                          not backdated. Opt in; see `guard`
   guard show | git [--apply]             what defends this ledger from outside the
                                          fold, and what each guard cannot see
   voice [<actor>]                        what someone raised, and what came of it
   second <question-id>                   add your weight to a question, without your name
-  replay [<dir>] [--policy <rule>]       re-decide this canon\'s own record;
-                                         --policy asks what another rule
+  replay [<dir>] [--rulings <rule>]      re-decide this canon\'s own record;
+                                         --rulings asks what another rule
                                          would have done to it
          [--scenario <f>]                ask your own questions instead
          [--write-scenario <f>]          write out the derived ones to edit
          [--expect <f>]                  check the answers against this file
 
-LINEAGE                     (git optional; only adopt --rebase needs a model)
+COPYING                     (git optional; only adopt --rebase needs a model)
   share                                  a pasteable snapshot
-  adopt <url>[@gen] | --paste            fork someone else's canon
-        [--except <id>,… -m \"<why>\"]       retract these as they arrive
-        <url>@<gen> --rebase             move a canon that descends from one
-                                         lineage onto another, keeping its record
+  adopt <url>[@gen] | --paste            copy another group's rules
+        [--except <id>,… -m \"<why>\"]       repeal these as they arrive
+        <url>@<gen> --rebase             move a canon copied from one group's rules
+                                         onto another's, keeping its record
               [--carry <id> -m \"<why>\"]     carry a conflict anyway, as your ruling
               [--dry-run]                print the reading, write nothing
-  diff --upstream [--propose]            how you have diverged from your seed
-  upgrade <gen> | --paste                take a newer generation
+  diff --upstream [--propose]            how you differ from the rules you copied
+  upgrade <gen> | --paste                take their updates
   merge-driver %O %A %B                  git merge driver; run it for setup
 
-ADJUDICATE                                    (needs an endpoint)
+RULING                                        (needs an endpoint)
   check \"<proposal>\"                     how a proposal stands (personal: stakes)
-  tensions                               where your commitments conflict
-  draft --from <paths>                   propose commitments from loose notes
+  conflicts                              rules of yours that conflict
+  draft --from <paths>                   propose rules from loose notes
         --from -                         read the document from stdin
         --as <name>                      what to call it in the citations
         --from-git --since 1y            commit bodies as the source
@@ -216,40 +233,69 @@ ENVIRONMENT
   CANON_ENDPOINT   override the configured endpoint for one run
   CANON_MODEL      override the configured model for one run
   CANON_API_KEY    sent as a bearer token, for an endpoint that needs one
+";
 
+/// The end of `help all` for a personal canon, or for none yet (personal is
+/// the default): in a house, xenia's student (row 17) read "never returns a
+/// verdict" as true of her `check`, and never ran it.
+const HELP_PERSONAL: &str = "
 ON THE PERSONAL PROFILE
   This is a structured journal, not a clinician. It does not diagnose and
-  it does not advise. `check` reports which of your commitments have a
+  it does not advise. `check` reports which things you hold yourself to have a
   stake in something and which way each pulls; it never returns a verdict
   and never exits 1. A contradiction you are carrying on purpose is a
   first-class state here, and nothing is ever force-resolved.
 ";
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    use std::io::IsTerminal;
+    // An old spelling is made new before anything reads it, and said once on
+    // stderr to a person at a terminal; a script parsing stdout reads on.
+    let typed: Vec<String> = std::env::args().skip(1).collect();
+    let (args, notes) = cli::resolve(&typed, std::io::stderr().is_terminal());
+    notes.iter().for_each(|n| eprintln!("{n}"));
+    // A bare `canon` in a canon is where you are and what waits on you; out
+    // of one, the short help and how to start one, exit 2, since nothing ran.
+    if args.is_empty() && cmds::dir().is_ok_and(|d| store::exists(&d)) {
+        std::process::exit(status::page());
+    }
     if args.is_empty() || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
         // `canon help <verb>` is the same answer as `canon <verb> --help`.
         if let Some(verb) = args.get(1).and_then(|v| cli::help_for(v, HELP_ALL)) {
             print!("{verb}");
             std::process::exit(0);
         }
-        let topic = args.get(1).map(String::as_str);
+        // `scopes` is what the topic was called before it was `areas`.
+        let topic = args.get(1).map(|t| if t == "scopes" { "areas" } else { t });
         if let Some((_, text)) = topic.and_then(|t| TOPICS.iter().find(|(n, _)| *n == t)) {
             print!("{text}");
+            std::process::exit(0);
+        }
+        // Any word canon uses, from its glossary: `canon help in charge`.
+        let said = cli::define(&args.get(1..).unwrap_or_default().join(" "));
+        if !said.is_empty() {
+            println!("{}", said.join("\n"));
             std::process::exit(0);
         }
         // A topic nobody has used to print the short help, so a reader asking
         // about profiles learned nothing and was not told so.
         if let Some(t) = topic.filter(|t| *t != "all" && *t != "--all" && !t.starts_with('-')) {
             eprintln!(
-                "no such topic `{t}` — canon help all lists the verbs, and `canon help profile | scopes` the rest."
+                "no such topic or word `{t}` — canon help all lists the verbs, and `canon help profile | areas` the rest."
             );
             std::process::exit(1);
         }
         // `canon help all` is the only way to the long form. Somebody who
-        // typed `canon` by accident gets seven verbs, not forty-nine.
+        // typed `canon` by accident gets seven verbs, not forty-nine, and
+        // outside a canon, how to start one.
         let all = args.iter().skip(1).any(|a| a == "all" || a == "--all");
-        print!("{}", if all { HELP_ALL } else { HELP });
+        let start = if args.is_empty() { START } else { "" };
+        let personal = all
+            && crate::cmds::dir().map_or(true, |d| {
+                profile::Profile::load(&d).unwrap_or_default() == profile::Profile::Personal
+            });
+        let tail = if personal { HELP_PERSONAL } else { "" };
+        print!("{}{tail}{start}", if all { HELP_ALL } else { HELP });
         std::process::exit(if args.is_empty() { 2 } else { 0 });
     }
     let (cmd, rest) = args.split_first().unwrap();
@@ -270,7 +316,7 @@ fn main() {
         // this tool declines to do, and exits the same way.
         Err(report) => std::process::exit(cmds::fail(report)),
     }[..];
-    let code = match cli::VERBS.iter().find(|(v, ..)| v == cmd) {
+    let code = match cli::verb(cmd) {
         Some((.., run)) => run(rest),
         None if cmd == "--version" || cmd == "-V" => {
             println!("canon {}", env!("CARGO_PKG_VERSION"));
@@ -287,7 +333,8 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{HELP, HELP_ALL};
+    use super::{HELP, HELP_ALL, START};
+    use crate::jargon;
 
     /// **The n+1 test, as a test.**
     ///
@@ -296,7 +343,8 @@ mod tests {
     /// noticing. This is the thing that notices.
     #[test]
     fn the_short_help_stays_short_and_stays_plain() {
-        let lines = HELP.lines().count();
+        // Counted with the line a bare `canon` outside a canon adds to it.
+        let lines = format!("{HELP}{START}").lines().count();
         assert!(
             lines <= 20,
             "the short help is {lines} lines — it is growing back into the long one"
@@ -326,6 +374,28 @@ mod tests {
         }
         // And it names the one door to everything else, or the rest is lost.
         assert!(HELP.contains("canon help all"));
+
+        // **Past the short help, plain is the bar too.** A student reads the
+        // long help and each verb's own as closely as the first screen, so the
+        // words the record keeps for itself stay out of all three.
+        let mut said = jargon::found(&format!("{HELP}{START}"));
+        said.extend(jargon::found(HELP_ALL));
+        said.extend(jargon::found(super::HELP_PERSONAL));
+        for (verb, ..) in crate::cli::VERBS {
+            let help = crate::cli::help_for(verb, HELP_ALL).unwrap();
+            said.extend(
+                jargon::found(&help)
+                    .into_iter()
+                    .map(|w| format!("{verb}: {w}")),
+            );
+        }
+        said.dedup();
+        assert!(
+            said.is_empty(),
+            "{} jargon:\n{}",
+            said.len(),
+            said.join("\n")
+        );
     }
 
     #[test]

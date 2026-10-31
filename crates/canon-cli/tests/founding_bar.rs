@@ -13,6 +13,8 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+mod jargon;
+
 fn scratch(name: &str) -> PathBuf {
     let dir =
         std::env::temp_dir().join(format!("canon-founding-bar-{name}-{}", std::process::id()));
@@ -35,6 +37,13 @@ fn fresh(name: &str) -> PathBuf {
 /// Run one verb as one actor, with `stdin` piped in. Stdout, stderr and the
 /// exit code.
 fn canon_in(dir: &Path, actor: &str, args: &[&str], stdin: &str) -> (i32, String) {
+    let (code, out, err) = canon_apart(dir, actor, args, stdin);
+    (code, format!("{out}{err}"))
+}
+
+/// The exit code, stdout and stderr, kept apart for a test that tells them
+/// apart.
+fn canon_apart(dir: &Path, actor: &str, args: &[&str], stdin: &str) -> (i32, String, String) {
     let mut child = Command::new(env!("CARGO_BIN_EXE_canon"))
         .args(args)
         .env("CANON_DIR", dir)
@@ -54,11 +63,8 @@ fn canon_in(dir: &Path, actor: &str, args: &[&str], stdin: &str) -> (i32, String
     let out = child.wait_with_output().unwrap();
     (
         out.status.code().unwrap_or(-1),
-        format!(
-            "{}{}",
-            String::from_utf8_lossy(&out.stdout),
-            String::from_utf8_lossy(&out.stderr)
-        ),
+        String::from_utf8_lossy(&out.stdout).into_owned(),
+        String::from_utf8_lossy(&out.stderr).into_owned(),
     )
 }
 
@@ -103,7 +109,7 @@ fn every_verb_says_what_it_does_when_asked() {
     let (_, same) = canon_as(&nowhere, "human:alex", &["help", "init"]);
     assert_eq!(same, out);
 
-    for verb in ["approve", "list", "retract", "adopt", "who", "draft"] {
+    for verb in ["approve", "list", "repeal", "adopt", "who", "draft"] {
         let (code, out) = canon_as(&nowhere, "human:alex", &[verb, "--help"]);
         assert_eq!(code, 0, "`canon {verb} --help`: {out}");
         assert!(
@@ -134,17 +140,17 @@ fn the_canon_as_a_whole_is_named_by_the_scopes_that_hold_it() {
     );
     assert_eq!(code, 0, "{out}");
     assert!(
-        flat(&out).contains("holds this canon by holding arch or procedure"),
+        flat(&out).contains("in charge of this canon (its areas arch or procedure)"),
         "{out}"
     );
 
     let (code, out) = canon_as(&dir, "human:alex", &["who"]);
     assert_eq!(code, 0, "{out}");
     assert!(
-        out.contains("held by whoever holds arch, procedure"),
+        out.contains("whoever is in charge of arch, procedure"),
         "{out}"
     );
-    assert!(out.contains("human:alex  over arch"), "{out}");
+    assert!(out.contains("human:alex  in charge of arch"), "{out}");
 
     let (_, out) = canon_as(&dir, "human:alex", &["who", "default"]);
     assert!(
@@ -152,7 +158,7 @@ fn the_canon_as_a_whole_is_named_by_the_scopes_that_hold_it() {
         "{out}"
     );
     assert!(
-        out.contains("the scopes in use are arch, procedure"),
+        out.contains("the areas in use are arch, procedure"),
         "{out}"
     );
 }
@@ -169,7 +175,10 @@ fn an_agents_first_write_in_a_fresh_canon_is_a_proposal() {
     );
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("PROPOSED"), "{out}");
-    assert!(out.contains("nobody holds procedure yet"), "{out}");
+    assert!(
+        out.contains("nobody is in charge of procedure yet"),
+        "{out}"
+    );
     let id = id_of(&out);
     let (_, out) = canon_as(&dir, "human:alex", &["approve", &id]);
     assert!(out.contains("in force"), "{out}");
@@ -233,7 +242,7 @@ fn adoption_can_leave_rules_behind_and_name_them_by_upstream_id() {
     assert!(out.contains("RETRACTED (1)"), "{out}");
     let (_, out) = canon_as(&down, "human:alex", &["why", &tooling]);
     assert!(
-        out.contains("reason it was retracted: their tooling, not ours"),
+        out.contains("reason it was repealed: their tooling, not ours"),
         "{out}"
     );
 
@@ -269,7 +278,7 @@ fn a_ratified_founding_warns_by_kind_not_by_thirty_ids() {
     }
     let (_, out) = canon_as(&dir, "human:alex", &["list"]);
     assert!(
-        out.contains("1 adjudication(s) were not authored by a person: 1 grant"),
+        out.contains("1 ruling(s) were not made by a person: 1 grant"),
         "{out}"
     );
     for id in &ids {
@@ -349,8 +358,11 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
     let canon = dir.join(".canon");
     let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("human:june holds this canon (house)"), "{out}");
-    assert!(out.contains("grant the others"), "{out}");
+    assert!(
+        out.contains("human:june is in charge of this canon (house)"),
+        "{out}"
+    );
+    assert!(out.contains("give the others"), "{out}");
     std::thread::sleep(std::time::Duration::from_millis(1100));
     let (code, out) = canon_as(
         &canon,
@@ -358,7 +370,10 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
         &["add", "Quiet hours are 10pm to 7am."],
     );
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("in force — june holds this canon"), "{out}");
+    assert!(
+        out.contains("in force — june is in charge of this canon"),
+        "{out}"
+    );
     let (code, out) = canon_as(&canon, "human:sam", &["add", "Guests stay three nights."]);
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("PROPOSED"), "{out}");
@@ -371,9 +386,9 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
         &["init", "--profile", "house", "--open"],
     );
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("nothing holds this canon"), "{out}");
+    assert!(out.contains("nobody is in charge of this canon"), "{out}");
     let (_, who) = canon_as(&shared, "human:june", &["who"]);
-    assert!(who.contains("nobody holds this canon"), "{who}");
+    assert!(who.contains("nobody is in charge of this canon"), "{who}");
 }
 
 #[test]
@@ -395,7 +410,7 @@ fn a_bare_name_is_refused_before_it_is_written_and_who_names_the_refused_acts() 
     assert!(out.contains("NOT APPLIED"), "{out}");
     let (_, who) = canon_as(&canon, "human:june", &["who"]);
     assert!(
-        who.contains("governance act(s) written without standing"),
+        who.contains("change(s) to who decides came from someone not in charge"),
         "{who}"
     );
 }
@@ -477,6 +492,14 @@ fn a_house_is_told_how_its_rules_are_made_and_a_replaced_rule_says_so() {
         "{show}"
     );
     assert_eq!(show.matches("in force since").count(), 1, "{show}");
+    // xenia row 17: in record order the replaced rule printed first and
+    // the house read the top one as the one that wins.
+    let first = show.lines().next().unwrap_or_default();
+    assert!(
+        first.starts_with(&uid) && first.contains("(in use now)"),
+        "{show}"
+    );
+    assert!(show.contains("earlier, and not in use now:"), "{show}");
 }
 
 #[test]
@@ -492,7 +515,7 @@ fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
     std::thread::sleep(std::time::Duration::from_millis(1100));
     let (_, log) = canon_as(&canon, "human:june", &["log"]);
     assert!(
-        log.contains("ratify     standing — A holder's word"),
+        log.contains("ratify     standing — Whoever is in charge decides"),
         "the log hides the ratification's policy: {log}"
     );
     let id = |line: &str| {
@@ -501,18 +524,25 @@ fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
             .unwrap_or_default()
             .to_string()
     };
+    // The log speaks the record's own names, and says so once, in text only.
+    assert!(
+        log.starts_with("the record's own words: supersede is amend"),
+        "{log}"
+    );
+    let (_, json) = canon_as(&canon, "human:june", &["log", "--json"]);
+    assert!(!json.contains("the record's own words"), "{json}");
     let rid = log
         .lines()
-        .find(|l| l.contains("ratify"))
+        .find(|l| l.starts_with("can-") && l.contains("ratify"))
         .map(id)
         .unwrap_or_default();
     let (code, why) = canon_as(&canon, "human:june", &["why", &rid]);
     assert_eq!(code, 0, "{why}");
     assert!(why.contains("ratification"), "{why}");
-    assert!(why.contains("A holder's word"), "{why}");
+    assert!(why.contains("Whoever is in charge decides"), "{why}");
     let gid = log
         .lines()
-        .find(|l| l.contains("grant"))
+        .find(|l| l.starts_with("can-") && l.contains("grant"))
         .map(id)
         .unwrap_or_default();
     let (code, why) = canon_as(&canon, "human:june", &["why", &gid]);
@@ -576,7 +606,10 @@ fn a_leaver_leaves_their_question_without_their_name_and_only_their_own() {
         ],
     );
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("no longer holds house.kitchen"), "{out}");
+    assert!(
+        out.contains("no longer in charge of house.kitchen"),
+        "{out}"
+    );
     assert!(out.contains("recorded without your name"), "{out}");
     let log = canon_as(&dir, "human:bo", &["log", "--json"]).1;
     let asked = log
@@ -597,4 +630,351 @@ fn a_verb_nobody_declared_is_refused_with_the_short_help() {
     let (code, out) = canon_as(&dir, "human:alex", &["--version"]);
     assert_eq!(code, 0, "{out}");
     assert!(out.starts_with("canon "), "{out}");
+}
+
+/// **An old name is the new one, and a pipe hears nothing about it.** Every
+/// renamed verb and flag, run under both spellings on twin canons: the same
+/// exit code and stdout, ids and digits aside, and no rename note on stderr,
+/// because stderr here is a pipe, as it is for an agent, a hook or the Slack
+/// bot. That the note does reach a terminal is `cli::tests`' to show: a test
+/// cannot be one.
+#[test]
+fn every_old_spelling_runs_the_new_verb_and_says_nothing_to_a_pipe() {
+    let plain = |s: &str| {
+        s.split_whitespace()
+            .map(|w| {
+                if w.contains("can-") {
+                    "<id>".into()
+                } else {
+                    w.replace(|c: char| c.is_ascii_digit(), "#")
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    let twins: &[(&[&str], &[&str])] = &[
+        (
+            &[
+                "supersede",
+                "<id>",
+                "Dishes by morning.",
+                "-m",
+                "late shifts",
+            ],
+            &["amend", "<id>", "Dishes by morning.", "-m", "late shifts"],
+        ),
+        (
+            &["retract", "<id>", "-m", "nobody cooks"],
+            &["repeal", "<id>", "-m", "nobody cooks"],
+        ),
+        (
+            &["grant", "human:sam", "house.kitchen"],
+            &["give", "human:sam", "house.kitchen"],
+        ),
+        (&["policy", "show"], &["rulings", "show"]),
+        (
+            &["horizon", "<id>", "2030-01-01"],
+            &["revisit", "<id>", "2030-01-01"],
+        ),
+        (&["tensions"], &["conflicts"]),
+        (
+            &["scope", "<id>", "house.kitchen"],
+            &["area", "<id>", "house.kitchen"],
+        ),
+        (
+            &["add", "Quiet after ten.", "--scope", "house"],
+            &["add", "Quiet after ten.", "--area", "house"],
+        ),
+        (
+            &[
+                "give",
+                "human:sam",
+                "house.kitchen",
+                "--horizon",
+                "2030-01-01",
+            ],
+            &[
+                "give",
+                "human:sam",
+                "house.kitchen",
+                "--until",
+                "2030-01-01",
+            ],
+        ),
+        (
+            &["rulings", "set", "consent", "--entrench", "principle"],
+            &["rulings", "set", "consent", "--constitutional", "principle"],
+        ),
+        (
+            &["rulings", "set", "default", "--graduated", "ask-one,refuse"],
+            &["rulings", "set", "default", "--escalate", "ask-one,refuse"],
+        ),
+        (
+            &["replay", "--policy", "consent", "--brief"],
+            &["replay", "--rulings", "consent", "--brief"],
+        ),
+        (
+            &["replay", "--ratification", "unanimous", "--brief"],
+            &["replay", "--passes", "unanimous", "--brief"],
+        ),
+        (
+            &["replay", "--entrench", "principle", "--brief"],
+            &["replay", "--constitutional", "principle", "--brief"],
+        ),
+        (
+            &["replay", "--graduated", "ask-one,refuse", "--brief"],
+            &["replay", "--escalate", "ask-one,refuse", "--brief"],
+        ),
+    ];
+    // One house with one rule, copied for each run, so every twin starts
+    // from the same bytes.
+    let base = scratch("alias-base").join(".canon");
+    canon_as(&base, "human:alex", &["init", "--profile", "house"]);
+    tick();
+    let id = id_of(&canon_as(&base, "human:alex", &["add", "Dishes the same day."]).1);
+    tick();
+    for (n, (old, new)) in twins.iter().enumerate() {
+        let mut said = Vec::new();
+        for (twin, typed) in [old, new].into_iter().enumerate() {
+            let dir = scratch(&format!("alias-{n}-{twin}")).join(".canon");
+            std::fs::create_dir_all(&dir).unwrap();
+            for file in std::fs::read_dir(&base).unwrap().flatten() {
+                if file.path().is_file() {
+                    std::fs::copy(file.path(), dir.join(file.file_name())).unwrap();
+                }
+            }
+            let args: Vec<&str> = typed
+                .iter()
+                .map(|a| if *a == "<id>" { id.as_str() } else { a })
+                .collect();
+            let (code, out, err) = canon_apart(&dir, "human:alex", &args, "");
+            assert!(
+                !err.contains("is now"),
+                "`{}` told a pipe:\n{err}",
+                typed.join(" ")
+            );
+            said.push((code, plain(&out)));
+        }
+        assert_eq!(
+            said[0],
+            said[1],
+            "`{}` and `{}` part",
+            old.join(" "),
+            new.join(" ")
+        );
+    }
+}
+
+/// **A student can read a whole session.** A house of two, run through the
+/// verbs a household meets in its first week, and not one word of the
+/// record's own vocabulary on stdout or stderr: what canon says to a person
+/// is in the words the person would use.
+#[test]
+fn a_first_week_in_a_house_reads_in_plain_words() {
+    let dir = scratch("first-week").join(".canon");
+    let mut said = String::new();
+    let mut run = |actor: &str, args: &[&str]| {
+        let (_, out, err) = canon_apart(&dir, actor, args, "");
+        said.push_str(&format!("$ canon {}\n{out}{err}", args.join(" ")));
+        if ![
+            "",
+            "who",
+            "list",
+            "why",
+            "open",
+            "overdue",
+            "ratification",
+            "rulings",
+        ]
+        .contains(args.first().unwrap_or(&""))
+        {
+            tick();
+        }
+        out
+    };
+    run("human:alex", &["init", "--profile", "house"]);
+    run("human:alex", &["give", "human:sam", "house.kitchen"]);
+    let rule = id_of(&run(
+        "human:alex",
+        &["add", "Dishes are washed the same day."],
+    ));
+    let quiet = id_of(&run(
+        "human:sam",
+        &["add", "Quiet after ten.", "--area", "house"],
+    ));
+    let guests = id_of(&run(
+        "human:sam",
+        &["add", "Guests leave by midnight.", "--area", "house"],
+    ));
+    run("human:alex", &["approve", &quiet, "-m", "fair"]);
+    run("human:alex", &["object", &guests, "-m", "too strict"]);
+    for args in [
+        &[][..],
+        &["who"],
+        &["who", "house.kitchen"],
+        &["list"],
+        &["why", &rule],
+        &["why", &quiet],
+        &["open"],
+        &["overdue"],
+        &["ratification", "show"],
+        &["rulings", "show"],
+    ] {
+        run("human:alex", args);
+    }
+    run(
+        "human:sam",
+        &["withdraw", "human:sam", "house.kitchen", "-m", "moving out"],
+    );
+    run("human:alex", &["check", "Paint the kitchen red."]);
+    run("human:sam", &[]);
+    let found = jargon::found(&said);
+    assert!(found.is_empty(), "{}\n\n{said}", found.join("\n"));
+}
+
+/// **A bare `canon` in a canon is where you are and what waits on you.** A
+/// house of two: Sam, in charge of the kitchen only, proposes a house rule,
+/// and one rule is past its review date. Alex, in charge of the house, sees
+/// the proposal as his to answer; Sam sees where he stands and that it is
+/// not his.
+#[test]
+fn a_bare_canon_says_what_is_waiting_for_whoever_runs_it() {
+    let dir = scratch("bare-house").join(".canon");
+    canon_as(&dir, "human:alex", &["init", "--profile", "house"]);
+    tick();
+    canon_as(&dir, "human:alex", &["give", "human:sam", "house.kitchen"]);
+    tick();
+    let (_, out) = canon_as(
+        &dir,
+        "human:alex",
+        &["add", "Dishes are washed the same day."],
+    );
+    let dishes = id_of(&out);
+    tick();
+    canon_as(&dir, "human:alex", &["revisit", &dishes, "2020-01-01"]);
+    tick();
+    canon_as(
+        &dir,
+        "human:sam",
+        &["add", "Quiet after ten.", "--area", "house"],
+    );
+    let (code, out) = canon_as(&dir, "human:alex", &[]);
+    assert_eq!(code, 0, "{out}");
+    let page = flat(&out);
+    assert!(page.contains("this house's rules: 1 in force"), "{out}");
+    assert!(page.contains("You are in charge of house."), "{out}");
+    let waiting = page
+        .split("waiting for your yes or no:")
+        .nth(1)
+        .unwrap_or_else(|| panic!("no waiting section:\n{out}"));
+    assert!(waiting.contains("Quiet after ten."), "{out}");
+    assert!(waiting.contains("canon review"), "{out}");
+    assert!(page.contains("past its review date: 1"), "{out}");
+    assert!(page.contains("canon overdue"), "{out}");
+    assert!(
+        out.trim_end()
+            .ends_with("`canon help` for everything else."),
+        "{out}"
+    );
+
+    let (code, out) = canon_as(&dir, "human:sam", &[]);
+    assert_eq!(code, 0, "{out}");
+    assert!(
+        flat(&out).contains("You are in charge of house.kitchen."),
+        "{out}"
+    );
+    assert!(!out.contains("waiting for your yes or no"), "{out}");
+    assert!(!out.contains("Quiet after ten."), "{out}");
+}
+
+#[test]
+fn a_bare_canon_in_an_empty_canon_says_nothing_waits_and_how_to_begin() {
+    let dir = fresh("bare-empty");
+    let (code, out) = canon_as(&dir, "human:alex", &[]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("nothing is waiting for you"), "{out}");
+    assert!(out.contains("canon add \"<a principle>\""), "{out}");
+    assert!(out.contains("`canon help` for everything else."), "{out}");
+}
+
+/// Outside any canon, the short help still, with the way to start one, and
+/// still exit 2: nothing was done.
+#[test]
+fn a_bare_canon_outside_any_canon_is_the_short_help_and_how_to_start() {
+    let dir = scratch("bare-outside");
+    let out = Command::new(env!("CARGO_BIN_EXE_canon"))
+        .env_remove("CANON_DIR")
+        .env("HOME", &dir)
+        .current_dir(&dir)
+        .output()
+        .expect("canon runs");
+    let said = String::from_utf8_lossy(&out.stdout);
+    assert_eq!(out.status.code(), Some(2), "{said}");
+    assert!(said.contains("canon help all"), "{said}");
+    assert!(said.contains("`canon init` starts one here"), "{said}");
+}
+
+/// **What row 17's student needed before her first week went wrong.** She
+/// typed `withdraw` to take back a proposal and stepped herself off house;
+/// the log's "position toward" never said which way; and `--help` never
+/// named the three verbs the house ran on.
+#[test]
+fn a_student_finds_the_everyday_verbs_and_withdraw_says_what_it_costs() {
+    let (code, help) = canon_as(&scratch("student-help"), "human:priya", &["--help"]);
+    assert_eq!(code, 0, "{help}");
+    for verb in ["approve <id>", "object <id>", "repeal <id>", "may I?"] {
+        assert!(help.contains(verb), "{verb}: {help}");
+    }
+    let canon = scratch("student").join(".canon");
+    assert_eq!(
+        canon_as(&canon, "human:mira", &["init", "--profile", "house"]).0,
+        0
+    );
+    let (_, out) = canon_as(&canon, "human:priya", &["add", "Guests stay three nights."]);
+    let rule = id_of(&out);
+    let (code, out) = canon_as(&canon, "human:mira", &["approve", &rule]);
+    assert_eq!(code, 0, "{out}");
+    let (_, log) = canon_as(&canon, "human:mira", &["log"]);
+    assert!(log.contains(&format!("approves {rule}")), "{log}");
+    let acts = log.lines().filter(|l| l.starts_with("can-")).count();
+
+    let (code, out) = canon_as(&canon, "human:priya", &["withdraw", &rule]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains(&format!("canon repeal {rule}")), "{out}");
+    let (_, log) = canon_as(&canon, "human:mira", &["log"]);
+    assert_eq!(
+        log.lines().filter(|l| l.starts_with("can-")).count(),
+        acts,
+        "{log}"
+    );
+
+    // Off a terminal nothing asks, so a script stepping back runs as it
+    // did; the cost is said either way.
+    let (code, _, err) = canon_apart(
+        &canon,
+        "human:mira",
+        &["withdraw", "human:mira", "house"],
+        "",
+    );
+    assert_eq!(code, 0, "{err}");
+    assert!(
+        err.contains("only someone still in charge of it can put you back"),
+        "{err}"
+    );
+}
+
+/// Row 17's re-run: in a house, `help all` ended on the personal profile's
+/// "`check` never returns a verdict", and the student took it as hers.
+#[test]
+fn help_all_says_the_personal_profile_only_to_a_personal_canon() {
+    let said = |profile: &str| {
+        let canon = scratch(&format!("help-all-{profile}")).join(".canon");
+        assert_eq!(
+            canon_as(&canon, "human:priya", &["init", "--profile", profile]).0,
+            0
+        );
+        canon_as(&canon, "human:priya", &["help", "all"]).1
+    };
+    assert!(!said("house").contains("never returns a verdict"));
+    assert!(said("personal").contains("never returns a verdict"));
 }

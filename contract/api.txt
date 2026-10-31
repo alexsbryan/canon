@@ -139,6 +139,7 @@ fold::Canon::ranks  fn ranks (& self) -> & [(ActId , String)]
 fold::Canon::ratifications  fn ratifications (& self) -> & [crate :: ratify :: AdoptedRatify]
 fold::Canon::retractions  fn retractions (& self) -> & [Retraction]
 fold::Canon::rulings  fn rulings (& self) -> & [Ruling]
+fold::Canon::said_about  fn said_about (& self , _ : & str) -> Vec < crate :: standing :: Position >
 fold::Canon::scope_of  fn scope_of (& self , _ : & ActId) -> Option < & crate :: scope :: Scope >
 fold::Canon::scopes  fn scopes (& self) -> & [(ActId , crate :: scope :: Scope)]
 fold::Canon::sealed  fn sealed (& self) -> & [crate :: draw :: Sealed]
@@ -271,6 +272,7 @@ ratify::Canon::adopted_at  fn adopted_at (& self , _ : Option < & Scope > , _ : 
 ratify::Canon::canon_scopes  fn canon_scopes (& self , _ : i64) -> Vec < & Scope >
 ratify::Canon::counts  fn counts (& self , _ : & crate :: scope :: Grant , _ : Option < & Scope > , _ : i64) -> bool
 ratify::Canon::governs_at  fn governs_at (& self , _ : Option < & Scope > , _ : i64) -> Governs
+ratify::Canon::holders_at  fn holders_at (& self , _ : Option < & Scope > , _ : i64) -> BTreeSet < & str >
 ratify::Canon::judge_retraction  fn judge_retraction (& self , _ : & Proposal , _ : i64) -> Verdict
 ratify::Canon::may_govern  fn may_govern (& self , _ : & str , _ : Option < & Scope > , _ : i64) -> bool
 ratify::Canon::owned_at  fn owned_at < 's > (& self , _ : & 's Scope , _ : i64) -> Option < & 's str >

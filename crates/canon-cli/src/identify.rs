@@ -240,7 +240,7 @@ fn usable(bound: &Binding) -> Result<Signing, String> {
         return Err(format!(
             "{} is contested: two key acts bind it, so somebody else holds a key that signs \
              for it and nothing more written under it can count. Write under a new name and \
-             ask a holder to grant it.",
+             ask someone in charge to put it in charge.",
             bound.actor
         ));
     }

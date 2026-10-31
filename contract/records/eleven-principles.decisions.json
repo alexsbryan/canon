@@ -1,7 +1,7 @@
 {
   "a-committer-elsewhere-does-not": {
     "authority": "ask-one",
-    "because": "subsidiarity: `engine.parser` is held by human:omar — not you",
+    "because": "subsidiarity: in charge of `engine.parser`: human:omar — not you",
     "cites": [
       "can-c34a786d7df3"
     ],
@@ -147,7 +147,7 @@
   },
   "the-owner-decides-the-parser": {
     "authority": "act",
-    "because": "subsidiarity: `engine.parser` is held by human:omar — including you",
+    "because": "subsidiarity: in charge of `engine.parser`: human:omar — including you",
     "cites": [
       "can-c34a786d7df3"
     ],

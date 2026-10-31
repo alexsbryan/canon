@@ -57,7 +57,7 @@ fn id_of(out: &str) -> String {
 fn a_refused_act_leads_with_not_applied_on_every_gated_verb() {
     let dir = fresh("refused");
     // Sam founds the house and writes two rules; a second passes so the
-    // gate is shut when Ola, who holds nothing, tries each verb.
+    // gate is shut when Ola, in charge of nothing, tries each verb.
     let (c, out) = canon_as(&dir, "human:sam", &["grant", "human:sam", "house"]);
     assert_eq!(c, 0, "{out}");
     let (_, a) = canon_as(
@@ -74,7 +74,7 @@ fn a_refused_act_leads_with_not_applied_on_every_gated_verb() {
     let (_, g) = canon_as(&dir, "human:sam", &["log"]);
     let grant_id = g
         .lines()
-        .find(|l| l.contains("grant"))
+        .find(|l| l.starts_with("can-") && l.contains("grant"))
         .map(|l| l.split_whitespace().next().unwrap().to_string())
         .expect("the grant is in the log");
     std::thread::sleep(std::time::Duration::from_millis(1100));
@@ -161,11 +161,11 @@ fn a_retraction_without_standing_is_a_proposal_the_holder_approves() {
 
     let (code, out) = canon_as(&dir, "human:sam", &["approve", &proposal]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains(&format!("retracted {a} since")), "{out}");
+    assert!(out.contains(&format!("repealed {a} since")), "{out}");
     let (_, why) = canon_as(&dir, "human:sam", &["why", &a]);
-    assert!(why.contains("retracted"), "{why}");
+    assert!(why.contains("repealed"), "{why}");
     assert!(
-        why.contains("agent:claude proposed retracting it: a duplicate"),
+        why.contains("agent:claude proposed repealing it: a duplicate"),
         "{why}"
     );
 }
@@ -206,12 +206,12 @@ fn an_act_that_took_while_open_says_so() {
     // The first grant in any canon takes because nothing predates it.
     let (code, out) = canon_as(&dir, "human:sam", &["grant", "human:sam", "house"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("human:sam holds house"), "{out}");
+    assert!(out.contains("human:sam is in charge of house"), "{out}");
     assert!(
         out.contains("applied while open: no grant over house predates this act"),
         "{out}"
     );
-    assert!(out.contains("granted by human:sam"), "{out}");
+    assert!(out.contains("given by human:sam"), "{out}");
 
     // A rule written right after says how it came to be in force rather
     // than a bare "in force" — the founding-script case, on the act itself.
@@ -223,7 +223,7 @@ fn an_act_that_took_while_open_says_so() {
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("in force — "), "{out}");
     assert!(
-        out.contains("nobody held house before this was written; it was open")
+        out.contains("nobody was in charge of house before this was written; it was open")
             || out.contains("holds house"),
         "{out}"
     );
@@ -235,9 +235,9 @@ fn a_grant_names_its_granter_and_says_when_it_leaves_you_out() {
     // The git-name case: the person acts as one label and seats another.
     let (code, out) = canon_as(&dir, "human:Alex Bryan", &["grant", "human:alex", "house"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("granted by human:Alex Bryan"), "{out}");
+    assert!(out.contains("given by human:Alex Bryan"), "{out}");
     assert!(
-        out.contains("human:Alex Bryan does not hold house"),
+        out.contains("human:Alex Bryan is not in charge of house"),
         "{out}"
     );
     assert!(out.contains("waiting on human:alex"), "{out}");
@@ -260,8 +260,14 @@ fn who_names_both_rules_by_name() {
     assert_eq!(code, 0, "{out}");
     let (code, out) = canon_as(&dir, "human:sam", &["who", "house.kitchen"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("rules made under: consent:7d — set "), "{out}");
-    assert!(out.contains("proposals judged under: default"), "{out}");
+    assert!(
+        out.contains("how rules pass here: `consent:7d` — set "),
+        "{out}"
+    );
+    assert!(
+        out.contains("how actions are judged here: `default`"),
+        "{out}"
+    );
     assert!(!out.contains("decided under:"), "{out}");
 }
 
@@ -338,7 +344,7 @@ fn a_rule_added_before_anyone_holds_the_canon_says_it_took_while_open() {
     let (code, out) = canon_as(&dir, "human:sam", &["add", "Quiet after eleven."]);
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("in force — "), "{out}");
-    assert!(out.contains("nobody held"), "{out}");
+    assert!(out.contains("nobody was in charge of"), "{out}");
     assert!(out.contains("it was open"), "{out}");
 }
 

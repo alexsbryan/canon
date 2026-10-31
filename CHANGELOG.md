@@ -7,6 +7,28 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Before you upgrade
+
+- Text output now uses plain words: a rule, an area, who is in charge,
+  how rules pass here and how actions are judged here, where it said
+  commitment, scope, holds and standing. A script that reads canon's text
+  should read `--json`, which is unchanged, keys and values alike, except
+  that a decision's `because` and `detail` say "in charge of" where they
+  said "holds".
+- Every old verb and flag still works and prints the same stdout as its
+  new name: `supersede`, `retract`, `grant`, `policy`, `horizon`,
+  `tensions`, the `scope` verb, `--scope`, `--horizon`, `--entrench`,
+  `--graduated`, `--policy` and `--ratification`.
+- The note naming the new spelling prints on stderr only when stderr is a
+  terminal, so agents, hooks and the Slack bot never see it.
+- `canon withdraw <you> <area>` says what stepping back costs, and on a
+  terminal asks first; `--yes` skips the question. Off a terminal it runs
+  as before. Given a rule's id, it refuses and names `canon repeal <id>`.
+- `canon log` writes a position as `approves` or `objects to`, where it
+  wrote `toward` or `against`; `--json` is unchanged.
+- `canon ratification show` lists what is in use first, then the rules it
+  replaced or refused.
+
 ### Removed
 
 - `canon rebase --onto <url>@<gen>` is `canon adopt <url>@<gen> --rebase
@@ -25,6 +47,42 @@ renames that heading to the version, and its section becomes the release notes
 
 ### Changes
 
+- A bare `canon` inside a canon is a short page for whoever runs it: how
+  many rules are in force and which areas you are in charge of, what is
+  waiting for your yes or no (`review`'s own list), what is past its review
+  date, open questions, and writes waiting for a person, each ending with
+  the command that shows it, and exits 0. Outside a canon it is still the
+  short help and exit 2, with a line on `canon init`.
+- Seven verbs and six flags have plain names: `supersede` is `amend`,
+  `retract` is `repeal`, `grant` is `give`, `policy` is `rulings`,
+  `horizon` is `revisit`, `tensions` is `conflicts`, the `scope` verb is
+  `area`, and `--scope` is `--area` on every verb that takes it. `give
+  --horizon` is `--until`; on `rulings` and `replay`, `--entrench` is
+  `--constitutional` and `--graduated` is `--escalate`; on `replay`,
+  `--policy` is `--rulings` and `--ratification` is `--passes`. The old
+  names still work and print the same stdout; on a terminal each says once
+  on stderr what to type instead, and help lists only the new ones. The
+  record, its op and field names, JSON keys and MCP tool names do not
+  change.
+- What canon prints is in plain words: a rule, an area, who is in charge,
+  how rules pass here (the ratification rule) and how actions are judged
+  here (the policy), in `canon help all`, `init`, `who`, `give`,
+  `withdraw`, `ratification show`, `rulings show`, `why`, `list` and MCP
+  text. `ratification show` and `rulings show` end with the command that
+  changes them, and `give` with the one that takes it back. A rule's
+  spelling (`standing`, `consent:7d`) is shown as you would type it.
+  `ratification set --governs rules` is the plain spelling of
+  `--governs commitments`, which still works, and `canon help areas` is
+  the topic `canon help scopes` was. JSON output is unchanged.
+- `canon help <word>` says what any word canon uses means, in one line:
+  every verb, the plain words it prints (`canon help in charge`), the ways
+  rules can pass (`canon help consent:14d`), and the record's own names
+  met in `canon log` or JSON (`canon help supersede`). Each verb's help
+  ends with its line too. The words live in `crates/canon-cli/glossary.txt`.
+- `canon log` opens with two lines saying how the record's own names map
+  onto the plain ones (supersede is amend, retract is repeal, grant is
+  give, scoped is area, policy is rulings). `canon log --json` is
+  unchanged.
 - `canon adopt <url>` no longer leaves its clone of the lineage where
   `git add .canon` commits it. `canon init` lists `lineages/` in
   `.canon/.gitignore`, and the cache writes a `.gitignore` of its own the

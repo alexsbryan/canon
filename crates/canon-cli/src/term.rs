@@ -26,6 +26,23 @@ pub fn done(line: &str) {
     eprint!("{}", render(line, true, std::io::stderr().is_terminal()));
 }
 
+/// Whether someone is at the keyboard to answer. A pipe, CI or an agent on
+/// the MCP surface is not, and a question nobody can answer is a hang.
+pub fn interactive() -> bool {
+    std::io::stdin().is_terminal()
+}
+
+/// Ask on stderr and read the answer; anything but y or yes is no.
+pub fn yes(question: &str) -> bool {
+    eprint!("{question} [y/N] ");
+    let _ = std::io::stderr().flush();
+    let mut answer = String::new();
+    if std::io::stdin().read_line(&mut answer).is_err() {
+        return false;
+    }
+    matches!(answer.trim().to_ascii_lowercase().as_str(), "y" | "yes")
+}
+
 /// The rule, apart from the streams, so it can be tested without a pty.
 fn render(line: &str, done: bool, tty: bool) -> String {
     match (tty, done) {

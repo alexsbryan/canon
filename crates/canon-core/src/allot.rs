@@ -162,7 +162,7 @@ impl core::fmt::Display for PoolError {
             ),
             Self::NobodyHolds => write!(
                 f,
-                "nobody holds standing over this scope, so there is nobody to take a turn"
+                "nobody is in charge of this area, so there is nobody to take a turn"
             ),
             Self::Draw(e) => write!(f, "the draw this rotation orders by is not settled: {e}"),
         }
