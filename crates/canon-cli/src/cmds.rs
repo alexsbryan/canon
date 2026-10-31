@@ -333,10 +333,9 @@ pub fn write_as(d: &Path, kind: ActKind, actor: &str) -> Result<Act, String> {
 // ── record ──────────────────────────────────────────────────
 
 pub fn init(args: &[String]) -> i32 {
-    let profile = match Profile::parse(flag(args, "--profile").unwrap_or("personal")) {
-        Ok(p) => p,
-        Err(e) => return fail(e),
-    };
+    let profile = or_fail!(Profile::parse(
+        flag(args, "--profile").unwrap_or("personal")
+    ));
     let base = match std::env::var("CANON_DIR") {
         Ok(d) => PathBuf::from(d),
         Err(_) => match std::env::current_dir() {
@@ -488,10 +487,7 @@ pub fn add(args: &[String]) -> i32 {
             "usage: canon add \"<rule>\" [--area <area>] [-m \"<why>\"] [--cite \"<where>\"]",
         );
     };
-    let scope = match scope_arg(args) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
+    let scope = or_fail!(scope_arg(args));
     let (d, _, st) = or_fail!(load());
     // A near-duplicate is a warning, not a refusal: the write still lands,
     // and the person can retract it. The warning is on stderr, so a pipe
@@ -643,10 +639,13 @@ fn weigh(args: &[String], approve: bool) -> i32 {
             ))
         }
     };
-    let (d, _, st) = or_fail!(load());
+    let (d, log, st) = or_fail!(load());
     let target = match crate::explain::resolve_proposal(&st, needle) {
         Ok(i) => i,
-        Err(e) => return fail(e),
+        Err(e) => {
+            return crate::govern::answer_request(&d, (&log, &st), needle, approve, because)
+                .unwrap_or_else(|| fail(e))
+        }
     };
     match answer(&d, &store::actor(), target.as_str(), None, approve, because) {
         Ok(act) => {
@@ -752,6 +751,7 @@ pub fn list(args: &[String]) -> i32 {
             "no {} yet. `canon add \"<the first one>\"` to start.",
             profile.nouns()
         );
+        crate::govern::unapplied(&log, &st);
         return 0;
     }
     for c in &live {
@@ -802,12 +802,7 @@ pub fn list(args: &[String]) -> i32 {
     if refused > 0 {
         println!("{refused} refused — `canon why <id>` says why");
     }
-    if !st.ungoverned().is_empty() {
-        println!(
-            "{} change(s) to who decides came from someone not in charge and were not applied — `canon log`",
-            st.ungoverned().len()
-        );
-    }
+    crate::govern::unapplied(&log, &st);
     let carried = st.tolerated().count();
     if carried > 0 {
         println!("{carried} contradiction(s) carried knowingly — `canon list --json` for detail");
@@ -910,10 +905,7 @@ pub fn why(args: &[String]) -> i32 {
         return fail("usage: canon why <id>");
     };
     let (_, log, st) = or_fail!(load());
-    let id = match crate::explain::resolve_why(&st, &log, needle) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
+    let id = or_fail!(crate::explain::resolve_why(&st, &log, needle));
     match crate::explain::explain(&log, &st, &id) {
         Ok(e) => {
             if has(args, "--json") {
@@ -953,10 +945,7 @@ pub fn supersede(args: &[String]) -> i32 {
         return fail("usage: canon amend <id> \"<new text>\" -m \"<reason>\" [--area <area>]");
     }
     let (d, _, st) = or_fail!(load());
-    let old = match crate::explain::resolve_any(&st, pos[0]) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
+    let old = or_fail!(crate::explain::resolve_any(&st, pos[0]));
     // The replacement lives where the old one lived unless told otherwise,
     // so the same people who ratified the rule ratify its replacement.
     let scope = match scope_arg(args) {
@@ -988,10 +977,7 @@ pub fn retract(args: &[String]) -> i32 {
         return fail("usage: canon repeal <id> -m \"<reason>\"");
     };
     let (d, _, st) = or_fail!(load());
-    let target = match crate::explain::resolve_any(&st, needle) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
+    let target = or_fail!(crate::explain::resolve_any(&st, needle));
     match write(
         &d,
         ActKind::Retract {
@@ -1309,10 +1295,7 @@ pub fn question(args: &[String]) -> i32 {
     let Some(text) = pos.first() else {
         return fail("usage: canon question \"<what the canon does not cover>\"");
     };
-    let d = match dir() {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
+    let d = or_fail!(dir());
     match write(
         &d,
         ActKind::Question {
@@ -1380,19 +1363,13 @@ pub fn open(args: &[String]) -> i32 {
 
 pub fn config(args: &[String]) -> i32 {
     let pos = positionals(args);
-    let d = match dir() {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
+    let d = or_fail!(dir());
     match pos.first().copied() {
         Some("set") => {
             if pos.len() < 3 {
                 return fail("usage: canon config set <key> <value>");
             }
-            let key = match Key::parse(pos[1]) {
-                Ok(k) => k,
-                Err(e) => return fail(e),
-            };
+            let key = or_fail!(Key::parse(pos[1]));
             match Config::write(&d, key, pos[2]) {
                 Ok(()) => {
                     println!("{} = {}", key.as_str(), pos[2]);
@@ -1405,14 +1382,8 @@ pub fn config(args: &[String]) -> i32 {
             if pos.len() < 2 {
                 return fail("usage: canon config get <key>");
             }
-            let key = match Key::parse(pos[1]) {
-                Ok(k) => k,
-                Err(e) => return fail(e),
-            };
-            let cfg = match Config::load(&d) {
-                Ok(c) => c,
-                Err(e) => return fail(e),
-            };
+            let key = or_fail!(Key::parse(pos[1]));
+            let cfg = or_fail!(Config::load(&d));
             match cfg.get(key) {
                 Some(v) => {
                     println!("{v}");
@@ -1427,10 +1398,7 @@ pub fn config(args: &[String]) -> i32 {
             }
         }
         Some("show") | None => {
-            let cfg = match Config::load(&d) {
-                Ok(c) => c,
-                Err(e) => return fail(e),
-            };
+            let cfg = or_fail!(Config::load(&d));
             let rendered = cfg.render();
             if rendered.is_empty() {
                 println!(

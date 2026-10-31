@@ -432,10 +432,7 @@ pub fn run(args: &[String]) -> i32 {
     if let Err(why) = door(terminal, &actor, from) {
         return fail(why);
     }
-    let d = match crate::cmds::dir() {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
+    let d = or_fail!(crate::cmds::dir());
     let mut terminal = Terminal {
         input: std::io::stdin().lock(),
     };
@@ -486,10 +483,7 @@ pub fn session(
     if let Err(why) = door(terminal, actor, from) {
         return fail(why);
     }
-    let tally = match walk(d, actor, from, only, prompt) {
-        Ok(t) => t,
-        Err(e) => return fail(e),
-    };
+    let tally = or_fail!(walk(d, actor, from, only, prompt));
     prompt.say(&format!("\n{}", tally.line()));
     i32::from(tally.failed > 0)
 }

@@ -45,6 +45,7 @@
 //! And there is no `--accept-all`: a canon adopted wholesale is disengagement
 //! at t=0, so onboarding *is* the first governance session.
 
+use crate::cmds::or_fail;
 use std::io::{BufRead, Read as _, Write};
 use std::path::{Path, PathBuf};
 
@@ -1717,10 +1718,7 @@ fn read_git(since: &str) -> Result<Vec<(String, String, i64)>, String> {
 /// `[q]uit` ends the sitting, not the run — the next run would otherwise
 /// open under the person's hands the moment they said stop.
 fn resume(dir: &Path, profile: Profile, seen: &mut Seen, pick: Option<&str>) -> i32 {
-    let (found, partial) = match runs_to_resume(dir, pick) {
-        Ok(v) => v,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let (found, partial) = or_fail!(runs_to_resume(dir, pick));
     // Said, not skipped in silence: the person who ran `--resume` while an
     // import was drafting is the person who needs to know it is still going.
     for p in &partial {
@@ -1871,14 +1869,8 @@ pub fn run(args: &[String]) -> i32 {
         return 2;
     }
 
-    let dir = match crate::cmds::dir() {
-        Ok(d) => d,
-        Err(e) => return crate::cmds::fail(e),
-    };
-    let profile = match Profile::load(&dir) {
-        Ok(p) => p,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let dir = or_fail!(crate::cmds::dir());
+    let profile = or_fail!(Profile::load(&dir));
     // A dry run READS the set — a preview should not re-offer what you
     // already declined — and writes nothing to it, or you would preview a
     // folder, decide to keep three, run it for real and be told there is
@@ -1903,10 +1895,7 @@ pub fn run(args: &[String]) -> i32 {
         }
         return continue_run(&dir, profile, args, target, &mut seen);
     }
-    let gathered = match read_sources(args) {
-        Ok(s) => s,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let gathered = or_fail!(read_sources(args));
     // **Before the model run, not after.** What was skipped changes whether
     // this run is worth paying for, and a person who finds out afterwards
     // has already spent the time.
@@ -2258,10 +2247,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     artifact.tension_passes_unread = compared.unread;
     artifact.tension_schedule = Some(compared.schedule);
     artifact.tape = client.tape();
-    let path = match persist(dir, &artifact) {
-        Ok(p) => p,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let path = or_fail!(persist(dir, &artifact));
     clear_checkpoint(dir, &artifact);
 
     if dry_run {
@@ -2307,10 +2293,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
     }
 
     // ── one at a time ───────────────────────────────────────
-    let accepted = match review(dir, &candidates, &chunks, &kept, seen).map(|(a, _)| a) {
-        Ok(a) => a,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let accepted = or_fail!(review(dir, &candidates, &chunks, &kept, seen).map(|(a, _)| a));
     if accepted.is_empty() {
         println!("nothing accepted.");
         return 0;

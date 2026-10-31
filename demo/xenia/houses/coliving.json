@@ -77,7 +77,7 @@
   "scenarios": [
     {
       "id": "setup",
-      "brief": "Sam: canon is installed on each of our machines. Let's start the house's canon together \u2014 one of us runs init, then we each get a say in how the house decides. The list is in house/situations.md.",
+      "brief": "Sam: canon is installed on each of our machines. Let's start the house's canon together \u2014 one of us runs init, then we each get a say in how the house decides. The list is situations.md, in the house's folder where our terminals start.",
       "feedback": [
         "Did setting it up feel shared, or did one person do it?",
         "What did canon assume about who holds the house?"
