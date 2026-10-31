@@ -561,7 +561,7 @@ impl Policy for Rule {
                     outcome,
                     authority,
                     because: format!(
-                        "subsidiarity: `{scope}` is in the charge of {} — {}",
+                        "subsidiarity: in charge of `{scope}`: {} — {}",
                         holders.join(", "),
                         if mine { "including you" } else { "not you" }
                     ),

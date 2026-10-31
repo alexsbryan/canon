@@ -97,7 +97,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | What it does | Example |
 |---|---|
 | Who may decide this room, and under what rule | `canon who house.kitchen` |
-| Give someone a seat, optionally with a term | `canon give human:dana house.kitchen --until 90` |
+| Give someone a seat, optionally with a term | `canon give human:dana house.kitchen --until 2027-06-30` |
 | Step down, or stand someone down | `canon withdraw human:dana house.kitchen -m "Term is up."` |
 | Put a rule in a room | `canon area can-ffc1 house.kitchen` |
 | Say how a room's rules get made | `canon ratification set joint:human:dana,human:sam --area house.kitchen` |
