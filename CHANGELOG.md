@@ -28,6 +28,13 @@ renames that heading to the version, and its section becomes the release notes
   wrote `toward` or `against`; `--json` is unchanged.
 - `canon ratification show` lists what is in use first, then the rules it
   replaced or refused.
+- A `give` from someone not in charge is a request: its refusal names who
+  is in charge and the line they run, `list` and `who` show each open one
+  as `<who> asks to be put in charge of <area> — canon approve <id>` in
+  place of the count, and `canon approve <id>` by someone in charge grants
+  it under their name. A refused change of any other kind is still counted
+  as before. `who` with one person in charge adds init's "give the others a
+  say" line.
 
 ### Removed
 

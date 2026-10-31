@@ -366,7 +366,9 @@ Five things to know before you lean on it:
 - **Out of seat is recorded, not applied.** A grant, a policy, a
   ratification rule, a ruling or an `undo` by somebody without standing
   over what it touches lands in the log marked `NOT APPLIED`, and
-  `canon list` says how many are sitting there.
+  `canon list` says how many are sitting there. A `give` is the exception
+  that waits: it is a request to whoever is in charge of the area, `list`
+  and `who` name it, and `canon approve <id>` by one of them grants it.
 - **Changing how a scope decides is judged under how it decides today.**
   `canon ratification set` is a proposal like any other, put to the same
   people under the rule it is replacing. Under `standing` a holder's
