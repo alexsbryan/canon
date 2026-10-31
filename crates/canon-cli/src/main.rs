@@ -233,7 +233,12 @@ ENVIRONMENT
   CANON_ENDPOINT   override the configured endpoint for one run
   CANON_MODEL      override the configured model for one run
   CANON_API_KEY    sent as a bearer token, for an endpoint that needs one
+";
 
+/// The end of `help all` for a personal canon, or for none yet (personal is
+/// the default): in a house, xenia's student (row 17) read "never returns a
+/// verdict" as true of her `check`, and never ran it.
+const HELP_PERSONAL: &str = "
 ON THE PERSONAL PROFILE
   This is a structured journal, not a clinician. It does not diagnose and
   it does not advise. `check` reports which things you hold yourself to have a
@@ -285,7 +290,12 @@ fn main() {
         // outside a canon, how to start one.
         let all = args.iter().skip(1).any(|a| a == "all" || a == "--all");
         let start = if args.is_empty() { START } else { "" };
-        print!("{}{start}", if all { HELP_ALL } else { HELP });
+        let personal = all
+            && crate::cmds::dir().map_or(true, |d| {
+                profile::Profile::load(&d).unwrap_or_default() == profile::Profile::Personal
+            });
+        let tail = if personal { HELP_PERSONAL } else { "" };
+        print!("{}{tail}{start}", if all { HELP_ALL } else { HELP });
         std::process::exit(if args.is_empty() { 2 } else { 0 });
     }
     let (cmd, rest) = args.split_first().unwrap();
@@ -370,6 +380,7 @@ mod tests {
         // words the record keeps for itself stay out of all three.
         let mut said = jargon::found(&format!("{HELP}{START}"));
         said.extend(jargon::found(HELP_ALL));
+        said.extend(jargon::found(super::HELP_PERSONAL));
         for (verb, ..) in crate::cli::VERBS {
             let help = crate::cli::help_for(verb, HELP_ALL).unwrap();
             said.extend(

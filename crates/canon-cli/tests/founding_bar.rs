@@ -944,3 +944,16 @@ fn a_student_finds_the_everyday_verbs_and_withdraw_says_what_it_costs() {
     assert_eq!(code, 0, "{err}");
     assert!(err.contains("only someone still in charge of it can put you back"), "{err}");
 }
+
+/// Row 17's re-run: in a house, `help all` ended on the personal profile's
+/// "`check` never returns a verdict", and the student took it as hers.
+#[test]
+fn help_all_says_the_personal_profile_only_to_a_personal_canon() {
+    let said = |profile: &str| {
+        let canon = scratch(&format!("help-all-{profile}")).join(".canon");
+        assert_eq!(canon_as(&canon, "human:priya", &["init", "--profile", profile]).0, 0);
+        canon_as(&canon, "human:priya", &["help", "all"]).1
+    };
+    assert!(!said("house").contains("never returns a verdict"));
+    assert!(said("personal").contains("never returns a verdict"));
+}
