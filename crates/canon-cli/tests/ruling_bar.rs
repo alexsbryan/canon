@@ -85,6 +85,34 @@ fn json_of(out: &str) -> Value {
     serde_json::from_str(&out[start..=end]).unwrap_or_else(|e| panic!("{e}: {out}"))
 }
 
+/// The `canon_check` MCP tool, called once over stdio. Its text and whether
+/// it was an error.
+fn mcp_check(dir: &Path, arguments: Value, bearings: &'static str) -> (String, bool) {
+    let call = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": { "name": "canon_check", "arguments": arguments },
+    });
+    let (_, out) = canon_at(
+        dir,
+        "agent:helper",
+        &["mcp"],
+        Some(&endpoint(bearings)),
+        &format!("{call}\n"),
+    );
+    let line = out.lines().find(|l| l.starts_with('{')).expect("a reply");
+    let reply: Value = serde_json::from_str(line).unwrap();
+    let result = &reply["result"];
+    (
+        result["content"][0]["text"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string(),
+        result["isError"].as_bool().unwrap_or(false),
+    )
+}
+
 /// Output with its wrapping undone, for a phrase the terminal may break.
 fn flat(out: &str) -> String {
     out.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -142,6 +170,7 @@ fn endpoint(bearings: &'static str) -> String {
 }
 
 const NOTHING: &str = "[]";
+const SHED: &str = r#"[{"commitment":1,"pull":"toward","because":"the shed has room"}]"#;
 
 // ── 1. a live check hears what people said ─────────────────────────────
 
@@ -200,4 +229,66 @@ fn a_live_check_counts_what_each_person_last_said_and_not_what_an_agent_said() {
     let v = json_of(&out);
     assert_eq!(v["outcome"], "supported", "{v}");
     assert_eq!(v["positions"].as_array().unwrap().len(), 1, "{v}");
+}
+
+// ── 2. the MCP tool asks the room's own rule ───────────────────────────
+
+#[test]
+fn the_mcp_check_takes_a_scope_and_a_subject_and_decides_by_the_rooms_rule() {
+    let dir = fresh("room", false);
+    let (code, out) = canon_as(&dir, "human:alex", &["add", "Bikes live in the shed."]);
+    assert_eq!(code, 0, "{out}");
+    let args = [
+        "policy",
+        "set",
+        "consent",
+        "--scope",
+        "house.kitchen",
+        "-m",
+        "we consent",
+    ];
+    let (code, out) = canon_as(&dir, "human:alex", &args);
+    assert_eq!(code, 0, "{out}");
+
+    // The call shape every agent already uses: the canon-wide rule.
+    let proposal = serde_json::json!({ "proposal": "a bike rack by the fridge" });
+    let (text, error) = mcp_check(&dir, proposal, SHED);
+    assert!(!error, "{text}");
+    assert!(text.contains("default:"), "{text}");
+
+    // In the kitchen, the kitchen's rule.
+    let kitchen = serde_json::json!({
+        "proposal": "a bike rack by the fridge",
+        "scope": "house.kitchen",
+    });
+    let (text, error) = mcp_check(&dir, kitchen.clone(), SHED);
+    assert!(!error, "{text}");
+    assert!(text.contains("consent: no objection"), "{text}");
+
+    // And what people said about the subject, named apart from the words.
+    let args = [
+        "position",
+        "bikes indoors",
+        "--against",
+        "-m",
+        "the floor is wet",
+    ];
+    let (code, out) = canon_as(&dir, "human:dana", &args);
+    assert_eq!(code, 0, "{out}");
+    let (text, _) = mcp_check(&dir, kitchen, SHED);
+    assert!(!text.contains("human:dana"), "a different subject: {text}");
+    let about = serde_json::json!({
+        "proposal": "a bike rack by the fridge",
+        "scope": "house.kitchen",
+        "about": "bikes indoors",
+    });
+    let (text, _) = mcp_check(&dir, about, SHED);
+    assert!(text.contains("consent: 1 reasoned objection"), "{text}");
+    assert!(text.contains("human:dana"), "{text}");
+
+    // A scope that is not one is refused, not read as the canon as a whole.
+    let bad = serde_json::json!({ "proposal": "a bike rack", "scope": "house..kitchen" });
+    let (text, error) = mcp_check(&dir, bad, SHED);
+    assert!(error, "{text}");
+    assert!(text.contains("is not a scope"), "{text}");
 }

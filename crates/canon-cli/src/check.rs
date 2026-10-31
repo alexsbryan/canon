@@ -504,13 +504,15 @@ pub fn payload(
     v
 }
 
-/// What the proposal is, beyond its words.
+/// What the proposal is, beyond its words. The MCP tool asks through this
+/// too, so an agent and a person asking about the same action in the same
+/// room are judged under the same rule.
 ///
 /// Effect classification is the caller's job — here, the person typing the
 /// command. `canon` never infers that a thing is irreversible, because a
 /// library that guessed would be wrong in exactly the cases the guess
 /// matters.
-fn attributes(args: &[String], proposal: &str) -> Result<Attributes, String> {
+pub fn attributes(args: &[String], proposal: &str) -> Result<Attributes, String> {
     let mut attrs = Attributes::about(crate::cmds::flag(args, "--about").unwrap_or(proposal))
         .by(crate::store::actor())
         .at(crate::store::now());
@@ -574,23 +576,15 @@ pub fn run(args: &[String]) -> i32 {
         // built from a different field than the comparison is how a real
         // mismatch renders as nothing and hides itself — the support step
         // shipped exactly that defect once.
-        let (what, why) = match &b.source {
-            canon_core::Source::Commitment(id) => (
-                id.to_string(),
-                if b.because.trim().is_empty() {
-                    "no reason given"
-                } else {
-                    "not a commitment in this canon"
-                },
-            ),
-            canon_core::Source::Actor(a) => (
-                format!("`{a}`"),
-                if b.because.trim().is_empty() {
-                    "no reason given"
-                } else {
-                    "no actor named"
-                },
-            ),
+        let (what, missing) = match &b.source {
+            canon_core::Source::Commitment(id) => {
+                (id.to_string(), "not a commitment in this canon")
+            }
+            canon_core::Source::Actor(a) => (format!("`{a}`"), "no actor named"),
+        };
+        let why = match b.because.trim() {
+            "" => "no reason given",
+            _ => missing,
         };
         eprintln!("warning: refused an uncitable position on {what} — {why}");
     }

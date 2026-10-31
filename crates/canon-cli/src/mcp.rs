@@ -182,7 +182,9 @@ fn tool_descriptors() -> Vec<Value> {
                     "proposal": {
                         "type": "string",
                         "description": "The proposal to judge, as you would say it out loud.",
-                    }
+                    },
+                    "about": { "type": "string", "description": "Its subject, if not its words." },
+                    "scope": { "type": "string", "description": "Where it happens: house.kitchen." }
                 },
                 "required": ["proposal"],
                 "additionalProperties": false,
@@ -227,7 +229,7 @@ fn call(name: &str, args: &Value) -> Value {
         "canon_list" => render_list(&dir, args),
         "canon_open" => render_open(&dir),
         "canon_why" => render_why(&dir, arg.unwrap_or_default()),
-        "canon_check" => render_check(&dir, arg.unwrap_or_default()),
+        "canon_check" => render_check(&dir, arg.unwrap_or_default(), args),
         _ => unreachable!("validated above"),
     };
     match rendered {
@@ -411,7 +413,15 @@ fn render_open(dir: &Path) -> Result<String, String> {
 ///
 /// Still a read: it writes no act. An agent that concludes something should
 /// be recorded says so in chat, as a command a person can run.
-fn render_check(dir: &Path, proposal: &str) -> Result<String, String> {
+fn render_check(dir: &Path, proposal: &str, args: &Value) -> Result<String, String> {
+    // The CLI's own flags, so the two surfaces read a subject and a scope
+    // one way.
+    let argv: Vec<String> = ["about", "scope"]
+        .iter()
+        .filter_map(|k| Some([format!("--{k}"), args.get(*k)?.as_str()?.to_string()]))
+        .flatten()
+        .collect();
+    let attrs = crate::check::attributes(&argv, proposal)?;
     let canon = store::read(dir)?.derive();
     if canon.active().next().is_none() {
         return Err(
@@ -421,12 +431,12 @@ fn render_check(dir: &Path, proposal: &str) -> Result<String, String> {
     let profile = crate::profile::Profile::load(dir)?;
     let client = crate::model::client_for(dir, false).map_err(|e| e.to_string())?;
     let (standing, refused) =
-        crate::check::assess(&client, &canon, proposal, proposal).map_err(|e| e.to_string())?;
-    // The canon's own rule, so an agent is told what the community decided
-    // rather than what shipped.
-    let attrs = canon_core::Attributes::about(proposal).at(store::now());
-    let decision = canon_core::Policy::decide(canon.policy_for(None), &standing, &attrs, &canon);
-    let silence = canon.silence_about(proposal);
+        crate::check::assess(&client, &canon, proposal, &attrs.about).map_err(|e| e.to_string())?;
+    // The canon's own rule for this scope, so an agent is told what the
+    // room decided rather than what shipped.
+    let rule = canon.policy_for(attrs.scope.as_ref());
+    let decision = canon_core::Policy::decide(rule, &standing, &attrs, &canon);
+    let silence = canon.silence_about(&attrs.about);
     let mut out = crate::check::render(profile, &canon, &standing, &decision, silence);
     // Refusals travel to the agent too. A shorter answer with no explanation
     // is indistinguishable from a canon that had less to say.
