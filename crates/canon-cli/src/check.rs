@@ -560,10 +560,7 @@ pub fn run(args: &[String]) -> i32 {
     else {
         return crate::cmds::fail("usage: canon check \"<proposal>\"");
     };
-    let (dir, _, canon) = match crate::cmds::load() {
-        Ok(v) => v,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let (dir, _, canon) = crate::cmds::or_fail!(crate::cmds::load());
     let profile = match Profile::load(&dir) {
         Ok(p) => p,
         Err(e) => return crate::cmds::fail(e),

@@ -13,7 +13,7 @@ use std::path::Path;
 
 use canon_core::{ActId, ActKind, Scope};
 
-use crate::cmds::{fail, flag, has, load, positionals, write};
+use crate::cmds::{fail, flag, has, load, or_fail, positionals, write};
 use crate::store;
 
 /// Where a sealed secret waits for its boundary.
@@ -110,10 +110,7 @@ fn commit(args: &[String], pos: &[&str]) -> i32 {
              after the fact is not a draw"
         ));
     }
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let pool = canon.who_decides(&scope, after_ts).len();
     match write(
         &d,
@@ -146,10 +143,7 @@ fn seal(_args: &[String], pos: &[&str]) -> i32 {
     let Some(needle) = pos.get(1) else {
         return fail("usage: canon draw seal <draw-id>");
     };
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let commit = match resolve_draw(&canon, needle) {
         Ok(c) => c,
         Err(e) => return fail(e),
@@ -216,10 +210,7 @@ fn open(args: &[String], pos: &[&str]) -> i32 {
     let Some(needle) = pos.get(1) else {
         return fail("usage: canon draw open <draw-id>");
     };
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let commit = match resolve_draw(&canon, needle) {
         Ok(c) => c,
         Err(e) => return fail(e),
@@ -278,10 +269,7 @@ fn show(args: &[String], pos: &[&str]) -> i32 {
     let Some(needle) = pos.get(1) else {
         return fail("usage: canon draw show <draw-id>");
     };
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     let commit = match resolve_draw(&canon, needle) {
         Ok(c) => c,
         Err(e) => return fail(e),
@@ -326,10 +314,7 @@ fn show(args: &[String], pos: &[&str]) -> i32 {
 }
 
 fn list(args: &[String]) -> i32 {
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     if has(args, "--json") {
         println!(
             "{}",

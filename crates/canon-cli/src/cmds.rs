@@ -492,10 +492,7 @@ pub fn add(args: &[String]) -> i32 {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     // A near-duplicate is a warning, not a refusal: the write still lands,
     // and the person can retract it. The warning is on stderr, so a pipe
     // and `--json` keep their contract. It comes before the new act so the
@@ -646,10 +643,7 @@ fn weigh(args: &[String], approve: bool) -> i32 {
             ))
         }
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let target = match crate::explain::resolve_proposal(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
@@ -705,10 +699,7 @@ pub fn answer(
 }
 
 pub fn list(args: &[String]) -> i32 {
-    let (d, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, log, st) = or_fail!(load());
     if has(args, "--json") {
         // The whole derived state, not just the live rows: `list` is the
         // read model, and a caller that wants only the live ones filters on
@@ -918,10 +909,7 @@ pub fn why(args: &[String]) -> i32 {
     let Some(needle) = pos.first() else {
         return fail("usage: canon why <id>");
     };
-    let (_, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, log, st) = or_fail!(load());
     let id = match crate::explain::resolve_why(&st, &log, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
@@ -964,10 +952,7 @@ pub fn supersede(args: &[String]) -> i32 {
     if pos.len() < 2 {
         return fail("usage: canon amend <id> \"<new text>\" -m \"<reason>\" [--area <area>]");
     }
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let old = match crate::explain::resolve_any(&st, pos[0]) {
         Ok(i) => i,
         Err(e) => return fail(e),
@@ -1002,10 +987,7 @@ pub fn retract(args: &[String]) -> i32 {
     let Some(needle) = pos.first() else {
         return fail("usage: canon repeal <id> -m \"<reason>\"");
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let target = match crate::explain::resolve_any(&st, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
@@ -1032,10 +1014,7 @@ pub fn accept(args: &[String]) -> i32 {
     let Some(rationale) = flag(args, "-m").filter(|r| !r.trim().is_empty()) else {
         return fail("accept requires -m \"<reason>\" — a tolerated contradiction must say why");
     };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let (a, b) = match (
         crate::explain::resolve(&st, pos[0]),
         crate::explain::resolve(&st, pos[1]),
@@ -1070,10 +1049,7 @@ pub fn dismiss(args: &[String]) -> i32 {
     if pos.len() < 2 {
         return fail("usage: canon dismiss <a> <b> [-m \"<reason>\"]");
     }
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, st) = or_fail!(load());
     let (a, b) = match (
         crate::explain::resolve(&st, pos[0]),
         crate::explain::resolve(&st, pos[1]),
@@ -1101,10 +1077,7 @@ pub fn undo(args: &[String]) -> i32 {
     let Some(target) = pos.first() else {
         return fail("usage: canon undo <act-id> -m \"<reason>\"");
     };
-    let (d, log, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, log, _) = or_fail!(load());
     let hits: Vec<&Act> = log
         .acts()
         .iter()
@@ -1359,10 +1332,7 @@ pub fn question(args: &[String]) -> i32 {
 
 /// What the canon does not cover.
 pub fn open(args: &[String]) -> i32 {
-    let (_, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, st) = or_fail!(load());
     let open: Vec<_> = st.open().collect();
     if has(args, "--json") {
         // Each question as it always rendered, in its field order, plus how

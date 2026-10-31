@@ -37,8 +37,7 @@ pub fn page() -> i32 {
     if !waiting.is_empty() {
         println!("\nwaiting for your yes or no:");
         for i in &waiting {
-            let take = (i.kind == review::Kind::Retraction).then_some("take away: ");
-            let text = format!("{}{}", take.unwrap_or_default(), one_line(&i.text));
+            let text = format!("{}: {}", i.kind.noun(), one_line(&i.text));
             println!("{}", wrap::hang(&format!("  {}  ", i.id), &text));
             println!("{}", wrap::hang("      needs ", &i.needs));
         }

@@ -26,7 +26,7 @@ use std::collections::BTreeMap;
 use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Scope, Status, Verdict};
 use serde::Serialize;
 
-use crate::cmds::{answer, fail, flag, has, load};
+use crate::cmds::{answer, fail, flag, has, load, or_fail};
 use crate::explain::{one_line, person, refused_by, refused_why};
 use crate::store;
 
@@ -49,8 +49,8 @@ impl Kind {
         match self {
             Kind::Rule => "new rule",
             Kind::Change => "change to a rule",
-            Kind::Retraction => "retraction",
-            Kind::DecisionRule => "how a room decides",
+            Kind::Retraction => "repeal",
+            Kind::DecisionRule => "how rules pass",
         }
     }
 }
@@ -410,10 +410,7 @@ pub fn run(args: &[String]) -> i32 {
         Some(Err(raw)) => return fail(format!("`{raw}` is not an area")),
     };
     if has(args, "--json") {
-        let (_, log, st) = match load() {
-            Ok(v) => v,
-            Err(e) => return fail(e),
-        };
+        let (_, log, st) = or_fail!(load());
         let actor = store::actor();
         let items: Vec<Item> = queue(&log, &st, &actor, store::now())
             .into_iter()
