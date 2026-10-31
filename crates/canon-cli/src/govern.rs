@@ -7,7 +7,7 @@
 
 use canon_core::{Act, ActKind, Authority, LadderKey, Outcome, Policy as _, Rule, Scope};
 
-use crate::cmds::{fail, flag, has, load, positionals, write};
+use crate::cmds::{fail, flag, has, load, or_fail, positionals, write};
 use crate::store;
 
 /// Parse a rule from the command line.
@@ -136,18 +136,9 @@ pub fn policy(args: &[String]) -> i32 {
                      [--entrench rank] [--cautious] [--scope s] [-m \"<how it reads>\"]",
                 );
             };
-            let rule = match rule_from(args, base) {
-                Ok(r) => r,
-                Err(e) => return fail(e),
-            };
-            let scope = match scope_from(args) {
-                Ok(s) => s,
-                Err(e) => return fail(e),
-            };
-            let (d, _, _) = match load() {
-                Ok(v) => v,
-                Err(e) => return fail(e),
-            };
+            let rule = or_fail!(rule_from(args, base));
+            let scope = or_fail!(scope_from(args));
+            let (d, _, _) = or_fail!(load());
             // The community's own words when they wrote any, and a plain
             // rendering of the typed rule when they did not. Never blended,
             // and the difference is visible on the way in.
@@ -180,10 +171,7 @@ pub fn policy(args: &[String]) -> i32 {
             }
         }
         Some("show") | None => {
-            let (_, _, canon) = match load() {
-                Ok(v) => v,
-                Err(e) => return fail(e),
-            };
+            let (_, _, canon) = or_fail!(load());
             if has(args, "--json") {
                 // The bare array when nothing waits, which is what every
                 // canon without the knob has always printed.
@@ -325,22 +313,10 @@ pub fn ratification(args: &[String]) -> i32 {
                      [-m \"<how it reads>\"]",
                 );
             };
-            let rule = match ratify_from(raw) {
-                Ok(r) => r,
-                Err(e) => return fail(e),
-            };
-            let scope = match scope_from(args) {
-                Ok(s) => s,
-                Err(e) => return fail(e),
-            };
-            let (d, _, canon) = match load() {
-                Ok(v) => v,
-                Err(e) => return fail(e),
-            };
-            let (governs, personal) = match knobs(args, &canon, scope.as_ref()) {
-                Ok(k) => k,
-                Err(e) => return fail(e),
-            };
+            let rule = or_fail!(ratify_from(raw));
+            let scope = or_fail!(scope_from(args));
+            let (d, _, canon) = or_fail!(load());
+            let (governs, personal) = or_fail!(knobs(args, &canon, scope.as_ref()));
             let own = flag(args, "-m").filter(|m| !m.trim().is_empty());
             let text = own.map_or_else(|| rule.prose(), str::to_string);
             match write(
@@ -367,10 +343,7 @@ pub fn ratification(args: &[String]) -> i32 {
             }
         }
         Some("show") | None => {
-            let (_, _, canon) = match load() {
-                Ok(v) => v,
-                Err(e) => return fail(e),
-            };
+            let (_, _, canon) = or_fail!(load());
             if has(args, "--json") {
                 println!(
                     "{}",
@@ -478,10 +451,7 @@ pub fn allot(args: &[String]) -> i32 {
     if units.is_empty() {
         return fail("--named needs at least one unit");
     }
-    let (d, _, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, _) = or_fail!(load());
     let own = flag(args, "-m").filter(|m| !m.trim().is_empty());
     let text = own.map_or_else(
         || format!("{} {unit}(s) in {scope}.", units.len()),
@@ -544,10 +514,7 @@ pub fn allocation(args: &[String]) -> i32 {
                 // A draw's commit is not a commitment, so it resolves through
                 // the draw's own lookup rather than the commitment one.
                 (None, Some(id)) => {
-                    let (_, _, canon) = match load() {
-                        Ok(v) => v,
-                        Err(e) => return fail(e),
-                    };
+                    let (_, _, canon) = or_fail!(load());
                     match crate::draw_cmd::resolve_draw(&canon, id) {
                         Ok(commit) => canon_core::Order::FromDraw { commit },
                         Err(e) => return fail(e),
@@ -562,15 +529,9 @@ pub fn allocation(args: &[String]) -> i32 {
                     return fail("--step takes a whole number; its sign is the direction")
                 }
             };
-            let per = match every(flag(args, "--per").unwrap_or("1d")) {
-                Ok(p) => p,
-                Err(e) => return fail(e),
-            };
+            let per = or_fail!(every(flag(args, "--per").unwrap_or("1d")));
             let rule = canon_core::Allocation::Rotation { order, step, per };
-            let (d, _, _) = match load() {
-                Ok(v) => v,
-                Err(e) => return fail(e),
-            };
+            let (d, _, _) = or_fail!(load());
             let own = flag(args, "-m").filter(|m| !m.trim().is_empty());
             let text = own.map_or_else(|| rule.prose(), str::to_string);
             match write(
@@ -596,10 +557,7 @@ pub fn allocation(args: &[String]) -> i32 {
             }
         }
         Some("show") | None => {
-            let (_, _, canon) = match load() {
-                Ok(v) => v,
-                Err(e) => return fail(e),
-            };
+            let (_, _, canon) = or_fail!(load());
             if canon.allocations().is_empty() {
                 println!("no allocation rule adopted; nothing here is shared out by rule.");
                 println!("  adopt one:  canon allocation set rotation --scope <scope>");
@@ -628,10 +586,7 @@ pub fn pool(args: &[String]) -> i32 {
     let Some(scope) = Scope::new(raw) else {
         return fail(format!("`{raw}` is not a scope"));
     };
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     let at = match flag(args, "--at") {
         None => store::now(),
         Some(d) => match canon_core::date::parse_ymd(d) {
@@ -639,10 +594,7 @@ pub fn pool(args: &[String]) -> i32 {
             None => return fail(format!("`{d}` is not a date")),
         },
     };
-    let schedule = match canon.pool_at(&scope, at) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
+    let schedule = or_fail!(canon.pool_at(&scope, at));
     if has(args, "--json") {
         println!(
             "{}",
@@ -723,10 +675,7 @@ pub fn decide(args: &[String]) -> i32 {
             )
         }
     };
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let mut citing = Vec::new();
     for needle in flag(args, "--citing")
         .into_iter()
@@ -801,14 +750,8 @@ pub fn rank(args: &[String]) -> i32 {
     if pos.len() < 2 {
         return fail("usage: canon rank <id> <rank>   e.g. canon rank can-abc principle");
     }
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let id = match crate::explain::resolve(&canon, pos[0]) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
+    let id = or_fail!(crate::explain::resolve(&canon, pos[0]));
     match write(
         &d,
         ActKind::Rank {
@@ -848,10 +791,7 @@ fn scopes_in_use(canon: &canon_core::Canon) -> Vec<Scope> {
 /// used to answer "grant it", and following that made a scope called
 /// `default` that meant nothing more than any other.
 fn who_holds_the_canon(args: &[String]) -> i32 {
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     let now = store::now();
     let scopes = canon.canon_scopes(now);
     let mut holders: Vec<&canon_core::Grant> = canon
@@ -938,10 +878,7 @@ pub fn who(args: &[String]) -> i32 {
             "`{raw}` is not a scope: dotted path, no empty segments"
         ));
     };
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     let now = store::now();
     let deciders = canon.who_decides(&scope, now);
     if has(args, "--json") {
@@ -1075,10 +1012,7 @@ pub fn grant(args: &[String]) -> i32 {
         Some(Some(ts)) => Some(ts),
         Some(None) => return fail("--horizon takes a date like 2026-12-31"),
     };
-    let (d, _, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, _) = or_fail!(load());
     let rationale = flag(args, "-m").unwrap_or_default();
     match give(&d, &store::actor(), pos[0], &scope, horizon, rationale) {
         Ok(act) => {
@@ -1173,10 +1107,7 @@ pub fn withdraw(args: &[String]) -> i32 {
             pos[0]
         ));
     }
-    let (d, _, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, _) = or_fail!(load());
     match write(
         &d,
         ActKind::Withdraw {
@@ -1234,14 +1165,8 @@ pub fn scoped(args: &[String]) -> i32 {
     if pos.len() < 2 {
         return fail("usage: canon scope <id> <scope>");
     }
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let id = match crate::explain::resolve(&canon, pos[0]) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
+    let id = or_fail!(crate::explain::resolve(&canon, pos[0]));
     let Some(scope) = Scope::new(pos[1]) else {
         return fail(format!("`{}` is not a scope", pos[1]));
     };
@@ -1294,10 +1219,7 @@ pub fn position(args: &[String]) -> i32 {
 /// `object --about` and `approve --about` write, and what a live check
 /// then counts under that subject.
 pub fn take(args: &[String], about: &str, toward: bool, because: &str) -> i32 {
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let citing = match flag(args, "--citing") {
         None => None,
         Some(needle) => match crate::explain::resolve(&canon, needle) {
@@ -1329,10 +1251,7 @@ pub fn horizon(args: &[String]) -> i32 {
     let Some(at) = canon_core::date::parse_ymd(pos[1]) else {
         return fail(format!("`{}` is not a date — YYYY-MM-DD", pos[1]));
     };
-    let (d, log, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, log, _) = or_fail!(load());
     // Any act may carry a horizon, not just a commitment: a grant, an
     // accepted contradiction and a question are all things somebody defers.
     let hits: Vec<&canon_core::Act> = log
@@ -1375,10 +1294,7 @@ pub fn horizon(args: &[String]) -> i32 {
 /// true. This is the cheapest defense available, and the difference between
 /// deferring something and burying it.
 pub fn overdue(args: &[String]) -> i32 {
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     let now = store::now();
     let due = canon.overdue(now);
     if has(args, "--json") {
@@ -1466,10 +1382,7 @@ pub fn silence(args: &[String]) -> i32 {
              indistinguishable from a gap",
         );
     };
-    let (d, _, _) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, _) = or_fail!(load());
     match write(
         &d,
         ActKind::Silence {
@@ -1502,10 +1415,7 @@ pub fn voice(args: &[String]) -> i32 {
         Some(a) => (*a).to_string(),
         None => store::actor(),
     };
-    let (_, log, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, log, canon) = or_fail!(load());
     let v = canon.voice_of(&who);
     // Standing this actor was given, and rulings they made on pairs. Neither
     // is something the actor "put in" — a grant is somebody else's act — but
@@ -1727,14 +1637,8 @@ pub fn second(args: &[String]) -> i32 {
             "{me} cannot second a question — agents draft, ask and cite; seconding is a person's"
         ));
     }
-    let (d, log, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let id = match crate::explain::resolve_question(&canon, needle) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
+    let (d, log, canon) = or_fail!(load());
+    let id = or_fail!(crate::explain::resolve_question(&canon, needle));
     // `pick` falls back to an inherited commitment's upstream id, which is
     // right for every other resolver and wrong here: weight on a commitment
     // is a vote.

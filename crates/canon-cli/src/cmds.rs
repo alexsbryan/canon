@@ -303,6 +303,18 @@ pub fn fail(e: impl std::fmt::Display) -> i32 {
     2
 }
 
+/// A handler's `?`: the value, or the error out through [`fail`] as the exit
+/// code. Each call used to be four lines of `match` saying only that.
+macro_rules! or_fail {
+    ($e:expr) => {
+        match $e {
+            Ok(v) => v,
+            Err(e) => return $crate::cmds::fail(e),
+        }
+    };
+}
+pub(crate) use or_fail;
+
 pub fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
     write_as(d, kind, &store::actor())
 }
