@@ -3,7 +3,7 @@ add  --cite --scope -m  |
 adopt  --carry --except -m  | --allow-remote --dry-run --paste --rebase
 allocation  --from-draw --order --per --scope --step -m  |
 allot  --count --named --unit -m  |
-approve  -m  |
+approve  --about --citing -m  |
 check  --about --amends --scope  | --allow-remote --irreversible --json
 config    |
 decide  --authority --citing --outcome -m  |
@@ -20,7 +20,7 @@ list  --out  | --check --json --markdown
 log    | --json
 mcp    |
 merge-driver    |
-object  -m  |
+object  --about --citing -m  |
 open    | --json
 overdue    | --json
 policy  --entrench --graduated --objections --of --scope -m  | --by-about --cautious --json --no-repair
