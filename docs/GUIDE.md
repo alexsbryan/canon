@@ -97,7 +97,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | What it does | Example |
 |---|---|
 | Who may decide this room, and under what rule | `canon who house.kitchen` |
-| Give someone a seat, optionally with a term | `canon give human:dana house.kitchen --horizon 90` |
+| Give someone a seat, optionally with a term | `canon give human:dana house.kitchen --until 90` |
 | Step down, or stand someone down | `canon withdraw human:dana house.kitchen -m "Term is up."` |
 | Put a rule in a room | `canon area can-ffc1 house.kitchen` |
 | Say how a room's rules get made | `canon ratification set joint:human:dana,human:sam --area house.kitchen` |
@@ -137,7 +137,7 @@ new name; name a backup key too if that would hurt.
 
 | What it does | Example |
 |---|---|
-| Re-decide your own history under a different rule | `canon replay --policy consent --brief` |
+| Re-decide your own history under a different rule | `canon replay --rulings consent --brief` |
 | Where your commitments conflict *model* | `canon conflicts` |
 | How a proposal stands with the rules you have *model* | `canon check "Guests may stay a week."` |
 | The ledger checked against git — append-only, not backdated | `canon witness` |

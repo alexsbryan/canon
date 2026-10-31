@@ -175,7 +175,7 @@ if [ $OFFLINE -eq 0 ]; then
 
 # ── act 4 · where it disagrees with itself ──────────────────
   beat "Ask it where the house disagrees with itself."
-  run $CANON tensions
+  run $CANON conflicts
   hold
   say "Proposed, not ruled. A person accepts or dismisses. Nothing is written"
   say "until someone does."
@@ -247,7 +247,7 @@ say "record changes and on a nightly schedule, with the house's model; that"
 say "crontab is the house's, and the record holds only what it wrote."
 say "Six commands, five months:"
 say ""
-say "   2025-09-05  mira    canon grant agent:helper house.kitchen --horizon 2026-01-31"
+say "   2025-09-05  mira    canon give agent:helper house.kitchen --until 2026-01-31"
 say "   2025-09-14  dana    canon add \"The hall stays clear enough to get a stroller through.\""
 say "                       canon add \"Bikes live in the hall, against the left wall.\""
 say "   2025-11-08  theo    canon position \"bikes in the hall\" --toward --citing $BIKES"
@@ -299,18 +299,18 @@ say "Here, a seat is one line: who holds a room, and until when. You may"
 say "grant a room you hold, or the room above it. The first grant in an"
 say "empty record needs nobody's leave; that is how a house is founded."
 say ""
-say "   2025-09-03  mira  canon grant human:mira house -m \"founding member\"     the first line"
-say "   2025-09-03  mira  canon grant human:theo house                          and ten more"
-say "   2025-09-04  mira  canon grant human:dana house.kitchen -m \"cooks most nights\""
-say "                     canon grant human:sam  house.kitchen -m \"cooks most nights\""
-say "   2026-03-05  dana  canon ratification set joint:human:dana,human:sam --scope house.kitchen"
+say "   2025-09-03  mira  canon give human:mira house -m \"founding member\"      the first line"
+say "   2025-09-03  mira  canon give human:theo house                           and ten more"
+say "   2025-09-04  mira  canon give human:dana house.kitchen -m \"cooks most nights\""
+say "                     canon give human:sam  house.kitchen -m \"cooks most nights\""
+say "   2026-03-05  dana  canon ratification set joint:human:dana,human:sam --area house.kitchen"
 say ""
 say "Whoever holds a room writes its rules; that is the default, called"
 say "standing. The cooks raised the kitchen's bar: both of them, jointly."
 hold
 say "Theo lives here and holds the house. He does not hold the kitchen."
 say "He writes a kitchen rule."
-CANON_ACTOR=human:theo run $CANON add "Leftovers are labelled with a name and a date." --scope house.kitchen
+CANON_ACTOR=human:theo run $CANON add "Leftovers are labelled with a name and a date." --area house.kitchen
 say "Written. Visible. Not a rule. Nobody's word was taken from them, and"
 say "nobody's rule was written for them."
 hold
@@ -334,7 +334,7 @@ say "   how those rules get made     both cooks, jointly"
 say "   who may change that          ?"
 hold
 say "The helper tries."
-CANON_ACTOR=agent:helper run $CANON ratification set standing --scope house.kitchen -m "simpler this way"
+CANON_ACTOR=agent:helper run $CANON ratification set standing --area house.kitchen -m "simpler this way"
 say "Kept on the record. Not applied. The helper's seat lapsed in January."
 hold
 # THEO MAY. He holds the house, which covers the kitchen, so he may write
@@ -342,7 +342,7 @@ hold
 # decides today: both cooks. Two answers side by side: NOT APPLIED for no
 # say, PROPOSED for a say without the last word.
 say "Theo tries. He holds the house, which covers the kitchen."
-CANON_ACTOR=human:theo run $CANON ratification set standing --scope house.kitchen -m "simpler this way"
+CANON_ACTOR=human:theo run $CANON ratification set standing --area house.kitchen -m "simpler this way"
 say "Not applied is for someone with no say. Proposed is for someone with a"
 say "say and not the last word. Changing how the kitchen decides is judged"
 say "the way the kitchen decides today: both cooks."
@@ -376,10 +376,10 @@ say "for the first vote has to have joined before the second."
 hold
 say "Five commands, one month:"
 say ""
-say "   2026-04-02  ola   canon ratification set twice:turnover:standing --scope house.garden"
-say "   2026-04-03  juno  canon add \"Water before nine or after seven.\" --scope house.garden"
+say "   2026-04-02  ola   canon ratification set twice:turnover:standing --area house.garden"
+say "   2026-04-03  juno  canon add \"Water before nine or after seven.\" --area house.garden"
 say "   2026-04-10  ola   canon approve $GARDEN                    counts for nothing: same two people"
-say "   2026-05-01  mira  canon grant human:kit house.garden"
+say "   2026-05-01  mira  canon give human:kit house.garden"
 say "   2026-05-03  ola   canon approve $GARDEN                    the second vote"
 run $CANON why "$GARDEN"
 hold
@@ -449,7 +449,7 @@ wait_
 beat "What if we had decided differently?"
 say "They're arguing about how they decide. What would the other way have"
 say "done to the last year? Every group has this argument."
-run $CANON replay fixtures/fernwood-commons --policy default --brief
+run $CANON replay fixtures/fernwood-commons --rulings default --brief
 hold
 say "Every decision that would have gone differently, by name, and which way"
 say "it moves. Look at the lock. Under the other rule, one person could have"
@@ -464,7 +464,7 @@ say "Three commands put an agent in your repository on the same terms as the"
 say "people in it:"
 say ""
 say "   canon init --profile code                 the record lives in your repo"
-say "   canon grant agent:yourbot repo.deps --horizon 90"
+say "   canon give agent:yourbot repo.deps --until 90"
 say "                                             a seat: one scope, ninety days"
 say "   canon mcp                                 your agent joins over MCP"
 say ""

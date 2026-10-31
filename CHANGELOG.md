@@ -7,6 +7,21 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Before you upgrade
+
+- Text output now uses plain words: a rule, an area, who is in charge,
+  how rules pass here and how actions are judged here, where it said
+  commitment, scope, holds and standing. A script that reads canon's text
+  should read `--json`, which is unchanged, keys and values alike, except
+  that a decision's `because` and `detail` say "in charge of" where they
+  said "holds".
+- Every old verb and flag still works and prints the same stdout as its
+  new name: `supersede`, `retract`, `grant`, `policy`, `horizon`,
+  `tensions`, the `scope` verb, `--scope`, `--horizon`, `--entrench`,
+  `--graduated`, `--policy` and `--ratification`.
+- The note naming the new spelling prints on stderr only when stderr is a
+  terminal, so agents, hooks and the Slack bot never see it.
+
 ### Removed
 
 - `canon rebase --onto <url>@<gen>` is `canon adopt <url>@<gen> --rebase

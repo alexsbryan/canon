@@ -149,14 +149,14 @@ nothing.
 
 ## The counterfactual, and what it is worth
 
-`canon replay --policy X` re-decides a whole history under a rule the
+`canon replay --rulings X` re-decides a whole history under a rule the
 community did not adopt. The **set** of `(step, field)` pairs that come out
 differently is identical across all ten institutions:
 
 ```
---policy default        10 of 45 decisions change, one signature, 10 institutions
---policy consent         8 of 45 decisions change, one signature, 10 institutions
---policy subsidiarity    9 of 45 decisions change, one signature, 10 institutions
+--rulings default        10 of 45 decisions change, one signature, 10 institutions
+--rulings consent         8 of 45 decisions change, one signature, 10 institutions
+--rulings subsidiarity    9 of 45 decisions change, one signature, 10 institutions
 ```
 
 *(An earlier draft reported 27 / 24 / 22 here. Those were changed FIELDS —

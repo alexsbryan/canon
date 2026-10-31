@@ -405,7 +405,7 @@ somebody, on the record, under its own name. It composes with the paragraph
 above: a scope whose rule is `twice:turnover:consent:14d` cannot have that
 rule loosened except by a change that itself survives a turnover. Cheap over
 a decade, near-impossible in a year. And it can be asked about first:
-`canon replay --ratification twice:turnover:consent:7d --brief`
+`canon replay --passes twice:turnover:consent:7d --brief`
 says what it would have done to the record you already have.
 
 The default is `standing`, which is exactly what every canon did before, made
@@ -692,7 +692,7 @@ subject text, saying so, when nothing is cited. **A repair closes an episode**:
 with `repair` on, a decision that went *for* the thing — the house bought a
 soaking tub — resets the count, so a problem the house solved does not meet its
 next occurrence on the top rung. Both still read decisions and nothing else.
-`--graduated` on `canon policy set` turns both on; `--by-about` and
+`--escalate` on `canon rulings set` turns both on; `--by-about` and
 `--no-repair` write the older ladder.
 
 **One generalization pays for five technologies.** Term limits, sunset clauses,

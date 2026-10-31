@@ -36,7 +36,7 @@ Data lives in `./data`.
 ./house people
 ```
 
-`people` prints a `grant` line per channel member. Delete anyone who
+`people` prints a `canon give` line per channel member. Delete anyone who
 shouldn't get a say, run the rest:
 
 ```sh
@@ -49,7 +49,7 @@ but doesn't count them, and tells them so.
 
 Choose how a proposal passes, before anyone proposes and before an import
 (§4). Until you do, proposing is deciding. Set it for the whole canon, not
-`--scope house`: what an import keeps carries no scope, and a scoped rule
+`--area house`: what an import keeps carries no scope, and a scoped rule
 would let it in at once.
 
 ```sh

@@ -378,9 +378,9 @@ Five things to know before you lean on it:
 
 ```sh
 canon replay                                              # your own record, re-decided
-canon replay --policy consent --brief                     # what consent would have done
-canon replay --policy threshold --objections 2 --brief    # or two objections to stop a thing
-canon replay --ratification twice:turnover:consent:7d --brief   # which rules would still be waiting
+canon replay --rulings consent --brief                     # what consent would have done
+canon replay --rulings threshold --objections 2 --brief    # or two objections to stop a thing
+canon replay --passes twice:turnover:consent:7d --brief   # which rules would still be waiting
 ```
 
 No setup, no files. The questions come from what your canon already holds —
