@@ -969,7 +969,10 @@ impl Canon {
     /// subsidiarity, and it is the same reading `check` gives under it:
     /// wider standing asks, it does not act. For an unscoped rule the
     /// narrowest level is the shallowest anyone holds.
-    fn holders_at(&self, scope: Option<&Scope>, at: i64) -> BTreeSet<&str> {
+    ///
+    /// Public because they are also whom a check that answers "ask" names:
+    /// the people a rule would go to are the people to ask about an action.
+    pub fn holders_at(&self, scope: Option<&Scope>, at: i64) -> BTreeSet<&str> {
         let covering: Vec<&crate::scope::Grant> = self
             .grants
             .iter()

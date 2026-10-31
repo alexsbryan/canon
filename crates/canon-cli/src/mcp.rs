@@ -436,8 +436,7 @@ fn render_check(dir: &Path, proposal: &str, args: &Value) -> Result<String, Stri
     // room decided rather than what shipped.
     let rule = canon.policy_for(attrs.scope.as_ref());
     let decision = canon_core::Policy::decide(rule, &standing, &attrs, &canon);
-    let silence = canon.silence_about(&attrs.about);
-    let mut out = crate::check::render(profile, &canon, &standing, &decision, silence);
+    let mut out = crate::check::render(profile, &canon, &standing, &decision, &attrs);
     // Refusals travel to the agent too. A shorter answer with no explanation
     // is indistinguishable from a canon that had less to say.
     if !refused.is_empty() {

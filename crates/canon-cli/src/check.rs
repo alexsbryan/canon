@@ -16,7 +16,7 @@
 
 use canon_core::{
     Attributes, Authority, Canon, Commitment, Decision, Disposition, Outcome, Policy, Position,
-    Pull, Scope, Silence, Standing, Status,
+    Pull, Scope, Standing, Status,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -296,13 +296,21 @@ pub fn render(
     canon: &Canon,
     standing: &Standing,
     decision: &Decision,
-    silence: Option<&Silence>,
+    attrs: &Attributes,
 ) -> String {
     match profile {
         // Never a verdict, and never routed through one.
         Profile::Personal => render_stakes(canon, standing),
-        Profile::Code => render_verdict(&CODE, canon, standing, decision, silence),
-        Profile::House => render_verdict(&HOUSE, canon, standing, decision, silence),
+        Profile::Code => render_verdict(&CODE, canon, standing, decision, attrs),
+        Profile::House => render_verdict(&HOUSE, canon, standing, decision, attrs),
+    }
+}
+
+/// A verdict's first lines: what it is, then its lead when the voice has one.
+fn head(out: &mut String, verdict: &str, lead: &str) {
+    out.push_str(&format!("{verdict}\n{lead}"));
+    if !lead.is_empty() {
+        out.push('\n');
     }
 }
 
@@ -312,17 +320,12 @@ fn render_verdict(
     canon: &Canon,
     standing: &Standing,
     decision: &Decision,
-    silence: Option<&Silence>,
+    attrs: &Attributes,
 ) -> String {
     let mut out = String::new();
     match decision.outcome {
         Outcome::Conflicts => {
-            out.push_str(v.conflict);
-            out.push('\n');
-            out.push_str(v.conflict_lead);
-            if !v.conflict_lead.is_empty() {
-                out.push('\n');
-            }
+            head(&mut out, v.conflict, v.conflict_lead);
             for b in standing.against() {
                 out.push_str(&cite(canon, b, "  "));
                 if v.offer_acts {
@@ -338,12 +341,7 @@ fn render_verdict(
             }
         }
         Outcome::Supported => {
-            out.push_str(v.supported);
-            out.push('\n');
-            out.push_str(v.supported_lead);
-            if !v.supported_lead.is_empty() {
-                out.push('\n');
-            }
+            head(&mut out, v.supported, v.supported_lead);
             for b in standing.toward() {
                 out.push_str(&cite(canon, b, "  "));
             }
@@ -354,7 +352,7 @@ fn render_verdict(
             // A subject somebody left unwritten ON PURPOSE is not a gap, and
             // prompting for a new rule here is how a tool turns a working
             // unwritten practice into a rota nobody wanted.
-            if let Some(s) = silence {
+            if let Some(s) = canon.silence_about(&attrs.about) {
                 out.push_str("UNWRITTEN ON PURPOSE\n");
                 out.push_str(&format!(
                     "  \"{}\" is left unwritten deliberately.\n",
@@ -368,53 +366,58 @@ fn render_verdict(
                     s.act
                 ));
             } else {
-                out.push_str(v.unaddressed);
-                out.push('\n');
-                out.push_str(v.unaddressed_lead);
-                if !v.unaddressed_lead.is_empty() {
-                    out.push('\n');
-                }
+                head(&mut out, v.unaddressed, v.unaddressed_lead);
                 out.push_str(&v.gap.replace("{p}", &standing.proposal));
             }
         }
     }
-    // **Only once this community has adopted a rule of its own.**
-    //
-    // Under the shipped default the authority is a pure function of the
-    // outcome — supported means act, anything else means ask a person — so
-    // printing it restates the verdict a reader just read, in vocabulary they
-    // have never met. A fresh house canon was telling housemates to "ask one
-    // person with standing" when nobody had been granted standing and the
-    // word had not appeared anywhere they had been.
-    //
-    // The moment somebody runs `canon policy set`, the authority stops being
-    // a restatement and starts being the thing the group decided, so it
-    // prints — including when it agrees with them, because a rule that is
-    // invisible whenever it agrees is one nobody notices they are governed
-    // by. Progressive disclosure falls out of the ledger rather than out of a
-    // flag somebody has to remember to set.
-    //
-    // `--json` is unaffected. An agent reading the payload wants the ladder
-    // whether or not a person would have found it noise.
-    if !canon.policies().is_empty() {
-        out.push_str(&authority_line(decision));
-    }
+    out.push_str(&next_step(canon, decision, attrs));
     // Exactly one trailing newline. The per-citation affordances end with a
     // blank line so they separate from each other, which used to be followed
     // by the authority line and now sometimes ends the output.
     format!("{}\n", out.trim_end())
 }
 
-/// What the community's own rule says you may now do, and which rule said so.
-fn authority_line(decision: &Decision) -> String {
-    let what = match decision.authority {
-        Authority::Act => "act",
-        Authority::ActAndNotify => "act, and say that you did",
-        Authority::AskOne => "ask one person with standing",
-        Authority::AskPanel => "ask the group",
-        Authority::Refuse => "not under this policy",
+/// Whom to ask, when the answer is to ask: the people holding the narrowest
+/// held scope that covers the action, or the canon as a whole when it names
+/// none. Empty when nobody holds anything, and then any person can answer.
+///
+/// `None` when the answer is not to ask. An "ask" that names nobody sends a
+/// person looking for whoever informally decides, which is the gatekeeper
+/// `canon who` exists to make unnecessary.
+pub fn ask<'a>(canon: &'a Canon, decision: &Decision, attrs: &Attributes) -> Option<Vec<&'a str>> {
+    matches!(decision.authority, Authority::AskOne | Authority::AskPanel).then(|| {
+        let held = canon.holders_at(attrs.scope.as_ref(), attrs.now);
+        held.into_iter().collect()
+    })
+}
+
+/// What you may do now, said every time: go ahead, or whom to ask.
+///
+/// **The rule that said so prints only once this community adopted one.**
+/// Under the shipped default the authority is a pure function of the
+/// outcome, so naming the rule restates the verdict in vocabulary a reader
+/// has never met: a fresh house canon once told housemates to "ask one
+/// person with standing" when nobody had been granted standing. The step
+/// itself is not vocabulary — "ask human:alex first" is an instruction — so
+/// it always prints. The moment somebody runs `canon policy set`, the rule
+/// is the thing the group decided, and it prints even when it agrees,
+/// because a rule invisible whenever it agrees is one nobody notices they
+/// are governed by. `--json` carries both either way.
+fn next_step(canon: &Canon, decision: &Decision, attrs: &Attributes) -> String {
+    let what = match (ask(canon, decision, attrs), decision.authority) {
+        (Some(p), _) if p.is_empty() => {
+            "ask a person first: nobody holds this, so anyone can answer".into()
+        }
+        (Some(p), Authority::AskOne) if p.len() > 1 => format!("ask one of {} first", p.join(", ")),
+        (Some(p), _) => format!("ask {} first", p.join(", ")),
+        (None, Authority::Act) => "go ahead".into(),
+        (None, a) => a.prose().to_string(),
     };
-    format!("\n{what}\n  {}\n", decision.because)
+    match canon.policies().is_empty() {
+        true => format!("\n{what}\n"),
+        false => format!("\n{what}\n  {}\n", decision.because),
+    }
 }
 
 /// The acts that would settle an opposing citation. A household's agenda.
@@ -484,22 +487,26 @@ fn render_stakes(canon: &Canon, standing: &Standing) -> String {
 /// to hold for the machine-readable surface too or it does not hold.
 pub fn payload(
     profile: Profile,
+    canon: &Canon,
     standing: &Standing,
     decision: &Decision,
-    silence: Option<&Silence>,
+    attrs: &Attributes,
 ) -> Value {
     let mut v = json!({
         "proposal": standing.proposal,
         "profile": profile.as_str(),
         "positions": standing.positions,
     });
-    if let Some(s) = silence {
+    if let Some(s) = canon.silence_about(&attrs.about) {
         v["silence"] = serde_json::to_value(s).unwrap_or(Value::Null);
     }
     if profile != Profile::Personal {
         v["outcome"] = serde_json::to_value(decision.outcome).unwrap_or(Value::Null);
         v["authority"] = serde_json::to_value(decision.authority).unwrap_or(Value::Null);
         v["because"] = json!(decision.because);
+        if let Some(people) = ask(canon, decision, attrs) {
+            v["ask"] = json!(people);
+        }
     }
     v
 }
@@ -592,15 +599,11 @@ pub fn run(args: &[String]) -> i32 {
     // adopted nothing decides by what shipped — and says so.
     let rule = canon.policy_for(attrs.scope.as_ref()).clone();
     let decision = rule.decide(&standing, &attrs, &canon);
-    let silence = canon.silence_about(&attrs.about);
     if crate::cmds::has(args, "--json") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&payload(profile, &standing, &decision, silence))
-                .unwrap_or_default()
-        );
+        let v = payload(profile, &canon, &standing, &decision, &attrs);
+        println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
     } else {
-        print!("{}", render(profile, &canon, &standing, &decision, silence));
+        print!("{}", render(profile, &canon, &standing, &decision, &attrs));
         if let Some(note) = crate::cmds::carried_note(&canon) {
             eprintln!("\n{note}");
         }

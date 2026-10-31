@@ -292,3 +292,73 @@ fn the_mcp_check_takes_a_scope_and_a_subject_and_decides_by_the_rooms_rule() {
     assert!(error, "{text}");
     assert!(text.contains("is not a scope"), "{text}");
 }
+
+// ── 3. every "ask" names who to ask ────────────────────────────────────
+
+#[test]
+fn an_ask_names_the_holders_of_the_narrowest_scope_and_a_go_ahead_says_so() {
+    let dir = fresh("whom", false);
+    let (code, out) = canon_as(&dir, "human:alex", &["add", "Bikes live in the shed."]);
+    assert_eq!(code, 0, "{out}");
+
+    // Nothing in the canon bears on it: ask whoever holds the canon. Said
+    // in a fresh house that never adopted a rule, and without its jargon.
+    let (code, out) = check(&dir, "human:sam", &["bikes in the hall"], NOTHING);
+    assert_eq!(code, 2, "{out}");
+    assert!(out.contains("\nask human:alex first"), "{out}");
+    assert!(!out.contains("standing"), "{out}");
+    let (_, out) = check(&dir, "human:sam", &["bikes in the hall", "--json"], NOTHING);
+    assert_eq!(
+        json_of(&out)["ask"],
+        serde_json::json!(["human:alex"]),
+        "{out}"
+    );
+    let bare = serde_json::json!({ "proposal": "bikes in the hall" });
+    let (text, _) = mcp_check(&dir, bare, NOTHING);
+    assert!(
+        text.contains("ask human:alex first"),
+        "an agent is told too: {text}"
+    );
+
+    // In the kitchen, the kitchen's holders, not the house's.
+    for who in ["human:dana", "human:sam"] {
+        let (code, out) = canon_as(&dir, "human:alex", &["grant", who, "house.kitchen"]);
+        assert_eq!(code, 0, "{out}");
+    }
+    let kitchen = ["a rack by the fridge", "--scope", "house.kitchen"];
+    let (_, out) = check(&dir, "human:ola", &kitchen, NOTHING);
+    assert!(
+        out.contains("ask one of human:dana, human:sam first"),
+        "{out}"
+    );
+    let mut json = kitchen.to_vec();
+    json.push("--json");
+    let (_, out) = check(&dir, "human:ola", &json, NOTHING);
+    let v = json_of(&out);
+    assert_eq!(
+        v["ask"],
+        serde_json::json!(["human:dana", "human:sam"]),
+        "{v}"
+    );
+
+    // Nothing to ask: go ahead, and no `ask` to read.
+    let (code, out) = check(&dir, "human:ola", &kitchen, SHED);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("\ngo ahead"), "{out}");
+    let (_, out) = check(&dir, "human:ola", &json, SHED);
+    assert!(json_of(&out).get("ask").is_none(), "{out}");
+
+    // Nobody holds anything: any person can answer.
+    let open = fresh("whom-open", true);
+    let (code, out) = canon_as(&open, "human:alex", &["add", "Bikes live in the shed."]);
+    assert_eq!(code, 0, "{out}");
+    let (_, out) = check(&open, "human:sam", &["bikes in the hall"], NOTHING);
+    assert!(out.contains("anyone can answer"), "{out}");
+    let (_, out) = check(
+        &open,
+        "human:sam",
+        &["bikes in the hall", "--json"],
+        NOTHING,
+    );
+    assert_eq!(json_of(&out)["ask"], serde_json::json!([]), "{out}");
+}
