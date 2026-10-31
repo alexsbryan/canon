@@ -1133,7 +1133,7 @@ pub fn run(args: &[String]) -> i32 {
     if derived == Some(0) && flag(args, "--ratification").is_none() {
         println!("nothing here records what anyone argued about or what the group decided,");
         println!("so there is nothing to re-decide under another rule. Either act does it:\n");
-        println!("  canon position \"<subject>\" --against -m \"<why>\"");
+        println!("  canon object --about \"<subject>\" -m \"<why>\"");
         println!("  canon decide \"<subject>\" --outcome conflicts --authority ask-panel\n");
     }
 

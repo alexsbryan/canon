@@ -113,6 +113,23 @@ fn mcp_check(dir: &Path, arguments: Value, bearings: &'static str) -> (String, b
     )
 }
 
+fn id_of(out: &str) -> String {
+    out.split_whitespace()
+        .find(|w| w.starts_with("can-"))
+        .unwrap_or_else(|| panic!("no id in: {out}"))
+        .to_string()
+}
+
+/// The acts as `canon log --json` prints them, one per line.
+fn acts(dir: &Path) -> Vec<Value> {
+    let (code, out) = canon_as(dir, "human:alex", &["log", "--json"]);
+    assert_eq!(code, 0, "{out}");
+    out.lines()
+        .filter(|l| l.starts_with('{'))
+        .map(|l| serde_json::from_str(l).expect("one act per line"))
+        .collect()
+}
+
 /// Output with its wrapping undone, for a phrase the terminal may break.
 fn flat(out: &str) -> String {
     out.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -361,4 +378,89 @@ fn an_ask_names_the_holders_of_the_narrowest_scope_and_a_go_ahead_says_so() {
         NOTHING,
     );
     assert_eq!(json_of(&out)["ask"], serde_json::json!([]), "{out}");
+}
+
+// ── 4. object and approve, about an action ─────────────────────────────
+
+#[test]
+fn object_and_approve_about_an_action_write_positions_a_check_counts() {
+    let dir = fresh("verbs", false);
+    let (code, out) = canon_as(&dir, "human:alex", &["add", "Bikes live in the shed."]);
+    assert_eq!(code, 0, "{out}");
+    let rule = id_of(&out);
+    let subject = "bikes in the hall";
+
+    // An objection still needs its reason.
+    let (code, out) = canon_as(&dir, "human:dana", &["object", "--about", subject]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains("needs a reason"), "{out}");
+
+    let args = [
+        "object",
+        "--about",
+        subject,
+        "--citing",
+        &rule,
+        "-m",
+        "it narrows the hall",
+    ];
+    let (code, out) = canon_as(&dir, "human:dana", &args);
+    assert_eq!(code, 0, "{out}");
+    let (code, out) = canon_as(&dir, "human:sam", &["approve", "--about", subject]);
+    assert_eq!(code, 0, "{out}");
+    let log = acts(&dir);
+    // Written in the same second, so found by who wrote them, not by order.
+    let by = |who: &str| {
+        let mine = log
+            .iter()
+            .filter(|a| a["about"] == subject && a["actor"] == who);
+        mine.cloned().collect::<Vec<Value>>()
+    };
+    let (dana, sam) = (by("human:dana"), by("human:sam"));
+    assert_eq!((dana.len(), sam.len()), (1, 1), "{log:?}");
+    assert_eq!(dana[0]["op"], "position");
+    assert_eq!(dana[0]["pull"], "against");
+    assert_eq!(dana[0]["citing"], rule.as_str());
+    assert_eq!(dana[0]["because"], "it narrows the hall");
+    assert_eq!(sam[0]["pull"], "toward");
+
+    // And a check about the action hears both.
+    let (code, out) = check(&dir, "human:ola", &[subject, "--json"], NOTHING);
+    assert_eq!(code, 1, "{out}");
+    assert_eq!(
+        json_of(&out)["positions"].as_array().unwrap().len(),
+        2,
+        "{out}"
+    );
+
+    // A mistyped proposal id is refused, never read as a subject.
+    let before = acts(&dir).len();
+    let (code, out) = canon_as(&dir, "human:dana", &["object", "can-0000dead", "-m", "no"]);
+    assert_ne!(code, 0, "{out}");
+    let (code, out) = canon_as(&dir, "human:dana", &["approve", "bikes in the hall"]);
+    assert_ne!(code, 0, "{out}");
+    // Nor is an id beside `--about`, or a citation on a proposal.
+    let both = ["object", "can-0000dead", "--about", subject, "-m", "no"];
+    let (code, out) = canon_as(&dir, "human:dana", &both);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains("usage: canon object"), "{out}");
+    let cited = ["approve", "can-0000dead", "--citing", &rule];
+    let (code, out) = canon_as(&dir, "human:dana", &cited);
+    assert_ne!(code, 0, "{out}");
+    assert_eq!(acts(&dir).len(), before, "a refusal wrote something");
+
+    // `position` keeps working for whoever already types it, and says
+    // what it is called now; the long help no longer offers it.
+    tick();
+    let old = ["position", subject, "--toward", "-m", "a rack fixes it"];
+    let (code, out) = canon_as(&dir, "human:dana", &old);
+    assert_eq!(code, 0, "{out}");
+    assert!(
+        out.contains("`canon position` is `canon object --about` / `canon approve --about` now"),
+        "{out}"
+    );
+    assert_eq!(acts(&dir).len(), before + 1);
+    let (_, help) = canon_as(&dir, "human:dana", &["help", "all"]);
+    assert!(!help.contains("  position "), "{help}");
+    assert!(help.contains("--about"), "{help}");
 }

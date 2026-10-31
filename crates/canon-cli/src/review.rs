@@ -268,7 +268,7 @@ pub fn decide(
     approve: bool,
     because: &str,
 ) -> Result<String, String> {
-    answer(d, actor, id, approve, because)?;
+    answer(d, actor, id.as_str(), None, approve, because)?;
     let st = store::read(d)?.derive_at(store::now());
     Ok(outcome(&st, id))
 }

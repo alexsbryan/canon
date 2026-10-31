@@ -104,7 +104,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | Show or change how proposals are judged | `canon policy set consent` |
 | Approve a proposal | `canon approve can-9b31 -m "Yes — and the rota moves too."` |
 | Object to one; the reason is required | `canon object can-9b31 -m "The pan rule already covers this."` |
-| Pull for or against something, citing what backs you | `canon position "can-9b31" --against -m "It doubles the tool budget."` |
+| Object to an action, or support one; `check` counts it | `canon object --about "a bike rack in the hall" -m "It narrows the hall."` |
 | Record what the group decided | `canon decide "guest room request" --outcome supported --authority act -m "Dana ruled; the guest stays to Friday."` |
 | Mark a rule as a principle, not a convention | `canon rank can-ffc1 principle` |
 | What someone raised, and what came of it | `canon voice human:dana` |

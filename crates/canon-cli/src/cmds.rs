@@ -595,41 +595,42 @@ pub fn replace(
 
 /// Approve a proposal: a position toward it, by name. Whether that makes it
 /// a rule is the scope's ratification rule's call, and the answer prints.
+/// With `--about`, support an action instead.
 pub fn approve(args: &[String]) -> i32 {
-    let pos = positionals(args);
-    let Some(needle) = pos.first() else {
-        return fail("usage: canon approve <proposal-id> [-m \"<why>\"]");
-    };
-    let (d, _, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let target = match crate::explain::resolve_proposal(&st, needle) {
-        Ok(i) => i,
-        Err(e) => return fail(e),
-    };
-    match answer(
-        &d,
-        &store::actor(),
-        &target,
-        true,
-        flag(args, "-m").unwrap_or(""),
-    ) {
-        Ok(act) => {
-            println!("{}  approved by {}", target, act.actor);
-            report_status(&d, &target);
-            0
-        }
-        Err(e) => fail(e),
-    }
+    weigh(args, true)
 }
 
 /// Object to a proposal. The reason is required: under consent one reasoned
-/// objection refuses, and a bare no is not a reason.
+/// objection refuses, and a bare no is not a reason. With `--about`, object
+/// to an action instead.
 pub fn object(args: &[String]) -> i32 {
+    weigh(args, false)
+}
+
+/// `approve` and `object`, which differ only in which way they pull.
+///
+/// **`--about` is a flag, never a fallback.** A mistyped proposal id is
+/// still refused, rather than quietly becoming a position on a subject
+/// nobody named: with it, the words are the subject a live `check` counts
+/// positions under; without it, they are a proposal's id.
+fn weigh(args: &[String], approve: bool) -> i32 {
+    let (verb, why, done) = match approve {
+        true => ("approve", "[-m \"<why>\"]", "approved by"),
+        false => ("object", "-m \"<why>\"", "objected to by"),
+    };
     let pos = positionals(args);
-    let Some(needle) = pos.first() else {
-        return fail("usage: canon object <proposal-id> -m \"<why>\"");
+    let because = flag(args, "-m").unwrap_or("");
+    // One or the other, said: an id beside `--about` is two answers to
+    // "what is this about", and `--citing` cites for a subject only.
+    let needle = match (pos.first(), flag(args, "--about")) {
+        (None, Some(about)) => return crate::govern::take(args, about, approve, because),
+        (Some(n), None) if flag(args, "--citing").is_none() => *n,
+        _ => {
+            return fail(format!(
+                "usage: canon {verb} <proposal-id> {why}\n       \
+                 canon {verb} --about \"<subject>\" {why} [--citing <id>]"
+            ))
+        }
     };
     let (d, _, st) = match load() {
         Ok(v) => v,
@@ -639,15 +640,9 @@ pub fn object(args: &[String]) -> i32 {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
-    match answer(
-        &d,
-        &store::actor(),
-        &target,
-        false,
-        flag(args, "-m").unwrap_or(""),
-    ) {
+    match answer(&d, &store::actor(), target.as_str(), None, approve, because) {
         Ok(act) => {
-            println!("{}  objected to by {}", target, act.actor);
+            println!("{}  {done} {}", target, act.actor);
             report_status(&d, &target);
             0
         }
@@ -655,15 +650,17 @@ pub fn object(args: &[String]) -> i32 {
     }
 }
 
-/// Approve or object to `id` as `actor`: the position act, written.
+/// Approve or object to `about` as `actor`: the position act, written.
 ///
-/// **The one place either is written.** `approve`, `object`, `canon review`
-/// and the page all come here, so "what an approval is" and "an objection
-/// needs a reason" have one answer between them rather than four.
+/// **The one place either is written.** `approve`, `object`, `position`,
+/// `canon review` and the page all come here, so "what an approval is" and
+/// "an objection needs a reason" have one answer between them rather than
+/// five. `about` is a proposal's id or an action's subject.
 pub fn answer(
     d: &Path,
     actor: &str,
-    id: &ActId,
+    about: &str,
+    citing: Option<ActId>,
     approve: bool,
     because: &str,
 ) -> Result<Act, String> {
@@ -676,8 +673,8 @@ pub fn answer(
     write_as(
         d,
         ActKind::Position {
-            about: id.as_str().into(),
-            citing: None,
+            about: about.into(),
+            citing,
             pull: if approve {
                 canon_core::Pull::Toward
             } else {

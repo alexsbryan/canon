@@ -1249,7 +1249,12 @@ pub fn scoped(args: &[String]) -> i32 {
 // ── canon position ──────────────────────────────────────────
 
 /// Take a position. A vote, an objection, a second — one shape.
+///
+/// Kept, and kept out of the long help: positions on an action are
+/// `canon object --about` and `canon approve --about` now, the verbs a
+/// house already knows, and somebody's script still says `position`.
 pub fn position(args: &[String]) -> i32 {
+    eprintln!("`canon position` is `canon object --about` / `canon approve --about` now");
     let pos = positionals(args);
     if pos.is_empty() {
         return fail(
@@ -1257,19 +1262,24 @@ pub fn position(args: &[String]) -> i32 {
         );
     }
     let (against, toward) = (has(args, "--against"), has(args, "--toward"));
-    let pull = match (against, toward) {
-        (true, false) => canon_core::Pull::Against,
-        (false, true) => canon_core::Pull::Toward,
+    if against == toward {
         // Refuse rather than pick. A position whose direction we guessed is
         // a position nobody took.
-        _ => return fail("say which way: --against or --toward, exactly one"),
-    };
+        return fail("say which way: --against or --toward, exactly one");
+    }
     let Some(because) = flag(args, "-m").filter(|b| !b.trim().is_empty()) else {
         return fail(
             "position requires -m \"<why>\" — a bare no is an assertion, and this tool \
              exists to replace assertions with citations",
         );
     };
+    take(args, pos[0], toward, because)
+}
+
+/// A position on `about`, citing `--citing` when given: what `position`,
+/// `object --about` and `approve --about` write, and what a live check
+/// then counts under that subject.
+pub fn take(args: &[String], about: &str, toward: bool, because: &str) -> i32 {
     let (d, _, canon) = match load() {
         Ok(v) => v,
         Err(e) => return fail(e),
@@ -1281,18 +1291,10 @@ pub fn position(args: &[String]) -> i32 {
             Err(e) => return fail(e),
         },
     };
-    match write(
-        &d,
-        ActKind::Position {
-            about: pos[0].to_string(),
-            citing: citing.clone(),
-            pull,
-            because: because.to_string(),
-        },
-    ) {
+    match crate::cmds::answer(&d, &store::actor(), about, citing.clone(), toward, because) {
         Ok(act) => {
-            let way = if against { "against" } else { "toward" };
-            println!("{}  {way} \"{}\"", act.id, pos[0]);
+            let way = if toward { "toward" } else { "against" };
+            println!("{}  {way} \"{about}\"", act.id);
             if let Some(c) = citing {
                 println!("  citing {c}");
             }

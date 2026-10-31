@@ -106,7 +106,10 @@ RECORD                                        (no model needed)
                                          change or take away a rule, leave something
                                          unwritten, identify yourself
   approve <id> [-m \"<why>\"]             approve a proposal, by name
+          --about \"<subject>\"           or support an action [--citing <id>]
   object <id> -m \"<why>\"                object to one; the reason is required
+         --about \"<subject>\"            or object to an action; `check` counts it
+                                         (what `position` did)
   list                                   what is live now, and what is proposed
        --markdown [--out <f> [--check]]  the same, as a document for readers without
                                          canon; --check fails when <f> is stale
@@ -144,7 +147,6 @@ GOVERN                                        (no model needed)
                                          or --from-draw <id> for a lot nobody steers
   pool <scope> [--at <date>]             whose turn it is. `who` is authority,
                                          `pool` is appropriation
-  position \"<about>\" --against|--toward  a vote, an objection, a second
   decide \"<about>\" --outcome --authority record what the group decided
          [--citing <id>,…]               the rules it turned on; a ladder counts by them
   rank <id> <rank>                       a principle, not a convention

@@ -199,11 +199,13 @@ action by a rule nobody wrote.**
 To put a position on the record yourself, model or no model:
 
 ```sh
-canon position "a bike rack in the hall" --citing can-294920c3d916 --against \
+canon object --about "a bike rack in the hall" --citing can-294920c3d916 \
   -m "the rack is the width of a pram"
 ```
 
-The reason is required in both directions. A position whose reason nobody can
+`canon approve --about "a bike rack in the hall"` is the same the other way,
+and `canon check` counts each person's latest word on the subject. The reason is required for
+an objection. A position whose reason nobody can
 check is an assertion, and this whole tool exists to replace assertions with
 citations.
 
