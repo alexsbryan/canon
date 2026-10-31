@@ -28,6 +28,10 @@
 #
 set -uo pipefail
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Run as a hook from a worktree, git exports GIT_DIR; every git the tests and
+# `canon witness` spawn then reads that repository instead of their own, and
+# two sources tests and the witness gate fail only under `git push`.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX
 
 start=$SECONDS
 failed=()
