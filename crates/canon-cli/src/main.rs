@@ -121,7 +121,7 @@ RECORD                                        (no model needed)
   amend <id> \"<text>\" -m \"<reason>\"      change a rule's words, and say why
   repeal <id> -m \"<reason>\"              take a rule away, no replacement; an id from the
                                          canon you copied names a rule you got from it.
-                                         Not in charge? It is a proposal for who is
+                                         Not in charge? It goes to whoever is, as a proposal
   accept <a> <b> -m \"<reason>\"           keep two rules that conflict, on purpose
   dismiss <a> <b> [-m \"<reason>\"]        not a real conflict
   undo <act-id> [-m \"<reason>\"]          take back an act — yours, or one in your area
