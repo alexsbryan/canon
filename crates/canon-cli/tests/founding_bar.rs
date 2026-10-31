@@ -516,9 +516,16 @@ fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
             .unwrap_or_default()
             .to_string()
     };
+    // The log speaks the record's own names, and says so once, in text only.
+    assert!(
+        log.starts_with("the record's own words: supersede is amend"),
+        "{log}"
+    );
+    let (_, json) = canon_as(&canon, "human:june", &["log", "--json"]);
+    assert!(!json.contains("the record's own words"), "{json}");
     let rid = log
         .lines()
-        .find(|l| l.contains("ratify"))
+        .find(|l| l.starts_with("can-") && l.contains("ratify"))
         .map(id)
         .unwrap_or_default();
     let (code, why) = canon_as(&canon, "human:june", &["why", &rid]);
@@ -527,7 +534,7 @@ fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
     assert!(why.contains("Whoever is in charge decides"), "{why}");
     let gid = log
         .lines()
-        .find(|l| l.contains("grant"))
+        .find(|l| l.starts_with("can-") && l.contains("grant"))
         .map(id)
         .unwrap_or_default();
     let (code, why) = canon_as(&canon, "human:june", &["why", &gid]);

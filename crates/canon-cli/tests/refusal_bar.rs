@@ -74,7 +74,7 @@ fn a_refused_act_leads_with_not_applied_on_every_gated_verb() {
     let (_, g) = canon_as(&dir, "human:sam", &["log"]);
     let grant_id = g
         .lines()
-        .find(|l| l.contains("grant"))
+        .find(|l| l.starts_with("can-") && l.contains("grant"))
         .map(|l| l.split_whitespace().next().unwrap().to_string())
         .expect("the grant is in the log");
     std::thread::sleep(std::time::Duration::from_millis(1100));

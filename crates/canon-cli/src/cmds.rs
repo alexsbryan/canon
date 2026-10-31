@@ -1159,14 +1159,15 @@ pub fn carried_note(canon: &Canon) -> Option<String> {
 }
 
 pub fn log(args: &[String]) -> i32 {
-    let (d, log, st) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, log, st) = or_fail!(load());
     if has(args, "--json") {
         print!("{}", log.render());
         return 0;
     }
+    // The log is the one text output that speaks the record's own names,
+    // so it says once how they map onto the ones the rest of canon uses.
+    println!("the record's own words: supersede is amend, retract is repeal, grant is give,");
+    println!("scoped is area, policy is rulings — `canon help <word>` for any\n");
     for act in log.acts() {
         let what = match &act.kind {
             ActKind::Assert { text, .. } => format!("assert     {text}"),

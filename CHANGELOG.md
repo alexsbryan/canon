@@ -51,6 +51,10 @@ renames that heading to the version, and its section becomes the release notes
   rules can pass (`canon help consent:14d`), and the record's own names
   met in `canon log` or JSON (`canon help supersede`). Each verb's help
   ends with its line too. The words live in `crates/canon-cli/glossary.txt`.
+- `canon log` opens with two lines saying how the record's own names map
+  onto the plain ones (supersede is amend, retract is repeal, grant is
+  give, scoped is area, policy is rulings). `canon log --json` is
+  unchanged.
 - `canon adopt <url>` no longer leaves its clone of the lineage where
   `git add .canon` commits it. `canon init` lists `lineages/` in
   `.canon/.gitignore`, and the cache writes a `.gitignore` of its own the
