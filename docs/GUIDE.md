@@ -72,11 +72,11 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 |---|---|
 | What's waiting on you, one at a time: read it, approve, object, or skip; offers you rooms nobody holds yet | `canon review` |
 | All of this as a page in your browser: decide, propose, change a rule, identify | `canon ui` |
-| Propose a rule; it's a proposal until its room ratifies it | `canon add "Quiet hours run 11pm to 7am." --scope house.quiet` |
+| Propose a rule; it's a proposal until its area passes it | `canon add "Quiet hours run 11pm to 7am." --area house.quiet` |
 | What's in force now, and what's still proposed | `canon list` |
 | Where an entry came from, and what it replaced | `canon why can-ffc1` |
-| Replace a rule, keeping the reason | `canon supersede can-ffc1 "Guests may stay up to three nights." -m "Sam's cousin stayed two weeks and nobody knew how to raise it."` |
-| Withdraw a rule with no replacement | `canon retract can-ffc1 -m "Nobody was using it."` |
+| Replace a rule, keeping the reason | `canon amend can-ffc1 "Guests may stay up to three nights." -m "Sam's cousin stayed two weeks and nobody knew how to raise it."` |
+| Withdraw a rule with no replacement | `canon repeal can-ffc1 -m "Nobody was using it."` |
 | Undo an entry — yours, or one you hold a seat over | `canon undo can-0ea2 -m "That was the wrong room."` |
 | Every entry, in order | `canon log` |
 
@@ -89,7 +89,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | Record that something is unwritten on purpose | `canon silence "party politics" -m "We decided not to have a rule about this."` |
 | Carry two conflicting rules knowingly, with a look-again date | `canon accept can-ffc1 can-9b31 -m "We know; revisit in spring." --revisit 2027-03-01` |
 | Rule out an apparent conflict | `canon dismiss can-ffc1 can-9b31 -m "One is about guests, one about pets."` |
-| Put a review date on any entry | `canon horizon can-ffc1 2027-03-01` |
+| Put a review date on any entry | `canon revisit can-ffc1 2027-03-01` |
 | What has gone past its date | `canon overdue` |
 
 ### Who gets a say
@@ -97,11 +97,11 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | What it does | Example |
 |---|---|
 | Who may decide this room, and under what rule | `canon who house.kitchen` |
-| Give someone a seat, optionally with a term | `canon grant human:dana house.kitchen --horizon 90` |
+| Give someone a seat, optionally with a term | `canon give human:dana house.kitchen --horizon 90` |
 | Step down, or stand someone down | `canon withdraw human:dana house.kitchen -m "Term is up."` |
-| Put a rule in a room | `canon scope can-ffc1 house.kitchen` |
-| Say how a room's rules get made | `canon ratification set joint:human:dana,human:sam --scope house.kitchen` |
-| Show or change how proposals are judged | `canon policy set consent` |
+| Put a rule in a room | `canon area can-ffc1 house.kitchen` |
+| Say how a room's rules get made | `canon ratification set joint:human:dana,human:sam --area house.kitchen` |
+| Show or change how proposals are judged | `canon rulings set consent` |
 | Approve a proposal | `canon approve can-9b31 -m "Yes — and the rota moves too."` |
 | Object to one; the reason is required | `canon object can-9b31 -m "The pan rule already covers this."` |
 | Object to an action, or support one; `check` counts it | `canon object --about "a bike rack in the hall" -m "It narrows the hall."` |
@@ -127,7 +127,7 @@ new name; name a backup key too if that would hurt.
 | What it does | Example |
 |---|---|
 | Name what a room shares | `canon allot house.tools --named drill,ladder` |
-| Say how it goes round — whose turn, how long | `canon allocation set rotation --scope house.tools --order holders --per 7` |
+| Say how it goes round — whose turn, how long | `canon allocation set rotation --area house.tools --order holders --per 7` |
 | Whose turn it is right now | `canon pool house.tools --at 2026-09-14` |
 | Announce a draw for a future date | `canon draw commit house.tools 1 --after 2026-10-01` |
 | Seal your secret before the date, then open it | `canon draw seal draw-1` |
@@ -138,7 +138,7 @@ new name; name a backup key too if that would hurt.
 | What it does | Example |
 |---|---|
 | Re-decide your own history under a different rule | `canon replay --policy consent --brief` |
-| Where your commitments conflict *model* | `canon tensions` |
+| Where your commitments conflict *model* | `canon conflicts` |
 | How a proposal stands with the rules you have *model* | `canon check "Guests may stay a week."` |
 | The ledger checked against git — append-only, not backdated | `canon witness` |
 | What is guarding the ledger, and what each guard cannot see | `canon guard show` |

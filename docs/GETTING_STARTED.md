@@ -100,7 +100,7 @@ canon init --profile house
 ```text
 canon initialised at /home/mira/house/.canon (house)
   human:mira holds this canon (house) — you write, it is in force.
-  grant the others: canon grant human:<them> house
+  give the others: canon give human:<them> house
   sign it: canon identify <your key.pub> — so only your key can decide as you
   a holder's word is a rule at once; to need everyone: canon ratification set unanimous
   policy changes wait like rules do, and human:mira.… is yours alone
@@ -222,7 +222,7 @@ canon add "<the rule you thought of afterwards>"
 Changing a rule keeps the reason. Don't edit — supersede:
 
 ```sh
-canon supersede can-ffc1e6e30686 \
+canon amend can-ffc1e6e30686 \
   "Anyone can invite a guest for up to three nights; longer needs a house chat." \
   -m "Sam's cousin stayed two weeks in June and nobody knew how to raise it."
 ```
@@ -301,7 +301,7 @@ keep:
 
 ```sh
 canon check "convert the spare room into a studio"   # what does this run against?
-canon tensions                                       # which of our rules conflict?
+canon conflicts                                       # which of our rules conflict?
 ```
 
 ## Later: decide how you decide
@@ -313,16 +313,16 @@ and canon keeps them in the same log as the rules themselves.
 
 | tier | what it settles | the act | who may |
 |---|---|---|---|
-| **operational** | bikes against the left wall; quiet after eleven | `canon add "…" --scope house.hall` | anyone — it's a proposal until the scope ratifies it |
-| **collective-choice** | who writes hall rules, and by what count | `canon grant`, `canon ratification set` | whoever holds that scope |
+| **operational** | bikes against the left wall; quiet after eleven | `canon add "…" --area house.hall` | anyone — it's a proposal until the area passes it |
+| **collective-choice** | who writes hall rules, and by what count | `canon give`, `canon ratification set` | whoever holds that scope |
 | **constitutional** | who may change *that* | the same two acts, aimed one scope up | whoever holds the scope above |
 
 Three commands, in the order a house reaches for them:
 
 ```sh
-canon grant mira house.hall                                # who has a say, and where
-canon ratification set threshold:2/1 --scope house.hall    # what makes a proposal a rule
-canon policy set consent -m "One reasoned objection stops a thing."
+canon give mira house.hall                                # who has a say, and where
+canon ratification set threshold:2/1 --area house.hall    # what makes a proposal a rule
+canon rulings set consent -m "One reasoned objection stops a thing."
 ```
 
 Acts written in the same second cannot govern one another, so a script that
@@ -342,7 +342,7 @@ and neither has to know about the other.
 **Policy** is the other axis — what `canon check` decides under when a
 proposal runs into a rule: `default`, `consent`, `threshold`,
 `supermajority --of 2/3`, `subsidiarity`. Both are ordinary recorded acts,
-so you can question them, supersede them and ask `canon why`.
+so you can question them, amend them and ask `canon why`.
 
 Once a ratification rule is set, a write tells you where it stands, and
 `canon approve <id>` / `canon object <id> -m "<why>"` move it:
@@ -402,11 +402,11 @@ about — a proposal in your own words, who would be doing it, what can't be
 undone — `canon replay --write-scenario questions.jsonl` writes the derived
 ones out to edit, and `--scenario questions.jsonl` uses yours instead.
 
-`canon who <scope>` answers who may decide something without anyone
+`canon who <area>` answers who may decide something without anyone
 having to be asked, and `canon who` on its own says who holds the canon as
 a whole — whoever holds its widest scopes; there is no scope named for
 it. `canon overdue` lists what's passed a review date set
-with `canon horizon` — which is also how you give a seat a term.
+with `canon revisit` — which is also how you give a seat a term.
 
 ## If it gets something wrong
 
@@ -416,7 +416,7 @@ standing over it, the same as writing it would have.
 
 ```sh
 canon undo <act-id> -m "<why>"
-canon retract <id> -m "<why>"      # withdraw a rule, no replacement
+canon repeal <id> -m "<why>"      # withdraw a rule, no replacement
 canon log                          # the raw acts, oldest first
 ```
 
@@ -440,7 +440,7 @@ done to you, and how an agent fits in. Real commands, real output.
 | finish a review later | `canon draft --resume` |
 | see what's live | `canon list` |
 | add the one you thought of after | `canon add "<rule>"` |
-| change one | `canon supersede <id> "<new>" -m "<why>"` |
+| change one | `canon amend <id> "<new>" -m "<why>"` |
 | find out why | `canon why <id>` |
 | note an open question | `canon question "<question>"` |
 | note a deliberate gap | `canon silence "<subject>" -m "<why>"` |

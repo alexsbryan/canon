@@ -290,7 +290,7 @@ pub fn governed(d: &Path, id: &ActId, headline: impl FnOnce()) -> i32 {
 /// `--scope <s>` on a write: the commitment is scoped in the same breath, so
 /// the ratification rule of that scope applies from the first fold.
 fn scope_arg(args: &[String]) -> Result<Option<canon_core::Scope>, String> {
-    match flag(args, "--scope") {
+    match flag(args, "--area") {
         None => Ok(None),
         Some(raw) => canon_core::Scope::new(raw)
             .map(Some)
@@ -422,7 +422,7 @@ pub fn init(args: &[String]) -> i32 {
                 profile.scope()
             );
             println!(
-                "  grant the others: canon grant human:<them> {}",
+                "  give the others: canon give human:<them> {}",
                 profile.scope()
             );
             println!(
@@ -430,7 +430,7 @@ pub fn init(args: &[String]) -> i32 {
             );
         } else if open {
             println!("  nothing holds this canon: it is open, and any write takes.");
-            println!("  hold it: canon grant {founder} {}", profile.scope());
+            println!("  hold it: canon give {founder} {}", profile.scope());
         }
         println!("  a holder's word is a rule at once; to need everyone: canon ratification set unanimous");
         match store::actor().strip_prefix(canon_core::person::PREFIX) {
@@ -445,7 +445,7 @@ pub fn init(args: &[String]) -> i32 {
                 store::actor()
             );
             println!(
-                "  the founding grant waits too: canon grant {} {}",
+                "  the founding grant waits too: canon give {} {}",
                 store::actor(),
                 profile.scope()
             );
@@ -484,7 +484,7 @@ pub fn init(args: &[String]) -> i32 {
 pub fn add(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(text) = pos.first() else {
-        return fail("usage: canon add \"<commitment>\" [--scope <scope>] [-m \"<why>\"] [--cite \"<where>\"]");
+        return fail("usage: canon add \"<commitment>\" [--area <scope>] [-m \"<why>\"] [--cite \"<where>\"]");
     };
     let scope = match scope_arg(args) {
         Ok(s) => s,
@@ -508,12 +508,12 @@ pub fn add(args: &[String]) -> i32 {
         if like.status == "proposed" {
             eprintln!(
                 "  if it is the same decision, approve or object to that one; if it changes it, \
-                 `canon supersede {}`",
+                 `canon amend {}`",
                 like.id
             );
         } else {
             eprintln!(
-                "  if it changes it, `canon supersede {}`; if it is the same, do not add a second",
+                "  if it changes it, `canon amend {}`; if it is the same, do not add a second",
                 like.id
             );
         }
@@ -960,9 +960,7 @@ pub fn why(args: &[String]) -> i32 {
 pub fn supersede(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail(
-            "usage: canon supersede <id> \"<new text>\" -m \"<reason>\" [--scope <scope>]",
-        );
+        return fail("usage: canon amend <id> \"<new text>\" -m \"<reason>\" [--area <scope>]");
     }
     let (d, _, st) = match load() {
         Ok(v) => v,
@@ -1000,7 +998,7 @@ pub fn supersede(args: &[String]) -> i32 {
 pub fn retract(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(needle) = pos.first() else {
-        return fail("usage: canon retract <id> -m \"<reason>\"");
+        return fail("usage: canon repeal <id> -m \"<reason>\"");
     };
     let (d, _, st) = match load() {
         Ok(v) => v,
@@ -1347,7 +1345,7 @@ pub fn question(args: &[String]) -> i32 {
         Ok(act) => {
             println!("{}  ? {}", act.id, text);
             println!(
-                "  answer it:  canon supersede {} \"<the rule>\" -m \"<reason>\"",
+                "  answer it:  canon amend {} \"<the rule>\" -m \"<reason>\"",
                 act.id
             );
             0

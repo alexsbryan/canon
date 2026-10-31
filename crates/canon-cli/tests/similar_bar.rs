@@ -76,7 +76,7 @@ fn a_second_guest_rule_names_the_first_and_how_to_settle_it() {
         "the warning did not name the proposal:\n{second}"
     );
     assert!(
-        second.contains(&format!("`canon supersede {first_id}`")),
+        second.contains(&format!("`canon amend {first_id}`")),
         "the warning did not say how to change it:\n{second}"
     );
 

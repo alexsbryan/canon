@@ -583,7 +583,7 @@ fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
         Status::Active => {
             lines.push("open — the canon does not cover this".into());
             lines.push(format!(
-                "answer it:  canon supersede {} \"<the rule>\" -m \"<reason>\"",
+                "answer it:  canon amend {} \"<the rule>\" -m \"<reason>\"",
                 q.id
             ));
         }

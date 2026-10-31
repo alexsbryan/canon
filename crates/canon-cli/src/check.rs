@@ -438,7 +438,7 @@ fn settle(canon: &Canon, b: &Position) -> String {
         return String::new();
     };
     format!(
-        "  amend it:  canon supersede {} \"<the new rule>\" -m \"<why>\"\n  \
+        "  amend it:  canon amend {} \"<the new rule>\" -m \"<why>\"\n  \
          or carry both knowingly:  canon accept {} <other> -m \"<what this protects>\"\n\n",
         c.id(),
         c.id()
@@ -535,7 +535,7 @@ pub fn attributes(args: &[String], proposal: &str) -> Result<Attributes, String>
     let mut attrs = Attributes::about(crate::cmds::flag(args, "--about").unwrap_or(proposal))
         .by(crate::store::actor())
         .at(crate::store::now());
-    if let Some(raw) = crate::cmds::flag(args, "--scope") {
+    if let Some(raw) = crate::cmds::flag(args, "--area") {
         let scope = Scope::new(raw)
             .ok_or_else(|| format!("`{raw}` is not a scope: dotted path, no empty segments"))?;
         attrs = attrs.in_scope(scope);

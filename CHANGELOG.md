@@ -25,6 +25,13 @@ renames that heading to the version, and its section becomes the release notes
 
 ### Changes
 
+- Seven verbs and one flag have plain names: `supersede` is `amend`,
+  `retract` is `repeal`, `grant` is `give`, `policy` is `rulings`,
+  `horizon` is `revisit`, `tensions` is `conflicts`, the `scope` verb is
+  `area`, and `--scope` is `--area` on every verb that takes it. The old
+  names still work and print the same stdout; each says once on stderr
+  what to type instead, and help lists only the new ones. The record, its
+  op and field names, JSON keys and MCP tool names do not change.
 - `canon adopt <url>` no longer leaves its clone of the lineage where
   `git add .canon` commits it. `canon init` lists `lineages/` in
   `.canon/.gitignore`, and the cache writes a `.gitignore` of its own the

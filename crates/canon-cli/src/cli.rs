@@ -34,39 +34,44 @@ use clap::{Arg, ArgAction, Command};
 /// A verb's handler: its arguments, checked, to an exit code.
 pub(crate) type Run = fn(&[String]) -> i32;
 
-/// Verb, the flags that take a value, the flags that do not, and what runs
-/// it. The one list: `main` dispatches from it, [`check`] parses by it, and the
-/// help test reads it, so a verb cannot be in one and missing from another.
+/// A verb, the flags that take a value, the flags that do not, and what runs
+/// it.
+type Flags = &'static [&'static str];
+pub(crate) type Verb = (&'static str, Flags, Flags, Run);
+
+/// Every verb. The one list: `main` dispatches from it, [`check`] parses by
+/// it, and the help test reads it, so a verb cannot be in one and missing
+/// from another.
 #[rustfmt::skip]
-pub(crate) const VERBS: &[(&str, &[&str], &[&str], Run)] = &[
+pub(crate) const VERBS: &[Verb] = &[
     ("init", &["--profile"], &["--plain", "--open"], crate::cmds::init),
-    ("add", &["--scope", "-m", "--cite"], &[], crate::cmds::add),
-    ("review", &["--scope"], &["--json"], crate::review::run),
+    ("add", &["--area", "-m", "--cite"], &[], crate::cmds::add),
+    ("review", &["--area"], &["--json"], crate::review::run),
     ("ui", &[], &[], crate::ui::run),
     ("approve", &["--about", "--citing", "-m"], &[], crate::cmds::approve),
     ("object", &["--about", "--citing", "-m"], &[], crate::cmds::object),
     ("list", &["--out"], &["--check", "--json", "--markdown"], crate::cmds::list),
     ("why", &[], &["--json"], crate::cmds::why),
-    ("supersede", &["--scope", "-m"], &[], crate::cmds::supersede),
-    ("retract", &["-m"], &[], crate::cmds::retract),
+    ("amend", &["--area", "-m"], &[], crate::cmds::supersede),
+    ("repeal", &["-m"], &[], crate::cmds::retract),
     ("accept", &["--revisit", "-m"], &[], crate::cmds::accept),
     ("dismiss", &["-m"], &[], crate::cmds::dismiss),
     ("undo", &["-m"], &[], crate::cmds::undo),
     ("log", &[], &["--json"], crate::cmds::log),
     ("question", &["--from-proposal"], &[], crate::cmds::question),
     ("who", &[], &["--json"], crate::govern::who),
-    ("grant", &["--horizon", "-m"], &[], crate::govern::grant),
+    ("give", &["--horizon", "-m"], &[], crate::govern::grant),
     ("withdraw", &["--ask", "-m"], &[], crate::govern::withdraw),
-    ("scope", &[], &[], crate::govern::scoped),
-    ("policy", &["--entrench", "--graduated", "--objections", "--of", "--scope", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"], crate::govern::policy),
-    ("ratification", &["--governs", "--personal", "--scope", "-m"], &["--json"], crate::govern::ratification),
+    ("area", &[], &[], crate::govern::scoped),
+    ("rulings", &["--entrench", "--graduated", "--objections", "--of", "--area", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"], crate::govern::policy),
+    ("ratification", &["--governs", "--personal", "--area", "-m"], &["--json"], crate::govern::ratification),
     ("allot", &["--count", "--named", "--unit", "-m"], &[], crate::govern::allot),
-    ("allocation", &["--from-draw", "--order", "--per", "--scope", "--step", "-m"], &[], crate::govern::allocation),
+    ("allocation", &["--from-draw", "--order", "--per", "--area", "--step", "-m"], &[], crate::govern::allocation),
     ("pool", &["--at"], &["--json"], crate::govern::pool),
     ("position", &["--citing", "-m"], &["--against", "--toward"], crate::govern::position),
     ("decide", &["--authority", "--citing", "--outcome", "-m"], &[], crate::govern::decide),
     ("rank", &[], &[], crate::govern::rank),
-    ("horizon", &["-m"], &[], crate::govern::horizon),
+    ("revisit", &["-m"], &[], crate::govern::horizon),
     ("overdue", &[], &["--json"], crate::govern::overdue),
     ("draw", &["--after", "--secret", "-m"], &["--json"], crate::draw_cmd::run),
     ("silence", &["-m"], &[], crate::govern::silence),
@@ -83,11 +88,49 @@ pub(crate) const VERBS: &[(&str, &[&str], &[&str], Run)] = &[
     ("diff", &[], &["--json", "--propose", "--upstream"], crate::lineage::diff),
     ("upgrade", &[], &["--paste"], crate::lineage::upgrade),
     ("merge-driver", &[], &[], crate::lineage::merge_driver),
-    ("tensions", &[], &["--allow-remote", "--json"], crate::tensions::run),
+    ("conflicts", &[], &["--allow-remote", "--json"], crate::tensions::run),
     ("config", &[], &[], crate::cmds::config),
     ("draft", &["--as", "--continue", "--from", "--max-chunks", "--replay", "--since"], &["--accept-all", "--allow-remote", "--dry-run", "--from-git", "--include-ignored", "--json", "--resume", "--yes"], crate::draft::run),
-    ("check", &["--about", "--amends", "--scope"], &["--allow-remote", "--irreversible", "--json"], crate::check::run),
+    ("check", &["--about", "--amends", "--area"], &["--allow-remote", "--irreversible", "--json"], crate::check::run),
 ];
+
+/// Old spellings, `(old, new)`: a verb renamed into plain words, and a flag.
+/// Neither is in help or in `contract/cli.txt`, which list what is
+/// documented; both still work, because scripts and fingers already type
+/// them. [`resolve`] is the one place they are read.
+#[rustfmt::skip]
+pub(crate) const VERB_ALIASES: &[(&str, &str)] = &[
+    ("supersede", "amend"), ("retract", "repeal"), ("grant", "give"), ("policy", "rulings"),
+    ("horizon", "revisit"), ("tensions", "conflicts"), ("scope", "area"),
+];
+pub(crate) const FLAG_ALIASES: &[(&str, &str)] = &[("--scope", "--area")];
+
+/// The command line with every old spelling in it made new, and one note per
+/// spelling for stderr. Stdout is the new verb's, byte for byte, so a script
+/// that parses it does not break; the note is how its author hears.
+///
+/// A flag is renamed only on a verb that takes the new one, so `--scope` on a
+/// verb that never took it is refused under the name that was typed.
+pub fn resolve(args: &[String]) -> (Vec<String>, Vec<String>) {
+    let (mut out, mut notes) = (args.to_vec(), Vec::new());
+    for i in 0..out.len() {
+        let (name, value) = out[i].split_once('=').unwrap_or((&out[i], ""));
+        let flags = verb(&out[0]).map_or(&[][..], |v| v.1);
+        let renamed = |a: &&(&str, &str)| a.0 == name && (i == 0 || flags.contains(&a.1));
+        let table = if i == 0 { VERB_ALIASES } else { FLAG_ALIASES };
+        if let Some((old, new)) = table.iter().find(renamed) {
+            let c = if i == 0 { "canon " } else { "" };
+            notes.push(format!("`{c}{old}` is now `{c}{new}`; both still work"));
+            out[i] = [new, value].join(if value.is_empty() { "" } else { "=" });
+        }
+    }
+    (out, notes)
+}
+
+/// The table's entry for a verb, under its documented name.
+pub(crate) fn verb(name: &str) -> Option<&'static Verb> {
+    VERBS.iter().find(|v| v.0 == name)
+}
 
 /// Did somebody ask a verb what it does? `main` answers before dispatch, so
 /// the handler never sees the flag.
@@ -105,7 +148,7 @@ pub fn wants_help(rest: &[String]) -> bool {
 /// it, so the two cannot disagree. `None` for a verb this table does not
 /// know.
 pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
-    let (name, valued, switches, _) = VERBS.iter().find(|(v, ..)| *v == verb)?;
+    let (name, valued, switches, _) = self::verb(verb)?;
     // A verb's entry is a line at two spaces that opens with its name, and
     // every deeper-indented line under it.
     let mut out = String::new();
@@ -158,7 +201,7 @@ pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
 /// request for help, which `main` answers with [`help_for`] instead of
 /// dispatching.
 pub fn check(verb: &str, rest: &[String]) -> Result<Vec<String>, String> {
-    let Some((name, valued, switches, _)) = VERBS.iter().find(|(v, ..)| *v == verb) else {
+    let Some((name, valued, switches, _)) = self::verb(verb) else {
         return Ok(rest.to_vec());
     };
     if wants_help(rest) {
@@ -245,14 +288,14 @@ fn wants(flag: &str) -> &'static str {
             "n" => "a number after it",
             "why" => "a reason after it, in quotes",
             "path" => "a path after it",
-            "scope" => "a scope after it",
+            "area" => "an area after it, like `house.kitchen`",
             "id" => "an id after it, as the pasted block prints it",
             _ => "a value after it",
         },
     }
 }
 
-/// `--scope=house` as `--scope house`.
+/// `--area=house` as `--area house`.
 ///
 /// Done here rather than left to clap because the HANDLERS are the ones that
 /// have to read it, and `cmds::flag` looks at the next argument. clap accepts
@@ -311,7 +354,7 @@ fn value_name(flag: &str) -> &'static str {
         "--continue" | "--expect" | "--from" | "--out" | "--replay" => "path",
         "-m" => "why",
         "--ask" => "question",
-        "--scope" | "--of" => "scope",
+        "--area" | "--of" => "area",
         "--except" => "id",
         "--after" | "--horizon" | "--revisit" | "--at" | "--since" => "date",
         "--count" | "--max-chunks" | "--step" => "n",

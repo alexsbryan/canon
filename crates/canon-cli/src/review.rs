@@ -404,7 +404,7 @@ pub fn door(terminal: bool, actor: &str, from: &str) -> Result<(), String> {
 }
 
 pub fn run(args: &[String]) -> i32 {
-    let only = match flag(args, "--scope").map(|raw| Scope::new(raw).ok_or(raw)) {
+    let only = match flag(args, "--area").map(|raw| Scope::new(raw).ok_or(raw)) {
         None => None,
         Some(Ok(s)) => Some(s),
         Some(Err(raw)) => return fail(format!("`{raw}` is not a scope")),

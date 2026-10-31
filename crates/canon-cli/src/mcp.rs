@@ -416,9 +416,9 @@ fn render_open(dir: &Path) -> Result<String, String> {
 fn render_check(dir: &Path, proposal: &str, args: &Value) -> Result<String, String> {
     // The CLI's own flags, so the two surfaces read a subject and a scope
     // one way.
-    let argv: Vec<String> = ["about", "scope"]
+    let argv: Vec<String> = [("about", "--about"), ("scope", "--area")]
         .iter()
-        .filter_map(|k| Some([format!("--{k}"), args.get(*k)?.as_str()?.to_string()]))
+        .filter_map(|(k, f)| Some([f.to_string(), args.get(*k)?.as_str()?.to_string()]))
         .flatten()
         .collect();
     let attrs = crate::check::attributes(&argv, proposal)?;

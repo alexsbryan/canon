@@ -78,7 +78,7 @@ const TOPICS: &[(&str, &str)] = &[
     ),
     (
         "scopes",
-        "SCOPES\n\n  A scope is a dotted path: `house`, `house.quiet`, `repo.defaults`.\n  A grant over `house` covers `house.quiet` and everything under it; a\n  grant over `house.quiet` covers only the quiet corner. The whole canon's\n  scope is the profile's own: `house`, `repo` or `personal`.\n\n  `canon who` names the scopes that hold the canon; `canon grant <actor>\n  <scope>` gives standing over one; `canon help grant` has the flags.\n",
+        "SCOPES\n\n  A scope is a dotted path: `house`, `house.quiet`, `repo.defaults`.\n  A grant over `house` covers `house.quiet` and everything under it; a\n  grant over `house.quiet` covers only the quiet corner. The whole canon's\n  scope is the profile's own: `house`, `repo` or `personal`.\n\n  `canon who` names the scopes that hold the canon; `canon give <actor>\n  <scope>` gives standing over one; `canon help give` has the flags.\n",
     ),
 ];
 
@@ -97,8 +97,8 @@ RECORD                                        (no model needed)
                                          until someone holds it
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
-  add \"<text>\" [--scope s]              propose a commitment; a rule when its scope ratifies it
-  review [--scope s] [--json]            what is waiting on you, a scope at a time; offers
+  add \"<text>\" [--area s]               propose a commitment; a rule when its scope ratifies it
+  review [--area s] [--json]             what is waiting on you, a scope at a time; offers
                                          you standing over a scope nobody holds yet.
                                          A person's verb: it needs a terminal and a
                                          human: actor; --json only reads
@@ -114,8 +114,8 @@ RECORD                                        (no model needed)
        --markdown [--out <f> [--check]]  the same, as a document for readers without
                                          canon; --check fails when <f> is stale
   why <id>                               what this replaced, when, and why; a silence or question shows its act
-  supersede <id> \"<text>\" -m \"<reason>\"  replace a commitment
-  retract <id> -m \"<reason>\"             withdraw one, no replacement; an upstream id
+  amend <id> \"<text>\" -m \"<reason>\"      replace a commitment
+  repeal <id> -m \"<reason>\"              withdraw one, no replacement; an upstream id
                                          names what was inherited from it. Without
                                          standing, a proposal for a holder to approve
   accept <a> <b> -m \"<reason>\"           carry a contradiction knowingly
@@ -129,11 +129,11 @@ RECORD                                        (no model needed)
 GOVERN                                        (no model needed)
   who [<scope>]                          who may decide this, and under what;
                                          no scope: who holds the canon as a whole
-  grant <actor> <scope> [--horizon <d>]  give someone standing
-  withdraw <actor> <scope>               step back from a scope, or stand down
+  give <actor> <area> [--horizon <d>]    give someone standing
+  withdraw <actor> <area>                step back from a scope, or stand down
            [--ask \"<question>\"]         yours: leave the question, without your name
-  scope <id> <scope>                     put a commitment in a scope
-  policy show | set <rule> [-m \"...\"]    what this canon decides under
+  area <id> <area>                       put a commitment in a scope
+  rulings show | set <rule> [-m \"...\"]   what this canon decides under
   ratification show | set <rule>         how a proposal becomes a rule, per scope:
                                          standing, joint:a,b, threshold:n/m (n approve,
                                          m objecting stop it), majority, unanimous,
@@ -143,7 +143,7 @@ GOVERN                                        (no model needed)
        [--governs all|commitments]       whether a change of policy waits too
        [--personal on|off]               canon-wide: a person's own scope is theirs
   allot <scope> --named a,b,c            what this commons has to share
-  allocation set rotation --scope s      how it goes round: --step, --per, --order
+  allocation set rotation --area s       how it goes round: --step, --per, --order
                                          or --from-draw <id> for a lot nobody steers
   pool <scope> [--at <date>]             whose turn it is. `who` is authority,
                                          `pool` is appropriation
@@ -151,7 +151,7 @@ GOVERN                                        (no model needed)
          --outcome <o> --authority <a>   the long form, as `check --json` says it
          [--citing <id>,…]               the rules it turned on; a ladder counts by them
   rank <id> <rank>                       a principle, not a convention
-  horizon <act-id> <YYYY-MM-DD>          look at this again by then
+  revisit <act-id> <YYYY-MM-DD>          look at this again by then
   overdue                                what has gone past its date
   draw commit <scope> <seats> --after    announce a lot nobody can steer
   draw seal | open <draw-id>             your secret, before and after
@@ -184,7 +184,7 @@ LINEAGE                     (git optional; only adopt --rebase needs a model)
 
 ADJUDICATE                                    (needs an endpoint)
   check \"<proposal>\"                     how a proposal stands (personal: stakes)
-  tensions                               where your commitments conflict
+  conflicts                              where your commitments conflict
   draft --from <paths>                   propose commitments from loose notes
         --from -                         read the document from stdin
         --as <name>                      what to call it in the citations
@@ -229,7 +229,10 @@ ON THE PERSONAL PROFILE
 ";
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    // An old spelling is made new before anything reads it, and said once on
+    // stderr, so stdout is the new verb's and a script parsing it reads on.
+    let (args, notes) = cli::resolve(&std::env::args().skip(1).collect::<Vec<_>>());
+    notes.iter().for_each(|n| eprintln!("{n}"));
     if args.is_empty() || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
         // `canon help <verb>` is the same answer as `canon <verb> --help`.
         if let Some(verb) = args.get(1).and_then(|v| cli::help_for(v, HELP_ALL)) {
@@ -273,7 +276,7 @@ fn main() {
         // this tool declines to do, and exits the same way.
         Err(report) => std::process::exit(cmds::fail(report)),
     }[..];
-    let code = match cli::VERBS.iter().find(|(v, ..)| v == cmd) {
+    let code = match cli::verb(cmd) {
         Some((.., run)) => run(rest),
         None if cmd == "--version" || cmd == "-V" => {
             println!("canon {}", env!("CARGO_PKG_VERSION"));

@@ -115,7 +115,7 @@ fn outcome(raw: &str) -> Result<Outcome, String> {
 }
 
 fn scope_from(args: &[String]) -> Result<Option<Scope>, String> {
-    match flag(args, "--scope") {
+    match flag(args, "--area") {
         None => Ok(None),
         Some(raw) => Scope::new(raw)
             .map(Some)
@@ -131,9 +131,9 @@ pub fn policy(args: &[String]) -> i32 {
         Some("set") => {
             let Some(base) = pos.get(1) else {
                 return fail(
-                    "usage: canon policy set <default|consent|threshold|supermajority|subsidiarity> \
+                    "usage: canon rulings set <default|consent|threshold|supermajority|subsidiarity> \
                      [--objections n] [--of n/d] [--graduated a,b,c [--by-about] [--no-repair]] \
-                     [--entrench rank] [--cautious] [--scope s] [-m \"<how it reads>\"]",
+                     [--entrench rank] [--cautious] [--area s] [-m \"<how it reads>\"]",
                 );
             };
             let rule = or_fail!(rule_from(args, base));
@@ -192,7 +192,7 @@ pub fn policy(args: &[String]) -> i32 {
                 println!("no policy adopted. this canon decides by what shipped:");
                 println!("  {}", Rule::Default.name());
                 println!("  {}", Rule::Default.prose());
-                println!("\n  adopt one:  canon policy set consent -m \"<how it reads here>\"");
+                println!("\n  adopt one:  canon rulings set consent -m \"<how it reads here>\"");
                 return 0;
             }
             for p in canon.policies() {
@@ -267,7 +267,7 @@ fn knobs(
         (Some(_), Some(s)) => {
             return Err(format!(
                 "`--personal` is canon-wide; it cannot be set for {s}. \
-                 Drop --scope, or drop --personal"
+                 Drop --area, or drop --personal"
             ))
         }
         (Some("on"), None) => Some(true),
@@ -309,7 +309,7 @@ pub fn ratification(args: &[String]) -> i32 {
                     "usage: canon ratification set \
                      <standing|joint:a,b|threshold:n/m|majority|unanimous|share:N%|share:a/b|\
                      consent:Nd|twice:<turnover|Nd>:<rule>> \
-                     [--scope s] [--governs all|commitments] [--personal on|off] \
+                     [--area s] [--governs all|commitments] [--personal on|off] \
                      [-m \"<how it reads>\"]",
                 );
             };
@@ -356,7 +356,7 @@ pub fn ratification(args: &[String]) -> i32 {
                 println!("  {}", canon_core::Ratify::Standing.name());
                 println!("  {}", canon_core::Ratify::Standing.prose());
                 println!(
-                    "\n  adopt one:  canon ratification set joint:human:a,human:b --scope house.kitchen"
+                    "\n  adopt one:  canon ratification set joint:human:a,human:b --area house.kitchen"
                 );
                 return 0;
             }
@@ -473,7 +473,7 @@ pub fn allot(args: &[String]) -> i32 {
                 println!("  {}", units.join(", "));
             });
             if code == 0 {
-                println!("\n  now say how they are shared:  canon allocation set rotation --scope {scope}");
+                println!("\n  now say how they are shared:  canon allocation set rotation --area {scope}");
             }
             code
         }
@@ -493,7 +493,7 @@ pub fn allocation(args: &[String]) -> i32 {
             }
             let scope = match scope_from(args) {
                 Ok(Some(s)) => s,
-                Ok(None) => return fail("an allocation rule needs --scope <scope>"),
+                Ok(None) => return fail("an allocation rule needs --area <scope>"),
                 Err(e) => return fail(e),
             };
             // Where the order comes from. The draw's contribution is its
@@ -560,7 +560,7 @@ pub fn allocation(args: &[String]) -> i32 {
             let (_, _, canon) = or_fail!(load());
             if canon.allocations().is_empty() {
                 println!("no allocation rule adopted; nothing here is shared out by rule.");
-                println!("  adopt one:  canon allocation set rotation --scope <scope>");
+                println!("  adopt one:  canon allocation set rotation --area <scope>");
                 return 0;
             }
             for a in canon.allocations() {
@@ -809,7 +809,7 @@ fn who_holds_the_canon(args: &[String]) -> i32 {
     }
     if holders.is_empty() {
         println!("nobody holds this canon yet, so it is open.");
-        println!("  canon grant <actor> <scope>   the widest scopes granted hold the canon");
+        println!("  canon give <actor> <scope>   the widest scopes granted hold the canon");
         return 0;
     }
     println!(
@@ -892,7 +892,7 @@ pub fn who(args: &[String]) -> i32 {
         // Not an error, and not an empty list rendered as nothing: an
         // unheld boundary is a finding about the canon.
         println!("nobody holds standing over `{scope}`.");
-        println!("  grant it:  canon grant <actor> {scope}");
+        println!("  grant it:  canon give <actor> {scope}");
         // A scope typed as a guess at the canon's own name — `default`,
         // `root` — gets this same answer, and the hint above turns the guess
         // into a scope. Say when nothing is in it, and what is.
@@ -999,7 +999,7 @@ fn bare_actor(name: &str, verb: &str) -> Option<String> {
 pub fn grant(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail("usage: canon grant <actor> <scope> [--horizon YYYY-MM-DD] [-m \"<why>\"]");
+        return fail("usage: canon give <actor> <scope> [--horizon YYYY-MM-DD] [-m \"<why>\"]");
     }
     if let Some(e) = bare_actor(pos[0], "grant") {
         return fail(e);
@@ -1048,7 +1048,7 @@ pub fn grant(args: &[String]) -> i32 {
                     act.actor
                 );
                 println!(
-                    "  proposals waiting on {holder} — `canon grant {} {scope}` if that is wrong.",
+                    "  proposals waiting on {holder} — `canon give {} {scope}` if that is wrong.",
                     act.actor
                 );
             }
@@ -1163,7 +1163,7 @@ fn ask_on_the_way_out(d: &std::path::Path, ask: Option<&str>) -> i32 {
 pub fn scoped(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail("usage: canon scope <id> <scope>");
+        return fail("usage: canon area <id> <scope>");
     }
     let (d, _, canon) = or_fail!(load());
     let id = or_fail!(crate::explain::resolve(&canon, pos[0]));
@@ -1246,7 +1246,7 @@ pub fn take(args: &[String], about: &str, toward: bool, because: &str) -> i32 {
 pub fn horizon(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail("usage: canon horizon <act-id> <YYYY-MM-DD> [-m \"<why>\"]");
+        return fail("usage: canon revisit <act-id> <YYYY-MM-DD> [-m \"<why>\"]");
     }
     let Some(at) = canon_core::date::parse_ymd(pos[1]) else {
         return fail(format!("`{}` is not a date — YYYY-MM-DD", pos[1]));

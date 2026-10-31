@@ -187,7 +187,7 @@ fn the_house_profile_says_which_act_the_proposal_needs() {
         &Attributes::default(),
     );
     assert!(text.contains("NEEDS AN AMENDMENT"));
-    assert!(text.contains("canon supersede"));
+    assert!(text.contains("canon amend"));
 
     let (canon, standing) = stand(&[]);
     let text = render(
@@ -379,10 +379,7 @@ fn a_canon_that_adopted_no_rule_is_not_told_about_the_ladder() {
         &Attributes::default(),
     );
     assert!(text.contains("NEEDS AN AMENDMENT"), "{text}");
-    assert!(
-        text.contains("canon supersede"),
-        "the concrete act still shows"
-    );
+    assert!(text.contains("canon amend"), "the concrete act still shows");
     for jargon in ["standing", "default:", "ask one person"] {
         assert!(!text.contains(jargon), "still saying `{jargon}`:\n{text}");
     }

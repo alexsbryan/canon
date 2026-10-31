@@ -35,6 +35,13 @@ fn fresh(name: &str) -> PathBuf {
 /// Run one verb as one actor, with `stdin` piped in. Stdout, stderr and the
 /// exit code.
 fn canon_in(dir: &Path, actor: &str, args: &[&str], stdin: &str) -> (i32, String) {
+    let (code, out, err) = canon_apart(dir, actor, args, stdin);
+    (code, format!("{out}{err}"))
+}
+
+/// The exit code, stdout and stderr, kept apart for a test that tells them
+/// apart.
+fn canon_apart(dir: &Path, actor: &str, args: &[&str], stdin: &str) -> (i32, String, String) {
     let mut child = Command::new(env!("CARGO_BIN_EXE_canon"))
         .args(args)
         .env("CANON_DIR", dir)
@@ -54,11 +61,8 @@ fn canon_in(dir: &Path, actor: &str, args: &[&str], stdin: &str) -> (i32, String
     let out = child.wait_with_output().unwrap();
     (
         out.status.code().unwrap_or(-1),
-        format!(
-            "{}{}",
-            String::from_utf8_lossy(&out.stdout),
-            String::from_utf8_lossy(&out.stderr)
-        ),
+        String::from_utf8_lossy(&out.stdout).into_owned(),
+        String::from_utf8_lossy(&out.stderr).into_owned(),
     )
 }
 
@@ -103,7 +107,7 @@ fn every_verb_says_what_it_does_when_asked() {
     let (_, same) = canon_as(&nowhere, "human:alex", &["help", "init"]);
     assert_eq!(same, out);
 
-    for verb in ["approve", "list", "retract", "adopt", "who", "draft"] {
+    for verb in ["approve", "list", "repeal", "adopt", "who", "draft"] {
         let (code, out) = canon_as(&nowhere, "human:alex", &[verb, "--help"]);
         assert_eq!(code, 0, "`canon {verb} --help`: {out}");
         assert!(
@@ -350,7 +354,7 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
     let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("human:june holds this canon (house)"), "{out}");
-    assert!(out.contains("grant the others"), "{out}");
+    assert!(out.contains("give the others"), "{out}");
     std::thread::sleep(std::time::Duration::from_millis(1100));
     let (code, out) = canon_as(
         &canon,
@@ -597,4 +601,78 @@ fn a_verb_nobody_declared_is_refused_with_the_short_help() {
     let (code, out) = canon_as(&dir, "human:alex", &["--version"]);
     assert_eq!(code, 0, "{out}");
     assert!(out.starts_with("canon "), "{out}");
+}
+
+/// **An old name is a new one with a note.** Every renamed verb and flag,
+/// run under both spellings on twin canons: the same stdout, ids aside, and
+/// the old one alone says on stderr, in one line, what to type instead.
+#[test]
+fn every_old_spelling_runs_the_new_verb_and_says_so_once() {
+    let ids = |s: &str| {
+        s.split_whitespace()
+            .map(|w| if w.contains("can-") { "<id>" } else { w })
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    let twins: &[(&str, &str, &[&str])] = &[
+        (
+            "supersede",
+            "amend",
+            &["<id>", "Dishes by morning.", "-m", "late shifts"],
+        ),
+        ("retract", "repeal", &["<id>", "-m", "nobody cooks"]),
+        ("grant", "give", &["human:sam", "house.kitchen"]),
+        ("policy", "rulings", &["show"]),
+        ("horizon", "revisit", &["<id>", "2030-01-01"]),
+        ("tensions", "conflicts", &[]),
+        ("scope", "area", &["<id>", "house.kitchen"]),
+        ("add", "add", &["Quiet after ten.", "--scope", "house"]),
+    ];
+    // One house with one rule, copied for each run, so every twin starts
+    // from the same bytes.
+    let base = scratch("alias-base").join(".canon");
+    canon_as(&base, "human:alex", &["init", "--profile", "house"]);
+    tick();
+    let id = id_of(&canon_as(&base, "human:alex", &["add", "Dishes the same day."]).1);
+    tick();
+    for (n, (old, new, rest)) in twins.iter().enumerate() {
+        let mut said = Vec::new();
+        for (twin, verb) in [old, new].into_iter().enumerate() {
+            let dir = scratch(&format!("alias-{n}-{twin}")).join(".canon");
+            std::fs::create_dir_all(&dir).unwrap();
+            for file in std::fs::read_dir(&base).unwrap().flatten() {
+                if file.path().is_file() {
+                    std::fs::copy(file.path(), dir.join(file.file_name())).unwrap();
+                }
+            }
+            let mut args = vec![*verb];
+            args.extend(
+                rest.iter()
+                    .map(|a| if *a == "<id>" { id.as_str() } else { a }),
+            );
+            if twin == 1 && old == new {
+                args = args
+                    .iter()
+                    .map(|a| if *a == "--scope" { "--area" } else { a })
+                    .collect();
+            }
+            let (code, out, err) = canon_apart(&dir, "human:alex", &args, "");
+            said.push((code, ids(&out), err));
+        }
+        let ((old_code, old_out, old_err), (new_code, new_out, new_err)) = (&said[0], &said[1]);
+        assert_eq!(
+            (old_code, old_out),
+            (new_code, new_out),
+            "`{old}` and `{new}` part"
+        );
+        let spelled = if old == new {
+            "`--area`"
+        } else {
+            &format!("`canon {new}`")
+        };
+        let notes: Vec<&str> = old_err.lines().filter(|l| l.contains("is now")).collect();
+        assert_eq!(notes.len(), 1, "`{old}` said:\n{old_err}");
+        assert!(notes[0].contains(spelled), "{}", notes[0]);
+        assert!(!new_err.contains("is now"), "`{new}` said:\n{new_err}");
+    }
 }
