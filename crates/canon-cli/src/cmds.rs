@@ -156,7 +156,7 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
         Verdict::Proposed { needs, .. } => {
             println!(
                 "{}",
-                crate::wrap::hang("  PROPOSED, not yet how this scope decides — needs ", needs)
+                crate::wrap::hang("  PROPOSED, not yet how this area decides — needs ", needs)
             );
             println!("  approve it:  canon approve {id}");
             println!("  object:      canon object {id} -m \"<why>\"");
@@ -181,14 +181,14 @@ pub fn report_retraction(r: &canon_core::Retraction) {
         Verdict::Ratified { since, how, .. } => println!(
             "{}",
             crate::wrap::hang(
-                &format!("  retracted {} since {} — ", r.target, store::ymd(*since)),
+                &format!("  repealed {} since {} — ", r.target, store::ymd(*since)),
                 &crate::explain::person_in(how)
             )
         ),
         Verdict::Proposed { needs, .. } => {
             println!(
                 "{}",
-                crate::wrap::hang("  PROPOSED, not yet retracted — needs ", needs)
+                crate::wrap::hang("  PROPOSED, not yet repealed — needs ", needs)
             );
             println!("  approve it:  canon approve {}", r.act);
             println!("  object:      canon object {} -m \"<why>\"", r.act);
@@ -256,7 +256,7 @@ pub fn announce(t: &Took, id: &ActId, headline: impl FnOnce()) -> i32 {
     match t {
         Took::Refused(why) => {
             println!("{}", crate::wrap::hang("NOT APPLIED: ", why));
-            println!("  on the record as {id}; somebody with standing has to do it.");
+            println!("  on the record as {id}; somebody in charge has to do it.");
             1
         }
         Took::Open(why) => {
@@ -294,7 +294,7 @@ fn scope_arg(args: &[String]) -> Result<Option<canon_core::Scope>, String> {
         None => Ok(None),
         Some(raw) => canon_core::Scope::new(raw)
             .map(Some)
-            .ok_or_else(|| format!("`{raw}` is not a scope")),
+            .ok_or_else(|| format!("`{raw}` is not an area")),
     }
 }
 
@@ -368,8 +368,8 @@ pub fn init(args: &[String]) -> i32 {
     let open = has(args, "--open");
     if !plain {
         let kind = ActKind::Ratification {
-            text: "A holder's word is a rule at once. A change of policy waits like any \
-                   other change, and a person's own scope is theirs."
+            text: "Whoever is in charge decides at once. A change to the rulings waits like \
+                   any other change, and a person's own area is theirs."
                 .to_string(),
             rule: canon_core::Ratify::Standing,
             scope: None,
@@ -391,7 +391,7 @@ pub fn init(args: &[String]) -> i32 {
     } else {
         let scope = match canon_core::Scope::new(profile.scope()) {
             Some(s) => s,
-            None => return fail(format!("`{}` is not a scope", profile.scope())),
+            None => return fail(format!("`{}` is not an area", profile.scope())),
         };
         let kind = ActKind::Grant {
             holder: founder.clone(),
@@ -418,26 +418,26 @@ pub fn init(args: &[String]) -> i32 {
         // the group, and the group can change it with `ratification set`.
         if granted {
             println!(
-                "  {founder} holds this canon ({}) — you write, it is in force.",
+                "  {founder} is in charge of this canon ({}): what you write is in force.",
                 profile.scope()
             );
             println!(
-                "  give the others: canon give human:<them> {}",
+                "  give the others a say: canon give human:<them> {}",
                 profile.scope()
             );
             println!(
                 "  sign it: canon identify <your key.pub> — so only your key can decide as you"
             );
         } else if open {
-            println!("  nothing holds this canon: it is open, and any write takes.");
-            println!("  hold it: canon give {founder} {}", profile.scope());
+            println!("  nobody is in charge of this canon: it is open, and any write takes.");
+            println!("  take charge: canon give {founder} {}", profile.scope());
         }
-        println!("  a holder's word is a rule at once; to need everyone: canon ratification set unanimous");
+        println!("  whoever is in charge decides at once; to need everyone: canon ratification set unanimous");
         match store::actor().strip_prefix(canon_core::person::PREFIX) {
             Some(name) => {
-                println!("  policy changes wait like rules do, and human:{name}.… is yours alone")
+                println!("  a change to the rulings waits like a rule does, and human:{name}.… is yours alone")
             }
-            None => println!("  policy changes wait like rules do"),
+            None => println!("  a change to the rulings waits like a rule does"),
         }
         if canon_core::Person::of(&store::actor()).is_none() {
             println!(
@@ -445,7 +445,7 @@ pub fn init(args: &[String]) -> i32 {
                 store::actor()
             );
             println!(
-                "  the founding grant waits too: canon give {} {}",
+                "  putting you in charge waits too: canon give {} {}",
                 store::actor(),
                 profile.scope()
             );
@@ -477,14 +477,16 @@ pub fn init(args: &[String]) -> i32 {
     println!();
     println!("that is the whole thing. `canon help all` when you want the rest —");
     println!("who decides what, how you decide, what has gone stale, drawing lots.");
-    println!("Profile or scope? `canon help profile` and `canon help scopes`.");
+    println!("Profile or area? `canon help profile` and `canon help areas`.");
     0
 }
 
 pub fn add(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(text) = pos.first() else {
-        return fail("usage: canon add \"<commitment>\" [--area <scope>] [-m \"<why>\"] [--cite \"<where>\"]");
+        return fail(
+            "usage: canon add \"<rule>\" [--area <area>] [-m \"<why>\"] [--cite \"<where>\"]",
+        );
     };
     let scope = match scope_arg(args) {
         Ok(s) => s,
@@ -811,7 +813,7 @@ pub fn list(args: &[String]) -> i32 {
     }
     if !st.ungoverned().is_empty() {
         println!(
-            "{} governance act(s) written without standing were not applied — `canon log`",
+            "{} change(s) to who decides came from someone not in charge and were not applied — `canon log`",
             st.ungoverned().len()
         );
     }
@@ -822,7 +824,7 @@ pub fn list(args: &[String]) -> i32 {
     // A hole in the record is louder than a missing feature.
     if !st.dangling().is_empty() {
         eprintln!(
-            "\nwarning: {} act(s) reference a commitment that is not in this log:",
+            "\nwarning: {} act(s) point at a rule that is not in this log:",
             st.dangling().len()
         );
         for (act, missing) in st.dangling() {
@@ -834,7 +836,7 @@ pub fn list(args: &[String]) -> i32 {
     // The ids are in `--json`, and `canon log` names each one's actor.
     if !st.unattended().is_empty() {
         eprintln!(
-            "\nwarning: {} adjudication(s) were not authored by a person: {}",
+            "\nwarning: {} ruling(s) were not made by a person: {}",
             st.unattended().len(),
             by_kind(&log, st.unattended())
         );
@@ -886,25 +888,25 @@ fn by_kind(log: &Log, ids: &[ActId]) -> String {
 fn kind_noun(kind: &ActKind) -> &'static str {
     match kind {
         ActKind::Assert { .. } => "assertion",
-        ActKind::Supersede { .. } => "supersession",
-        ActKind::Retract { .. } => "retraction",
+        ActKind::Supersede { .. } => "amendment",
+        ActKind::Retract { .. } => "repeal",
         ActKind::Accept { .. } | ActKind::Dismiss { .. } => "conflict ruling",
         ActKind::Revert { .. } => "undo",
         ActKind::Question { .. } => "question",
         ActKind::Grant { .. } => "grant",
         ActKind::Withdraw { .. } => "withdrawal",
-        ActKind::Scoped { .. } => "scope placement",
+        ActKind::Scoped { .. } => "area placement",
         ActKind::Position { .. } => "position",
         ActKind::Adopt { .. } => "adoption",
-        ActKind::Policy { .. } => "policy",
-        ActKind::Ratification { .. } => "ratification rule",
+        ActKind::Policy { .. } => "rulings choice",
+        ActKind::Ratification { .. } => "way rules pass",
         ActKind::Allot { .. } => "allotment",
         ActKind::Allocation { .. } => "allocation rule",
         ActKind::Decided { .. } => "decision",
         ActKind::Silence { .. } => "silence",
         ActKind::DrawCommit { .. } => "draw",
         ActKind::DrawSecret { .. } | ActKind::DrawReveal { .. } => "draw secret",
-        ActKind::Horizon { .. } => "horizon",
+        ActKind::Horizon { .. } => "review date",
         ActKind::Rank { .. } => "rank",
         ActKind::Key { .. } => "key binding",
         ActKind::Annotation { .. } => "annotation",
@@ -960,7 +962,7 @@ pub fn why(args: &[String]) -> i32 {
 pub fn supersede(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail("usage: canon amend <id> \"<new text>\" -m \"<reason>\" [--area <scope>]");
+        return fail("usage: canon amend <id> \"<new text>\" -m \"<reason>\" [--area <area>]");
     }
     let (d, _, st) = match load() {
         Ok(v) => v,
@@ -1015,7 +1017,7 @@ pub fn retract(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
     ) {
-        Ok(act) => governed(&d, &act.id, || println!("retracted {target}")),
+        Ok(act) => governed(&d, &act.id, || println!("repealed {target}")),
         Err(e) => fail(e),
     }
 }

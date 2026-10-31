@@ -191,9 +191,9 @@ fn cite(canon: &Canon, b: &Position, indent: &str) -> String {
         );
     };
     let status = match &c.status() {
-        Status::Active => "in force, never superseded".to_string(),
-        Status::Superseded { by } => format!("superseded by {by}"),
-        Status::Retracted { at } => format!("retracted {}", store::ymd(*at)),
+        Status::Active => "in force, never amended".to_string(),
+        Status::Superseded { by } => format!("amended by {by}"),
+        Status::Retracted { at } => format!("repealed {}", store::ymd(*at)),
         Status::Proposed { needs } => format!("proposed, not yet a rule — needs {needs}"),
         Status::Refused { at, by, .. } => format!(
             "refused{}",
@@ -536,8 +536,9 @@ pub fn attributes(args: &[String], proposal: &str) -> Result<Attributes, String>
         .by(crate::store::actor())
         .at(crate::store::now());
     if let Some(raw) = crate::cmds::flag(args, "--area") {
-        let scope = Scope::new(raw)
-            .ok_or_else(|| format!("`{raw}` is not a scope: dotted path, no empty segments"))?;
+        let scope = Scope::new(raw).ok_or_else(|| {
+            format!("`{raw}` is not an area: a dotted path like `house.kitchen`, no empty parts")
+        })?;
         attrs = attrs.in_scope(scope);
     }
     if crate::cmds::has(args, "--irreversible") {

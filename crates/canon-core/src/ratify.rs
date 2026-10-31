@@ -418,8 +418,8 @@ impl Ratify {
     pub fn prose(&self) -> String {
         match self {
             Self::Standing => {
-                "Whoever holds this scope may write its rules. Anyone else proposes, and one \
-                 holder's approval makes it a rule."
+                "Whoever is in charge of this area may write its rules. Anyone else proposes, \
+                 and one yes from someone in charge makes it a rule."
                     .into()
             }
             Self::Joint { holders } => format!(
@@ -428,20 +428,20 @@ impl Ratify {
                 holders.join(", ")
             ),
             Self::Threshold { approve, block } => format!(
-                "A rule here takes {approve} holder(s) approving; {block} objecting refuses it."
+                "Among those in charge, {approve} yes makes it a rule and {block} no refuses it."
             ),
-            Self::Majority => "A rule here takes more than half of the people who hold this \
-                               scope when it is proposed. It is refused once that can no longer \
+            Self::Majority => "A rule here takes more than half of the people in charge of \
+                               this area when it is proposed. It is refused once that can no longer \
                                happen."
                 .into(),
-            Self::Unanimous => "A rule here takes everyone who holds this scope when it is \
-                                proposed. One of them objecting, or no longer holding it before \
+            Self::Unanimous => "A rule here takes everyone in charge of this area when it \
+                                is proposed. One of them objecting, or no longer holding it before \
                                 they approve, refuses it."
                 .into(),
             Self::Share(bar) => match Self::of_bar(*bar) {
                 Self::Share(bar) => format!(
-                    "A rule here takes {} {} of the people who hold this scope when it is \
-                     proposed. It is refused once that can no longer happen.",
+                    "A rule here takes {} {} of the people in charge of this area when it \
+                     is proposed. It is refused once that can no longer happen.",
                     if bar.more_than {
                         "more than"
                     } else {
@@ -452,13 +452,13 @@ impl Ratify {
                 same => same.prose(),
             },
             Self::Consent { days } => format!(
-                "A proposal here becomes a rule after {days} day(s) unless a holder objects \
-                 with a reason."
+                "A proposal here becomes a rule after {days} day(s) unless someone in charge \
+                 objects with a reason."
             ),
             Self::Twice { each, between } => {
                 let gap = match between {
                     Between::Days { days } => format!("{days} day(s)"),
-                    Between::Turnover => "someone new being granted the scope".to_string(),
+                    Between::Turnover => "someone new being put in charge".to_string(),
                 };
                 let mut s = format!(
                     "A rule here is carried twice, with {gap} between the two votes. Each \

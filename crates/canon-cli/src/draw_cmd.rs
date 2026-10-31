@@ -87,12 +87,10 @@ pub fn run(args: &[String]) -> i32 {
 
 fn commit(args: &[String], pos: &[&str]) -> i32 {
     if pos.len() < 3 {
-        return fail(
-            "usage: canon draw commit <scope> <seats> --after <YYYY-MM-DD> [-m \"<why>\"]",
-        );
+        return fail("usage: canon draw commit <area> <seats> --after <YYYY-MM-DD> [-m \"<why>\"]");
     }
     let Some(scope) = Scope::new(pos[1]) else {
-        return fail(format!("`{}` is not a scope", pos[1]));
+        return fail(format!("`{}` is not an area", pos[1]));
     };
     let Ok(count) = pos[2].parse::<usize>() else {
         return fail(format!("`{}` is not a number of seats", pos[2]));
@@ -340,7 +338,7 @@ fn list(args: &[String]) -> i32 {
         return 0;
     }
     if canon.draws().is_empty() {
-        println!("no draws announced. `canon draw commit <scope> <seats> --after <date>`");
+        println!("no draws announced. `canon draw commit <area> <seats> --after <date>`");
         return 0;
     }
     let now = store::now();

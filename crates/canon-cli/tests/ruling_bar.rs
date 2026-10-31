@@ -318,7 +318,7 @@ fn the_mcp_check_takes_a_scope_and_a_subject_and_decides_by_the_rooms_rule() {
     let bad = serde_json::json!({ "proposal": "a bike rack", "scope": "house..kitchen" });
     let (text, error) = mcp_check(&dir, bad, SHED);
     assert!(error, "{text}");
-    assert!(text.contains("is not a scope"), "{text}");
+    assert!(text.contains("is not an area"), "{text}");
 }
 
 // ── 3. every "ask" names who to ask ────────────────────────────────────

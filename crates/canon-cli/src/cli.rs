@@ -183,8 +183,8 @@ pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
             "  writes .canon/acts.jsonl, the canon itself, one act per line, starting\n  \
              with the one that turns the v4 knobs on (--plain starts it empty);\n  \
              .canon/profile, which says how `check` answers; and .canon/.gitignore,\n  \
-             which keeps this machine's model config, draft runs and lineage clones\n  \
-             out of git.\n  \
+             which keeps this machine's model config, draft runs and copies of the\n  \
+             canons you copied rules from out of git.\n  \
              Commit the rest.\n",
         );
     }

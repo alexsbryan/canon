@@ -372,7 +372,7 @@ fn scope_of(body: &Value, key: &str) -> Result<canon_core::Scope, String> {
         .get(key)
         .and_then(|v| v.as_str())
         .ok_or_else(|| format!("needs `{key}`"))?;
-    canon_core::Scope::new(raw).ok_or_else(|| format!("`{raw}` is not a scope"))
+    canon_core::Scope::new(raw).ok_or_else(|| format!("`{raw}` is not an area"))
 }
 
 fn id_of(body: &Value, key: &str, labels: &BTreeMap<String, ActId>) -> Result<ActId, String> {

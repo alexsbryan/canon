@@ -353,7 +353,10 @@ fn init_founds_the_canon_with_the_knobs_on_and_plain_without() {
         out.contains("human:sam.… is yours alone"),
         "the real personal scope, never a placeholder: {out}"
     );
-    assert!(out.contains("human:sam holds this canon (house)"), "{out}");
+    assert!(
+        out.contains("human:sam is in charge of this canon (house)"),
+        "{out}"
+    );
     assert!(out.contains("give the others"), "{out}");
     assert!(out.contains("canon identify"), "{out}");
     let line = last_line(&canon);

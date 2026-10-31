@@ -32,6 +32,16 @@ renames that heading to the version, and its section becomes the release notes
   names still work and print the same stdout; each says once on stderr
   what to type instead, and help lists only the new ones. The record, its
   op and field names, JSON keys and MCP tool names do not change.
+- What canon prints is in plain words: a rule, an area, who is in charge,
+  how rules pass here (the ratification rule) and how actions are judged
+  here (the policy), in `canon help all`, `init`, `who`, `give`,
+  `withdraw`, `ratification show`, `rulings show`, `why`, `list` and MCP
+  text. `ratification show` and `rulings show` end with the command that
+  changes them, and `give` with the one that takes it back. A rule's
+  spelling (`standing`, `consent:7d`) is shown as you would type it.
+  `ratification set --governs rules` is the plain spelling of
+  `--governs commitments`, which still works, and `canon help areas` is
+  the topic `canon help scopes` was. JSON output is unchanged.
 - `canon adopt <url>` no longer leaves its clone of the lineage where
   `git add .canon` commits it. `canon init` lists `lineages/` in
   `.canon/.gitignore`, and the cache writes a `.gitignore` of its own the

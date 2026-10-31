@@ -145,10 +145,10 @@ fn the_canon_as_a_whole_is_named_by_the_scopes_that_hold_it() {
     let (code, out) = canon_as(&dir, "human:alex", &["who"]);
     assert_eq!(code, 0, "{out}");
     assert!(
-        out.contains("held by whoever holds arch, procedure"),
+        out.contains("whoever is in charge of arch, procedure"),
         "{out}"
     );
-    assert!(out.contains("human:alex  over arch"), "{out}");
+    assert!(out.contains("human:alex  in charge of arch"), "{out}");
 
     let (_, out) = canon_as(&dir, "human:alex", &["who", "default"]);
     assert!(
@@ -156,7 +156,7 @@ fn the_canon_as_a_whole_is_named_by_the_scopes_that_hold_it() {
         "{out}"
     );
     assert!(
-        out.contains("the scopes in use are arch, procedure"),
+        out.contains("the areas in use are arch, procedure"),
         "{out}"
     );
 }
@@ -237,7 +237,7 @@ fn adoption_can_leave_rules_behind_and_name_them_by_upstream_id() {
     assert!(out.contains("RETRACTED (1)"), "{out}");
     let (_, out) = canon_as(&down, "human:alex", &["why", &tooling]);
     assert!(
-        out.contains("reason it was retracted: their tooling, not ours"),
+        out.contains("reason it was repealed: their tooling, not ours"),
         "{out}"
     );
 
@@ -273,7 +273,7 @@ fn a_ratified_founding_warns_by_kind_not_by_thirty_ids() {
     }
     let (_, out) = canon_as(&dir, "human:alex", &["list"]);
     assert!(
-        out.contains("1 adjudication(s) were not authored by a person: 1 grant"),
+        out.contains("1 ruling(s) were not made by a person: 1 grant"),
         "{out}"
     );
     for id in &ids {
@@ -353,7 +353,10 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
     let canon = dir.join(".canon");
     let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("human:june holds this canon (house)"), "{out}");
+    assert!(
+        out.contains("human:june is in charge of this canon (house)"),
+        "{out}"
+    );
     assert!(out.contains("give the others"), "{out}");
     std::thread::sleep(std::time::Duration::from_millis(1100));
     let (code, out) = canon_as(
@@ -375,9 +378,9 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
         &["init", "--profile", "house", "--open"],
     );
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("nothing holds this canon"), "{out}");
+    assert!(out.contains("nobody is in charge of this canon"), "{out}");
     let (_, who) = canon_as(&shared, "human:june", &["who"]);
-    assert!(who.contains("nobody holds this canon"), "{who}");
+    assert!(who.contains("nobody is in charge of this canon"), "{who}");
 }
 
 #[test]
@@ -399,7 +402,7 @@ fn a_bare_name_is_refused_before_it_is_written_and_who_names_the_refused_acts() 
     assert!(out.contains("NOT APPLIED"), "{out}");
     let (_, who) = canon_as(&canon, "human:june", &["who"]);
     assert!(
-        who.contains("governance act(s) written without standing"),
+        who.contains("change(s) to who decides came from someone not in charge"),
         "{who}"
     );
 }
@@ -496,7 +499,7 @@ fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
     std::thread::sleep(std::time::Duration::from_millis(1100));
     let (_, log) = canon_as(&canon, "human:june", &["log"]);
     assert!(
-        log.contains("ratify     standing — A holder's word"),
+        log.contains("ratify     standing — Whoever is in charge decides"),
         "the log hides the ratification's policy: {log}"
     );
     let id = |line: &str| {
@@ -513,7 +516,7 @@ fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
     let (code, why) = canon_as(&canon, "human:june", &["why", &rid]);
     assert_eq!(code, 0, "{why}");
     assert!(why.contains("ratification"), "{why}");
-    assert!(why.contains("A holder's word"), "{why}");
+    assert!(why.contains("Whoever is in charge decides"), "{why}");
     let gid = log
         .lines()
         .find(|l| l.contains("grant"))
@@ -580,7 +583,10 @@ fn a_leaver_leaves_their_question_without_their_name_and_only_their_own() {
         ],
     );
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("no longer holds house.kitchen"), "{out}");
+    assert!(
+        out.contains("no longer in charge of house.kitchen"),
+        "{out}"
+    );
     assert!(out.contains("recorded without your name"), "{out}");
     let log = canon_as(&dir, "human:bo", &["log", "--json"]).1;
     let asked = log

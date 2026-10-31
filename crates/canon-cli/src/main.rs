@@ -77,8 +77,8 @@ const TOPICS: &[(&str, &str)] = &[
         "THE THREE PROFILES\n\n  personal  a person's own journal: what has a stake, and which\n            way it pulls; never a verdict, never exit 1.\n  code      a codebase's principles: verdict-shaped, because CI reads\n            exit codes.\n  house     a household's rules: which act a proposal needs.\n\n  `canon init` defaults to personal; `canon init --profile <p>` picks one.\n  The profile changes the words and the verdicts, not the record.\n",
     ),
     (
-        "scopes",
-        "SCOPES\n\n  A scope is a dotted path: `house`, `house.quiet`, `repo.defaults`.\n  A grant over `house` covers `house.quiet` and everything under it; a\n  grant over `house.quiet` covers only the quiet corner. The whole canon's\n  scope is the profile's own: `house`, `repo` or `personal`.\n\n  `canon who` names the scopes that hold the canon; `canon give <actor>\n  <scope>` gives standing over one; `canon help give` has the flags.\n",
+        "areas",
+        "AREAS\n\n  An area is a dotted path: `house`, `house.quiet`, `repo.defaults`.\n  Whoever is in charge of `house` is in charge of `house.quiet` and all\n  under it; whoever is in charge of `house.quiet` has only the quiet corner.\n  The whole canon's area is the profile's own: `house`, `repo` or `personal`.\n\n  `canon who` says who is in charge of the canon; `canon give <actor> <area>`\n  puts someone in charge of one; `canon help give` has the flags.\n",
     ),
 ];
 
@@ -90,16 +90,16 @@ USAGE
   canon <command> [args]
 
 RECORD                                        (no model needed)
-  init [--profile personal|code|house]  start a canon here: its founder holds it
-       [--plain]                         without the v4 knobs (policy changes that
-                                         wait, personal scopes), for older readers
+  init [--profile personal|code|house]  start a canon here, with you in charge of it
+       [--plain]                         without the v4 knobs (changes to the rulings
+                                         that wait, personal areas), for older readers
        [--open]                          the old shared start: any write takes
-                                         until someone holds it
+                                         until someone is in charge
   identify [<key.pub> [<backup.pub>…]]   from here on, only your SSH key writes as you;
                                          again, who you are here and what does not count
-  add \"<text>\" [--area s]               propose a commitment; a rule when its scope ratifies it
-  review [--area s] [--json]             what is waiting on you, a scope at a time; offers
-                                         you standing over a scope nobody holds yet.
+  add \"<text>\" [--area a]               propose a rule; it is one once its area passes it
+  review [--area a] [--json]             what is waiting on you, an area at a time; offers
+                                         you charge of an area nobody is in charge of yet.
                                          A person's verb: it needs a terminal and a
                                          human: actor; --json only reads
   ui                                     canon as a page on this machine: decide, propose,
@@ -114,49 +114,52 @@ RECORD                                        (no model needed)
        --markdown [--out <f> [--check]]  the same, as a document for readers without
                                          canon; --check fails when <f> is stale
   why <id>                               what this replaced, when, and why; a silence or question shows its act
-  amend <id> \"<text>\" -m \"<reason>\"      replace a commitment
-  repeal <id> -m \"<reason>\"              withdraw one, no replacement; an upstream id
-                                         names what was inherited from it. Without
-                                         standing, a proposal for a holder to approve
-  accept <a> <b> -m \"<reason>\"           carry a contradiction knowingly
-  dismiss <a> <b> [-m \"<reason>\"]        not actually a conflict
-  undo <act-id> [-m \"<reason>\"]          revert an act — yours, or one you hold
+  amend <id> \"<text>\" -m \"<reason>\"      change a rule's words, and say why
+  repeal <id> -m \"<reason>\"              take a rule away, no replacement; an id from the
+                                         canon you copied names a rule you got from it.
+                                         Not in charge? It is a proposal for who is
+  accept <a> <b> -m \"<reason>\"           keep two rules that conflict, on purpose
+  dismiss <a> <b> [-m \"<reason>\"]        not a real conflict
+  undo <act-id> [-m \"<reason>\"]          take back an act — yours, or one in your area
   question \"<text>\"                      record what the canon does not cover
   open                                   the open questions
   log                                    the raw acts
   mcp                                    serve the agent surface on stdio
 
 GOVERN                                        (no model needed)
-  who [<scope>]                          who may decide this, and under what;
-                                         no scope: who holds the canon as a whole
-  give <actor> <area> [--horizon <d>]    give someone standing
-  withdraw <actor> <area>                step back from a scope, or stand down
+  who [<area>]                           who's in charge here, and how rules pass;
+                                         no area: who's in charge of the whole canon
+  give <actor> <area> [--horizon <d>]    put someone in charge of an area, until <d>
+  withdraw <actor> <area>                step back from an area, or take someone off it
            [--ask \"<question>\"]         yours: leave the question, without your name
-  area <id> <area>                       put a commitment in a scope
-  rulings show | set <rule> [-m \"...\"]   what this canon decides under
-  ratification show | set <rule>         how a proposal becomes a rule, per scope:
-                                         standing, joint:a,b, threshold:n/m (n approve,
-                                         m objecting stop it), majority, unanimous,
-                                         share:60% or share:2/3 (that share of who holds
-                                         it), consent:Nd, twice:turnover:<rule>
-                                         or twice:Nd:<rule>
-       [--governs all|commitments]       whether a change of policy waits too
-       [--personal on|off]               canon-wide: a person's own scope is theirs
-  allot <scope> --named a,b,c            what this commons has to share
+  area <id> <area>                       put a rule in an area
+  rulings show | set <rule> [-m \"...\"]   how actions are judged here
+  ratification show | set <rule>         how rules pass here, area by area: `standing`
+                                         (whoever is in charge says yes), `joint:a,b`,
+                                         `threshold:n/m` (n yes pass it, m no stop it),
+                                         `majority`, `unanimous`, `share:60%` or
+                                         `share:2/3` (that share of those in charge),
+                                         `consent:Nd` (passes unless someone objects
+                                         within N days), `twice:turnover:<rule>` or
+                                         `twice:Nd:<rule>` (must pass twice)
+       [--governs all|rules]             whether a change to the rulings waits too
+       [--personal on|off]               canon-wide: a person's own area is theirs
+  allot <area> --named a,b,c             what this commons has to share
   allocation set rotation --area s       how it goes round: --step, --per, --order
                                          or --from-draw <id> for a lot nobody steers
-  pool <scope> [--at <date>]             whose turn it is. `who` is authority,
-                                         `pool` is appropriation
+  pool <area> [--at <date>]              whose turn it is. `who` says who decides,
+                                         `pool` who gets what
   decide \"<about>\" allow|deny -m \"<why>\" record what the group decided
          --outcome <o> --authority <a>   the long form, as `check --json` says it
          [--citing <id>,…]               the rules it turned on; a ladder counts by them
-  rank <id> <rank>                       a principle, not a convention
-  revisit <act-id> <YYYY-MM-DD>          look at this again by then
-  overdue                                what has gone past its date
-  draw commit <scope> <seats> --after    announce a lot nobody can steer
+  rank <id> principle                    constitutional: harder to change than a rule
+                                         ranked `convention`
+  revisit <act-id> <YYYY-MM-DD>          set a review date: look at this again by then
+  overdue                                what is past its review date
+  draw commit <area> <seats> --after     announce a lot nobody can steer
   draw seal | open <draw-id>             your secret, before and after
   draw show <draw-id>                    the panel, recomputed from the log
-  silence \"<subject>\" -m \"<why>\"         unwritten on purpose, not by neglect
+  silence \"<subject>\" -m \"<why>\"         left unwritten on purpose, not by neglect
   witness [--base <ref>] [--gate]        the ledger checked against git: append-only,
                                          not backdated. Opt in; see `guard`
   guard show | git [--apply]             what defends this ledger from outside the
@@ -170,22 +173,22 @@ GOVERN                                        (no model needed)
          [--write-scenario <f>]          write out the derived ones to edit
          [--expect <f>]                  check the answers against this file
 
-LINEAGE                     (git optional; only adopt --rebase needs a model)
+COPYING                     (git optional; only adopt --rebase needs a model)
   share                                  a pasteable snapshot
-  adopt <url>[@gen] | --paste            fork someone else's canon
-        [--except <id>,… -m \"<why>\"]       retract these as they arrive
-        <url>@<gen> --rebase             move a canon that descends from one
-                                         lineage onto another, keeping its record
+  adopt <url>[@gen] | --paste            copy another group's rules
+        [--except <id>,… -m \"<why>\"]       repeal these as they arrive
+        <url>@<gen> --rebase             move a canon copied from one group's rules
+                                         onto another's, keeping its record
               [--carry <id> -m \"<why>\"]     carry a conflict anyway, as your ruling
               [--dry-run]                print the reading, write nothing
-  diff --upstream [--propose]            how you have diverged from your seed
-  upgrade <gen> | --paste                take a newer generation
+  diff --upstream [--propose]            how you differ from the rules you copied
+  upgrade <gen> | --paste                take their updates
   merge-driver %O %A %B                  git merge driver; run it for setup
 
-ADJUDICATE                                    (needs an endpoint)
+RULING                                        (needs an endpoint)
   check \"<proposal>\"                     how a proposal stands (personal: stakes)
-  conflicts                              where your commitments conflict
-  draft --from <paths>                   propose commitments from loose notes
+  conflicts                              rules of yours that conflict
+  draft --from <paths>                   propose rules from loose notes
         --from -                         read the document from stdin
         --as <name>                      what to call it in the citations
         --from-git --since 1y            commit bodies as the source
@@ -222,7 +225,7 @@ ENVIRONMENT
 
 ON THE PERSONAL PROFILE
   This is a structured journal, not a clinician. It does not diagnose and
-  it does not advise. `check` reports which of your commitments have a
+  it does not advise. `check` reports which things you hold yourself to have a
   stake in something and which way each pulls; it never returns a verdict
   and never exits 1. A contradiction you are carrying on purpose is a
   first-class state here, and nothing is ever force-resolved.
@@ -239,7 +242,8 @@ fn main() {
             print!("{verb}");
             std::process::exit(0);
         }
-        let topic = args.get(1).map(String::as_str);
+        // `scopes` is what the topic was called before it was `areas`.
+        let topic = args.get(1).map(|t| if t == "scopes" { "areas" } else { t });
         if let Some((_, text)) = topic.and_then(|t| TOPICS.iter().find(|(n, _)| *n == t)) {
             print!("{text}");
             std::process::exit(0);
@@ -248,7 +252,7 @@ fn main() {
         // about profiles learned nothing and was not told so.
         if let Some(t) = topic.filter(|t| *t != "all" && *t != "--all" && !t.starts_with('-')) {
             eprintln!(
-                "no such topic `{t}` — canon help all lists the verbs, and `canon help profile | scopes` the rest."
+                "no such topic `{t}` — canon help all lists the verbs, and `canon help profile | areas` the rest."
             );
             std::process::exit(1);
         }

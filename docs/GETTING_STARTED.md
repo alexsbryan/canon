@@ -99,11 +99,11 @@ canon init --profile house
 
 ```text
 canon initialised at /home/mira/house/.canon (house)
-  human:mira holds this canon (house) — you write, it is in force.
-  give the others: canon give human:<them> house
+  human:mira is in charge of this canon (house): what you write is in force.
+  give the others a say: canon give human:<them> house
   sign it: canon identify <your key.pub> — so only your key can decide as you
-  a holder's word is a rule at once; to need everyone: canon ratification set unanimous
-  policy changes wait like rules do, and human:mira.… is yours alone
+  whoever is in charge decides at once; to need everyone: canon ratification set unanimous
+  a change to the rulings waits like a rule does, and human:mira.… is yours alone
 
   canon add "<a rule you already have>"      write one down
   canon check "<something you want to do>"   does it clash with one?
@@ -111,6 +111,7 @@ canon initialised at /home/mira/house/.canon (house)
 
 that is the whole thing. `canon help all` when you want the rest —
 who decides what, how you decide, what has gone stale, drawing lots.
+Profile or area? `canon help profile` and `canon help areas`.
 ```
 
 `--profile house` makes the tool say **rule** instead of *commitment*,

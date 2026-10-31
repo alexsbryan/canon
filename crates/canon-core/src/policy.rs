@@ -318,7 +318,7 @@ impl Rule {
     /// you replace it, and the two are never blended.
     pub fn prose(&self) -> String {
         match self {
-            Self::Default => "Commitments decide. A conflict or a gap is settled by a person, \
+            Self::Default => "The rules decide. A conflict or a gap is settled by a person, \
                               never by silence."
                 .into(),
             Self::Consent => "We decide by consent: one reasoned objection blocks, and silence \
@@ -335,7 +335,7 @@ impl Rule {
                  voted are for it."
             ),
             Self::Subsidiarity => {
-                "Whoever holds the narrowest standing over a thing decides it.".into()
+                "The closest area decides first: whoever is in charge nearest to it.".into()
             }
             Self::Graduated {
                 ladder,

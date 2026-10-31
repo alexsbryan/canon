@@ -273,10 +273,9 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     }
     let scope = match obj.get("scope") {
         None => None,
-        Some(Value::String(raw)) => Some(
-            canon_core::Scope::new(raw)
-                .ok_or_else(|| format!("`{raw}` is not a scope: use a dotted path"))?,
-        ),
+        Some(Value::String(raw)) => Some(canon_core::Scope::new(raw).ok_or_else(|| {
+            format!("`{raw}` is not an area: use a dotted path like `house.kitchen`")
+        })?),
         _ => return Err("canon_list scope must be a string".into()),
     };
     let query = match obj.get("query") {
@@ -300,7 +299,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     };
     let live: Vec<_> = canon.active().collect();
     if live.is_empty() {
-        return Ok("This canon has no commitments yet.".into());
+        return Ok("This canon has no rules yet.".into());
     }
     if live.len() > 50 && obj.is_empty() {
         let mut counts: BTreeMap<String, usize> = BTreeMap::new();
@@ -311,13 +310,13 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
                 .unwrap_or("(unscoped)");
             *counts.entry(key.to_string()).or_default() += 1;
         }
-        let mut out = format!("{} in force. By scope:\n", live.len());
+        let mut out = format!("{} in force. By area:\n", live.len());
         let omitted = counts.len().saturating_sub(30);
         for (scope, n) in counts.into_iter().take(30) {
             out.push_str(&format!("  {scope}  {n}\n"));
         }
         if omitted > 0 {
-            out.push_str(&format!("  …and {omitted} more scope(s)\n"));
+            out.push_str(&format!("  …and {omitted} more area(s)\n"));
         }
         out.push_str("Use canon_list(scope, query, limit, offset) to browse rules, and canon_why(id) for history.");
         return Ok(out);
@@ -336,16 +335,16 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     if filtered.is_empty() {
         let mut filters = Vec::new();
         if let Some(s) = &scope {
-            filters.push(format!("scope `{s}`"));
+            filters.push(format!("area `{s}`"));
         }
         if let Some(q) = &query {
             filters.push(format!("query `{q}`"));
         }
-        return Ok(format!("No commitments match {}.", filters.join(" and ")));
+        return Ok(format!("No rules match {}.", filters.join(" and ")));
     }
     if offset >= filtered.len() {
         return Ok(format!(
-            "Offset {offset} is past the {} matching commitment(s). Start again at offset 0.",
+            "Offset {offset} is past the {} matching rule(s). Start again at offset 0.",
             filtered.len()
         ));
     }
@@ -357,7 +356,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
         out.push_str(&format!("\n{} in force.", filtered.len()));
     } else {
         out.push_str(&format!(
-            "\nShowing {}-{} of {} matching commitment(s).",
+            "\nShowing {}-{} of {} matching rule(s).",
             offset.min(filtered.len()) + usize::from(offset < filtered.len()),
             offset.saturating_add(limit).min(filtered.len()),
             filtered.len()
@@ -377,7 +376,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
     // A hole in the record is louder than a missing feature (§18.3).
     if !canon.dangling().is_empty() {
         out.push_str(&format!(
-            "\nWARNING: {} act(s) reference a commitment absent from this log.",
+            "\nWARNING: {} act(s) point at a rule absent from this log.",
             canon.dangling().len()
         ));
     }
@@ -424,9 +423,7 @@ fn render_check(dir: &Path, proposal: &str, args: &Value) -> Result<String, Stri
     let attrs = crate::check::attributes(&argv, proposal)?;
     let canon = store::read(dir)?.derive();
     if canon.active().next().is_none() {
-        return Err(
-            "This canon has no commitments yet, so there is nothing to check against.".into(),
-        );
+        return Err("This canon has no rules yet, so there is nothing to check against.".into());
     }
     let profile = crate::profile::Profile::load(dir)?;
     let client = crate::model::client_for(dir, false).map_err(|e| e.to_string())?;

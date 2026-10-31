@@ -161,11 +161,11 @@ fn a_retraction_without_standing_is_a_proposal_the_holder_approves() {
 
     let (code, out) = canon_as(&dir, "human:sam", &["approve", &proposal]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains(&format!("retracted {a} since")), "{out}");
+    assert!(out.contains(&format!("repealed {a} since")), "{out}");
     let (_, why) = canon_as(&dir, "human:sam", &["why", &a]);
-    assert!(why.contains("retracted"), "{why}");
+    assert!(why.contains("repealed"), "{why}");
     assert!(
-        why.contains("agent:claude proposed retracting it: a duplicate"),
+        why.contains("agent:claude proposed repealing it: a duplicate"),
         "{why}"
     );
 }
@@ -206,12 +206,12 @@ fn an_act_that_took_while_open_says_so() {
     // The first grant in any canon takes because nothing predates it.
     let (code, out) = canon_as(&dir, "human:sam", &["grant", "human:sam", "house"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("human:sam holds house"), "{out}");
+    assert!(out.contains("human:sam is in charge of house"), "{out}");
     assert!(
         out.contains("applied while open: no grant over house predates this act"),
         "{out}"
     );
-    assert!(out.contains("granted by human:sam"), "{out}");
+    assert!(out.contains("given by human:sam"), "{out}");
 
     // A rule written right after says how it came to be in force rather
     // than a bare "in force" — the founding-script case, on the act itself.
@@ -235,9 +235,9 @@ fn a_grant_names_its_granter_and_says_when_it_leaves_you_out() {
     // The git-name case: the person acts as one label and seats another.
     let (code, out) = canon_as(&dir, "human:Alex Bryan", &["grant", "human:alex", "house"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("granted by human:Alex Bryan"), "{out}");
+    assert!(out.contains("given by human:Alex Bryan"), "{out}");
     assert!(
-        out.contains("human:Alex Bryan does not hold house"),
+        out.contains("human:Alex Bryan is not in charge of house"),
         "{out}"
     );
     assert!(out.contains("waiting on human:alex"), "{out}");
@@ -260,8 +260,14 @@ fn who_names_both_rules_by_name() {
     assert_eq!(code, 0, "{out}");
     let (code, out) = canon_as(&dir, "human:sam", &["who", "house.kitchen"]);
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("rules made under: consent:7d — set "), "{out}");
-    assert!(out.contains("proposals judged under: default"), "{out}");
+    assert!(
+        out.contains("how rules pass here: `consent:7d` — set "),
+        "{out}"
+    );
+    assert!(
+        out.contains("how actions are judged here: `default`"),
+        "{out}"
+    );
     assert!(!out.contains("decided under:"), "{out}");
 }
 
