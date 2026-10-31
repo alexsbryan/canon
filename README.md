@@ -75,7 +75,7 @@ through what's waiting on you, one proposal at a time, and offers you any
 room nobody holds yet. `canon ui` lets you do that and the rest of the
 everyday work from a page on your machine.
 
-Only `draft`, `check`, `tensions`, and `adopt --rebase` call a language model, to
+Only `draft`, `check`, `conflicts`, and `adopt --rebase` call a language model, to
 help read documents or compare rules. A model offers evidence and
 proposals; it cannot make a rule. canon refuses remote endpoints unless
 you pass `--allow-remote`.

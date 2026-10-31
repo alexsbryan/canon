@@ -107,7 +107,7 @@ fn a_proposal_reads_as_what_it_would_change() {
     assert_eq!(item.text, "Quiet hours are 10pm to 7am.");
     assert_eq!(item.scope.as_deref(), Some("house"));
     assert_eq!(item.by, "agent:euphemia");
-    assert!(item.needs.contains("holds house"), "{}", item.needs);
+    assert!(item.needs.contains("in charge of house"), "{}", item.needs);
 }
 
 #[test]
@@ -436,7 +436,7 @@ fn taking_standing_over_a_scope_nobody_holds_is_the_grant_and_then_the_question(
     assert_eq!(code, 0, "{}", script.heard());
     assert_eq!(
         script.asked[0],
-        "nobody holds garden; take standing? [y/N] › "
+        "nobody is in charge of garden; take charge of it? [y/N] › "
     );
     // The act `canon grant human:alex garden` writes, by alex.
     assert_eq!(

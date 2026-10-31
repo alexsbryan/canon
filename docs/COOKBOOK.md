@@ -35,10 +35,10 @@ decides without rewriting what it decided.
 Give people standing over a scope, then ask.
 
 ```sh
-canon grant human:mira house
-canon grant human:sam house
-canon grant human:dana house
-canon grant human:priya house.kitchen
+canon give human:mira house
+canon give human:sam house
+canon give human:dana house
+canon give human:priya house.kitchen
 
 canon who house.kitchen
 ```
@@ -74,16 +74,16 @@ of four that one person leaves can never carry anything again, a change of
 the rule included.
 
 ```sh
-canon policy set consent --cautious \
+canon rulings set consent --cautious \
   -m "One reasoned objection stops a thing, and what cannot be undone is not decided by silence."
-canon ratification set threshold:2/1 --scope house \
+canon ratification set threshold:2/1 --area house \
   -m "A house rule takes two of us; one reasoned objection stops it."
 ```
 
 Now a write is a proposal until the rule is met, and the command says so:
 
 ```sh
-canon add "Bikes go against the left wall of the hall." --scope house
+canon add "Bikes go against the left wall of the hall." --area house
 ```
 
 ```text
@@ -120,7 +120,7 @@ A rule set this way also reaches policy: a new `ratification set` writes
 the house decides either. Sam's change waits for the week like anything else:
 
 ```sh
-canon policy set subsidiarity --scope house.kitchen -m "Whoever cooks decides the kitchen."
+canon rulings set subsidiarity --area house.kitchen -m "Whoever cooks decides the kitchen."
 ```
 
 ```text
@@ -146,7 +146,7 @@ for her is hers alone once the canon-wide rule has `personal: on` (the default
 a new `ratification set` writes):
 
 ```sh
-canon add "Nobody uses my whiskey glasses without asking me first." --scope human:phylla.glasses
+canon add "Nobody uses my whiskey glasses without asking me first." --area human:phylla.glasses
 ```
 
 ```text
@@ -183,7 +183,7 @@ THIS NEEDS AN AMENDMENT
   can-294920c3d916  "Bikes go against the left wall of the hall."
                     asserted 2026-09-02, in force, never superseded
                     because: a rack against that wall is the width of a pram
-  amend it:  canon supersede can-294920c3d916 "<the new rule>" -m "<why>"
+  amend it:  canon amend can-294920c3d916 "<the new rule>" -m "<why>"
   or carry both knowingly:  canon accept can-294920c3d916 <other> -m "<what this protects>"
 ```
 
@@ -199,11 +199,13 @@ action by a rule nobody wrote.**
 To put a position on the record yourself, model or no model:
 
 ```sh
-canon position "a bike rack in the hall" --citing can-294920c3d916 --against \
+canon object --about "a bike rack in the hall" --citing can-294920c3d916 \
   -m "the rack is the width of a pram"
 ```
 
-The reason is required in both directions. A position whose reason nobody can
+`canon approve --about "a bike rack in the hall"` is the same the other way,
+and `canon check` counts each person's latest word on the subject. The reason is required for
+an objection. A position whose reason nobody can
 check is an assertion, and this whole tool exists to replace assertions with
 citations.
 
@@ -236,7 +238,7 @@ canon question "Who looks after the plants when everyone travels at once?"
 
 ```text
 can-65840b5de0cc  ? Who looks after the plants when everyone travels at once?
-  answer it:  canon supersede can-65840b5de0cc "<the rule>" -m "<reason>"
+  answer it:  canon amend can-65840b5de0cc "<the rule>" -m "<reason>"
 ```
 
 **Answering a question is superseding it.** There is deliberately no separate
@@ -244,7 +246,7 @@ can-65840b5de0cc  ? Who looks after the plants when everyone travels at once?
 and the result is that the new rule carries the gap it closed:
 
 ```sh
-canon supersede can-65840b5de0cc \
+canon amend can-65840b5de0cc \
   "Whoever is away longest waters the plants; say so in the group chat before you go." \
   -m "Three plants died in August and nobody had been asked."
 
@@ -306,7 +308,7 @@ would cost to be wrong.
 ### "We keep having the same argument"
 
 ```sh
-canon policy set default --graduated ask-one,ask-panel,refuse
+canon rulings set default --escalate ask-one,ask-panel,refuse
 ```
 
 First time, ask one person. Second time, ask the group. Third, refuse.
@@ -360,7 +362,7 @@ ladder canon wrote before these existed.
 Never edit a rule. Supersede it, and the reason is kept:
 
 ```sh
-canon supersede can-294920c3d916 \
+canon amend can-294920c3d916 \
   "Bikes go against the left wall of the hall, and the shed once it is built." \
   -m "The rack argument in September; the wall alone was never going to hold six bikes."
 
@@ -379,7 +381,7 @@ against still exists.
 Finding them needs a model:
 
 ```sh
-canon tensions          # (needs a model)
+canon conflicts          # (needs a model)
 ```
 
 Deciding what to do about one does not. A contradiction you are carrying on
@@ -404,7 +406,7 @@ unanswerable. Here it takes no setup and no files:
 
 ```sh
 canon replay                                              # your own record, re-decided
-canon replay --policy threshold --objections 2 --brief
+canon replay --rulings threshold --objections 2 --brief
 ```
 
 ```text
@@ -427,7 +429,7 @@ Want to ask better questions than the record can know about?
 
 ```sh
 canon replay --write-scenario questions.jsonl   # the derived ones, to edit
-canon replay --scenario questions.jsonl --policy consent --brief
+canon replay --scenario questions.jsonl --rulings consent --brief
 ```
 
 ### "How do we make a rule outlast the people who made it?"
@@ -439,9 +441,9 @@ without depending on anyone's virtue. It cannot detect bad intent, so it
 does not try; it demands a duration only genuine, broad support survives.
 
 ```sh
-canon ratification set twice:turnover:standing --scope house \
+canon ratification set twice:turnover:standing --area house \
   -m "A house rule is carried twice, and somebody has to have moved in between."
-canon add "Guests may stay up to three nights." --scope house
+canon add "Guests may stay up to three nights." --area house
 ```
 
 ```text
@@ -456,7 +458,7 @@ two people cannot elect themselves. Re-granting yourself is not turnover,
 and neither is somebody leaving. Ola moves in, and the second vote opens:
 
 ```sh
-canon grant human:ola house -m "moved in"
+canon give human:ola house -m "moved in"
 canon list
 ```
 
@@ -482,7 +484,7 @@ change that itself survives a turnover. And before you adopt it, ask what
 it would have done to you:
 
 ```sh
-canon replay --ratification twice:turnover:consent:7d --brief
+canon replay --passes twice:turnover:consent:7d --brief
 ```
 
 ### "How do we change how we decide?"
@@ -540,7 +542,7 @@ undefended one.
 ### "Someone changed something they had no say over"
 
 ```sh
-canon ratification set standing --scope house -m "let anyone write"    # run by Ola
+canon ratification set standing --area house -m "let anyone write"    # run by Ola
 ```
 
 ```text
@@ -561,8 +563,8 @@ yours.
 ### "Standing shouldn't be forever"
 
 ```sh
-canon grant human:priya house.kitchen --horizon 2027-01-01
-canon horizon can-294920c3d916 2026-03-01 -m "check the hall still works in winter"
+canon give human:priya house.kitchen --until 2027-01-01
+canon revisit can-294920c3d916 2026-03-01 -m "check the hall still works in winter"
 canon overdue
 ```
 
@@ -630,7 +632,7 @@ canon allot fishery.sites --unit site \
   --named kizilburun,incekum,karaburun,mahmutlar,konakli,payallar,turkler,okurcalar,avsallar,demirtas,kargicak \
   -m "The written list of spots, and the order runs west to east along the coast."
 
-canon allocation set rotation --scope fishery.sites --step 1 --per 1d \
+canon allocation set rotation --area fishery.sites --step 1 --per 1d \
   --order human:kemal,human:ayla,human:bora,… \
   -m "From September each boat moves one site east a day."
 
@@ -710,10 +712,10 @@ finding, not a green light. If you want silence to permit things, adopt a
 policy that says so — and the record will show you chose it.
 
 **A scoped ratification rule doesn't cover an unscoped rule.** `ratification
-set threshold:2/1 --scope house` governs `house` and everything under it. A
-commitment written with no `--scope` isn't under it and falls back to the
+set threshold:2/1 --area house` governs `house` and everything under it. A
+commitment written with no `--area` isn't under it and falls back to the
 canon-wide rule. Either scope your rules, or set the ratification rule with no
-`--scope` so it covers everything.
+`--area` so it covers everything.
 
 **Acts written in the same second cannot govern each other.** That is what
 lets a founder write twelve grants in one sitting without the first one to

@@ -54,7 +54,7 @@ Four verbs call one. Nothing else does.
 |---|---|---|---|
 | `draft` | N + 2·⌈N/10⌉ + 1 | one 1500-char chunk each; then rules with their sentence; then all candidates | sentence positions; carried or not; duplicate groups |
 | `check` | 1 | the proposal and every live rule | which rules bear, which way, why |
-| `tensions` | 1, blocks of 24 past that | every live rule | pairs that can't both hold, and the situation |
+| `conflicts` | 1, blocks of 24 past that | every live rule | pairs that can't both hold, and the situation |
 | `adopt --rebase` | 1 | your rules, the old base, the new one | which of your changes still mean anything |
 
 - **Plain OpenAI chat completions.** No connector, no vendor. llama.cpp, vllm,
@@ -63,7 +63,7 @@ Four verbs call one. Nothing else does.
 - **JSON schema, enforced.** Can't enforce? One step down to JSON mode, said
   aloud. No third rung. Prose is never parsed. Won't answer in JSON? Exit 3:
   *cannot judge*. That's a verdict.
-- **The model proposes. A person disposes.** `draft`, `tensions`, `adopt --rebase --dry-run`
+- **The model proposes. A person disposes.** `draft`, `conflicts`, `adopt --rebase --dry-run`
   write nothing. One rule at a time. No `--accept-all`.
 - **Refusals cost coverage,** counted and reported, never absorbed.
 - **The model that answered is recorded.** An alias moves; a number you can't

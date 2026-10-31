@@ -259,7 +259,7 @@ fn a_rule_can_be_proposed_changed_and_taken_away_from_the_page() {
     assert_eq!(st.scope_of(bins.id()).map(|s| s.as_str()), Some("house"));
     assert!(
         matches!(bins.status(), canon_core::Status::Active),
-        "alex holds house"
+        "alex is in charge of house"
     );
 
     // A change needs its reason, and the reason is kept.

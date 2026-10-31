@@ -33,15 +33,15 @@ open canon. If your first grant goes to someone else, your later grants don't
 take.
 
 ```sh
-canon grant "$CANON_ACTOR" house
+canon give "$CANON_ACTOR" house
 ```
 
 **5. Write the rules, each in `house`**, the scope the bot proposes in. Say in
 the first one what this is.
 
 ```sh
-canon add "These rules were written by Alex alone to start; when the house joins, any of them is open to change." --scope house
-canon add "Quiet hours are 10pm to 7am." --scope house
+canon add "These rules were written by Alex alone to start; when the house joins, any of them is open to change." --area house
+canon add "Quiet hours are 10pm to 7am." --area house
 canon list               # what's live
 canon who house          # you, deciding alone under standing
 ```
@@ -75,7 +75,7 @@ git add .canon && git commit -m "canon: what you added" && git push
 
 **1. Choose how the house decides while you still hold it alone.** Once others
 hold it, changing the rule is itself a proposal. Set it for the whole canon,
-with no `--scope`.
+with no `--area`.
 
 ```sh
 canon ratification set share:60%     # or majority, or consent:3d
@@ -87,7 +87,7 @@ written. A house that shrinks can still decide.
 **2. Grant each member** by their exact Slack full name.
 
 ```sh
-canon grant 'human:Sam Lee' house
+canon give 'human:Sam Lee' house
 ```
 
 When someone moves out, withdraw them that day:

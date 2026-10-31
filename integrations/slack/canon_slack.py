@@ -168,7 +168,7 @@ def build_app():
 
         if verb in ("propose", "rule") and rest:
             actor = actor_for(client, user)
-            code, out, err = write("add", "--scope", SCOPE, rest, actor=actor,
+            code, out, err = write("add", "--area", SCOPE, rest, actor=actor,
                                    note=f"propose by {actor}")
             cid = first_id(out)
             if code != 0 or not cid:
@@ -269,7 +269,7 @@ def build_app():
         v = json.loads(body["actions"][0]["value"])
         c = json.loads(Path(v["run"]).read_text())["candidates"][v["i"]]
         actor = actor_for(client, body["user"]["id"])
-        verb = ["add", "--scope", SCOPE] if c["kind"] == "rule" else ["question"]
+        verb = ["add", "--area", SCOPE] if c["kind"] == "rule" else ["question"]
         code, out, err = write(*verb, c["text"], actor=actor,
                                note=f"propose from notes by {actor}")
         cid = first_id(out)
@@ -315,7 +315,7 @@ def people():
     found = load_people()
     print(f"wrote {PEOPLE} ({len(found)} people). To give each of them a say in {SCOPE}:\n")
     for name in sorted(found):
-        print(f'  canon grant "human:{name}" {SCOPE} -m "founding member"')
+        print(f'  canon give "human:{name}" {SCOPE} -m "founding member"')
 
 
 def post_draft(run):

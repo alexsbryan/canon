@@ -45,7 +45,7 @@
 //! And there is no `--accept-all`: a canon adopted wholesale is disengagement
 //! at t=0, so onboarding *is* the first governance session.
 
-use std::io::{BufRead, IsTerminal as _, Read as _, Write};
+use std::io::{BufRead, Read as _, Write};
 use std::path::{Path, PathBuf};
 
 use canon_core::ActKind;
@@ -1602,16 +1602,8 @@ fn confirmed(args: &[String], sources: usize, passages: usize) -> bool {
     // Said either way. The count is the thing a person needed before the run,
     // whether or not there is anybody there to answer for it.
     eprintln!("{sources} source(s) read, {passages} passage(s) — one model call each.");
-    if !needs_asking(args, passages, std::io::stdin().is_terminal()) {
-        return true;
-    }
-    eprint!("That is a large run. Proceed? [y/N] ");
-    let _ = std::io::stderr().flush();
-    let mut answer = String::new();
-    if std::io::stdin().read_line(&mut answer).is_err() {
-        return false;
-    }
-    matches!(answer.trim().to_ascii_lowercase().as_str(), "y" | "yes")
+    !needs_asking(args, passages, crate::term::interactive())
+        || crate::term::yes("That is a large run. Proceed?")
 }
 
 /// `--from` takes every following argument until the next flag, because a

@@ -140,7 +140,7 @@ def first_id(out):
 
 def check(plan):
     remote = ["--allow-remote"] if ALLOW_REMOTE else []
-    return canon("check", "--scope", SCOPE, *remote, plan)
+    return canon("check", "--area", SCOPE, *remote, plan)
 
 
 # ── people ──────────────────────────────────────────────────

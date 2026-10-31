@@ -125,7 +125,7 @@ formality.
 - [x] Built as `two_up_upper_bound` in `crates/canon-cli/tests/draft_bar.rs`,
       reusing the bar's own `section_key` / `anchors` / `truth` rather than
       minting a second resolver. No production code: a canon holding exactly
-      two commitments is at or below `BATCH`, so `canon tensions` makes one
+      two commitments is at or below `BATCH`, so `canon conflicts` makes one
       pass over one pair. `CANON_BAR_TWO_UP_DRY=1` resolves and spends nothing.
 - [x] Ran, twice — the first run measured the instrument rather than the stage.
       `side_to_candidate` first copied `extraction_coverage`'s text-OR-citation
@@ -318,7 +318,7 @@ Re-labelling ground truth after seeing which pair resisted is the one move that
 would invalidate every number above it.
 
 **Measured on ONE corpus.** This prompt is shipped code and reaches `canon
-draft` and `canon tensions` for every user. The maple-house bar is the
+draft` and `canon conflicts` for every user. The maple-house bar is the
 regression check and has NOT been run against this change — it needs three
 `draft` runs against an endpoint. That is the outstanding risk on this promotion
 and it is not discharged by anything above.
@@ -727,7 +727,7 @@ properly on a quiet host.
    a defensible reason to spend six or seven hours on the sweep.
 2. **Cut the demo tape.** `./scripts/record-demo-tape.sh` — one maple-house
    draft run, so act 1 of the demo is real output with no live risk.
-3. **Look at `check` and `tensions` on stage.** They work; nobody has checked
+3. **Look at `check` and `conflicts` on stage.** They work; nobody has checked
    whether they read well at projector size.
 4. **The maple-house regression check** for the Phase 1a prompt change. Still
    the plan's own undischarged risk, and now harder: its baseline is three 27B

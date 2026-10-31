@@ -26,7 +26,7 @@ use std::collections::BTreeMap;
 use canon_core::{Act, ActId, ActKind, Canon, Log, Pull, Scope, Status, Verdict};
 use serde::Serialize;
 
-use crate::cmds::{answer, fail, flag, has, load};
+use crate::cmds::{answer, fail, flag, has, load, or_fail};
 use crate::explain::{one_line, person, refused_by, refused_why};
 use crate::store;
 
@@ -49,8 +49,8 @@ impl Kind {
         match self {
             Kind::Rule => "new rule",
             Kind::Change => "change to a rule",
-            Kind::Retraction => "retraction",
-            Kind::DecisionRule => "how a room decides",
+            Kind::Retraction => "repeal",
+            Kind::DecisionRule => "how rules pass",
         }
     }
 }
@@ -268,7 +268,7 @@ pub fn decide(
     approve: bool,
     because: &str,
 ) -> Result<String, String> {
-    answer(d, actor, id, approve, because)?;
+    answer(d, actor, id.as_str(), None, approve, because)?;
     let st = store::read(d)?.derive_at(store::now());
     Ok(outcome(&st, id))
 }
@@ -404,16 +404,13 @@ pub fn door(terminal: bool, actor: &str, from: &str) -> Result<(), String> {
 }
 
 pub fn run(args: &[String]) -> i32 {
-    let only = match flag(args, "--scope").map(|raw| Scope::new(raw).ok_or(raw)) {
+    let only = match flag(args, "--area").map(|raw| Scope::new(raw).ok_or(raw)) {
         None => None,
         Some(Ok(s)) => Some(s),
-        Some(Err(raw)) => return fail(format!("`{raw}` is not a scope")),
+        Some(Err(raw)) => return fail(format!("`{raw}` is not an area")),
     };
     if has(args, "--json") {
-        let (_, log, st) = match load() {
-            Ok(v) => v,
-            Err(e) => return fail(e),
-        };
+        let (_, log, st) = or_fail!(load());
         let actor = store::actor();
         let items: Vec<Item> = queue(&log, &st, &actor, store::now())
             .into_iter()
@@ -526,8 +523,9 @@ enum Stand {
 /// grant <actor> <scope>` writes, through the same [`crate::govern::give`].
 /// Whether it took is the fold's answer, never assumed.
 fn stand(d: &Path, actor: &str, scope: &Scope, prompt: &mut dyn Prompt) -> Stand {
-    let Some(answer) = prompt.ask(&format!("nobody holds {scope}; take standing? [y/N] › "))
-    else {
+    let Some(answer) = prompt.ask(&format!(
+        "nobody is in charge of {scope}; take charge of it? [y/N] › "
+    )) else {
         return Stand::Quit;
     };
     if !matches!(answer.to_lowercase().as_str(), "y" | "yes") {
@@ -604,7 +602,7 @@ fn walk(
         if let Some(s) = unheld(d, scope.as_deref().and_then(Scope::new).as_ref())? {
             match stand(d, actor, &s, prompt) {
                 Stand::Took => {
-                    prompt.say(&format!("  you hold {s} now"));
+                    prompt.say(&format!("  you are in charge of {s} now"));
                     // Asked again: the grant is on the record, and what
                     // waits on you is still the fold's call.
                     let log = store::read(d)?;

@@ -13,7 +13,7 @@ use std::path::Path;
 
 use canon_core::{ActId, ActKind, Scope};
 
-use crate::cmds::{fail, flag, has, load, positionals, write};
+use crate::cmds::{fail, flag, has, load, or_fail, positionals, write};
 use crate::store;
 
 /// Where a sealed secret waits for its boundary.
@@ -87,12 +87,10 @@ pub fn run(args: &[String]) -> i32 {
 
 fn commit(args: &[String], pos: &[&str]) -> i32 {
     if pos.len() < 3 {
-        return fail(
-            "usage: canon draw commit <scope> <seats> --after <YYYY-MM-DD> [-m \"<why>\"]",
-        );
+        return fail("usage: canon draw commit <area> <seats> --after <YYYY-MM-DD> [-m \"<why>\"]");
     }
     let Some(scope) = Scope::new(pos[1]) else {
-        return fail(format!("`{}` is not a scope", pos[1]));
+        return fail(format!("`{}` is not an area", pos[1]));
     };
     let Ok(count) = pos[2].parse::<usize>() else {
         return fail(format!("`{}` is not a number of seats", pos[2]));
@@ -112,10 +110,7 @@ fn commit(args: &[String], pos: &[&str]) -> i32 {
              after the fact is not a draw"
         ));
     }
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let pool = canon.who_decides(&scope, after_ts).len();
     match write(
         &d,
@@ -134,7 +129,7 @@ fn commit(args: &[String], pos: &[&str]) -> i32 {
             println!("    canon draw open {}", act.id);
             // Absence reported at the moment it can still be fixed.
             if pool == 0 {
-                eprintln!("\nwarning: nobody holds standing over `{scope}` yet — as it stands this draw has no pool.");
+                eprintln!("\nwarning: nobody is in charge of `{scope}` yet — as it stands this draw has no pool.");
             } else if count >= pool {
                 eprintln!("\nwarning: {count} seat(s) from a pool of {pool} would select everyone, which is not a draw.");
             }
@@ -148,10 +143,7 @@ fn seal(_args: &[String], pos: &[&str]) -> i32 {
     let Some(needle) = pos.get(1) else {
         return fail("usage: canon draw seal <draw-id>");
     };
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let commit = match resolve_draw(&canon, needle) {
         Ok(c) => c,
         Err(e) => return fail(e),
@@ -218,10 +210,7 @@ fn open(args: &[String], pos: &[&str]) -> i32 {
     let Some(needle) = pos.get(1) else {
         return fail("usage: canon draw open <draw-id>");
     };
-    let (d, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (d, _, canon) = or_fail!(load());
     let commit = match resolve_draw(&canon, needle) {
         Ok(c) => c,
         Err(e) => return fail(e),
@@ -280,10 +269,7 @@ fn show(args: &[String], pos: &[&str]) -> i32 {
     let Some(needle) = pos.get(1) else {
         return fail("usage: canon draw show <draw-id>");
     };
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     let commit = match resolve_draw(&canon, needle) {
         Ok(c) => c,
         Err(e) => return fail(e),
@@ -328,10 +314,7 @@ fn show(args: &[String], pos: &[&str]) -> i32 {
 }
 
 fn list(args: &[String]) -> i32 {
-    let (_, _, canon) = match load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, _, canon) = or_fail!(load());
     if has(args, "--json") {
         println!(
             "{}",
@@ -340,7 +323,7 @@ fn list(args: &[String]) -> i32 {
         return 0;
     }
     if canon.draws().is_empty() {
-        println!("no draws announced. `canon draw commit <scope> <seats> --after <date>`");
+        println!("no draws announced. `canon draw commit <area> <seats> --after <date>`");
         return 0;
     }
     let now = store::now();

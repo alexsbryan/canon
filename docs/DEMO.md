@@ -51,16 +51,16 @@ Four cards, one line each. Say the rest.
 | 2 | the agent reads Article I live; four rules cite lines 3–8 | `canon draft --dry-run --max-chunks 1 --from …` | **yes** |
 | 2, cont. | the whole document from the recording of the same command; six kept by hand | `canon draft --replay <run>` · `canon list` | recorded |
 | 3 | ask the house a question; its own rules answer, and find act 1's pair | `canon check "…"` | **yes** |
-| 4 | ask where the house disagrees with itself | `canon tensions` | **yes** |
+| 4 | ask where the house disagrees with itself | `canon conflicts` | **yes** |
 | — | **the turn** — everything that read went through a model. Pull the cable out. | | |
 | 5 | the people decide: carry it knowingly, then ask why | `canon accept a b -m "…"` · `canon why b` | no |
 | | **Part two. A member.** | | |
 | 6 | six commands over five months, on screen as the people and the program typed them: a seat with a room and an end date; Theo's ask; the helper's reading, citing a rule; its ruling outside its seat, kept and not applied; Dana's ruling. Then the readback, then January | `canon voice agent:helper` · `canon overdue` | no |
-| 7 | **live, no model:** a non-cook writes a kitchen rule; it lands as a proposal; both cooks approve; it is a rule. Then Ostrom's three levels: the helper tries to change how the kitchen makes rules, kept and not applied; Theo tries, and it is a proposal for the cooks | `canon add … --scope house.kitchen` · `canon approve` ×2 · `canon ratification set …` ×2 | no |
+| 7 | **live, no model:** a non-cook writes a kitchen rule; it lands as a proposal; both cooks approve; it is a rule. Then Ostrom's three levels: the helper tries to change how the kitchen makes rules, kept and not applied; Theo tries, and it is a proposal for the cooks | `canon add … --area house.kitchen` · `canon approve` ×2 · `canon ratification set …` ×2 | no |
 | 7, cont. | the garden went further: a rule carried twice, with somebody new between the votes | `canon why <the watering rule>` | no |
 | 8 | Wednesday dinners, unwritten on purpose; the laundry in two lines | `canon voice human:mira` | no |
 | 9 | the eight in the room's words, each tied to a beat they saw; then the whole record, a year of the house, checked against all eight in milliseconds | `canon replay fixtures/fernwood-commons --brief` | no |
-| 10 | what if we had decided differently | `… --policy default --brief` | no |
+| 10 | what if we had decided differently | `… --rulings default --brief` | no |
 | 11 | yours: the three commands that put an agent in your repo on the same terms | none; three lines of screen text | no |
 | 11, cont. | **off by default** (`SHOW_TRANSFER=1`): the transfer study, fourteen places from one spine | `cargo test --test transfer_bar -- --nocapture` | no |
 | | **Part three. A country.** | | |
@@ -403,10 +403,10 @@ and how to make each artifact again.
 | 4 | the house disagrees with itself | `tensions` | positions again; every pair is a *proposal* until `accept` or `dismiss` |
 | 5 | the people carry the contradiction, and can say why | `accept a b -m`, `why b` | the ledger: append-only, reasoned, the citation `draft` cut still attached |
 | 6 | the helper's record, then January | `voice agent:helper`, `overdue` | standing with a horizon; rulings take standing: `dismiss` without it is recorded and not applied; horizons on grants and on carried contradictions |
-| 7 | a non-cook's kitchen rule becomes a proposal and then a rule; the helper and then Theo try to change how the kitchen makes rules; the garden's rule carried twice | `add --scope`, `approve`, `ratification set`, `why` | **ratification**: a write is a proposal until the scope's rule is met; changing the rule takes standing over the scope or the one above (`may_govern`) and is then itself a proposal under the rule it replaces; `twice` waits for turnover |
+| 7 | a non-cook's kitchen rule becomes a proposal and then a rule; the helper and then Theo try to change how the kitchen makes rules; the garden's rule carried twice | `add --area`, `approve`, `ratification set`, `why` | **ratification**: a write is a proposal until the scope's rule is met; changing the rule takes standing over the scope or the one above (`may_govern`) and is then itself a proposal under the rule it replaces; `twice` waits for turnover |
 | 8 | what Mira decided not to have | `voice human:mira` | standing queries; `silence` as data |
 | 9 | a year of the house against Ostrom's eight | `replay --brief` | `Log → Canon → policy → Decision`, pure |
-| 10 | what a different rule would have done | `replay --policy default --brief` | policy as a pure function; decided twice, diffed |
+| 10 | what a different rule would have done | `replay --rulings default --brief` | policy as a pure function; decided twice, diffed |
 | 11 | fourteen commons, one spine | `cargo test --test transfer_bar` | the same nine primitives; only the nouns change |
 | 12 | the founding documents, cold | `draft --replay <run>` | resolvers, at 12,672 words |
 | 13 | 283 tensions, four read aloud | a reader over the run file | — |

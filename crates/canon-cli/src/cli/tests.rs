@@ -21,8 +21,8 @@ fn the_four_ways_the_parser_used_to_fail_open() {
     assert!(typo.contains("--dry-run"), "{typo}");
 
     // A valued flag with nothing after it dropped the value in silence.
-    let bare = check("add", &args(&["a rule", "--scope"])).unwrap_err();
-    assert!(bare.contains("--scope"), "{bare}");
+    let bare = check("add", &args(&["a rule", "--area"])).unwrap_err();
+    assert!(bare.contains("--area"), "{bare}");
 
     // A real flag, on a verb that does not take it.
     let elsewhere = check("add", &args(&["a rule", "--max-chunks", "5"])).unwrap_err();
@@ -34,8 +34,8 @@ fn the_equals_form_reaches_the_handler() {
     // `--scope=house` parsed as nothing at all, so `canon add` wrote the
     // commitment and silently dropped the scope — a rule recorded at the
     // wrong level, which in a governance tool is the whole ballgame.
-    let checked = check("add", &args(&["a rule", "--scope=house"])).unwrap();
-    assert_eq!(checked, args(&["a rule", "--scope", "house"]));
+    let checked = check("add", &args(&["a rule", "--area=house"])).unwrap();
+    assert_eq!(checked, args(&["a rule", "--area", "house"]));
     // And a positional that merely contains `=` is left alone.
     let kept = check("config", &args(&["set", "endpoint", "http://x/v1"])).unwrap();
     assert_eq!(kept, args(&["set", "endpoint", "http://x/v1"]));
@@ -160,6 +160,8 @@ fn every_command_line_in_the_documentation_still_parses() {
             let Some(tokens) = tokenize(rest) else {
                 continue;
             };
+            // An old spelling in a document still works, so it still parses.
+            let (tokens, _) = resolve(&tokens, false);
             let Some((verb, rest)) = tokens.split_first() else {
                 continue;
             };
@@ -257,7 +259,7 @@ fn a_refused_argument_speaks_the_way_the_rest_of_the_tool_does() {
     let listed = check("add", &args(&["a rule", "--nonsense-flag"])).unwrap_err();
     assert_eq!(
         listed,
-        "`canon add` has no `--nonsense-flag` — it takes `--cite`, `--scope`, `-m`"
+        "`canon add` has no `--nonsense-flag` — it takes `--area`, `--cite`, `-m`"
     );
 
     // Past a handful, the list stops being a hint and becomes a wall.
@@ -281,13 +283,13 @@ fn a_flag_left_empty_says_what_it_was_waiting_for() {
         ),
         (
             "add",
-            vec!["a rule", "--scope"],
-            "`--scope` needs a scope after it",
+            vec!["a rule", "--area"],
+            "`--area` needs an area after it, like `house.kitchen`",
         ),
         (
-            "grant",
-            vec!["ana", "--horizon"],
-            "`--horizon` needs a date after it — YYYY-MM-DD",
+            "give",
+            vec!["ana", "--until"],
+            "`--until` needs a date after it — YYYY-MM-DD",
         ),
         (
             "approve",
@@ -341,4 +343,74 @@ fn every_verb_and_flag_is_the_checked_in_one() {
         .collect();
     lines.sort();
     canon_contract::golden("cli.txt", &lines.concat());
+}
+
+#[test]
+fn every_old_spelling_names_a_verb_or_flag_that_exists_and_none_is_one() {
+    // An alias that points nowhere would turn a working script into an
+    // unknown command; one that shadows a verb would make that verb
+    // unreachable.
+    for (old, new) in VERB_ALIASES {
+        assert!(VERBS.iter().any(|(v, ..)| v == new), "`{old}` -> `{new}`");
+        assert!(!VERBS.iter().any(|(v, ..)| v == old), "`{old}` is a verb");
+    }
+    for (old, new) in FLAG_ALIASES {
+        assert!(
+            VERBS.iter().any(|(_, valued, ..)| valued.contains(new)),
+            "`{new}`"
+        );
+        assert!(
+            !VERBS.iter().any(|(_, valued, ..)| valued.contains(old)),
+            "`{old}`"
+        );
+    }
+    // To a person at a terminal, one note per old spelling, naming the new.
+    let typed = args(&["supersede", "x", "--scope=house"]);
+    let (args, notes) = resolve(&typed, true);
+    assert_eq!(args, self::args(&["amend", "x", "--area=house"]));
+    assert_eq!(
+        notes,
+        [
+            "`canon supersede` is now `canon amend`; both still work",
+            "`--scope` is now `--area`; both still work"
+        ]
+    );
+    // To a pipe, the same rewrite and not a word.
+    assert_eq!(resolve(&typed, false), (args, Vec::new()));
+    // On a verb that never took it, an old flag is left to be refused by name.
+    assert_eq!(
+        resolve(&self::args(&["log", "--scope"]), true).0,
+        self::args(&["log", "--scope"])
+    );
+}
+
+#[test]
+fn every_verb_and_every_old_name_is_in_the_glossary() {
+    // `canon help <word>` is only a promise if the words are there: a verb
+    // nobody defined is one a student meets with nothing to read.
+    let missing: Vec<&str> = VERBS
+        .iter()
+        .map(|(v, ..)| *v)
+        .chain(VERB_ALIASES.iter().map(|(old, _)| *old))
+        .chain(FLAG_ALIASES.iter().flat_map(|(old, new)| [*old, *new]))
+        .filter(|v| define(v).is_empty())
+        .collect();
+    assert!(missing.is_empty(), "not in glossary.txt: {missing:?}");
+    // Every line is a definition or a note, so none is silently unreadable.
+    for line in GLOSSARY
+        .lines()
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+    {
+        assert!(
+            line.split_once(": ")
+                .is_some_and(|(_, d)| !d.trim().is_empty()),
+            "not `term: definition`: {line}"
+        );
+    }
+    assert_eq!(
+        define("consent:14d").len(),
+        1,
+        "a rule's spelling finds its word"
+    );
+    assert_eq!(define("in charge").len(), 1);
 }

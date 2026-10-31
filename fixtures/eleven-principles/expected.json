@@ -6,13 +6,13 @@
   "the-owner-decides-the-parser": {
     "outcome": "supported",
     "authority": "act",
-    "because": "`engine.parser` is held by human:omar — including you",
+    "because": "in charge of `engine.parser`: human:omar — including you",
     "cites": ["@parser-alloc"]
   },
   "a-committer-elsewhere-does-not": {
     "outcome": "supported",
     "authority": "ask-one",
-    "because": "held by human:omar — not you"
+    "because": "in charge of `engine.parser`: human:omar — not you"
   },
 
   "forked-from-the-engineering-canon": {

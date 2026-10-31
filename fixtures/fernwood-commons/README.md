@@ -12,7 +12,7 @@ and decision has been broken.
 
 ```sh
 canon replay fixtures/fernwood-commons
-canon replay fixtures/fernwood-commons --policy consent   # the counterfactual
+canon replay fixtures/fernwood-commons --rulings consent   # the counterfactual
 canon replay fixtures/fernwood-commons --brief            # Ostrom's eight, as a table
 ```
 

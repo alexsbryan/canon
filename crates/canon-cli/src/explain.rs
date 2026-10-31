@@ -305,8 +305,8 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
             }
             _ => lines.push("in force".into()),
         },
-        Status::Superseded { by } => lines.push(format!("superseded by {}", named(canon, by))),
-        Status::Retracted { at } => lines.push(format!("retracted {}", store::ymd(*at))),
+        Status::Superseded { by } => lines.push(format!("amended by {}", named(canon, by))),
+        Status::Retracted { at } => lines.push(format!("repealed {}", store::ymd(*at))),
         Status::Proposed { needs } => lines.push(format!(
             "proposed, not yet a rule — needs {}",
             person_in(needs)
@@ -335,7 +335,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                 match put.map(|r| &r.verdict) {
                     Some(Verdict::Proposed { needs, .. }) => {
                         lines.push(format!(
-                            "{} proposed retracting it, {}{}",
+                            "{} proposed repealing it, {}{}",
                             person(&act.actor),
                             store::ymd(act.ts_unix),
                             said(rationale)
@@ -348,7 +348,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                     }
                     Some(Verdict::Refused { at, by, why, .. }) => {
                         lines.push(format!(
-                            "{} proposed retracting it, {}{}",
+                            "{} proposed repealing it, {}{}",
                             person(&act.actor),
                             store::ymd(act.ts_unix),
                             said(rationale)
@@ -361,7 +361,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                     }
                     Some(Verdict::Ratified { how, .. }) => {
                         lines.push(format!(
-                            "{} proposed retracting it{}",
+                            "{} proposed repealing it{}",
                             person(&act.actor),
                             said(rationale)
                         ));
@@ -370,7 +370,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                     None if !rationale.is_empty()
                         && !canon.ungoverned().iter().any(|(x, _)| *x == act.id) =>
                     {
-                        lines.push(format!("reason it was retracted: {rationale}"))
+                        lines.push(format!("reason it was repealed: {rationale}"))
                     }
                     None => {}
                 }
@@ -407,7 +407,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
             named(canon, other)
         ));
         lines.push(format!(
-            "  {}, not applied: outside their standing{}",
+            "  {}, not applied: outside what they are in charge of{}",
             store::ymd(act.ts_unix),
             if why.is_empty() {
                 String::new()
@@ -476,7 +476,10 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                 });
             }
             Disposition::Open { reason } => {
-                lines.push(format!("open tension with {}", named(canon, other)));
+                lines.push(format!(
+                    "an unsettled conflict with {}",
+                    named(canon, other)
+                ));
                 lines.push(format!("  {reason}"));
             }
         }
@@ -583,7 +586,7 @@ fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
         Status::Active => {
             lines.push("open — the canon does not cover this".into());
             lines.push(format!(
-                "answer it:  canon supersede {} \"<the rule>\" -m \"<reason>\"",
+                "answer it:  canon amend {} \"<the rule>\" -m \"<reason>\"",
                 q.id
             ));
         }
@@ -666,7 +669,7 @@ mod tests {
         let canon = log.derive();
 
         let e = explain(&log, &canon, &old.id).unwrap();
-        assert!(e.lines.iter().any(|l| l.contains("superseded by")));
+        assert!(e.lines.iter().any(|l| l.contains("amended by")));
         assert!(e
             .lines
             .iter()

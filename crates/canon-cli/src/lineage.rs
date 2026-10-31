@@ -25,7 +25,7 @@ use std::process::Command;
 
 use canon_core::{ActId, ActKind, Canon, Divergence, Fate, Log, Snapshot};
 
-use crate::cmds::{fail, has, positionals};
+use crate::cmds::{fail, has, or_fail, positionals};
 use crate::profile::Profile;
 use crate::store;
 
@@ -54,10 +54,7 @@ pub fn name_of(dir: &Path) -> String {
 }
 
 pub fn share(_args: &[String]) -> i32 {
-    let (dir, _, canon) = match crate::cmds::load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (dir, _, canon) = or_fail!(crate::cmds::load());
     let profile = match Profile::load(&dir) {
         Ok(p) => p,
         Err(e) => return fail(e),
@@ -493,10 +490,7 @@ pub fn diff(args: &[String]) -> i32 {
     if !has(args, "--upstream") {
         return fail("usage: canon diff --upstream [--propose] [--json]");
     }
-    let (dir, _, canon) = match crate::cmds::load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (dir, _, canon) = or_fail!(crate::cmds::load());
     let seed = match load_seed(&dir) {
         Ok(s) => s,
         Err(e) => return fail(e),
@@ -632,10 +626,7 @@ pub fn upgrade(args: &[String]) -> i32 {
     if generation.is_none() && !pasted {
         return fail("usage: canon upgrade <generation> | --paste");
     }
-    let (dir, _, canon) = match crate::cmds::load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (dir, _, canon) = or_fail!(crate::cmds::load());
     let Some(ancestry) = canon.ancestry().clone() else {
         return fail("this canon was not adopted from a lineage — nothing to upgrade");
     };
