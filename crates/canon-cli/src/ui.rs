@@ -39,7 +39,7 @@ use std::time::Duration;
 
 use canon_core::{ActId, ActKind, Canon, Log};
 
-use crate::cmds::{dir, fail, positionals};
+use crate::cmds::{dir, fail, or_fail, positionals};
 use crate::review::{self, Item, Kind};
 use crate::store;
 
@@ -118,10 +118,7 @@ const COOKIE: &str = "canon_ui";
 
 pub fn run(args: &[String]) -> i32 {
     let _ = positionals(args);
-    let d = match dir() {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
+    let d = or_fail!(dir());
     let listener = match TcpListener::bind(("127.0.0.1", 0)) {
         Ok(l) => l,
         Err(e) => return fail(format!("could not listen on this machine: {e}")),

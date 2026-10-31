@@ -144,10 +144,7 @@ fn seal(_args: &[String], pos: &[&str]) -> i32 {
         return fail("usage: canon draw seal <draw-id>");
     };
     let (d, _, canon) = or_fail!(load());
-    let commit = match resolve_draw(&canon, needle) {
-        Ok(c) => c,
-        Err(e) => return fail(e),
-    };
+    let commit = or_fail!(resolve_draw(&canon, needle));
     let announced = canon
         .draws()
         .iter()
@@ -171,14 +168,8 @@ fn seal(_args: &[String], pos: &[&str]) -> i32 {
              that counts, and a second would be a way to open whichever flatters you",
         );
     }
-    let secret = match fresh_secret() {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
-    let dir = match secrets_dir(&d) {
-        Ok(x) => x,
-        Err(e) => return fail(e),
-    };
+    let secret = or_fail!(fresh_secret());
+    let dir = or_fail!(secrets_dir(&d));
     let path = dir.join(commit.as_str());
     if let Err(e) = std::fs::write(&path, format!("{secret}\n")) {
         return fail(format!("writing {}: {e}", path.display()));
@@ -211,10 +202,7 @@ fn open(args: &[String], pos: &[&str]) -> i32 {
         return fail("usage: canon draw open <draw-id>");
     };
     let (d, _, canon) = or_fail!(load());
-    let commit = match resolve_draw(&canon, needle) {
-        Ok(c) => c,
-        Err(e) => return fail(e),
-    };
+    let commit = or_fail!(resolve_draw(&canon, needle));
     let announced = canon
         .draws()
         .iter()
@@ -270,10 +258,7 @@ fn show(args: &[String], pos: &[&str]) -> i32 {
         return fail("usage: canon draw show <draw-id>");
     };
     let (_, _, canon) = or_fail!(load());
-    let commit = match resolve_draw(&canon, needle) {
-        Ok(c) => c,
-        Err(e) => return fail(e),
-    };
+    let commit = or_fail!(resolve_draw(&canon, needle));
     match canon.draw(&commit) {
         Ok(drawn) => {
             if has(args, "--json") {

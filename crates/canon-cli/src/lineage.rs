@@ -55,10 +55,7 @@ pub fn name_of(dir: &Path) -> String {
 
 pub fn share(_args: &[String]) -> i32 {
     let (dir, _, canon) = or_fail!(crate::cmds::load());
-    let profile = match Profile::load(&dir) {
-        Ok(p) => p,
-        Err(e) => return fail(e),
-    };
+    let profile = or_fail!(Profile::load(&dir));
     if canon.active().next().is_none() {
         return fail("nothing to share — this canon has no live commitments");
     }
@@ -71,14 +68,8 @@ pub fn share(_args: &[String]) -> i32 {
 // ── adopt ───────────────────────────────────────────────────
 
 pub fn adopt(args: &[String]) -> i32 {
-    let dir = match crate::cmds::dir() {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
-    let (_, canon) = match store::read(&dir).map(|l| (l.len(), l.derive())) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let dir = or_fail!(crate::cmds::dir());
+    let (_, canon) = or_fail!(store::read(&dir).map(|l| (l.len(), l.derive())));
     let rebasing = has(args, "--rebase");
     match (canon.ancestry(), rebasing) {
         (Some(a), false) => {
@@ -132,10 +123,7 @@ pub fn adopt(args: &[String]) -> i32 {
 
     // Resolved before anything is written: a typo in one id must not leave
     // a half-adopted canon behind it.
-    let except = match excepted(&snapshot, &crate::cmds::flags(args, "--except")) {
-        Ok(e) => e,
-        Err(e) => return fail(e),
-    };
+    let except = or_fail!(excepted(&snapshot, &crate::cmds::flags(args, "--except")));
     let why = crate::cmds::flag(args, "-m").unwrap_or_default();
     match write_adoption(&dir, &snapshot, &source, &except, why) {
         Ok(n) => {
@@ -491,14 +479,8 @@ pub fn diff(args: &[String]) -> i32 {
         return fail("usage: canon diff --upstream [--propose] [--json]");
     }
     let (dir, _, canon) = or_fail!(crate::cmds::load());
-    let seed = match load_seed(&dir) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
-    let d = match diverged(&dir, &seed, &canon) {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
+    let seed = or_fail!(load_seed(&dir));
+    let d = or_fail!(diverged(&dir, &seed, &canon));
     if has(args, "--json") {
         println!("{}", serde_json::to_string_pretty(&d).unwrap_or_default());
         return 0;
@@ -630,10 +612,7 @@ pub fn upgrade(args: &[String]) -> i32 {
     let Some(ancestry) = canon.ancestry().clone() else {
         return fail("this canon was not adopted from a lineage — nothing to upgrade");
     };
-    let seed = match load_seed(&dir) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
+    let seed = or_fail!(load_seed(&dir));
     // **Two ways in, one way through.** A canon adopted by paste has no
     // upstream to fetch, and `upgrade` used to refuse it and advise adopting
     // into a new canon, which discards the fork's own record. A newer block
@@ -644,10 +623,7 @@ pub fn upgrade(args: &[String]) -> i32 {
         if let Err(e) = std::io::stdin().read_to_string(&mut block) {
             return fail(format!("reading the pasted block: {e}"));
         }
-        let next = match Snapshot::parse(&block) {
-            Ok(s) => s,
-            Err(e) => return fail(e),
-        };
+        let next = or_fail!(Snapshot::parse(&block));
         if next.lineage != ancestry.lineage {
             return fail(format!(
                 "that block is {}@{}, and this canon descends from {} — nothing was written. \
@@ -685,10 +661,7 @@ pub fn upgrade(args: &[String]) -> i32 {
         return 0;
     }
 
-    let carried = match load_carried(&dir) {
-        Ok(c) => c,
-        Err(e) => return fail(e),
-    };
+    let carried = or_fail!(load_carried(&dir));
     let d = Divergence::compute_carried(&seed, &canon, &carried);
     let fate_of = |upstream_id: &canon_core::ActId| -> Option<&Fate> {
         d.inherited
