@@ -18,6 +18,10 @@ mod explain;
 mod govern;
 mod guard;
 mod identify;
+// The integration tests' list of jargon, read by the help test too.
+#[cfg(test)]
+#[path = "../tests/jargon/mod.rs"]
+mod jargon;
 mod lineage;
 mod locate;
 mod mcp;
@@ -248,11 +252,17 @@ fn main() {
             print!("{text}");
             std::process::exit(0);
         }
+        // Any word canon uses, from its glossary: `canon help in charge`.
+        let said = cli::define(&args[1..].join(" "));
+        if !said.is_empty() {
+            println!("{}", said.join("\n"));
+            std::process::exit(0);
+        }
         // A topic nobody has used to print the short help, so a reader asking
         // about profiles learned nothing and was not told so.
         if let Some(t) = topic.filter(|t| *t != "all" && *t != "--all" && !t.starts_with('-')) {
             eprintln!(
-                "no such topic `{t}` — canon help all lists the verbs, and `canon help profile | areas` the rest."
+                "no such topic or word `{t}` — canon help all lists the verbs, and `canon help profile | areas` the rest."
             );
             std::process::exit(1);
         }
@@ -298,6 +308,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{HELP, HELP_ALL};
+    use crate::jargon;
 
     /// **The n+1 test, as a test.**
     ///
@@ -336,6 +347,27 @@ mod tests {
         }
         // And it names the one door to everything else, or the rest is lost.
         assert!(HELP.contains("canon help all"));
+
+        // **Past the short help, plain is the bar too.** A student reads the
+        // long help and each verb's own as closely as the first screen, so the
+        // words the record keeps for itself stay out of all three.
+        let mut said = jargon::found(HELP);
+        said.extend(jargon::found(HELP_ALL));
+        for (verb, ..) in crate::cli::VERBS {
+            let help = crate::cli::help_for(verb, HELP_ALL).unwrap();
+            said.extend(
+                jargon::found(&help)
+                    .into_iter()
+                    .map(|w| format!("{verb}: {w}")),
+            );
+        }
+        said.dedup();
+        assert!(
+            said.is_empty(),
+            "{} jargon:\n{}",
+            said.len(),
+            said.join("\n")
+        );
     }
 
     #[test]

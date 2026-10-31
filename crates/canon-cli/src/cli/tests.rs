@@ -373,3 +373,33 @@ fn every_old_spelling_names_a_verb_or_flag_that_exists_and_none_is_one() {
         self::args(&["log", "--scope"])
     );
 }
+
+#[test]
+fn every_verb_and_every_old_name_is_in_the_glossary() {
+    // `canon help <word>` is only a promise if the words are there: a verb
+    // nobody defined is one a student meets with nothing to read.
+    let missing: Vec<&str> = VERBS
+        .iter()
+        .map(|(v, ..)| *v)
+        .chain(VERB_ALIASES.iter().map(|(old, _)| *old))
+        .filter(|v| define(v).is_empty())
+        .collect();
+    assert!(missing.is_empty(), "not in glossary.txt: {missing:?}");
+    // Every line is a definition or a note, so none is silently unreadable.
+    for line in GLOSSARY
+        .lines()
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+    {
+        assert!(
+            line.split_once(": ")
+                .is_some_and(|(_, d)| !d.trim().is_empty()),
+            "not `term: definition`: {line}"
+        );
+    }
+    assert_eq!(
+        define("consent:14d").len(),
+        1,
+        "a rule's spelling finds its word"
+    );
+    assert_eq!(define("in charge").len(), 1);
+}

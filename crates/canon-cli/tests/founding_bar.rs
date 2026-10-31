@@ -13,6 +13,8 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
+mod jargon;
+
 fn scratch(name: &str) -> PathBuf {
     let dir =
         std::env::temp_dir().join(format!("canon-founding-bar-{name}-{}", std::process::id()));
@@ -681,4 +683,68 @@ fn every_old_spelling_runs_the_new_verb_and_says_so_once() {
         assert!(notes[0].contains(spelled), "{}", notes[0]);
         assert!(!new_err.contains("is now"), "`{new}` said:\n{new_err}");
     }
+}
+
+/// **A student can read a whole session.** A house of two, run through the
+/// verbs a household meets in its first week, and not one word of the
+/// record's own vocabulary on stdout or stderr: what canon says to a person
+/// is in the words the person would use.
+#[test]
+fn a_first_week_in_a_house_reads_in_plain_words() {
+    let dir = scratch("first-week").join(".canon");
+    let mut said = String::new();
+    let mut run = |actor: &str, args: &[&str]| {
+        let (_, out, err) = canon_apart(&dir, actor, args, "");
+        said.push_str(&format!("$ canon {}\n{out}{err}", args.join(" ")));
+        if ![
+            "who",
+            "list",
+            "why",
+            "open",
+            "overdue",
+            "ratification",
+            "rulings",
+        ]
+        .contains(&args[0])
+        {
+            tick();
+        }
+        out
+    };
+    run("human:alex", &["init", "--profile", "house"]);
+    run("human:alex", &["give", "human:sam", "house.kitchen"]);
+    let rule = id_of(&run(
+        "human:alex",
+        &["add", "Dishes are washed the same day."],
+    ));
+    let quiet = id_of(&run(
+        "human:sam",
+        &["add", "Quiet after ten.", "--area", "house"],
+    ));
+    let guests = id_of(&run(
+        "human:sam",
+        &["add", "Guests leave by midnight.", "--area", "house"],
+    ));
+    run("human:alex", &["approve", &quiet, "-m", "fair"]);
+    run("human:alex", &["object", &guests, "-m", "too strict"]);
+    for args in [
+        &["who"][..],
+        &["who", "house.kitchen"],
+        &["list"],
+        &["why", &rule],
+        &["why", &quiet],
+        &["open"],
+        &["overdue"],
+        &["ratification", "show"],
+        &["rulings", "show"],
+    ] {
+        run("human:alex", args);
+    }
+    run(
+        "human:sam",
+        &["withdraw", "human:sam", "house.kitchen", "-m", "moving out"],
+    );
+    run("human:alex", &["check", "Paint the kitchen red."]);
+    let found = jargon::found(&said);
+    assert!(found.is_empty(), "{}\n\n{said}", found.join("\n"));
 }

@@ -132,6 +132,28 @@ pub(crate) fn verb(name: &str) -> Option<&'static Verb> {
     VERBS.iter().find(|v| v.0 == name)
 }
 
+/// What each word canon uses means, one line each. Content rather than
+/// program, so it is a file a reader can open, and `canon help <word>` and
+/// each verb's help read it.
+const GLOSSARY: &str = include_str!("../glossary.txt");
+
+/// Every line of the glossary that defines `term`, or none. `consent:14d`
+/// is found as `consent` and `areas` as `area`; a word with two senses, like
+/// `area`, has two lines.
+pub fn define(term: &str) -> Vec<&'static str> {
+    let term = term.to_lowercase();
+    let head = term.split(':').next().unwrap_or_default();
+    for t in [&term[..], head, term.strip_suffix('s').unwrap_or_default()] {
+        let entry =
+            |l: &&str| !l.starts_with('#') && l.split_once(": ").is_some_and(|(k, _)| k == t);
+        let found: Vec<&str> = GLOSSARY.lines().filter(entry).collect();
+        if !found.is_empty() {
+            return found;
+        }
+    }
+    Vec::new()
+}
+
 /// Did somebody ask a verb what it does? `main` answers before dispatch, so
 /// the handler never sees the flag.
 pub fn wants_help(rest: &[String]) -> bool {
@@ -177,6 +199,9 @@ pub fn help_for(verb: &str, help_all: &str) -> Option<String> {
         out.push_str("  takes no flags\n");
     } else {
         out.push_str(&format!("  flags: {}\n", flags.join("  ")));
+    }
+    for (_, said) in define(name).iter().filter_map(|l| l.split_once(": ")) {
+        out.push_str(&format!("  in a word: {said}\n"));
     }
     if *name == "init" {
         out.push_str(

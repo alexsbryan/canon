@@ -42,6 +42,11 @@ renames that heading to the version, and its section becomes the release notes
   `ratification set --governs rules` is the plain spelling of
   `--governs commitments`, which still works, and `canon help areas` is
   the topic `canon help scopes` was. JSON output is unchanged.
+- `canon help <word>` says what any word canon uses means, in one line:
+  every verb, the plain words it prints (`canon help in charge`), the ways
+  rules can pass (`canon help consent:14d`), and the record's own names
+  met in `canon log` or JSON (`canon help supersede`). Each verb's help
+  ends with its line too. The words live in `crates/canon-cli/glossary.txt`.
 - `canon adopt <url>` no longer leaves its clone of the lineage where
   `git add .canon` commits it. `canon init` lists `lineages/` in
   `.canon/.gitignore`, and the cache writes a `.gitignore` of its own the

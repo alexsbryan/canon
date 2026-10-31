@@ -1,0 +1,137 @@
+# What each word canon uses means, one line each: `canon help <word>`.
+#
+# Every verb is here, every plain word canon prints, and the record's own
+# names a person still meets in `canon log` or in JSON. The record keeps
+# those names; this file is how a reader gets from one to the other.
+#
+# A line is `term: definition`. A term never holds ": ", so `consent:Nd`
+# is one. Lines starting with # are notes for whoever edits this file.
+
+# The verbs
+init: start a canon in this folder, with you in charge of it.
+add: write a rule down; it is in force once its area passes it, and a proposal until then.
+review: go through what is waiting on you, one area at a time.
+ui: open canon as a page in your browser, on this machine only.
+approve: say yes to a proposal, or support an action with --about.
+object: say no to a proposal, with your reason, or object to an action with --about.
+list: the rules in force now, and what is proposed.
+why: where a rule came from, what it replaced, and why.
+amend: change a rule's words, and say why; the record calls it `supersede`.
+repeal: take a rule away with no replacement; the record calls it `retract`.
+accept: keep two rules that conflict, on purpose, until a review date.
+dismiss: say two rules only seem to conflict.
+undo: take back an act, yours or one in an area you are in charge of.
+log: every act in the record, oldest first, under the record's own names.
+question: write down something the rules do not cover yet.
+who: who is in charge of an area, and how rules pass and actions are judged there.
+give: put someone in charge of an area, until a date if you name one; the record calls it `grant`.
+withdraw: step back from an area you are in charge of, or take someone off one.
+area: put a rule in an area; the old name of the verb is `scope`.
+rulings: how actions are judged here; the record calls it `policy`.
+ratification: how rules pass here, area by area: who has to say yes, and how many.
+allot: say what this commons has to share, like rooms or tools.
+allocation: say how a shared thing goes round, like a rotation.
+pool: whose turn it is with a shared thing, on a date.
+position: the old way to support or object to an action; `approve --about` and `object --about` do it now.
+decide: write down a ruling the group made about an action.
+rank: mark a rule constitutional (`principle`), so it is harder to change, or ordinary (`convention`).
+revisit: set a review date on a rule or an act; the record calls it `horizon`.
+overdue: what is past its review date.
+draw: pick people by lot, in a way nobody can steer.
+silence: write down that something is left unwritten on purpose.
+voice: what someone raised, and what came of it.
+second: add your weight to an open question, without your name.
+replay: decide this canon's own past again, to see what another way of judging would have done.
+open: the questions nobody has answered yet.
+witness: check the record against git: nothing taken out, nothing backdated.
+guard: what protects the record from being edited behind canon's back.
+identify: tie your name to your SSH key, so only you can write as you.
+mcp: let an AI agent read the rules and ask canon, over stdio.
+share: print a block another group can paste to copy your rules.
+adopt: copy another group's rules to start from.
+diff: how your rules differ from the ones you copied.
+upgrade: take the updates from the group you copied rules from.
+merge-driver: help git merge two copies of the record; run it once to set it up.
+conflicts: rules of yours that conflict with each other; the old name of the verb is `tensions`.
+config: what this canon is set up with, like which model reads for it.
+draft: read your notes or documents and propose the rules already in them.
+check: ask whether something you want to do fits the rules, and what to do next.
+
+# The plain words canon prints
+rule: something the group agreed, in force until it is amended or repealed.
+proposal: a rule someone wrote that has not passed yet.
+area: a part of the canon with its own people in charge, like `house.kitchen`; a dotted path.
+in charge: able to decide for an area: pass its rules, and give or take its charge.
+in force: passed, and not amended or repealed since.
+how rules pass here: what a proposal in an area needs before it is a rule; `canon ratification show`.
+how actions are judged here: what the rulings say an action needs; `canon rulings show`.
+ruling: a decision the group made about one action.
+constitutional: a rule ranked `principle`, harder to change than an ordinary one.
+go ahead: the action fits the rules; nobody has to be asked.
+ask first: ask the person in charge before you do it.
+ask everyone: the group decides this one together.
+not allowed: the rules say no.
+review date: the day a rule or a charge should be looked at again.
+past its review date: its review date has come and gone, and nobody has looked again.
+keep both: two rules conflict and the group keeps both on purpose (`canon accept`).
+not a real conflict: two rules only seem to clash (`canon dismiss`).
+the rules you copied from: the group whose canon you started from with `canon adopt`.
+left unwritten on purpose: a thing the group chose not to make a rule about (`canon silence`).
+the closest area decides first: whoever is in charge nearest a thing decides it before anyone above.
+consequences that escalate: the second time something happens the answer is firmer, and the third firmer again.
+must pass twice: a rule that needs two votes, with time or new people in between.
+
+# How rules can pass (`canon ratification set <rule>`)
+standing: whoever is in charge of the area says yes, and it is a rule.
+joint: every one of the named people has to say yes.
+threshold: so many yes votes pass it, and so many no votes stop it.
+majority: more than half of those in charge say yes.
+unanimous: everyone in charge says yes, and one no stops it.
+share: that share of those in charge, like `share:60%` or `share:2/3`.
+consent: it passes unless someone in charge objects within that many days, like `consent:14d`.
+twice: it must pass twice, with days or someone new in between.
+
+# How actions can be judged (`canon rulings set <rule>`)
+default: the rules decide, and a person settles a conflict or a gap.
+supermajority: a proposal carries when that share of the votes are for it.
+cautious: what cannot be undone is never decided by silence.
+
+# What `check` says to do
+act: go ahead.
+act-and-notify: go ahead, and tell the group.
+ask-one: ask the person in charge first.
+ask-panel: ask everyone, or a panel drawn for it.
+refuse: not allowed.
+
+# The record's own words, met in `canon log` and in JSON
+commitment: the record's word for a rule.
+assert: the record's name for writing a rule down (`canon add`).
+supersede: the record's name for `amend`: a rule's words changed.
+retract: the record's name for `repeal`: a rule taken away.
+scope: the record's word for an area.
+scoped: the record's name for putting a rule in an area.
+grant: the record's name for `give`: someone put in charge of an area.
+standing over: the record's way of saying someone is in charge of an area.
+holder: the record's word for someone in charge.
+policy: the record's word for the rulings: how actions are judged here.
+ratify: the record's name for choosing how rules pass in an area.
+ratification rule: the record's words for how rules pass here.
+decided: the record's name for a ruling written down (`canon decide`).
+graduated: the record's word for consequences that escalate for repeats.
+subsidiarity: the record's word for: the closest area decides first.
+entrenched: the record's word for constitutional rules being harder to change.
+principle: a rule ranked constitutional: harder to change.
+convention: an ordinary rule, changed the ordinary way.
+horizon: the record's word for a review date.
+tension: the record's word for two rules that conflict.
+tensions: the old name of `canon conflicts`.
+lineage: the record's word for the rules you copied from.
+upstream: the group whose rules you copied.
+generation: one version of the rules you copied, as their group published it.
+provenance: where a rule came from: who wrote it, citing what.
+adjudicate: to rule on whether an action fits the rules.
+revert: the record's name for `canon undo`.
+act: one line of the record: something somebody did, with who and when.
+actor: who did an act: `human:<name>` for a person, `agent:<name>` for software.
+profile: what kind of canon this is: `personal`, `code` or `house`.
+endpoint: the address of the model `check` and `draft` ask.
