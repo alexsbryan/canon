@@ -643,10 +643,13 @@ fn weigh(args: &[String], approve: bool) -> i32 {
             ))
         }
     };
-    let (d, _, st) = or_fail!(load());
+    let (d, log, st) = or_fail!(load());
     let target = match crate::explain::resolve_proposal(&st, needle) {
         Ok(i) => i,
-        Err(e) => return fail(e),
+        Err(e) => {
+            return crate::govern::answer_request(&d, (&log, &st), needle, approve, because)
+                .unwrap_or_else(|| fail(e))
+        }
     };
     match answer(&d, &store::actor(), target.as_str(), None, approve, because) {
         Ok(act) => {
@@ -752,6 +755,7 @@ pub fn list(args: &[String]) -> i32 {
             "no {} yet. `canon add \"<the first one>\"` to start.",
             profile.nouns()
         );
+        crate::govern::unapplied(&log, &st);
         return 0;
     }
     for c in &live {
@@ -802,12 +806,7 @@ pub fn list(args: &[String]) -> i32 {
     if refused > 0 {
         println!("{refused} refused — `canon why <id>` says why");
     }
-    if !st.ungoverned().is_empty() {
-        println!(
-            "{} change(s) to who decides came from someone not in charge and were not applied — `canon log`",
-            st.ungoverned().len()
-        );
-    }
+    crate::govern::unapplied(&log, &st);
     let carried = st.tolerated().count();
     if carried > 0 {
         println!("{carried} contradiction(s) carried knowingly — `canon list --json` for detail");

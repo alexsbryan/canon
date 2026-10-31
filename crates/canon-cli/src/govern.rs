@@ -855,7 +855,7 @@ fn under(canon: &canon_core::Canon, scope: Option<&Scope>, now: i64) {
 /// used to answer "grant it", and following that made a scope called
 /// `default` that meant nothing more than any other.
 fn who_holds_the_canon(args: &[String]) -> i32 {
-    let (_, _, canon) = or_fail!(load());
+    let (d, log, canon) = or_fail!(load());
     let now = store::now();
     let scopes = canon.canon_scopes(now);
     let mut holders: Vec<&canon_core::Grant> = canon
@@ -889,15 +889,21 @@ fn who_holds_the_canon(args: &[String]) -> i32 {
         };
         println!("  {}  in charge of {}{}{bare}", g.actor, g.scope, until(g));
     }
+    // Row 17's steward, alone in charge, read that canon "only knows me"
+    // and never typed the line init had shown her.
+    let alone = holders.len() == 1
+        && crate::profile::Profile::load(&d).unwrap_or_default()
+            != crate::profile::Profile::Personal;
+    if alone {
+        println!(
+            "  every yes here is theirs alone; give the others a say: canon give human:<them> {}",
+            holders[0].scope
+        );
+    }
     println!("\nthey say yes or no to proposals made outside any area.");
     under(&canon, None, now);
     // The ledger is careful; the summary above it must say so too.
-    if !canon.ungoverned().is_empty() {
-        println!(
-            "{} change(s) to who decides came from someone not in charge and were not applied — `canon log`",
-            canon.ungoverned().len()
-        );
-    }
+    unapplied(&log, &canon);
     0
 }
 
@@ -1008,7 +1014,19 @@ pub fn grant(args: &[String]) -> i32 {
     match give(&d, &store::actor(), pos[0], &scope, horizon, rationale) {
         Ok(act) => {
             let holder = pos[0];
-            let code = crate::cmds::governed(&d, &act.id, || {
+            let took = crate::cmds::took(&d, &act.id);
+            if let crate::cmds::Took::Refused(why) = &took {
+                let c = store::read(&d).map(|l| l.derive_at(store::now()));
+                let ask = c.map_or(String::new(), |c| deciders(&c, &scope));
+                println!("{}", crate::wrap::hang("NOT APPLIED: ", why));
+                println!(
+                    "  on the record as {} — a request to {ask}; they say yes with",
+                    act.id
+                );
+                println!("    canon approve {}", act.id);
+                return 1;
+            }
+            let code = crate::cmds::announce(&took, &act.id, || {
                 match horizon {
                     Some(h) => println!("{holder} is in charge of {scope} until {}", store::ymd(h)),
                     None => println!(
@@ -1072,6 +1090,119 @@ pub fn give(
             rationale: rationale.to_string(),
         },
         by,
+    )
+}
+
+/// A `give` from someone not in charge: refused by the fold, kept on the
+/// record, and a request to whoever is in charge of its area until one of
+/// them grants it. xenia row 17's student asked to be let in this way and
+/// it reached nobody: `approve` knew only proposals.
+fn requests<'a>(
+    log: &'a canon_core::Log,
+    canon: &canon_core::Canon,
+    now: i64,
+    open: bool,
+) -> Vec<(&'a Act, &'a str, &'a Scope, Option<i64>)> {
+    let refused = |a: &&Act| canon.ungoverned().iter().any(|(x, _)| *x == a.id);
+    let ask = |a: &'a Act| match &a.kind {
+        ActKind::Grant {
+            holder,
+            scope,
+            horizon,
+            ..
+        } if !open
+            || !canon
+                .who_decides(scope, now)
+                .iter()
+                .any(|g| g.actor == *holder) =>
+        {
+            Some((a, holder.as_str(), scope, *horizon))
+        }
+        _ => None,
+    };
+    log.acts().iter().filter(refused).filter_map(ask).collect()
+}
+
+/// Who can say yes to a request over `area`, as a reader names them.
+fn deciders(canon: &canon_core::Canon, area: &Scope) -> String {
+    let who: Vec<&str> = canon
+        .who_decides(area, store::now())
+        .iter()
+        .map(|g| g.actor.as_str())
+        .collect();
+    match who.is_empty() {
+        true => format!("whoever is in charge of {area}"),
+        false => listed(&who),
+    }
+}
+
+/// The refused acts, where the people in charge look: each open request by
+/// name with the line that grants it, and the rest counted.
+pub fn unapplied(log: &canon_core::Log, canon: &canon_core::Canon) {
+    for (a, holder, area, _) in requests(log, canon, store::now(), true) {
+        let whom = if a.actor == holder {
+            "to be put".into()
+        } else {
+            format!("to put {holder}")
+        };
+        println!(
+            "{} asks {whom} in charge of {area} — `canon approve {}`",
+            a.actor, a.id
+        );
+    }
+    let rest = canon.ungoverned().len() - requests(log, canon, 0, false).len();
+    if rest > 0 {
+        println!(
+            "{rest} change(s) to who decides came from someone not in charge and were not applied — `canon log`"
+        );
+    }
+}
+
+/// `approve` on a request: someone in charge of its area writes the give as
+/// their own, so the fold's one gate on a grant still decides it. `None`
+/// when `needle` names no open request.
+pub fn answer_request(
+    d: &std::path::Path,
+    (log, canon): (&canon_core::Log, &canon_core::Canon),
+    needle: &str,
+    yes: bool,
+    because: &str,
+) -> Option<i32> {
+    let found = requests(log, canon, store::now(), true).into_iter();
+    let (a, holder, area, horizon) = found
+        .into_iter()
+        .find(|(a, ..)| a.id.as_str().starts_with(needle))?;
+    let me = store::actor();
+    if !yes {
+        return Some(fail(format!(
+            "{} was never applied, so there is nothing to object to and nothing was written; leaving it unapproved is the no",
+            a.id
+        )));
+    }
+    if !canon
+        .who_decides(area, store::now())
+        .iter()
+        .any(|g| g.actor == me)
+    {
+        let who = deciders(canon, area);
+        return Some(fail(format!(
+            "{} asks for {holder} to be put in charge of {area}; only someone in charge of it can say yes: {who}",
+            a.id
+        )));
+    }
+    let why = format!("approves {}: {because}", a.id);
+    Some(
+        match give(d, &me, holder, area, horizon, why.trim_end_matches(": ")) {
+            Ok(_) => {
+                let to = horizon.map_or(String::new(), |h| format!(" until {}", store::ymd(h)));
+                println!(
+                    "{}  approved by {me}: {holder} is in charge of {area}{to}",
+                    a.id
+                );
+                0
+            }
+            Err(e) => fail(e),
+        },
     )
 }
 
