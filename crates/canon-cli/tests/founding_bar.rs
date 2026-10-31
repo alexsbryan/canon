@@ -140,7 +140,7 @@ fn the_canon_as_a_whole_is_named_by_the_scopes_that_hold_it() {
     );
     assert_eq!(code, 0, "{out}");
     assert!(
-        flat(&out).contains("holds this canon by holding arch or procedure"),
+        flat(&out).contains("in charge of this canon (its areas arch or procedure)"),
         "{out}"
     );
 
@@ -175,7 +175,10 @@ fn an_agents_first_write_in_a_fresh_canon_is_a_proposal() {
     );
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("PROPOSED"), "{out}");
-    assert!(out.contains("nobody holds procedure yet"), "{out}");
+    assert!(
+        out.contains("nobody is in charge of procedure yet"),
+        "{out}"
+    );
     let id = id_of(&out);
     let (_, out) = canon_as(&dir, "human:alex", &["approve", &id]);
     assert!(out.contains("in force"), "{out}");
@@ -367,7 +370,10 @@ fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
         &["add", "Quiet hours are 10pm to 7am."],
     );
     assert_eq!(code, 0, "{out}");
-    assert!(out.contains("in force — june holds this canon"), "{out}");
+    assert!(
+        out.contains("in force — june is in charge of this canon"),
+        "{out}"
+    );
     let (code, out) = canon_as(&canon, "human:sam", &["add", "Guests stay three nights."]);
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("PROPOSED"), "{out}");

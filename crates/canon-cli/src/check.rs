@@ -419,7 +419,7 @@ fn next_step(canon: &Canon, decision: &Decision, attrs: &Attributes) -> String {
     };
     let what = match (asked, decision.authority) {
         (Some(p), _) if p.is_empty() => {
-            "ask a person first: nobody holds this, so anyone can answer".into()
+            "ask a person first: nobody is in charge of this, so anyone can answer".into()
         }
         (Some(p), Authority::AskOne) if p.len() > 1 => format!("ask one of {} first", p.join(", ")),
         (Some(p), _) => format!("ask {} first", p.join(", ")),

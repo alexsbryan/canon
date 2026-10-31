@@ -288,10 +288,10 @@ fn knobs(
 pub(crate) fn ratify_from(raw: &str) -> Result<canon_core::Ratify, String> {
     raw.parse().map_err(|e| match e {
         canon_core::NotARule::Unknown => format!(
-            "`{raw}` is not a ratification rule — standing, joint:human:a,human:b, \
+            "`{raw}` is not a way rules can pass — standing, joint:human:a,human:b, \
              threshold:2/1 (two approving carry it, one objecting stops it), majority, \
-             unanimous, share:60% or share:2/3 (that share of the people who hold the \
-             scope), consent:7d, or twice:turnover:consent:7d"
+             unanimous, share:60% or share:2/3 (that share of the people in charge of \
+             the area), consent:7d, or twice:turnover:consent:7d"
         ),
         e => format!("`{raw}` — {e}"),
     })
@@ -1314,7 +1314,7 @@ pub fn overdue(args: &[String]) -> i32 {
                 // renewed is exactly what a monitor's accountability looks
                 // like when it works.
                 if canon.who_decides(scope, now).is_empty() {
-                    println!("          nobody holds it now — `canon who {scope}`");
+                    println!("          nobody is in charge of it now — `canon who {scope}`");
                 }
             }
         }

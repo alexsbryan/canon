@@ -272,7 +272,11 @@ fn subsidiarity_routes_to_the_deepest_holder_and_refuses_an_unheld_scope() {
         .at(200);
     let d = Rule::Subsidiarity.decide(&s, &garage, &canon);
     assert_eq!(d.authority, Authority::Refuse);
-    assert!(d.because.contains("nobody holds standing"), "{}", d.because);
+    assert!(
+        d.because.contains("nobody is in charge of"),
+        "{}",
+        d.because
+    );
 }
 
 #[test]

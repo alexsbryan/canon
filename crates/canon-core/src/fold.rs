@@ -949,7 +949,7 @@ fn apply_grant(
     // and is open.
     if !gate(canon, act, Some(scope), || {
         format!(
-            "{} granted {holder} standing over {scope} without holding it",
+            "{} put {holder} in charge of {scope} without being in charge of it",
             act.actor
         )
     }) {
@@ -984,7 +984,7 @@ fn apply_withdraw(canon: &mut Canon, act: &Act, holder: &str, scope: &crate::sco
     if act.actor != *holder
         && !gate(canon, act, Some(scope), || {
             format!(
-                "{} stood {holder} down from {scope} without holding it",
+                "{} took {holder} off {scope} without being in charge of it",
                 act.actor
             )
         })
@@ -1531,7 +1531,7 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
             ActKind::Policy { text, rule, scope } => {
                 if !gate(&mut canon, act, scope.as_ref(), || {
                     format!(
-                        "{} set a policy over {} without holding it",
+                        "{} set the rulings for {} without being in charge of it",
                         act.actor,
                         crate::ratify::where_(scope.as_ref())
                     )
@@ -1563,7 +1563,7 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                 // by standing over the scope, which includes the scope above.
                 if !gate(&mut canon, act, scope.as_ref(), || {
                     format!(
-                        "{} set how {} makes rules without holding it",
+                        "{} set how {} makes rules without being in charge of it",
                         act.actor,
                         crate::ratify::where_(scope.as_ref())
                     )
@@ -1600,7 +1600,7 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                 // boundary Ostrom's first principle is about, one level down
                 // from who holds it.
                 if !gate(&mut canon, act, Some(scope), || {
-                    format!("{} allotted {scope} without holding it", act.actor)
+                    format!("{} allotted {scope}, not in charge of it", act.actor)
                 }) {
                     continue;
                 }
@@ -1617,7 +1617,7 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
             }
             ActKind::Allocation { text, rule, scope } => {
                 if !gate(&mut canon, act, Some(scope), || {
-                    format!("{} set how {scope} is shared without holding it", act.actor)
+                    format!("{} set how {scope} goes round, not in charge", act.actor)
                 }) {
                     continue;
                 }

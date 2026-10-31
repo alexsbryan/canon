@@ -57,7 +57,7 @@ fn id_of(out: &str) -> String {
 fn a_refused_act_leads_with_not_applied_on_every_gated_verb() {
     let dir = fresh("refused");
     // Sam founds the house and writes two rules; a second passes so the
-    // gate is shut when Ola, who holds nothing, tries each verb.
+    // gate is shut when Ola, in charge of nothing, tries each verb.
     let (c, out) = canon_as(&dir, "human:sam", &["grant", "human:sam", "house"]);
     assert_eq!(c, 0, "{out}");
     let (_, a) = canon_as(
@@ -223,7 +223,7 @@ fn an_act_that_took_while_open_says_so() {
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("in force — "), "{out}");
     assert!(
-        out.contains("nobody held house before this was written; it was open")
+        out.contains("nobody was in charge of house before this was written; it was open")
             || out.contains("holds house"),
         "{out}"
     );
@@ -344,7 +344,7 @@ fn a_rule_added_before_anyone_holds_the_canon_says_it_took_while_open() {
     let (code, out) = canon_as(&dir, "human:sam", &["add", "Quiet after eleven."]);
     assert_eq!(code, 0, "{out}");
     assert!(out.contains("in force — "), "{out}");
-    assert!(out.contains("nobody held"), "{out}");
+    assert!(out.contains("nobody was in charge of"), "{out}");
     assert!(out.contains("it was open"), "{out}");
 }
 

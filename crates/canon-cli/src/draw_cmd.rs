@@ -132,7 +132,7 @@ fn commit(args: &[String], pos: &[&str]) -> i32 {
             println!("    canon draw open {}", act.id);
             // Absence reported at the moment it can still be fixed.
             if pool == 0 {
-                eprintln!("\nwarning: nobody holds standing over `{scope}` yet — as it stands this draw has no pool.");
+                eprintln!("\nwarning: nobody is in charge of `{scope}` yet — as it stands this draw has no pool.");
             } else if count >= pool {
                 eprintln!("\nwarning: {count} seat(s) from a pool of {pool} would select everyone, which is not a draw.");
             }

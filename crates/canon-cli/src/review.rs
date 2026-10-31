@@ -526,8 +526,9 @@ enum Stand {
 /// grant <actor> <scope>` writes, through the same [`crate::govern::give`].
 /// Whether it took is the fold's answer, never assumed.
 fn stand(d: &Path, actor: &str, scope: &Scope, prompt: &mut dyn Prompt) -> Stand {
-    let Some(answer) = prompt.ask(&format!("nobody holds {scope}; take standing? [y/N] › "))
-    else {
+    let Some(answer) = prompt.ask(&format!(
+        "nobody is in charge of {scope}; take charge of it? [y/N] › "
+    )) else {
         return Stand::Quit;
     };
     if !matches!(answer.to_lowercase().as_str(), "y" | "yes") {
@@ -604,7 +605,7 @@ fn walk(
         if let Some(s) = unheld(d, scope.as_deref().and_then(Scope::new).as_ref())? {
             match stand(d, actor, &s, prompt) {
                 Stand::Took => {
-                    prompt.say(&format!("  you hold {s} now"));
+                    prompt.say(&format!("  you are in charge of {s} now"));
                     // Asked again: the grant is on the record, and what
                     // waits on you is still the fold's call.
                     let log = store::read(d)?;

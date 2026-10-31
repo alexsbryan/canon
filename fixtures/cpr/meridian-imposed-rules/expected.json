@@ -36,7 +36,7 @@
   "boundary-nobody-holds-this": {
     "outcome": "unaddressed",
     "authority": "refuse",
-    "because": "nobody holds standing over `infra`"
+    "because": "nobody is in charge of `infra`"
   },
   "congruence-forked-and-diverged": {
     "lineage": "platform-engineering-canon",

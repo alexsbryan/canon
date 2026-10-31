@@ -134,10 +134,7 @@ impl core::fmt::Display for DrawError {
                 "nobody opened a secret, so there is no seed — and there is no default seed"
             ),
             Self::EmptyPool { scope } => {
-                write!(
-                    f,
-                    "nobody holds standing over `{scope}`, so there is no pool"
-                )
+                write!(f, "nobody is in charge of `{scope}`, so there is no pool")
             }
             Self::PoolTooSmall { pool, count } => write!(
                 f,

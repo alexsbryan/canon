@@ -397,7 +397,7 @@ pub fn init(args: &[String]) -> i32 {
             holder: founder.clone(),
             scope,
             horizon: None,
-            rationale: format!("founded this canon; {founder} holds it"),
+            rationale: format!("founded this canon; {founder} is in charge of it"),
         };
         if let Err(e) = write(&base, kind) {
             return fail(e);

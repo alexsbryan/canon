@@ -134,7 +134,7 @@ impl core::fmt::Display for BadBar {
             }
             Self::Nobody => "a share of none of them would make a rule before anyone approved it",
             Self::MoreThanEveryone => {
-                "that is more than everyone who holds the scope, so nothing could ever carry"
+                "that is more than everyone in charge of the area, so nothing could ever carry"
             }
         })
     }
@@ -158,7 +158,7 @@ impl core::fmt::Display for NotARule {
             // A shell reads `>` as a redirect, so an unquoted `share:>1/2`
             // arrives as `share:` and lands here: say how to type it.
             Self::Share => f.write_str(
-                "a share is a whole percent or a fraction of the people who hold the scope: \
+                "a share is a whole percent or a fraction of the people in charge of the area: \
                  share:60%, share:2/3, or 'share:>1/2' for more than half (quoted, so the \
                  shell leaves the > alone)",
             ),
@@ -435,7 +435,7 @@ impl Ratify {
                                happen."
                 .into(),
             Self::Unanimous => "A rule here takes everyone in charge of this area when it \
-                                is proposed. One of them objecting, or no longer holding it before \
+                                is proposed. One of them objecting, or no longer in charge before \
                                 they approve, refuses it."
                 .into(),
             Self::Share(bar) => match Self::of_bar(*bar) {
@@ -1028,8 +1028,8 @@ impl Canon {
             .collect();
         match scopes.split_last() {
             None => where_(None),
-            Some((only, [])) => format!("this canon by holding {only}"),
-            Some((last, rest)) => format!("this canon by holding {} or {last}", rest.join(", ")),
+            Some((only, [])) => format!("this canon (its area {only})"),
+            Some((last, rest)) => format!("this canon (its areas {} or {last})", rest.join(", ")),
         }
     }
 
@@ -1167,11 +1167,11 @@ impl Canon {
                     let people = self.people_said(p, from);
                     return Outcome {
                         completed: people.approved.first().map(|(who, at)| {
-                            (*at, format!("approved by {who}; nobody held {here}"))
+                            (*at, format!("approved by {who}; nobody was in charge of {here}"))
                         }),
                         refused: objection(people.first_objection()),
                         needs: format!(
-                            "a person's approval — nobody holds {here} yet, and the proposer is \
+                            "a person's approval — nobody is in charge of {here} yet, and the proposer is \
                              not a person"
                         ),
                     };
@@ -1182,7 +1182,7 @@ impl Canon {
                         // the scope IS held, one second too late to count.
                         completed: Some((
                             from,
-                            format!("nobody held {here} before this was written; it was open"),
+                            format!("nobody was in charge of {here} before this was written; it was open"),
                         )),
                         refused: None,
                         needs: String::new(),
@@ -1193,9 +1193,9 @@ impl Canon {
                     .first()
                     .filter(|(who, at)| who.actor() == p.actor && *at == p.at);
                 let completed = match (own, t.approved.first()) {
-                    (Some(_), _) => Some((from, format!("{} holds {here}", p.actor))),
+                    (Some(_), _) => Some((from, format!("{} is in charge of {here}", p.actor))),
                     (None, Some((who, at))) => {
-                        Some((*at, format!("approved by {who}, who holds {here}")))
+                        Some((*at, format!("approved by {who}, in charge of {here}")))
                     }
                     (None, None) => None,
                 };
@@ -1203,7 +1203,7 @@ impl Canon {
                     completed,
                     refused: objection(t.first_objection()),
                     needs: format!(
-                        "approval from one person who holds {}{}",
+                        "approval from one person in charge of {}{}",
                         self.held_as(p.scope, now),
                         if is_human(p.actor) {
                             ""
@@ -1253,7 +1253,7 @@ impl Canon {
                         (
                             at,
                             String::new(),
-                            format!("{} holder(s) objected", t.against.len()),
+                            format!("{} of those in charge objected", t.against.len()),
                         ),
                         |(_, by, why)| (at, by.to_string(), why.to_string()),
                     ))
@@ -1268,14 +1268,14 @@ impl Canon {
                     };
                     (
                         done,
-                        format!("{} of {approve} holder approvals", t.approved.len()),
+                        format!("{} of {approve} needed approvals", t.approved.len()),
                     )
                 });
                 Outcome {
                     completed,
                     refused,
                     needs: format!(
-                        "{} more approval(s) from people who hold {here}",
+                        "{} more approval(s) from people in charge of {here}",
                         approve.saturating_sub(t.approved.len())
                     ),
                 }
@@ -1289,12 +1289,12 @@ impl Canon {
                     completed: (now >= due).then(|| {
                         (
                             due,
-                            format!("{days} day(s) passed with no objection from a holder"),
+                            format!("{days} day(s) passed with no objection from anyone in charge"),
                         )
                     }),
                     refused: objection(t.first_objection()),
                     needs: format!(
-                        "no objection from a holder before {}",
+                        "no objection from anyone in charge before {}",
                         crate::date::ymd(due)
                     ),
                 }
@@ -1332,7 +1332,7 @@ impl Canon {
                 refused: Some((
                     from,
                     String::new(),
-                    format!("nobody held {here} when it was proposed"),
+                    format!("nobody was in charge of {here} when it was proposed"),
                 )),
                 needs: String::new(),
             };
@@ -1346,9 +1346,11 @@ impl Canon {
             .collect();
         let completed = approved.get(needed - 1).map(|(_, at)| {
             let how = if all {
-                format!("approved by all {n} people who held {here} when it was proposed")
+                format!("approved by all {n} people in charge of {here} when it was proposed")
             } else {
-                format!("{needed} of the {n} people who held {here} when it was proposed approved")
+                format!(
+                    "{needed} of the {n} people in charge of {here} when it was proposed approved"
+                )
             };
             (*at, how)
         });
@@ -1407,8 +1409,8 @@ impl Canon {
                             at,
                             String::new(),
                             format!(
-                                "{voter} said no or no longer holds {here}, so everyone who \
-                                 held it when it was proposed can no longer approve it"
+                                "{voter} said no or is no longer in charge of {here}, so everyone in \
+                                 charge when it was proposed can no longer approve it"
                             ),
                         ),
                     };
@@ -1421,12 +1423,12 @@ impl Canon {
                     lost.iter().take_while(|(when, _, _)| *when <= at).collect();
                 let k = gone.len();
                 let who = match (n, k) {
-                    (1, _) => format!("the one person who held {here} when it was proposed"),
-                    _ => format!("{k} of the {n} people who held {here} when it was proposed"),
+                    (1, _) => format!("the one person in charge of {here} when it was proposed"),
+                    _ => format!("{k} of the {n} people in charge of {here} when it was proposed"),
                 };
-                let hold = if k == 1 { "holds" } else { "hold" };
+                let hold = if k == 1 { "is" } else { "are" };
                 let mut why = format!(
-                    "{who} said no or no longer {hold} it, so {} can no longer approve it",
+                    "{who} said no or {hold} no longer in charge, so {} can no longer approve it",
                     bar.phrase()
                 );
                 let reasons: Vec<String> = gone
@@ -1446,7 +1448,7 @@ impl Canon {
                 .filter(|v| !approved.iter().any(|(who, _)| who.actor() == *v))
                 .collect();
             format!(
-                "approval from {}: everyone who held {here} when it was proposed",
+                "approval from {}: everyone in charge of {here} when it was proposed",
                 missing.join(", ")
             )
         } else {
@@ -1466,7 +1468,7 @@ impl Canon {
             let count = needed.saturating_sub(approved.len());
             if missing.is_empty() {
                 format!(
-                    "{} more approval(s) from the {n} people who held {here} when it was proposed",
+                    "{} more approval(s) from the {n} people in charge of {here} when it was proposed",
                     count
                 )
             } else {
@@ -1482,7 +1484,7 @@ impl Canon {
                     format!("any of {names}")
                 };
                 format!(
-                    "{} more approval(s) from {who} — of the {n} people who held {here} when it \
+                    "{} more approval(s) from {who} — of the {n} people in charge of {here} when it \
                      was proposed",
                     count
                 )
@@ -1570,7 +1572,7 @@ impl Canon {
         let Some((b, joined)) = boundary else {
             return Verdict::Proposed {
                 needs: format!(
-                    "someone who did not hold {} on {} to be granted it, then a second approval",
+                    "someone not in charge of {} on {} to be put in charge, then a second approval",
                     where_(p.scope),
                     crate::date::ymd(t1)
                 ),
@@ -1636,7 +1638,7 @@ impl Canon {
         let completed = said
             .iter()
             .find(|(_, s)| s.position.pull == Pull::Toward)
-            .map(|(who, s)| (s.at, format!("approved by {who}, who holds {here}")));
+            .map(|(who, s)| (s.at, format!("approved by {who}, in charge of {here}")));
         let refused = said
             .iter()
             .find(|(_, s)| {
@@ -1647,7 +1649,7 @@ impl Canon {
             completed,
             refused,
             needs: format!(
-                "approval from a person who holds {}",
+                "approval from a person in charge of {}",
                 self.held_as(p.scope, now)
             ),
         })

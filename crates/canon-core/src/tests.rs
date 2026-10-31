@@ -1824,7 +1824,7 @@ fn under_standing_a_holder_writes_and_a_non_holder_proposes() {
     let Status::Proposed { needs } = &canon.get(&by_theo.id).unwrap().status else {
         panic!("theo does not hold the kitchen, so his line is a proposal")
     };
-    assert!(needs.contains("holds house.kitchen"), "{needs}");
+    assert!(needs.contains("in charge of house.kitchen"), "{needs}");
 
     // One holder's approval is enough under `standing`.
     acts.push(approve_at(&by_theo.id, 200, "human:sam"));
@@ -2302,7 +2302,7 @@ fn an_agents_write_in_a_scope_nobody_holds_waits_for_a_person() {
     let Status::Proposed { needs } = &canon.get(&by_agent.id).unwrap().status else {
         panic!("an agent's write in an open scope is not law")
     };
-    assert!(needs.contains("nobody holds garden"), "{needs}");
+    assert!(needs.contains("nobody is in charge of garden"), "{needs}");
 
     // An agent's approval is not a person's.
     let mut agents = acts.clone();
@@ -2382,7 +2382,7 @@ fn the_canon_is_held_by_its_widest_held_scopes_and_says_so() {
         unreachable!()
     };
     assert!(
-        needs.contains("holds this canon by holding arch or procedure"),
+        needs.contains("in charge of this canon (its areas arch or procedure)"),
         "{needs}"
     );
 }
@@ -2525,7 +2525,7 @@ fn a_house_holder_changing_the_kitchens_rule_proposes_and_one_cook_carries_it() 
     let Verdict::Proposed { needs } = verdict_of(&canon, &change.id) else {
         panic!("a house holder proposes the kitchen's rule; the cooks ratify it")
     };
-    assert!(needs.contains("holds house.kitchen"), "{needs}");
+    assert!(needs.contains("in charge of house.kitchen"), "{needs}");
     assert_eq!(
         canon.ratification_for(Some(&scope("house.kitchen"))),
         &Ratify::Standing,
@@ -2550,7 +2550,7 @@ fn a_house_holder_changing_the_kitchens_rule_proposes_and_one_cook_carries_it() 
         panic!("theo's pan rule is a proposal")
     };
     assert!(
-        needs.contains("one person who holds"),
+        needs.contains("one person in charge of"),
         "{needs}: standing, not joint"
     );
 
@@ -2680,7 +2680,7 @@ fn a_consent_rule_change_governs_only_what_is_written_after_its_window_closes() 
     let Status::Proposed { needs } = &canon.get(&late.id).unwrap().status else {
         panic!("written under standing, by a non-cook")
     };
-    assert!(needs.contains("one person who holds"), "{needs}");
+    assert!(needs.contains("one person in charge of"), "{needs}");
 }
 
 #[test]
@@ -2737,7 +2737,7 @@ fn twice_by_turnover_waits_for_someone_who_did_not_hold_the_kitchen_at_the_first
     let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
         panic!("carried once; now it waits for the kitchen to change hands")
     };
-    assert!(needs.contains("did not hold house.kitchen"), "{needs}");
+    assert!(needs.contains("not in charge of house.kitchen"), "{needs}");
 
     // Dana approving again, before anyone new arrives, counts for nothing.
     acts.push(approve_at(&pan.id, 300, "human:dana"));
@@ -2794,7 +2794,7 @@ fn renewing_your_own_standing_is_not_turnover_and_neither_is_a_lapse_nobody_fill
     let Status::Proposed { needs } = &canon.get(&pan.id).unwrap().status else {
         panic!("the same coalition cannot elect itself")
     };
-    assert!(needs.contains("did not hold house.kitchen"), "{needs}");
+    assert!(needs.contains("not in charge of house.kitchen"), "{needs}");
 
     // Somebody who last held it years ago and returns is new to THIS vote.
     acts.push(grant("human:theo", "house.kitchen", None, 1_500));
@@ -3122,8 +3122,8 @@ fn a_majority_is_of_the_house_when_the_proposal_was_written() {
     };
     assert_eq!(
         needs,
-        "1 more approval(s) from any of human:cy, human:eve, human:fay — of the 5 people who \
-         held house when it was proposed"
+        "1 more approval(s) from any of human:cy, human:eve, human:fay — of the 5 people in \
+         charge of house when it was proposed"
     );
     acts.push(approve_at(&bikes.id, 300, "human:eve"));
     let canon = Log::from_acts(acts).derive();
@@ -3169,7 +3169,7 @@ fn under_unanimous_someone_moving_out_before_they_approve_refuses_it() {
     };
     assert_eq!((by.as_str(), *at), ("", 200));
     assert!(
-        why.contains("human:cy") && why.contains("no longer holds house"),
+        why.contains("human:cy") && why.contains("no longer in charge of house"),
         "{why}"
     );
 }
@@ -3329,7 +3329,7 @@ fn five_people_under_sixty_percent_carry_at_three_and_refuse_as_a_house() {
         status_of(&canon, &shed.id),
         &Status::Proposed {
             needs: "1 more approval(s) from any of human:ana, human:dee, human:eve — of the 5 \
-                    people who held house when it was proposed"
+                    people in charge of house when it was proposed"
                 .into()
         }
     );
@@ -3366,7 +3366,7 @@ fn five_people_under_sixty_percent_carry_at_three_and_refuse_as_a_house() {
         canon.ratify(canon.get(&shed.id).unwrap(), i64::MAX),
         crate::ratify::Verdict::Ratified {
             since: 300,
-            how: "3 of the 5 people who held house when it was proposed approved".into()
+            how: "3 of the 5 people in charge of house when it was proposed approved".into()
         }
     );
     assert_eq!(
@@ -3374,8 +3374,8 @@ fn five_people_under_sixty_percent_carry_at_three_and_refuse_as_a_house() {
         &Status::Refused {
             at: 220,
             by: String::new(),
-            why: "3 of the 5 people who held house when it was proposed said no or no longer \
-                  hold it, so 60% can no longer approve it — human:cy: Late cooks need the \
+            why: "3 of the 5 people in charge of house when it was proposed said no or are no \
+                  longer in charge, so 60% can no longer approve it — human:cy: Late cooks need the \
                   evening.; human:dee: Not in summer."
                 .into()
         }
@@ -3385,8 +3385,8 @@ fn five_people_under_sixty_percent_carry_at_three_and_refuse_as_a_house() {
         &Status::Refused {
             at: 400,
             by: String::new(),
-            why: "3 of the 5 people who held house when it was proposed said no or no longer \
-                  hold it, so 60% can no longer approve it — human:cy: Too dark.; human:dee: \
+            why: "3 of the 5 people in charge of house when it was proposed said no or are no \
+                  longer in charge, so 60% can no longer approve it — human:cy: Too dark.; human:dee: \
                   Not in summer."
                 .into()
         }
@@ -3414,7 +3414,7 @@ fn thirty_people_under_sixty_percent_carry_at_eighteen() {
         status_of(&canon, &carry.id),
         &Status::Proposed {
             needs: "1 more approval(s) from any of human:p18, human:p19, human:p20 and 10 \
-                    other(s) — of the 30 people who held house when it was proposed"
+                    other(s) — of the 30 people in charge of house when it was proposed"
                 .into()
         },
         "seventeen of thirty is not 60%"
@@ -3456,10 +3456,11 @@ fn thirty_people_under_sixty_percent_carry_at_eighteen() {
         &Status::Refused {
             at: 300,
             by: String::new(),
-            why: "13 of the 30 people who held house when it was proposed said no or no longer \
-                  hold it, so 60% can no longer approve it — human:p02: Late cooks need the \
+            why:
+                "13 of the 30 people in charge of house when it was proposed said no or are no \
+                  longer in charge, so 60% can no longer approve it — human:p02: Late cooks need the \
                   morning.; human:p14: Not in summer."
-                .into()
+                    .into()
         }
     );
     assert_eq!(
@@ -3467,8 +3468,8 @@ fn thirty_people_under_sixty_percent_carry_at_eighteen() {
         &Status::Refused {
             at: 400,
             by: String::new(),
-            why: "13 of the 30 people who held house when it was proposed said no or no longer \
-                  hold it, so 60% can no longer approve it — human:p02: Not in summer."
+            why: "13 of the 30 people in charge of house when it was proposed said no or are no \
+                  longer in charge, so 60% can no longer approve it — human:p02: Not in summer."
                 .into()
         }
     );
@@ -3494,8 +3495,8 @@ fn under_majority_nobody_refuses_alone() {
         &Status::Refused {
             at: 210,
             by: String::new(),
-            why: "2 of the 3 people who held house when it was proposed said no or no longer \
-                  hold it, so more than half can no longer approve it — human:bo: Sunday is \
+            why: "2 of the 3 people in charge of house when it was proposed said no or are no \
+                  longer in charge, so more than half can no longer approve it — human:bo: Sunday is \
                   for sleeping.; human:cy: Too loud."
                 .into()
         }
@@ -3521,8 +3522,8 @@ fn only_a_bar_of_everyone_waits_for_a_reason() {
                 assert_eq!((*at, by.as_str()), (200, ""));
                 assert_eq!(
                     why,
-                    "1 of the 2 people who held house when it was proposed said no or no \
-                     longer holds it, so more than half can no longer approve it"
+                    "1 of the 2 people in charge of house when it was proposed said no or is no \
+                     longer in charge, so more than half can no longer approve it"
                 );
             }
             Status::Proposed { .. } if !refuses => {}
@@ -3578,8 +3579,8 @@ fn a_share_of_the_whole_canon_names_the_scope_its_people_held() {
         &Status::Refused {
             at: 210,
             by: String::new(),
-            why: "2 of the 3 people who held house when it was proposed said no or no longer \
-                  hold it, so 2/3 can no longer approve it — human:cy: Not with these floors."
+            why: "2 of the 3 people in charge of house when it was proposed said no or are no \
+                  longer in charge, so 2/3 can no longer approve it — human:cy: Not with these floors."
                 .into()
         },
         "two-thirds of three is two; one no leaves two who can, and a second no ends it"
@@ -3615,7 +3616,7 @@ fn twice_under_a_share_counts_the_house_at_each_vote() {
         "{needs}"
     );
     assert!(
-        needs.ends_with("of the 6 people who held house when it was proposed"),
+        needs.ends_with("of the 6 people in charge of house when it was proposed"),
         "{needs}"
     );
     acts.push(approve_at(&oven.id, 90_100, "human:dee"));

@@ -543,7 +543,7 @@ impl Policy for Rule {
                     return Decision {
                         outcome,
                         authority: Authority::Refuse,
-                        because: format!("subsidiarity: nobody holds standing over `{scope}`"),
+                        because: format!("subsidiarity: nobody is in charge of `{scope}`"),
                     };
                 };
                 let holders: Vec<&str> = deciders
@@ -561,7 +561,7 @@ impl Policy for Rule {
                     outcome,
                     authority,
                     because: format!(
-                        "subsidiarity: `{scope}` is held by {} — {}",
+                        "subsidiarity: `{scope}` is in the charge of {} — {}",
                         holders.join(", "),
                         if mine { "including you" } else { "not you" }
                     ),

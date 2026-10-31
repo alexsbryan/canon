@@ -271,7 +271,7 @@ def predict(v: dict, ctx: dict, seed_acts: int, scenario: list[dict]) -> dict:
         "outcome": "supported", "authority": "ask-one", "because": "not you"}
     e["boundary-nobody-holds-this"] = {
         "outcome": "unaddressed", "authority": "refuse",
-        "because": f"nobody holds standing over `{v['unheld']}`"}
+        "because": f"nobody is in charge of `{v['unheld']}`"}
 
     e["congruence-forked-and-diverged"] = {
         "lineage": v["lineage"] if forked else None,
