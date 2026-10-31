@@ -44,5 +44,5 @@ upgrade    | --paste
 voice    |
 who    | --json
 why    | --json
-withdraw  --ask -m  |
+withdraw  --ask -m  | --yes
 witness  --base --slack  | --gate --json
