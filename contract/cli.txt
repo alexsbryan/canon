@@ -1,19 +1,21 @@
 accept  --revisit -m  |
-add  --cite --scope -m  |
+add  --area --cite -m  |
 adopt  --carry --except -m  | --allow-remote --dry-run --paste --rebase
-allocation  --from-draw --order --per --scope --step -m  |
+allocation  --area --from-draw --order --per --step -m  |
 allot  --count --named --unit -m  |
+amend  --area -m  |
 approve  --about --citing -m  |
-check  --about --amends --scope  | --allow-remote --irreversible --json
+area    |
+check  --about --amends --area  | --allow-remote --irreversible --json
 config    |
+conflicts    | --allow-remote --json
 decide  --authority --citing --outcome -m  |
 diff    | --json --propose --upstream
 dismiss  -m  |
 draft  --as --continue --from --max-chunks --replay --since  | --accept-all --allow-remote --dry-run --from-git --include-ignored --json --resume --yes
 draw  --after --secret -m  | --json
-grant  --horizon -m  |
+give  --until -m  |
 guard  --check --slack  | --apply
-horizon  -m  |
 identify    |
 init  --profile  | --open --plain
 list  --out  | --check --json --markdown
@@ -23,21 +25,19 @@ merge-driver    |
 object  --about --citing -m  |
 open    | --json
 overdue    | --json
-policy  --entrench --graduated --objections --of --scope -m  | --by-about --cautious --json --no-repair
 pool  --at  | --json
 position  --citing -m  | --against --toward
 question  --from-proposal  |
 rank    |
-ratification  --governs --personal --scope -m  | --json
-replay  --entrench --expect --graduated --objections --of --out --policy --profile --ratification --scenario --write-scenario  | --brief --by-about --cautious --json --no-repair
-retract  -m  |
-review  --scope  | --json
-scope    |
+ratification  --area --governs --personal -m  | --json
+repeal  -m  |
+replay  --constitutional --escalate --expect --objections --of --out --passes --profile --rulings --scenario --write-scenario  | --brief --by-about --cautious --json --no-repair
+review  --area  | --json
+revisit  -m  |
+rulings  --area --constitutional --escalate --objections --of -m  | --by-about --cautious --json --no-repair
 second    |
 share    |
 silence  -m  |
-supersede  --scope -m  |
-tensions    | --allow-remote --json
 ui    |
 undo  -m  |
 upgrade    | --paste
