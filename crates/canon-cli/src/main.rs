@@ -48,25 +48,28 @@ mod wrap;
 
 /// What a new person is shown.
 ///
-/// **Six verbs, because the other forty-one are the reason this does not
+/// **Eight lines of verbs, because the rest are the reason this does not
 /// spread.** A tool somebody has to be introduced to twice is one that stops
-/// at the person who installed it. Everything past `check` is something a
+/// at the person who installed it. Everything past these is something a
 /// group grows into — most never will — and it is one command away.
+/// `approve`, `object` and `repeal` share a line because a house lives on
+/// them from its first proposal, and xenia's student (row 17) used them
+/// blind for days.
 const HELP: &str = "\
 canon — the rules you already have, and what was decided about them
 
   init [--profile personal|code|house]   start one in this directory
   draft --from <folder>                  read what you already have
   add \"<text>\" [-m <why>] [--cite <where>] write one down, with why it is one and where it came from
-  check \"<proposal>\"                     does it clash with one? A model does the
-                                         reading: canon config set endpoint <url>
-  list                                   what is live now
-  why <id>                               what replaced what, when, and why; a silence too
-  log                                    the raw acts, oldest first
+  check \"<something you want to do>\"     may I? It names the rule in the way, and
+                                         who to ask
+  list                                   what is live now, and what waits on whom
+  approve <id> · object <id> -m <why>    yes or no to a proposal; `repeal <id>`
+                                         takes a rule, or your own proposal, away
+  why <id> · log                         what replaced what, and why; every act in order
 
 Nobody writes one of these a rule at a time. `draft` reads a folder — any text
 in it — or a pipe: `cat whatever | canon draft --from - --dry-run --json`.
-
 `draft`/`check` need a model (`canon config set endpoint <url>`); the rest folds a text file.
 
   canon help all    who decides what, how you decide, what has gone stale,

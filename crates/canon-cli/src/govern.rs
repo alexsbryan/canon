@@ -357,10 +357,23 @@ pub fn ratification(args: &[String]) -> i32 {
                 return 0;
             }
             let now = store::now();
-            for r in canon.ratifications() {
-                // The one deciding its scope today, among the history kept.
-                let decides = canon.adopted_at(r.scope.as_ref(), now);
-                let deciding = decides.is_some_and(|d| d.act == r.act);
+            // What decides today first, then the history: in record order a
+            // refused or replaced rule printed above the one in use, and
+            // xenia's house read the top one as the one that wins (row 17).
+            let mut rows: Vec<_> = canon
+                .ratifications()
+                .iter()
+                .map(|r| {
+                    let decides = canon.adopted_at(r.scope.as_ref(), now);
+                    (r, decides, decides.is_some_and(|d| d.act == r.act))
+                })
+                .collect();
+            rows.sort_by_key(|(_, _, deciding)| !deciding);
+            let in_use = rows.iter().filter(|(_, _, deciding)| *deciding).count();
+            for (i, (r, decides, deciding)) in rows.into_iter().enumerate() {
+                if i == in_use && in_use > 0 {
+                    println!("\nearlier, and not in use now:");
+                }
                 let mark = if deciding { "  (in use now)" } else { "" };
                 let at = r
                     .scope
@@ -1070,6 +1083,15 @@ pub fn give(
 /// confrontation from someone who is already disengaging.
 pub fn withdraw(args: &[String]) -> i32 {
     let pos = positionals(args);
+    // xenia's student (row 17, run 3) typed `withdraw` meaning "take back my
+    // proposal", stepped herself off house, and nobody put her back.
+    if let Some(id) = pos.iter().find(|p| p.starts_with("can-")) {
+        return fail(format!(
+            "withdraw takes a person off an area, not a rule off the list; \
+             nothing was written. Take back your own rule or proposal with \
+             `canon repeal {id}`"
+        ));
+    }
     if pos.len() < 2 {
         return fail("usage: canon withdraw <actor> <area> [-m \"<why>\"] [--ask \"<question>\"]");
     }
@@ -1080,7 +1102,19 @@ pub fn withdraw(args: &[String]) -> i32 {
         return fail(format!("`{}` is not an area", pos[1]));
     };
     let ask = flag(args, "--ask").filter(|q| !q.trim().is_empty());
-    if ask.is_some() && pos[0] != store::actor() {
+    let you = pos[0] == store::actor();
+    if you {
+        // Said either way; asked only of someone at the keyboard, so a
+        // script stepping back runs as it did.
+        eprintln!("{}", stepping_back(&scope));
+        if crate::term::interactive()
+            && !has(args, "--yes")
+            && !crate::term::yes(&format!("Step back from {scope}?"))
+        {
+            return fail("nothing was written");
+        }
+    }
+    if ask.is_some() && !you {
         return fail(format!(
             "--ask leaves your own question as you go; {} is not you, and nothing was written",
             pos[0]
@@ -1108,6 +1142,16 @@ pub fn withdraw(args: &[String]) -> i32 {
         },
         Err(e) => fail(e),
     }
+}
+
+/// What stepping yourself back costs, before it is done: the one part of it
+/// you cannot undo yourself.
+fn stepping_back(area: &Scope) -> String {
+    format!(
+        "This takes you off {area}: your yes and no stop counting there, and only \
+         someone still in charge of it can put you back. To take back your own \
+         rule or proposal instead: `canon repeal <id>`."
+    )
 }
 
 /// The question a leaver never raised, written by `anonymous`.

@@ -492,6 +492,11 @@ fn a_house_is_told_how_its_rules_are_made_and_a_replaced_rule_says_so() {
         "{show}"
     );
     assert_eq!(show.matches("in force since").count(), 1, "{show}");
+    // xenia row 17: in record order the replaced rule printed first and
+    // the house read the top one as the one that wins.
+    let first = show.lines().next().unwrap_or_default();
+    assert!(first.starts_with(&uid) && first.contains("(in use now)"), "{show}");
+    assert!(show.contains("earlier, and not in use now:"), "{show}");
 }
 
 #[test]
@@ -904,4 +909,38 @@ fn a_bare_canon_outside_any_canon_is_the_short_help_and_how_to_start() {
     assert_eq!(out.status.code(), Some(2), "{said}");
     assert!(said.contains("canon help all"), "{said}");
     assert!(said.contains("`canon init` starts one here"), "{said}");
+}
+
+/// **What row 17's student needed before her first week went wrong.** She
+/// typed `withdraw` to take back a proposal and stepped herself off house;
+/// the log's "position toward" never said which way; and `--help` never
+/// named the three verbs the house ran on.
+#[test]
+fn a_student_finds_the_everyday_verbs_and_withdraw_says_what_it_costs() {
+    let (code, help) = canon_as(&scratch("student-help"), "human:priya", &["--help"]);
+    assert_eq!(code, 0, "{help}");
+    for verb in ["approve <id>", "object <id>", "repeal <id>", "may I?"] {
+        assert!(help.contains(verb), "{verb}: {help}");
+    }
+    let canon = scratch("student").join(".canon");
+    assert_eq!(canon_as(&canon, "human:mira", &["init", "--profile", "house"]).0, 0);
+    let (_, out) = canon_as(&canon, "human:priya", &["add", "Guests stay three nights."]);
+    let rule = id_of(&out);
+    let (code, out) = canon_as(&canon, "human:mira", &["approve", &rule]);
+    assert_eq!(code, 0, "{out}");
+    let (_, log) = canon_as(&canon, "human:mira", &["log"]);
+    assert!(log.contains(&format!("approves {rule}")), "{log}");
+    let acts = log.lines().filter(|l| l.starts_with("can-")).count();
+
+    let (code, out) = canon_as(&canon, "human:priya", &["withdraw", &rule]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains(&format!("canon repeal {rule}")), "{out}");
+    let (_, log) = canon_as(&canon, "human:mira", &["log"]);
+    assert_eq!(log.lines().filter(|l| l.starts_with("can-")).count(), acts, "{log}");
+
+    // Off a terminal nothing asks, so a script stepping back runs as it
+    // did; the cost is said either way.
+    let (code, _, err) = canon_apart(&canon, "human:mira", &["withdraw", "human:mira", "house"], "");
+    assert_eq!(code, 0, "{err}");
+    assert!(err.contains("only someone still in charge of it can put you back"), "{err}");
 }

@@ -106,7 +106,7 @@ canon initialised at /home/mira/house/.canon (house)
   a change to the rulings waits like a rule does, and human:mira.… is yours alone
 
   canon add "<a rule you already have>"      write one down
-  canon check "<something you want to do>"   does it clash with one?
+  canon check "<something you want to do>"   may I? It names who to ask
   canon why <id>                             what replaced what, and why
 
 that is the whole thing. `canon help all` when you want the rest —

@@ -61,7 +61,7 @@ pub(crate) const VERBS: &[Verb] = &[
     ("question", &["--from-proposal"], &[], crate::cmds::question),
     ("who", &[], &["--json"], crate::govern::who),
     ("give", &["--until", "-m"], &[], crate::govern::grant),
-    ("withdraw", &["--ask", "-m"], &[], crate::govern::withdraw),
+    ("withdraw", &["--ask", "-m"], &["--yes"], crate::govern::withdraw),
     ("area", &[], &[], crate::govern::scoped),
     ("rulings", &["--constitutional", "--escalate", "--objections", "--of", "--area", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"], crate::govern::policy),
     ("ratification", &["--governs", "--personal", "--area", "-m"], &["--json"], crate::govern::ratification),

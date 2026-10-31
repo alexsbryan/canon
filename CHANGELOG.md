@@ -21,6 +21,13 @@ renames that heading to the version, and its section becomes the release notes
   `--graduated`, `--policy` and `--ratification`.
 - The note naming the new spelling prints on stderr only when stderr is a
   terminal, so agents, hooks and the Slack bot never see it.
+- `canon withdraw <you> <area>` says what stepping back costs, and on a
+  terminal asks first; `--yes` skips the question. Off a terminal it runs
+  as before. Given a rule's id, it refuses and names `canon repeal <id>`.
+- `canon log` writes a position as `approves` or `objects to`, where it
+  wrote `toward` or `against`; `--json` is unchanged.
+- `canon ratification show` lists what is in use first, then the rules it
+  replaced or refused.
 
 ### Removed
 

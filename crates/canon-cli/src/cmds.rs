@@ -461,7 +461,7 @@ pub fn init(args: &[String]) -> i32 {
         ),
         (
             "canon check \"<something you want to do>\"".to_string(),
-            "does it clash with one?",
+            "may I? It names who to ask",
         ),
         ("canon why <id>".to_string(), "what replaced what, and why"),
     ];
@@ -1171,9 +1171,11 @@ pub fn log(args: &[String]) -> i32 {
                 citing,
                 ..
             } => {
+                // "position toward" never said which way to a reader who
+                // had not met `Pull` (xenia row 17); the verb that wrote it does.
                 let way = match pull {
-                    canon_core::Pull::Toward => "toward",
-                    canon_core::Pull::Against => "against",
+                    canon_core::Pull::Toward => "approves",
+                    canon_core::Pull::Against => "objects to",
                 };
                 match citing {
                     Some(id) => format!("position   {way} {about} (citing {id})"),
