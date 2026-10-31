@@ -694,20 +694,34 @@ pub fn decide(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(about) = pos.first() else {
         return fail(
-            "usage: canon decide \"<what it was about>\" --outcome <supported|conflicts|unaddressed> \
+            "usage: canon decide \"<what it was about>\" allow|deny [--citing <id>,…] \
+             -m \"<what was decided>\"\n       \
+             canon decide \"<what it was about>\" --outcome <supported|conflicts|unaddressed> \
              --authority <act|notify|ask-one|ask-panel|refuse> [--citing <id>,…] \
              -m \"<what was decided>\"",
         );
     };
-    let (Some(o), Some(a)) = (flag(args, "--outcome"), flag(args, "--authority")) else {
-        return fail(
-            "decide requires --outcome and --authority — `canon check --json` prints both, \
-             and defaulting either would record a decision nobody made",
-        );
+    // The short form is a ruling as the person asked says it: allow went
+    // FOR the action, which closes a graduated rule's episode; deny went
+    // against it, which is the conflict its next rung counts.
+    let ruled = match pos.get(1).copied() {
+        None => None,
+        Some("allow") => Some((Outcome::Supported, Authority::Act)),
+        Some("deny") => Some((Outcome::Conflicts, Authority::Refuse)),
+        Some(other) => return fail(format!("`{other}` is not a ruling — allow or deny")),
     };
-    let (outcome, authority) = match (outcome(o), authority(a)) {
-        (Ok(o), Ok(a)) => (o, a),
-        (Err(e), _) | (_, Err(e)) => return fail(e),
+    let (outcome, authority) = match (ruled, flag(args, "--outcome"), flag(args, "--authority")) {
+        (Some(r), None, None) => r,
+        (None, Some(o), Some(a)) => match (outcome(o), authority(a)) {
+            (Ok(o), Ok(a)) => (o, a),
+            (Err(e), _) | (_, Err(e)) => return fail(e),
+        },
+        _ => {
+            return fail(
+                "decide takes allow|deny, or --outcome and --authority, never both — \
+                 defaulting either half would record a decision nobody made",
+            )
+        }
     };
     let (d, _, canon) = match load() {
         Ok(v) => v,

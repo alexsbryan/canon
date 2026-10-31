@@ -147,7 +147,8 @@ GOVERN                                        (no model needed)
                                          or --from-draw <id> for a lot nobody steers
   pool <scope> [--at <date>]             whose turn it is. `who` is authority,
                                          `pool` is appropriation
-  decide \"<about>\" --outcome --authority record what the group decided
+  decide \"<about>\" allow|deny -m \"<why>\" record what the group decided
+         --outcome <o> --authority <a>   the long form, as `check --json` says it
          [--citing <id>,…]               the rules it turned on; a ladder counts by them
   rank <id> <rank>                       a principle, not a convention
   horizon <act-id> <YYYY-MM-DD>          look at this again by then

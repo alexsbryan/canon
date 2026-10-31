@@ -130,6 +130,17 @@ fn acts(dir: &Path) -> Vec<Value> {
         .collect()
 }
 
+/// The `decided` act whose rationale is `why`.
+fn decided(dir: &Path, why: &str) -> Value {
+    let log = acts(dir);
+    let found = log
+        .iter()
+        .find(|a| a["op"] == "decided" && a["rationale"] == why);
+    found
+        .cloned()
+        .unwrap_or_else(|| panic!("no decision `{why}` in {log:?}"))
+}
+
 /// Output with its wrapping undone, for a phrase the terminal may break.
 fn flat(out: &str) -> String {
     out.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -463,4 +474,104 @@ fn object_and_approve_about_an_action_write_positions_a_check_counts() {
     let (_, help) = canon_as(&dir, "human:dana", &["help", "all"]);
     assert!(!help.contains("  position "), "{help}");
     assert!(help.contains("--about"), "{help}");
+}
+
+// ── 5. the person asked records their ruling ───────────────────────────
+
+#[test]
+fn an_ask_ends_with_the_ruling_and_allow_and_deny_land_on_the_ladder() {
+    let dir = fresh("ruling", false);
+    let (code, out) = canon_as(&dir, "human:alex", &["add", "Bikes live in the shed."]);
+    assert_eq!(code, 0, "{out}");
+    let ladder = ["policy", "set", "default", "--graduated", "ask-one,refuse"];
+    let (code, out) = canon_as(&dir, "human:alex", &ladder);
+    assert_eq!(code, 0, "{out}");
+    let subject = "bikes in the hall";
+
+    // The ask ends with what the person asked runs.
+    let (_, out) = check(&dir, "human:sam", &[subject], NOTHING);
+    // Stdout's last line: stderr, which names the endpoint, follows it here.
+    let mut said = out.lines().filter(|l| !l.starts_with("checking on"));
+    let last = said.rfind(|l| !l.trim().is_empty()).unwrap_or_default();
+    assert!(
+        last.contains("canon decide \"bikes in the hall\" allow|deny -m \"<why>\""),
+        "{out}"
+    );
+
+    // Deny went against the action: the conflict the next rung counts.
+    let (code, out) = canon_as(
+        &dir,
+        "human:alex",
+        &["decide", subject, "deny", "-m", "not here"],
+    );
+    assert_eq!(code, 0, "{out}");
+    let denied = &decided(&dir, "not here");
+    assert_eq!(denied["op"], "decided", "{denied}");
+    assert_eq!(denied["outcome"], "conflicts", "{denied}");
+    assert_eq!(denied["authority"], "refuse", "{denied}");
+    assert_eq!(denied["rationale"], "not here", "{denied}");
+    let (_, out) = check(&dir, "human:sam", &[subject, "--json"], NOTHING);
+    let v = json_of(&out);
+    assert_eq!(v["authority"], "refuse", "{v}");
+    assert!(
+        v["because"].as_str().unwrap().contains("1 prior conflict"),
+        "{v}"
+    );
+
+    // Allow went for it: the episode closes and the ladder starts again.
+    tick();
+    let (code, out) = canon_as(
+        &dir,
+        "human:alex",
+        &["decide", subject, "allow", "-m", "a rack"],
+    );
+    assert_eq!(code, 0, "{out}");
+    let allowed = &decided(&dir, "a rack");
+    assert_eq!(allowed["outcome"], "supported", "{allowed}");
+    assert_eq!(allowed["authority"], "act", "{allowed}");
+    let (_, out) = check(&dir, "human:sam", &[subject, "--json"], NOTHING);
+    let v = json_of(&out);
+    assert_eq!(v["authority"], "ask-one", "{v}");
+    assert!(
+        v["because"].as_str().unwrap().contains("0 prior conflict"),
+        "{v}"
+    );
+
+    // Neither form guessed at, and the two never mixed.
+    let before = acts(&dir).len();
+    for args in [
+        vec!["decide", subject, "maybe", "-m", "x"],
+        vec!["decide", subject, "-m", "x"],
+        vec![
+            "decide",
+            subject,
+            "allow",
+            "--outcome",
+            "conflicts",
+            "--authority",
+            "refuse",
+        ],
+        vec!["decide", subject, "--outcome", "supported"],
+    ] {
+        let (code, out) = canon_as(&dir, "human:alex", &args);
+        assert_ne!(code, 0, "{args:?} was written: {out}");
+    }
+    assert_eq!(acts(&dir).len(), before);
+
+    // The long form still writes what it always wrote.
+    let long = [
+        "decide",
+        "pans",
+        "--outcome",
+        "unaddressed",
+        "--authority",
+        "ask-panel",
+        "-m",
+        "the house meets",
+    ];
+    let (code, out) = canon_as(&dir, "human:alex", &long);
+    assert_eq!(code, 0, "{out}");
+    let pans = decided(&dir, "the house meets");
+    assert_eq!(pans["outcome"], "unaddressed", "{pans}");
+    assert_eq!(pans["authority"], "ask-panel", "{pans}");
 }

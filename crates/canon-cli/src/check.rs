@@ -404,8 +404,20 @@ pub fn ask<'a>(canon: &'a Canon, decision: &Decision, attrs: &Attributes) -> Opt
 /// is the thing the group decided, and it prints even when it agrees,
 /// because a rule invisible whenever it agrees is one nobody notices they
 /// are governed by. `--json` carries both either way.
+///
+/// An ask ends with the command the person asked runs to answer, so their
+/// ruling is a `decided` act a graduated rule can count, not a word in a
+/// hallway nobody can find again.
 fn next_step(canon: &Canon, decision: &Decision, attrs: &Attributes) -> String {
-    let what = match (ask(canon, decision, attrs), decision.authority) {
+    let asked = ask(canon, decision, attrs);
+    let record = match asked {
+        Some(_) => format!(
+            "  they answer:  canon decide \"{}\" allow|deny -m \"<why>\"\n",
+            attrs.about
+        ),
+        None => String::new(),
+    };
+    let what = match (asked, decision.authority) {
         (Some(p), _) if p.is_empty() => {
             "ask a person first: nobody holds this, so anyone can answer".into()
         }
@@ -415,8 +427,8 @@ fn next_step(canon: &Canon, decision: &Decision, attrs: &Attributes) -> String {
         (None, a) => a.prose().to_string(),
     };
     match canon.policies().is_empty() {
-        true => format!("\n{what}\n"),
-        false => format!("\n{what}\n  {}\n", decision.because),
+        true => format!("\n{what}\n{record}"),
+        false => format!("\n{what}\n  {}\n{record}", decision.because),
     }
 }
 
