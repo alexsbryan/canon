@@ -50,7 +50,13 @@ fn judged(items: &[(usize, &str, &str)]) -> String {
 fn stand(items: &[(usize, &str, &str)]) -> (Canon, Standing) {
     let canon = canon_of(&TEXTS);
     let mock = Mock::spawn(vec![(200, judged(items))]);
-    let (standing, _) = assess(&mock.client(), &canon, "take the 8am rotation").unwrap();
+    let (standing, _) = assess(
+        &mock.client(),
+        &canon,
+        "take the 8am rotation",
+        "take the 8am rotation",
+    )
+    .unwrap();
     (canon, standing)
 }
 
@@ -211,7 +217,7 @@ fn a_bearing_naming_a_commitment_that_does_not_exist_is_refused() {
     // the conflict to whichever rule happened to be last.
     let canon = canon_of(&TEXTS);
     let mock = Mock::spawn(vec![(200, judged(&[(99, "against", "invented")]))]);
-    let (standing, _) = assess(&mock.client(), &canon, "p").unwrap();
+    let (standing, _) = assess(&mock.client(), &canon, "p", "p").unwrap();
     assert!(standing.positions.is_empty());
     assert_eq!(standing.outcome(), Outcome::Unaddressed);
 }
@@ -220,7 +226,7 @@ fn a_bearing_naming_a_commitment_that_does_not_exist_is_refused() {
 fn a_bearing_with_no_reason_is_refused_and_reported() {
     let canon = canon_of(&TEXTS);
     let mock = Mock::spawn(vec![(200, judged(&[(1, "against", "   ")]))]);
-    let (standing, refused) = assess(&mock.client(), &canon, "p").unwrap();
+    let (standing, refused) = assess(&mock.client(), &canon, "p", "p").unwrap();
     assert!(standing.positions.is_empty());
     assert_eq!(
         refused.len(),
@@ -233,7 +239,7 @@ fn a_bearing_with_no_reason_is_refused_and_reported() {
 fn an_unreadable_pull_is_dropped_rather_than_guessed() {
     let canon = canon_of(&TEXTS);
     let mock = Mock::spawn(vec![(200, judged(&[(1, "maybe", "unsure")]))]);
-    let (standing, _) = assess(&mock.client(), &canon, "p").unwrap();
+    let (standing, _) = assess(&mock.client(), &canon, "p", "p").unwrap();
     assert!(standing.positions.is_empty());
 }
 
@@ -277,7 +283,13 @@ fn a_carried_contradiction_is_shown_rather_than_relitigated() {
             (2, "toward", "team is short"),
         ]),
     )]);
-    let (standing, _) = assess(&mock.client(), &canon, "take the rotation").unwrap();
+    let (standing, _) = assess(
+        &mock.client(),
+        &canon,
+        "take the rotation",
+        "take the rotation",
+    )
+    .unwrap();
     let text = render(
         Profile::Personal,
         &canon,

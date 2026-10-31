@@ -729,6 +729,7 @@ fn is_human(actor: &str) -> bool {
 
 /// The counted word of the people a rule names, in time order. Every entry
 /// is a [`Person`], so nothing but a person's word can be counted here.
+#[derive(Default)]
 struct Tally<'a> {
     /// Who approved and when they first did. The proposer's own act, when it
     /// counts, is the earliest entry.
@@ -743,6 +744,15 @@ struct Tally<'a> {
 impl<'a> Tally<'a> {
     fn first_objection(&self) -> Option<(i64, Person<'a>, &'a str)> {
         self.objections.first().copied()
+    }
+
+    /// A position against: always counted against, and an objection only
+    /// when it gives a reason.
+    fn object(&mut self, at: i64, who: Person<'a>, why: &'a str) {
+        self.against.push((at, who));
+        if !why.trim().is_empty() {
+            self.objections.push((at, who, why));
+        }
     }
 }
 
@@ -1084,11 +1094,7 @@ impl Canon {
     /// people the rule names. `after` drops everything at or before a
     /// moment; `implicit` counts the proposer's own act as their approval.
     fn tally<'a>(&'a self, p: &Proposal<'a>, after: Option<i64>, implicit: bool) -> Tally<'a> {
-        let mut t = Tally {
-            approved: Vec::new(),
-            objections: Vec::new(),
-            against: Vec::new(),
-        };
+        let mut t = Tally::default();
         if let Some(who) = self.holding(p.scope, p.actor, p.at).filter(|_| implicit) {
             t.approved.push((who, p.at));
         }
@@ -1108,12 +1114,7 @@ impl Canon {
                         t.approved.push((who, s.at));
                     }
                 }
-                Pull::Against => {
-                    t.against.push((s.at, who));
-                    if !s.position.because.trim().is_empty() {
-                        t.objections.push((s.at, who, s.position.because.as_str()));
-                    }
-                }
+                Pull::Against => t.object(s.at, who, &s.position.because),
             }
         }
         // By time, so "the n-th approval" means what it says. Stable, so
@@ -1127,26 +1128,15 @@ impl Canon {
     /// no holders to count.
     fn people_said<'a>(&'a self, p: &Proposal, from: i64) -> Tally<'a> {
         let mut said: Vec<(Person<'a>, &crate::fold::Stated)> = self
-            .positions
-            .iter()
-            .filter(|s| s.about == p.id.as_str() && s.at >= from)
-            .filter_map(|s| Some((Person::of(&s.by)?, s)))
+            .people_on(p.id.as_str())
+            .filter(|(_, s)| s.at >= from)
             .collect();
         said.sort_by_key(|(_, s)| s.at);
-        let mut t = Tally {
-            approved: Vec::new(),
-            objections: Vec::new(),
-            against: Vec::new(),
-        };
+        let mut t = Tally::default();
         for (who, s) in said {
             match s.position.pull {
                 Pull::Toward => t.approved.push((who, s.at)),
-                Pull::Against => {
-                    t.against.push((s.at, who));
-                    if !s.position.because.trim().is_empty() {
-                        t.objections.push((s.at, who, s.position.because.as_str()));
-                    }
-                }
+                Pull::Against => t.object(s.at, who, &s.position.because),
             }
         }
         t
@@ -1636,12 +1626,8 @@ impl Canon {
     pub fn judge_retraction(&self, p: &Proposal, now: i64) -> Verdict {
         let here = where_(p.scope);
         let mut said: Vec<(Person, &crate::fold::Stated)> = self
-            .positions
-            .iter()
-            .filter(|s| {
-                s.about == p.id.as_str() && self.seat(&s.by, p.scope, s.at) != Seat::Lacking
-            })
-            .filter_map(|s| Some((Person::of(&s.by)?, s)))
+            .people_on(p.id.as_str())
+            .filter(|(_, s)| self.seat(&s.by, p.scope, s.at) != Seat::Lacking)
             .collect();
         said.sort_by_key(|(_, s)| s.at);
         let completed = said

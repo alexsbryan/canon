@@ -682,6 +682,35 @@ impl Canon {
             .count()
     }
 
+    /// What each person last said about this subject, in the order they said
+    /// it: what a live check adds to what the canon says.
+    ///
+    /// **People only.** An agent's position is advice to a person, never a
+    /// member's objection, so it never reaches a decision. Matched exactly,
+    /// as [`Self::silence_about`] and [`Self::prior_decisions`] match; a
+    /// later word replaces an earlier one, because a person who changed
+    /// their mind holds one position, not two.
+    pub fn said_about(&self, about: &str) -> Vec<crate::standing::Position> {
+        let mut said: Vec<&Stated> = Vec::new();
+        for (_, s) in self.people_on(about) {
+            said.retain(|l| l.by != s.by);
+            said.push(s);
+        }
+        said.into_iter().map(|s| s.position.clone()).collect()
+    }
+
+    /// Every position a person wrote about `about`, in fold order. The one
+    /// reading of "a person said so" that ratification and a live check share.
+    pub(crate) fn people_on<'a: 'b, 'b>(
+        &'a self,
+        about: &'b str,
+    ) -> impl Iterator<Item = (crate::Person<'a>, &'a Stated)> + 'b {
+        self.positions
+            .iter()
+            .filter(move |s| s.about == about)
+            .filter_map(|s| Some((crate::Person::of(&s.by)?, s)))
+    }
+
     /// Is this subject unwritten on purpose?
     ///
     /// **Exact subject match, and no fuzzy matching ever.** A silence that

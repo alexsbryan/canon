@@ -92,11 +92,17 @@ pub(crate) const SCHEMA: Schema = Schema::new(
 );
 
 /// Ask how this proposal stands. Returns the standing and anything refused.
+///
+/// The standing is what the canon says AND what people said about `about`
+/// with `canon object --about`: a live check that saw only the rules would
+/// leave every rule that counts people deciding nothing outside `replay`.
 pub fn assess(
     client: &Client,
     canon: &Canon,
     proposal: &str,
+    about: &str,
 ) -> Result<(Standing, Vec<Position>), ModelError> {
+    let mut positions = canon.said_about(about);
     let live: Vec<&Commitment> = canon.active().collect();
     // The same numbering discipline as every other reader here, from the one
     // place that owns it — see `crate::resolver`. `Offered::at` never clamps:
@@ -106,15 +112,13 @@ pub fn assess(
         "commitment",
     );
     if offered.is_empty() {
-        return Ok(Standing::cited(canon, proposal, Vec::new()));
+        return Ok(Standing::cited(canon, proposal, positions));
     }
     let user = format!(
         "Commitments:\n{}\nProposal:\n{proposal}\n",
         offered.numbered()
     );
     let judged: Judged = client.complete_json(SYSTEM, &user, "bearings", &SCHEMA)?;
-
-    let mut positions = Vec::new();
     for b in judged.bearings {
         let Some(c) = b
             .commitment
@@ -559,7 +563,7 @@ pub fn run(args: &[String]) -> i32 {
         Err(e) => return model::report(e),
     };
     eprintln!("checking on {}", client.describe());
-    let (standing, refused) = match assess(&client, &canon, proposal) {
+    let (standing, refused) = match assess(&client, &canon, proposal, &attrs.about) {
         Ok(v) => v,
         Err(e) => return model::report(e),
     };

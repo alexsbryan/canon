@@ -869,6 +869,57 @@ fn a_reverted_position_leaves_no_trace_in_the_fold() {
     assert!(canon.positions.is_empty(), "revert tombstones its effects");
 }
 
+#[test]
+fn what_people_said_about_a_subject_is_each_persons_latest_word() {
+    // What a live check counts: people, not agents; the subject as written,
+    // not a resemblance; and one position per person, the last they took.
+    let said = |about: &str, pull, why: &str, ts, by: &str| {
+        Act::new(
+            ActKind::Position {
+                about: about.into(),
+                citing: None,
+                pull,
+                because: why.into(),
+            },
+            ts,
+            by,
+        )
+    };
+    let hall = "bikes in the hall";
+    let canon = Log::from_acts(vec![
+        said(
+            hall,
+            Pull::Against,
+            "it narrows the hall",
+            100,
+            "human:dana",
+        ),
+        said(hall, Pull::Toward, "fine by me", 110, "human:sam"),
+        said(hall, Pull::Against, "I object", 120, "agent:helper"),
+        said(
+            "bikes in the hallway",
+            Pull::Against,
+            "elsewhere",
+            130,
+            "human:ola",
+        ),
+        said(hall, Pull::Toward, "a rack fixes it", 140, "human:dana"),
+    ])
+    .derive();
+    let got = canon.said_about(hall);
+    let who: Vec<(Option<&str>, Pull)> = got.iter().map(|p| (p.actor(), p.pull)).collect();
+    assert_eq!(
+        who,
+        vec![
+            (Some("human:sam"), Pull::Toward),
+            (Some("human:dana"), Pull::Toward),
+        ],
+        "{got:?}"
+    );
+    assert_eq!(got[1].because, "a rack fixes it", "the later word stands");
+    assert!(canon.said_about("bikes").is_empty(), "no fuzzy matching");
+}
+
 // ── scope: who holds standing, over what (Ostrom #1) ────────────────────
 
 fn scope(s: &str) -> Scope {
