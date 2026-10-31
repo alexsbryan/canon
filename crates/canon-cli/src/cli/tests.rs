@@ -161,7 +161,7 @@ fn every_command_line_in_the_documentation_still_parses() {
                 continue;
             };
             // An old spelling in a document still works, so it still parses.
-            let (tokens, _) = resolve(&tokens);
+            let (tokens, _) = resolve(&tokens, false);
             let Some((verb, rest)) = tokens.split_first() else {
                 continue;
             };
@@ -364,12 +364,22 @@ fn every_old_spelling_names_a_verb_or_flag_that_exists_and_none_is_one() {
             "`{old}`"
         );
     }
-    let (args, notes) = resolve(&args(&["supersede", "x", "--scope=house"]));
+    // To a person at a terminal, one note per old spelling, naming the new.
+    let typed = args(&["supersede", "x", "--scope=house"]);
+    let (args, notes) = resolve(&typed, true);
     assert_eq!(args, self::args(&["amend", "x", "--area=house"]));
-    assert_eq!(notes.len(), 2, "{notes:?}");
+    assert_eq!(
+        notes,
+        [
+            "`canon supersede` is now `canon amend`; both still work",
+            "`--scope` is now `--area`; both still work"
+        ]
+    );
+    // To a pipe, the same rewrite and not a word.
+    assert_eq!(resolve(&typed, false), (args, Vec::new()));
     // On a verb that never took it, an old flag is left to be refused by name.
     assert_eq!(
-        resolve(&self::args(&["log", "--scope"])).0,
+        resolve(&self::args(&["log", "--scope"]), true).0,
         self::args(&["log", "--scope"])
     );
 }

@@ -107,11 +107,16 @@ pub(crate) const FLAG_ALIASES: &[(&str, &str)] = &[("--scope", "--area")];
 
 /// The command line with every old spelling in it made new, and one note per
 /// spelling for stderr. Stdout is the new verb's, byte for byte, so a script
-/// that parses it does not break; the note is how its author hears.
+/// that parses it does not break.
+///
+/// **The note is for a person typing, so only `to_a_person` gets it.** `main`
+/// passes whether stderr is a terminal; an agent, a hook or the Slack bot
+/// reads a pipe, and a line it did not ask for is noise it may log or relay.
+/// The flag is the seam the tests drive, since they cannot be a terminal.
 ///
 /// A flag is renamed only on a verb that takes the new one, so `--scope` on a
 /// verb that never took it is refused under the name that was typed.
-pub fn resolve(args: &[String]) -> (Vec<String>, Vec<String>) {
+pub fn resolve(args: &[String], to_a_person: bool) -> (Vec<String>, Vec<String>) {
     let (mut out, mut notes) = (args.to_vec(), Vec::new());
     for i in 0..out.len() {
         let (name, value) = out[i].split_once('=').unwrap_or((&out[i], ""));
@@ -120,7 +125,9 @@ pub fn resolve(args: &[String]) -> (Vec<String>, Vec<String>) {
         let table = if i == 0 { VERB_ALIASES } else { FLAG_ALIASES };
         if let Some((old, new)) = table.iter().find(renamed) {
             let c = if i == 0 { "canon " } else { "" };
-            notes.push(format!("`{c}{old}` is now `{c}{new}`; both still work"));
+            if to_a_person {
+                notes.push(format!("`{c}{old}` is now `{c}{new}`; both still work"));
+            }
             out[i] = [new, value].join(if value.is_empty() { "" } else { "=" });
         }
     }

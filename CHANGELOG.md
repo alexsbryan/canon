@@ -29,8 +29,8 @@ renames that heading to the version, and its section becomes the release notes
   `retract` is `repeal`, `grant` is `give`, `policy` is `rulings`,
   `horizon` is `revisit`, `tensions` is `conflicts`, the `scope` verb is
   `area`, and `--scope` is `--area` on every verb that takes it. The old
-  names still work and print the same stdout; each says once on stderr
-  what to type instead, and help lists only the new ones. The record, its
+  names still work and print the same stdout; on a terminal each says once
+  on stderr what to type instead, and help lists only the new ones. The record, its
   op and field names, JSON keys and MCP tool names do not change.
 - What canon prints is in plain words: a rule, an area, who is in charge,
   how rules pass here (the ratification rule) and how actions are judged

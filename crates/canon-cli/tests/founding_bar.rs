@@ -611,30 +611,59 @@ fn a_verb_nobody_declared_is_refused_with_the_short_help() {
     assert!(out.starts_with("canon "), "{out}");
 }
 
-/// **An old name is a new one with a note.** Every renamed verb and flag,
-/// run under both spellings on twin canons: the same stdout, ids aside, and
-/// the old one alone says on stderr, in one line, what to type instead.
+/// **An old name is the new one, and a pipe hears nothing about it.** Every
+/// renamed verb and flag, run under both spellings on twin canons: the same
+/// exit code and stdout, ids and digits aside, and no rename note on stderr,
+/// because stderr here is a pipe, as it is for an agent, a hook or the Slack
+/// bot. That the note does reach a terminal is `cli::tests`' to show: a test
+/// cannot be one.
 #[test]
-fn every_old_spelling_runs_the_new_verb_and_says_so_once() {
-    let ids = |s: &str| {
+fn every_old_spelling_runs_the_new_verb_and_says_nothing_to_a_pipe() {
+    let plain = |s: &str| {
         s.split_whitespace()
-            .map(|w| if w.contains("can-") { "<id>" } else { w })
+            .map(|w| {
+                if w.contains("can-") {
+                    "<id>".into()
+                } else {
+                    w.replace(|c: char| c.is_ascii_digit(), "#")
+                }
+            })
             .collect::<Vec<_>>()
             .join(" ")
     };
-    let twins: &[(&str, &str, &[&str])] = &[
+    let twins: &[(&[&str], &[&str])] = &[
         (
-            "supersede",
-            "amend",
-            &["<id>", "Dishes by morning.", "-m", "late shifts"],
+            &[
+                "supersede",
+                "<id>",
+                "Dishes by morning.",
+                "-m",
+                "late shifts",
+            ],
+            &["amend", "<id>", "Dishes by morning.", "-m", "late shifts"],
         ),
-        ("retract", "repeal", &["<id>", "-m", "nobody cooks"]),
-        ("grant", "give", &["human:sam", "house.kitchen"]),
-        ("policy", "rulings", &["show"]),
-        ("horizon", "revisit", &["<id>", "2030-01-01"]),
-        ("tensions", "conflicts", &[]),
-        ("scope", "area", &["<id>", "house.kitchen"]),
-        ("add", "add", &["Quiet after ten.", "--scope", "house"]),
+        (
+            &["retract", "<id>", "-m", "nobody cooks"],
+            &["repeal", "<id>", "-m", "nobody cooks"],
+        ),
+        (
+            &["grant", "human:sam", "house.kitchen"],
+            &["give", "human:sam", "house.kitchen"],
+        ),
+        (&["policy", "show"], &["rulings", "show"]),
+        (
+            &["horizon", "<id>", "2030-01-01"],
+            &["revisit", "<id>", "2030-01-01"],
+        ),
+        (&["tensions"], &["conflicts"]),
+        (
+            &["scope", "<id>", "house.kitchen"],
+            &["area", "<id>", "house.kitchen"],
+        ),
+        (
+            &["add", "Quiet after ten.", "--scope", "house"],
+            &["add", "Quiet after ten.", "--area", "house"],
+        ),
     ];
     // One house with one rule, copied for each run, so every twin starts
     // from the same bytes.
@@ -643,9 +672,9 @@ fn every_old_spelling_runs_the_new_verb_and_says_so_once() {
     tick();
     let id = id_of(&canon_as(&base, "human:alex", &["add", "Dishes the same day."]).1);
     tick();
-    for (n, (old, new, rest)) in twins.iter().enumerate() {
+    for (n, (old, new)) in twins.iter().enumerate() {
         let mut said = Vec::new();
-        for (twin, verb) in [old, new].into_iter().enumerate() {
+        for (twin, typed) in [old, new].into_iter().enumerate() {
             let dir = scratch(&format!("alias-{n}-{twin}")).join(".canon");
             std::fs::create_dir_all(&dir).unwrap();
             for file in std::fs::read_dir(&base).unwrap().flatten() {
@@ -653,35 +682,25 @@ fn every_old_spelling_runs_the_new_verb_and_says_so_once() {
                     std::fs::copy(file.path(), dir.join(file.file_name())).unwrap();
                 }
             }
-            let mut args = vec![*verb];
-            args.extend(
-                rest.iter()
-                    .map(|a| if *a == "<id>" { id.as_str() } else { a }),
-            );
-            if twin == 1 && old == new {
-                args = args
-                    .iter()
-                    .map(|a| if *a == "--scope" { "--area" } else { a })
-                    .collect();
-            }
+            let args: Vec<&str> = typed
+                .iter()
+                .map(|a| if *a == "<id>" { id.as_str() } else { a })
+                .collect();
             let (code, out, err) = canon_apart(&dir, "human:alex", &args, "");
-            said.push((code, ids(&out), err));
+            assert!(
+                !err.contains("is now"),
+                "`{}` told a pipe:\n{err}",
+                typed.join(" ")
+            );
+            said.push((code, plain(&out)));
         }
-        let ((old_code, old_out, old_err), (new_code, new_out, new_err)) = (&said[0], &said[1]);
         assert_eq!(
-            (old_code, old_out),
-            (new_code, new_out),
-            "`{old}` and `{new}` part"
+            said[0],
+            said[1],
+            "`{}` and `{}` part",
+            old.join(" "),
+            new.join(" ")
         );
-        let spelled = if old == new {
-            "`--area`"
-        } else {
-            &format!("`canon {new}`")
-        };
-        let notes: Vec<&str> = old_err.lines().filter(|l| l.contains("is now")).collect();
-        assert_eq!(notes.len(), 1, "`{old}` said:\n{old_err}");
-        assert!(notes[0].contains(spelled), "{}", notes[0]);
-        assert!(!new_err.contains("is now"), "`{new}` said:\n{new_err}");
     }
 }
 

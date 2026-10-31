@@ -236,9 +236,11 @@ ON THE PERSONAL PROFILE
 ";
 
 fn main() {
+    use std::io::IsTerminal;
     // An old spelling is made new before anything reads it, and said once on
-    // stderr, so stdout is the new verb's and a script parsing it reads on.
-    let (args, notes) = cli::resolve(&std::env::args().skip(1).collect::<Vec<_>>());
+    // stderr to a person at a terminal; a script parsing stdout reads on.
+    let typed: Vec<String> = std::env::args().skip(1).collect();
+    let (args, notes) = cli::resolve(&typed, std::io::stderr().is_terminal());
     notes.iter().for_each(|n| eprintln!("{n}"));
     if args.is_empty() || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
         // `canon help <verb>` is the same answer as `canon <verb> --help`.
