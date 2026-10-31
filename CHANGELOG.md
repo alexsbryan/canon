@@ -40,6 +40,12 @@ renames that heading to the version, and its section becomes the release notes
 
 ### Changes
 
+- A bare `canon` inside a canon is a short page for whoever runs it: how
+  many rules are in force and which areas you are in charge of, what is
+  waiting for your yes or no (`review`'s own list), what is past its review
+  date, open questions, and writes waiting for a person, each ending with
+  the command that shows it, and exits 0. Outside a canon it is still the
+  short help and exit 2, with a line on `canon init`.
 - Seven verbs and six flags have plain names: `supersede` is `amend`,
   `retract` is `repeal`, `grant` is `give`, `policy` is `rulings`,
   `horizon` is `revisit`, `tensions` is `conflicts`, the `scope` verb is

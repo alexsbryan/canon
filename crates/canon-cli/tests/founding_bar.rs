@@ -769,6 +769,7 @@ fn a_first_week_in_a_house_reads_in_plain_words() {
         let (_, out, err) = canon_apart(&dir, actor, args, "");
         said.push_str(&format!("$ canon {}\n{out}{err}", args.join(" ")));
         if ![
+            "",
             "who",
             "list",
             "why",
@@ -777,7 +778,7 @@ fn a_first_week_in_a_house_reads_in_plain_words() {
             "ratification",
             "rulings",
         ]
-        .contains(&args[0])
+        .contains(args.first().unwrap_or(&""))
         {
             tick();
         }
@@ -800,7 +801,8 @@ fn a_first_week_in_a_house_reads_in_plain_words() {
     run("human:alex", &["approve", &quiet, "-m", "fair"]);
     run("human:alex", &["object", &guests, "-m", "too strict"]);
     for args in [
-        &["who"][..],
+        &[][..],
+        &["who"],
         &["who", "house.kitchen"],
         &["list"],
         &["why", &rule],
@@ -817,6 +819,89 @@ fn a_first_week_in_a_house_reads_in_plain_words() {
         &["withdraw", "human:sam", "house.kitchen", "-m", "moving out"],
     );
     run("human:alex", &["check", "Paint the kitchen red."]);
+    run("human:sam", &[]);
     let found = jargon::found(&said);
     assert!(found.is_empty(), "{}\n\n{said}", found.join("\n"));
+}
+
+/// **A bare `canon` in a canon is where you are and what waits on you.** A
+/// house of two: Sam, in charge of the kitchen only, proposes a house rule,
+/// and one rule is past its review date. Alex, in charge of the house, sees
+/// the proposal as his to answer; Sam sees where he stands and that it is
+/// not his.
+#[test]
+fn a_bare_canon_says_what_is_waiting_for_whoever_runs_it() {
+    let dir = scratch("bare-house").join(".canon");
+    canon_as(&dir, "human:alex", &["init", "--profile", "house"]);
+    tick();
+    canon_as(&dir, "human:alex", &["give", "human:sam", "house.kitchen"]);
+    tick();
+    let (_, out) = canon_as(
+        &dir,
+        "human:alex",
+        &["add", "Dishes are washed the same day."],
+    );
+    let dishes = id_of(&out);
+    tick();
+    canon_as(&dir, "human:alex", &["revisit", &dishes, "2020-01-01"]);
+    tick();
+    canon_as(
+        &dir,
+        "human:sam",
+        &["add", "Quiet after ten.", "--area", "house"],
+    );
+    let (code, out) = canon_as(&dir, "human:alex", &[]);
+    assert_eq!(code, 0, "{out}");
+    let page = flat(&out);
+    assert!(page.contains("this house's rules: 1 in force"), "{out}");
+    assert!(page.contains("You are in charge of house."), "{out}");
+    let waiting = page
+        .split("waiting for your yes or no:")
+        .nth(1)
+        .unwrap_or_else(|| panic!("no waiting section:\n{out}"));
+    assert!(waiting.contains("Quiet after ten."), "{out}");
+    assert!(waiting.contains("canon review"), "{out}");
+    assert!(page.contains("past its review date: 1"), "{out}");
+    assert!(page.contains("canon overdue"), "{out}");
+    assert!(
+        out.trim_end()
+            .ends_with("`canon help` for everything else."),
+        "{out}"
+    );
+
+    let (code, out) = canon_as(&dir, "human:sam", &[]);
+    assert_eq!(code, 0, "{out}");
+    assert!(
+        flat(&out).contains("You are in charge of house.kitchen."),
+        "{out}"
+    );
+    assert!(!out.contains("waiting for your yes or no"), "{out}");
+    assert!(!out.contains("Quiet after ten."), "{out}");
+}
+
+#[test]
+fn a_bare_canon_in_an_empty_canon_says_nothing_waits_and_how_to_begin() {
+    let dir = fresh("bare-empty");
+    let (code, out) = canon_as(&dir, "human:alex", &[]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("nothing is waiting for you"), "{out}");
+    assert!(out.contains("canon add \"<a principle>\""), "{out}");
+    assert!(out.contains("`canon help` for everything else."), "{out}");
+}
+
+/// Outside any canon, the short help still, with the way to start one, and
+/// still exit 2: nothing was done.
+#[test]
+fn a_bare_canon_outside_any_canon_is_the_short_help_and_how_to_start() {
+    let dir = scratch("bare-outside");
+    let out = Command::new(env!("CARGO_BIN_EXE_canon"))
+        .env_remove("CANON_DIR")
+        .env("HOME", &dir)
+        .current_dir(&dir)
+        .output()
+        .expect("canon runs");
+    let said = String::from_utf8_lossy(&out.stdout);
+    assert_eq!(out.status.code(), Some(2), "{said}");
+    assert!(said.contains("canon help all"), "{said}");
+    assert!(said.contains("`canon init` starts one here"), "{said}");
 }

@@ -1286,39 +1286,7 @@ pub fn overdue(args: &[String]) -> i32 {
     if due.is_empty() {
         println!("nothing overdue.");
     }
-    for o in &due {
-        let when = store::ymd(o.due);
-        match &o.what {
-            canon_core::Due::Horizon { rationale } => {
-                let what = canon
-                    .get(&o.target)
-                    .map(|c| c.text().to_string())
-                    .or_else(|| canon.question(&o.target).map(|q| format!("? {}", q.text)))
-                    .unwrap_or_else(|| o.target.to_string());
-                println!("{when}  {}  {what}", o.target);
-                if !rationale.is_empty() {
-                    println!("          {rationale}");
-                }
-            }
-            canon_core::Due::Revisit { other, rationale } => {
-                println!(
-                    "{when}  {}\n          carried against {}",
-                    crate::explain::named(&canon, &o.target),
-                    crate::explain::named(&canon, other)
-                );
-                println!("          \"{rationale}\"");
-            }
-            canon_core::Due::Standing { holder, scope } => {
-                println!("{when}  {holder} is no longer in charge of {scope}");
-                // The Ostrom-4 residue: standing that lapsed and nobody
-                // renewed is exactly what a monitor's accountability looks
-                // like when it works.
-                if canon.who_decides(scope, now).is_empty() {
-                    println!("          nobody is in charge of it now — `canon who {scope}`");
-                }
-            }
-        }
-    }
+    due.iter().for_each(|o| say_due(&canon, o, now));
     if !due.is_empty() {
         println!("\n{} overdue", due.len());
     }
@@ -1339,6 +1307,42 @@ pub fn overdue(args: &[String]) -> i32 {
         eprintln!("\n{note}");
     }
     0
+}
+
+/// One overdue thing, as `canon overdue` prints it, and as the page a bare
+/// `canon` prints shows the first few.
+pub fn say_due(canon: &canon_core::Canon, o: &canon_core::Overdue, now: i64) {
+    let when = store::ymd(o.due);
+    match &o.what {
+        canon_core::Due::Horizon { rationale } => {
+            let what = canon
+                .get(&o.target)
+                .map(|c| c.text().to_string())
+                .or_else(|| canon.question(&o.target).map(|q| format!("? {}", q.text)))
+                .unwrap_or_else(|| o.target.to_string());
+            println!("{when}  {}  {what}", o.target);
+            if !rationale.is_empty() {
+                println!("          {rationale}");
+            }
+        }
+        canon_core::Due::Revisit { other, rationale } => {
+            println!(
+                "{when}  {}\n          carried against {}",
+                crate::explain::named(canon, &o.target),
+                crate::explain::named(canon, other)
+            );
+            println!("          \"{rationale}\"");
+        }
+        canon_core::Due::Standing { holder, scope } => {
+            println!("{when}  {holder} is no longer in charge of {scope}");
+            // The Ostrom-4 residue: standing that lapsed and nobody
+            // renewed is exactly what a monitor's accountability looks
+            // like when it works.
+            if canon.who_decides(scope, now).is_empty() {
+                println!("          nobody is in charge of it now — `canon who {scope}`");
+            }
+        }
+    }
 }
 
 // ── canon silence ───────────────────────────────────────────

@@ -36,6 +36,7 @@ mod review;
 mod seen;
 mod similar;
 mod sources;
+mod status;
 mod store;
 mod subject;
 mod tensions;
@@ -71,6 +72,9 @@ in it — or a pipe: `cat whatever | canon draft --from - --dry-run --json`.
   canon help all    who decides what, how you decide, what has gone stale,
                     forking and merging, drawing lots, the agent surface
 ";
+
+/// What a bare `canon` adds to the short help where there is no canon yet.
+const START: &str = "\nnot in a canon: `canon init` starts one here.\n";
 
 /// The two things a reader asks before their first write: which profile
 /// they founded, and what a scope is. `canon help profile` used to print
@@ -242,6 +246,11 @@ fn main() {
     let typed: Vec<String> = std::env::args().skip(1).collect();
     let (args, notes) = cli::resolve(&typed, std::io::stderr().is_terminal());
     notes.iter().for_each(|n| eprintln!("{n}"));
+    // A bare `canon` in a canon is where you are and what waits on you; out
+    // of one, the short help and how to start one, exit 2, since nothing ran.
+    if args.is_empty() && cmds::dir().is_ok_and(|d| store::exists(&d)) {
+        std::process::exit(status::page());
+    }
     if args.is_empty() || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
         // `canon help <verb>` is the same answer as `canon <verb> --help`.
         if let Some(verb) = args.get(1).and_then(|v| cli::help_for(v, HELP_ALL)) {
@@ -255,7 +264,7 @@ fn main() {
             std::process::exit(0);
         }
         // Any word canon uses, from its glossary: `canon help in charge`.
-        let said = cli::define(&args[1..].join(" "));
+        let said = cli::define(&args.get(1..).unwrap_or_default().join(" "));
         if !said.is_empty() {
             println!("{}", said.join("\n"));
             std::process::exit(0);
@@ -269,9 +278,11 @@ fn main() {
             std::process::exit(1);
         }
         // `canon help all` is the only way to the long form. Somebody who
-        // typed `canon` by accident gets seven verbs, not forty-nine.
+        // typed `canon` by accident gets seven verbs, not forty-nine, and
+        // outside a canon, how to start one.
         let all = args.iter().skip(1).any(|a| a == "all" || a == "--all");
-        print!("{}", if all { HELP_ALL } else { HELP });
+        let start = if args.is_empty() { START } else { "" };
+        print!("{}{start}", if all { HELP_ALL } else { HELP });
         std::process::exit(if args.is_empty() { 2 } else { 0 });
     }
     let (cmd, rest) = args.split_first().unwrap();
@@ -309,7 +320,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{HELP, HELP_ALL};
+    use super::{HELP, HELP_ALL, START};
     use crate::jargon;
 
     /// **The n+1 test, as a test.**
@@ -319,7 +330,8 @@ mod tests {
     /// noticing. This is the thing that notices.
     #[test]
     fn the_short_help_stays_short_and_stays_plain() {
-        let lines = HELP.lines().count();
+        // Counted with the line a bare `canon` outside a canon adds to it.
+        let lines = format!("{HELP}{START}").lines().count();
         assert!(
             lines <= 20,
             "the short help is {lines} lines — it is growing back into the long one"
@@ -353,7 +365,7 @@ mod tests {
         // **Past the short help, plain is the bar too.** A student reads the
         // long help and each verb's own as closely as the first screen, so the
         // words the record keeps for itself stay out of all three.
-        let mut said = jargon::found(HELP);
+        let mut said = jargon::found(&format!("{HELP}{START}"));
         said.extend(jargon::found(HELP_ALL));
         for (verb, ..) in crate::cli::VERBS {
             let help = crate::cli::help_for(verb, HELP_ALL).unwrap();
