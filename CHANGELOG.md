@@ -25,13 +25,17 @@ renames that heading to the version, and its section becomes the release notes
 
 ### Changes
 
-- Seven verbs and one flag have plain names: `supersede` is `amend`,
+- Seven verbs and six flags have plain names: `supersede` is `amend`,
   `retract` is `repeal`, `grant` is `give`, `policy` is `rulings`,
   `horizon` is `revisit`, `tensions` is `conflicts`, the `scope` verb is
-  `area`, and `--scope` is `--area` on every verb that takes it. The old
+  `area`, and `--scope` is `--area` on every verb that takes it. `give
+  --horizon` is `--until`; on `rulings` and `replay`, `--entrench` is
+  `--constitutional` and `--graduated` is `--escalate`; on `replay`,
+  `--policy` is `--rulings` and `--ratification` is `--passes`. The old
   names still work and print the same stdout; on a terminal each says once
-  on stderr what to type instead, and help lists only the new ones. The record, its
-  op and field names, JSON keys and MCP tool names do not change.
+  on stderr what to type instead, and help lists only the new ones. The
+  record, its op and field names, JSON keys and MCP tool names do not
+  change.
 - What canon prints is in plain words: a rule, an area, who is in charge,
   how rules pass here (the ratification rule) and how actions are judged
   here (the policy), in `canon help all`, `init`, `who`, `give`,

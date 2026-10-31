@@ -57,6 +57,20 @@ config: what this canon is set up with, like which model reads for it.
 draft: read your notes or documents and propose the rules already in them.
 check: ask whether something you want to do fits the rules, and what to do next.
 
+# Flags whose names changed, new and old
+--area: the area a command is about, like `--area house.kitchen`.
+--scope: the old name of `--area`.
+--until: the date someone stops being in charge (`canon give`); `canon overdue` says when it passes.
+--horizon: the old name of `--until`.
+--constitutional: the ranks that are harder to change, like `principle` (`canon rulings set`, `canon replay`).
+--entrench: the old name of `--constitutional`.
+--escalate: the steps a repeat goes through, firmer each time, like `ask-one,ask-panel,refuse`.
+--graduated: the old name of `--escalate`.
+--rulings: another way of judging actions, for `canon replay` to try on your past.
+--policy: the old name of `--rulings`.
+--passes: another way of passing rules, for `canon replay` to try on your past.
+--ratification: the old name of `--passes`.
+
 # The plain words canon prints
 rule: something the group agreed, in force until it is amended or repealed.
 proposal: a rule someone wrote that has not passed yet.

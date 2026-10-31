@@ -1073,7 +1073,7 @@ pub fn run(args: &[String]) -> i32 {
             Ok(d) => d,
             Err(e) => {
                 return fail(format!(
-                    "{e}\n       usage: canon replay [<dir>] [--policy <rule>] [--brief] \
+                    "{e}\n       usage: canon replay [<dir>] [--rulings <rule>] [--brief] \
                      [--scenario <file>] [--write-scenario <file>]\n       \
                      with no directory it replays the canon you are standing in"
                 ))
@@ -1123,14 +1123,14 @@ pub fn run(args: &[String]) -> i32 {
             .filter(|l| !l.trim().is_empty() && !l.trim_start().starts_with("//"))
             .count();
         println!("{steps} step(s) written to {out}");
-        println!("edit it, then:  canon replay --scenario {out} --policy consent --brief");
+        println!("edit it, then:  canon replay --scenario {out} --rulings consent --brief");
         return 0;
     }
 
     // Absence reported as absence. A canon nobody has recorded a position or
     // a decision in has nothing to re-decide, and saying "0 of 0 changed"
     // would look like an answer.
-    if derived == Some(0) && flag(args, "--ratification").is_none() {
+    if derived == Some(0) && flag(args, "--passes").is_none() {
         println!("nothing here records what anyone argued about or what the group decided,");
         println!("so there is nothing to re-decide under another rule. Either act does it:\n");
         println!("  canon object --about \"<subject>\" -m \"<why>\"");
@@ -1141,7 +1141,7 @@ pub fn run(args: &[String]) -> i32 {
     // weighing is usually the one with a number in it — "what would two
     // objections have done to us" — and a counterfactual that cannot express
     // the rule under discussion is a demo.
-    let forced = match flag(args, "--policy") {
+    let forced = match flag(args, "--rulings") {
         None => None,
         Some(name) => match crate::govern::rule_from(args, name) {
             Ok(r) => Some(r),
@@ -1151,7 +1151,7 @@ pub fn run(args: &[String]) -> i32 {
     // The same for how a proposal becomes a rule: `--ratification` re-judges
     // every `status` step under the rule named, so "what would twice have
     // done to the last year" is a question with an answer.
-    let forced_ratify = match flag(args, "--ratification") {
+    let forced_ratify = match flag(args, "--passes") {
         None => None,
         Some(raw) => match crate::govern::ratify_from(raw) {
             Ok(r) => Some(r),
@@ -1288,9 +1288,9 @@ pub fn run(args: &[String]) -> i32 {
                     elapsed(started.elapsed())
                 );
                 println!("what another rule would have done:");
-                println!("  canon replay --policy consent --brief");
-                println!("  canon replay --policy threshold --objections 2 --brief");
-                println!("  canon replay --ratification twice:turnover:consent:7d --brief");
+                println!("  canon replay --rulings consent --brief");
+                println!("  canon replay --rulings threshold --objections 2 --brief");
+                println!("  canon replay --passes twice:turnover:consent:7d --brief");
             }
         }
         return 0;

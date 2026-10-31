@@ -60,10 +60,10 @@ pub(crate) const VERBS: &[Verb] = &[
     ("log", &[], &["--json"], crate::cmds::log),
     ("question", &["--from-proposal"], &[], crate::cmds::question),
     ("who", &[], &["--json"], crate::govern::who),
-    ("give", &["--horizon", "-m"], &[], crate::govern::grant),
+    ("give", &["--until", "-m"], &[], crate::govern::grant),
     ("withdraw", &["--ask", "-m"], &[], crate::govern::withdraw),
     ("area", &[], &[], crate::govern::scoped),
-    ("rulings", &["--entrench", "--graduated", "--objections", "--of", "--area", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"], crate::govern::policy),
+    ("rulings", &["--constitutional", "--escalate", "--objections", "--of", "--area", "-m"], &["--by-about", "--cautious", "--json", "--no-repair"], crate::govern::policy),
     ("ratification", &["--governs", "--personal", "--area", "-m"], &["--json"], crate::govern::ratification),
     ("allot", &["--count", "--named", "--unit", "-m"], &[], crate::govern::allot),
     ("allocation", &["--from-draw", "--order", "--per", "--area", "--step", "-m"], &[], crate::govern::allocation),
@@ -77,7 +77,7 @@ pub(crate) const VERBS: &[Verb] = &[
     ("silence", &["-m"], &[], crate::govern::silence),
     ("voice", &[], &[], crate::govern::voice),
     ("second", &[], &[], crate::govern::second),
-    ("replay", &["--entrench", "--expect", "--graduated", "--objections", "--of", "--out", "--policy", "--profile", "--ratification", "--scenario", "--write-scenario"], &["--brief", "--by-about", "--cautious", "--json", "--no-repair"], crate::replay::run),
+    ("replay", &["--constitutional", "--expect", "--escalate", "--objections", "--of", "--out", "--rulings", "--profile", "--passes", "--scenario", "--write-scenario"], &["--brief", "--by-about", "--cautious", "--json", "--no-repair"], crate::replay::run),
     ("open", &[], &["--json"], crate::cmds::open),
     ("witness", &["--base", "--slack"], &["--gate", "--json"], crate::guard::witness),
     ("guard", &["--check", "--slack"], &["--apply"], crate::guard::guard),
@@ -103,7 +103,11 @@ pub(crate) const VERB_ALIASES: &[(&str, &str)] = &[
     ("supersede", "amend"), ("retract", "repeal"), ("grant", "give"), ("policy", "rulings"),
     ("horizon", "revisit"), ("tensions", "conflicts"), ("scope", "area"),
 ];
-pub(crate) const FLAG_ALIASES: &[(&str, &str)] = &[("--scope", "--area")];
+#[rustfmt::skip]
+pub(crate) const FLAG_ALIASES: &[(&str, &str)] = &[
+    ("--scope", "--area"), ("--horizon", "--until"), ("--entrench", "--constitutional"),
+    ("--graduated", "--escalate"), ("--policy", "--rulings"), ("--ratification", "--passes"),
+];
 
 /// The command line with every old spelling in it made new, and one note per
 /// spelling for stderr. Stdout is the new verb's, byte for byte, so a script
@@ -388,7 +392,10 @@ fn value_name(flag: &str) -> &'static str {
         "--ask" => "question",
         "--area" | "--of" => "area",
         "--except" => "id",
-        "--after" | "--horizon" | "--revisit" | "--at" | "--since" => "date",
+        "--after" | "--until" | "--revisit" | "--at" | "--since" => "date",
+        "--rulings" | "--passes" => "rule",
+        "--constitutional" => "rank",
+        "--escalate" => "steps",
         "--count" | "--max-chunks" | "--step" => "n",
         _ => "value",
     }

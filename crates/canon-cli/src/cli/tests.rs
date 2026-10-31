@@ -288,8 +288,8 @@ fn a_flag_left_empty_says_what_it_was_waiting_for() {
         ),
         (
             "give",
-            vec!["ana", "--horizon"],
-            "`--horizon` needs a date after it — YYYY-MM-DD",
+            vec!["ana", "--until"],
+            "`--until` needs a date after it — YYYY-MM-DD",
         ),
         (
             "approve",
@@ -392,6 +392,7 @@ fn every_verb_and_every_old_name_is_in_the_glossary() {
         .iter()
         .map(|(v, ..)| *v)
         .chain(VERB_ALIASES.iter().map(|(old, _)| *old))
+        .chain(FLAG_ALIASES.iter().flat_map(|(old, new)| [*old, *new]))
         .filter(|v| define(v).is_empty())
         .collect();
     assert!(missing.is_empty(), "not in glossary.txt: {missing:?}");

@@ -62,11 +62,13 @@ pub(crate) fn rule_from(args: &[String], base: &str) -> Result<Rule, String> {
     };
     // Innermost first, so the wrapping order is a property of the code and
     // not of the argument order.
-    if let Some(ladder) = flag(args, "--graduated") {
+    if let Some(ladder) = flag(args, "--escalate") {
         let rungs: Result<Vec<Authority>, String> = ladder.split(',').map(authority).collect();
         let rungs = rungs?;
         if rungs.is_empty() {
-            return Err("--graduated takes rungs, e.g. ask-one,ask-panel,refuse".into());
+            return Err(
+                "--escalate takes its steps in order, e.g. ask-one,ask-panel,refuse".into(),
+            );
         }
         // Keyed on the cited rule and reset by a repair unless asked
         // otherwise: a paraphrase climbing a fresh ladder and a house meeting
@@ -83,7 +85,7 @@ pub(crate) fn rule_from(args: &[String], base: &str) -> Result<Rule, String> {
             repair,
         };
     }
-    if let Some(ranks) = flag(args, "--entrench") {
+    if let Some(ranks) = flag(args, "--constitutional") {
         rule = Rule::Entrenched {
             protected: ranks.split(',').map(|r| r.trim().to_string()).collect(),
             base: Box::new(rule),
@@ -132,8 +134,8 @@ pub fn policy(args: &[String]) -> i32 {
             let Some(base) = pos.get(1) else {
                 return fail(
                     "usage: canon rulings set <default|consent|threshold|supermajority|subsidiarity> \
-                     [--objections n] [--of n/d] [--graduated a,b,c [--by-about] [--no-repair]] \
-                     [--entrench rank] [--cautious] [--area s] [-m \"<how it reads>\"]",
+                     [--objections n] [--of n/d] [--escalate a,b,c [--by-about] [--no-repair]] \
+                     [--constitutional rank] [--cautious] [--area s] [-m \"<how it reads>\"]",
                 );
             };
             let rule = or_fail!(rule_from(args, base));
@@ -975,7 +977,7 @@ fn bare_actor(name: &str, verb: &str) -> Option<String> {
 pub fn grant(args: &[String]) -> i32 {
     let pos = positionals(args);
     if pos.len() < 2 {
-        return fail("usage: canon give <actor> <area> [--horizon YYYY-MM-DD] [-m \"<why>\"]");
+        return fail("usage: canon give <actor> <area> [--until YYYY-MM-DD] [-m \"<why>\"]");
     }
     if let Some(e) = bare_actor(pos[0], "give") {
         return fail(e);
@@ -983,10 +985,10 @@ pub fn grant(args: &[String]) -> i32 {
     let Some(scope) = Scope::new(pos[1]) else {
         return fail(format!("`{}` is not an area", pos[1]));
     };
-    let horizon = match flag(args, "--horizon").map(canon_core::date::parse_ymd) {
+    let horizon = match flag(args, "--until").map(canon_core::date::parse_ymd) {
         None => None,
         Some(Some(ts)) => Some(ts),
-        Some(None) => return fail("--horizon takes a date like 2026-12-31"),
+        Some(None) => return fail("--until takes a date like 2026-12-31"),
     };
     let (d, _, _) = or_fail!(load());
     let rationale = flag(args, "-m").unwrap_or_default();

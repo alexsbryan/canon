@@ -133,7 +133,7 @@ RECORD                                        (no model needed)
 GOVERN                                        (no model needed)
   who [<area>]                           who's in charge here, and how rules pass;
                                          no area: who's in charge of the whole canon
-  give <actor> <area> [--horizon <d>]    put someone in charge of an area, until <d>
+  give <actor> <area> [--until <d>]      put someone in charge of an area, until <d>
   withdraw <actor> <area>                step back from an area, or take someone off it
            [--ask \"<question>\"]         yours: leave the question, without your name
   area <id> <area>                       put a rule in an area
@@ -170,8 +170,8 @@ GOVERN                                        (no model needed)
                                          fold, and what each guard cannot see
   voice [<actor>]                        what someone raised, and what came of it
   second <question-id>                   add your weight to a question, without your name
-  replay [<dir>] [--policy <rule>]       re-decide this canon\'s own record;
-                                         --policy asks what another rule
+  replay [<dir>] [--rulings <rule>]      re-decide this canon\'s own record;
+                                         --rulings asks what another rule
                                          would have done to it
          [--scenario <f>]                ask your own questions instead
          [--write-scenario <f>]          write out the derived ones to edit

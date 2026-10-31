@@ -664,6 +664,46 @@ fn every_old_spelling_runs_the_new_verb_and_says_nothing_to_a_pipe() {
             &["add", "Quiet after ten.", "--scope", "house"],
             &["add", "Quiet after ten.", "--area", "house"],
         ),
+        (
+            &[
+                "give",
+                "human:sam",
+                "house.kitchen",
+                "--horizon",
+                "2030-01-01",
+            ],
+            &[
+                "give",
+                "human:sam",
+                "house.kitchen",
+                "--until",
+                "2030-01-01",
+            ],
+        ),
+        (
+            &["rulings", "set", "consent", "--entrench", "principle"],
+            &["rulings", "set", "consent", "--constitutional", "principle"],
+        ),
+        (
+            &["rulings", "set", "default", "--graduated", "ask-one,refuse"],
+            &["rulings", "set", "default", "--escalate", "ask-one,refuse"],
+        ),
+        (
+            &["replay", "--policy", "consent", "--brief"],
+            &["replay", "--rulings", "consent", "--brief"],
+        ),
+        (
+            &["replay", "--ratification", "unanimous", "--brief"],
+            &["replay", "--passes", "unanimous", "--brief"],
+        ),
+        (
+            &["replay", "--entrench", "principle", "--brief"],
+            &["replay", "--constitutional", "principle", "--brief"],
+        ),
+        (
+            &["replay", "--graduated", "ask-one,refuse", "--brief"],
+            &["replay", "--escalate", "ask-one,refuse", "--brief"],
+        ),
     ];
     // One house with one rule, copied for each run, so every twin starts
     // from the same bytes.
