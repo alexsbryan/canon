@@ -1,0 +1,380 @@
+{
+  "a-boundary-nobody-holds": {
+    "authority": "refuse",
+    "because": "subsidiarity: nobody holds standing over `allotment`",
+    "cites": [],
+    "outcome": "unaddressed",
+    "refused": 0,
+    "rule": "subsidiarity",
+    "silence": false,
+    "voices": []
+  },
+  "a-cook-refuses-it-with-a-reason": {
+    "by": "agent:helper",
+    "detail": "human:dana: half-loads on Sunday night, or nobody has a clean pan on Monday",
+    "rule": "joint:human:dana,human:sam",
+    "status": "refused"
+  },
+  "a-different-subject-starts-at-the-bottom": {
+    "authority": "ask-one",
+    "because": "graduated: 0 prior decision(s) about `drying rack in the hall` -> rung 1 of 3 (default: at least one commitment pulls against)",
+    "cites": [
+      "can-794c8d460ba0"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "graduated/default",
+    "silence": false,
+    "voices": []
+  },
+  "a-draw-before-anyone-opened-refuses": {
+    "error": "nobody opened a secret, so there is no seed — and there is no default seed"
+  },
+  "a-non-cook-proposes-a-kitchen-rule": {
+    "by": "human:theo",
+    "detail": "approval from human:dana, human:sam",
+    "rule": "joint:human:dana,human:sam",
+    "status": "proposed"
+  },
+  "a-panel-is-announced": {
+    "act": "can-ff19008f1ce9"
+  },
+  "a-sabotage-proposal-dies-on-unaddressed": {
+    "authority": "refuse",
+    "because": "cautious: irreversible (consent: nothing bears on it and nobody objected, but nobody looked either)",
+    "cites": [],
+    "outcome": "unaddressed",
+    "refused": 0,
+    "rule": "cautious/consent",
+    "silence": false,
+    "voices": []
+  },
+  "act": {
+    "act": "can-3b66b1531f13"
+  },
+  "after-the-conflict": {
+    "acts": 38,
+    "carried": 0,
+    "live": 8,
+    "open_questions": 0,
+    "proposed": 0,
+    "tolerated": 1,
+    "ungoverned": 1
+  },
+  "an-unwritten-norm-is-not-a-gap": {
+    "authority": "act-and-notify",
+    "because": "consent: nothing bears on it and nobody objected, but nobody looked either",
+    "cites": [],
+    "outcome": "unaddressed",
+    "refused": 0,
+    "rule": "cautious/consent",
+    "silence": true,
+    "voices": []
+  },
+  "before-the-conflict": {
+    "acts": 37,
+    "carried": 0,
+    "live": 8,
+    "open_questions": 0,
+    "proposed": 0,
+    "tolerated": 0,
+    "ungoverned": 1
+  },
+  "bikes-against-the-hall": {
+    "authority": "refuse",
+    "because": "consent: 1 reasoned objection(s); one is enough",
+    "cites": [
+      "can-794c8d460ba0",
+      "can-f3110e135d4d"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "cautious/consent",
+    "silence": false,
+    "voices": []
+  },
+  "both-cooks-and-it-is-a-rule": {
+    "by": "human:theo",
+    "detail": "",
+    "rule": "joint:human:dana,human:sam",
+    "status": "in-force"
+  },
+  "carried-a-second-time-after-the-election": {
+    "by": "human:juno",
+    "detail": "",
+    "rule": "twice:turnover:standing",
+    "status": "in-force"
+  },
+  "carried-once-and-waiting-for-the-garden-to-change-hands": {
+    "by": "human:juno",
+    "detail": "someone who did not hold house.garden on 2026-04-03 to be granted it, then a second approval",
+    "rule": "twice:turnover:standing",
+    "status": "proposed"
+  },
+  "forked-and-diverged": {
+    "generation": "g3",
+    "inherited": 3,
+    "lineage": "coliving-commons",
+    "local": 5
+  },
+  "kit-joins-and-the-second-vote-opens": {
+    "by": "human:juno",
+    "detail": "a second time, since 2026-05-01: approval from one person who holds house.garden",
+    "rule": "twice:turnover:standing",
+    "status": "proposed"
+  },
+  "kitchen-decided-by-a-cook": {
+    "authority": "act",
+    "because": "subsidiarity: `house.kitchen` is held by agent:helper, human:dana, human:sam — including you",
+    "cites": [
+      "can-1de7b517b436"
+    ],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "subsidiarity",
+    "silence": false,
+    "voices": []
+  },
+  "kitchen-not-decided-by-a-non-cook": {
+    "authority": "ask-one",
+    "because": "subsidiarity: `house.kitchen` is held by agent:helper, human:dana, human:sam — not you",
+    "cites": [
+      "can-1de7b517b436"
+    ],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "subsidiarity",
+    "silence": false,
+    "voices": []
+  },
+  "kitchen-under-the-new-rule": {
+    "authority": "act",
+    "because": "threshold: 1 against, 2 needed",
+    "cites": [],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "threshold",
+    "silence": false,
+    "voices": [
+      "human:dana"
+    ]
+  },
+  "laundry-first-time": {
+    "authority": "ask-one",
+    "because": "graduated: 0 prior decision(s) about `laundry after midnight` -> rung 1 of 3 (default: at least one commitment pulls against)",
+    "cites": [
+      "can-8514a8499247"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "graduated/default",
+    "silence": false,
+    "voices": []
+  },
+  "laundry-second-time": {
+    "authority": "ask-panel",
+    "because": "graduated: 1 prior decision(s) about `laundry after midnight` -> rung 2 of 3 (default: at least one commitment pulls against)",
+    "cites": [
+      "can-8514a8499247"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "graduated/default",
+    "silence": false,
+    "voices": []
+  },
+  "laundry-third-time": {
+    "authority": "refuse",
+    "because": "graduated: 2 prior decision(s) about `laundry after midnight` -> rung 3 of 3 (default: at least one commitment pulls against)",
+    "cites": [
+      "can-8514a8499247"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "graduated/default",
+    "silence": false,
+    "voices": []
+  },
+  "one-cook-is-not-both": {
+    "by": "human:theo",
+    "detail": "approval from human:sam",
+    "rule": "joint:human:dana,human:sam",
+    "status": "proposed"
+  },
+  "past-the-boundary": {
+    "now": "2026-03-02"
+  },
+  "the-agent-tries-to-adjudicate": {
+    "act": "can-006a587422ab"
+  },
+  "the-agents-adjudication-is-surfaced": {
+    "unattended": [
+      "can-006a587422ab"
+    ]
+  },
+  "the-agents-record-is-queryable": {
+    "answered": 0,
+    "asked": 0,
+    "decided": 0,
+    "open": 0,
+    "positions": 1
+  },
+  "the-agents-standing-lapsed": {
+    "count": 1,
+    "targets": [
+      "can-010d28684d45"
+    ]
+  },
+  "the-change-to-the-gardens-rule-is-itself-judged": {
+    "by": "human:ola",
+    "detail": "",
+    "rule": "standing",
+    "sets": "twice:turnover:standing",
+    "status": "in-force"
+  },
+  "the-cooks-change-their-own-rule": {
+    "act": "can-df8c29b61e9d"
+  },
+  "the-cooks-decide-how-kitchen-rules-are-made": {
+    "act": "can-12fe44548cc7"
+  },
+  "the-fork-keeps-what-it-wrote": {
+    "generation": "g3",
+    "inherited": 3,
+    "lineage": "coliving-commons",
+    "local": 5
+  },
+  "the-garden-at-the-end": {
+    "acts": 64,
+    "carried": 0,
+    "live": 10,
+    "open_questions": 0,
+    "proposed": 0,
+    "tolerated": 1,
+    "ungoverned": 1
+  },
+  "the-garden-decides-to-decide-twice": {
+    "act": "can-3760cc7eeb33"
+  },
+  "the-helper-proposes-and-cannot-mint": {
+    "by": "agent:helper",
+    "detail": "approval from human:dana, human:sam",
+    "rule": "joint:human:dana,human:sam",
+    "status": "proposed"
+  },
+  "the-house-above-the-kitchen": {
+    "deciders": [
+      "human:arjun",
+      "human:ben",
+      "human:dana",
+      "human:ines",
+      "human:juno",
+      "human:kit",
+      "human:lila",
+      "human:mira",
+      "human:ola",
+      "human:rae",
+      "human:sam",
+      "human:theo"
+    ],
+    "holders": [
+      "human:arjun",
+      "human:ben",
+      "human:dana",
+      "human:ines",
+      "human:juno",
+      "human:kit",
+      "human:lila",
+      "human:mira",
+      "human:ola",
+      "human:rae",
+      "human:sam",
+      "human:theo"
+    ],
+    "policy": "cautious/consent"
+  },
+  "the-kitchen-at-the-end": {
+    "acts": 56,
+    "carried": 0,
+    "live": 9,
+    "open_questions": 0,
+    "proposed": 0,
+    "tolerated": 1,
+    "ungoverned": 1
+  },
+  "the-kitchen-inside-the-house": {
+    "deciders": [
+      "human:dana",
+      "human:sam",
+      "human:arjun",
+      "human:ben",
+      "human:ines",
+      "human:juno",
+      "human:kit",
+      "human:lila",
+      "human:mira",
+      "human:ola",
+      "human:rae",
+      "human:theo"
+    ],
+    "holders": [
+      "human:dana",
+      "human:sam"
+    ],
+    "policy": "threshold"
+  },
+  "the-panel": {
+    "pool": 11,
+    "seats": [
+      "human:juno",
+      "human:theo",
+      "human:sam"
+    ],
+    "seed": "abe5d69a5c5fca4036817c121e9eb7d18e34e692e1d01079ae3b3c2ca0ce5e66",
+    "withheld": [
+      "human:ola"
+    ]
+  },
+  "the-same-thing-reversible-is-not-refused": {
+    "authority": "act-and-notify",
+    "because": "consent: nothing bears on it and nobody objected, but nobody looked either",
+    "cites": [],
+    "outcome": "unaddressed",
+    "refused": 0,
+    "rule": "cautious/consent",
+    "silence": false,
+    "voices": []
+  },
+  "the-same-two-cannot-carry-it-twice": {
+    "by": "human:juno",
+    "detail": "someone who did not hold house.garden on 2026-04-03 to be granted it, then a second approval",
+    "rule": "twice:turnover:standing",
+    "status": "proposed"
+  },
+  "three-months-later": {
+    "now": "2026-02-15"
+  },
+  "who-holds-the-kitchen": {
+    "deciders": [
+      "agent:helper",
+      "human:dana",
+      "human:sam",
+      "human:arjun",
+      "human:ben",
+      "human:ines",
+      "human:juno",
+      "human:kit",
+      "human:lila",
+      "human:mira",
+      "human:ola",
+      "human:rae",
+      "human:theo"
+    ],
+    "holders": [
+      "agent:helper",
+      "human:dana",
+      "human:sam"
+    ],
+    "policy": "subsidiarity"
+  }
+}

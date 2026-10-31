@@ -99,6 +99,11 @@ canon init --profile house
 
 ```text
 canon initialised at /home/mira/house/.canon (house)
+  human:mira holds this canon (house) — you write, it is in force.
+  grant the others: canon grant human:<them> house
+  sign it: canon identify <your key.pub> — so only your key can decide as you
+  a holder's word is a rule at once; to need everyone: canon ratification set unanimous
+  policy changes wait like rules do, and human:mira.… is yours alone
 
   canon add "<a rule you already have>"      write one down
   canon check "<something you want to do>"   does it clash with one?

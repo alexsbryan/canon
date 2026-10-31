@@ -23,7 +23,11 @@ fn scratch(name: &str) -> PathBuf {
 
 fn fresh(name: &str) -> PathBuf {
     let canon = scratch(name).join(".canon");
-    let (code, out) = canon_as(&canon, "human:alex", &["init", "--profile", "code"]);
+    let (code, out) = canon_as(
+        &canon,
+        "human:alex",
+        &["init", "--profile", "code", "--open"],
+    );
     assert_eq!(code, 0, "{out}");
     canon
 }
@@ -90,7 +94,10 @@ fn every_verb_says_what_it_does_when_asked() {
         "{out}"
     );
     assert!(out.contains(".canon/acts.jsonl"), "{out}");
-    assert!(out.contains("flags: --plain  --profile <value>"), "{out}");
+    assert!(
+        out.contains("flags: --open  --plain  --profile <value>"),
+        "{out}"
+    );
     assert!(!nowhere.exists(), "asking wrote nothing");
 
     let (_, same) = canon_as(&nowhere, "human:alex", &["help", "init"]);
@@ -329,4 +336,265 @@ fn the_canon_renders_to_a_file_and_says_when_the_file_is_stale() {
 
     let (code, _) = canon_as(&dir, "human:alex", &["list", "--markdown", "--check"]);
     assert_eq!(code, 2, "--check without a file is a usage error");
+}
+
+#[test]
+fn init_holds_the_canon_for_its_founder_so_writes_are_not_open() {
+    // The group's finding: a canon that nobody holds lets the first person
+    // to write become the house. `init` now seats its founder, so the
+    // founder's write is the house's and everyone else's is a proposal.
+    let dir = std::env::temp_dir().join(format!("canon-founded-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("human:june holds this canon (house)"), "{out}");
+    assert!(out.contains("grant the others"), "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(
+        &canon,
+        "human:june",
+        &["add", "Quiet hours are 10pm to 7am."],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("in force — june holds this canon"), "{out}");
+    let (code, out) = canon_as(&canon, "human:sam", &["add", "Guests stay three nights."]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("PROPOSED"), "{out}");
+
+    // The old shared start is explicit.
+    let shared = dir.join("shared");
+    let (code, out) = canon_as(
+        &shared,
+        "human:june",
+        &["init", "--profile", "house", "--open"],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("nothing holds this canon"), "{out}");
+    let (_, who) = canon_as(&shared, "human:june", &["who"]);
+    assert!(who.contains("nobody holds this canon"), "{who}");
+}
+
+#[test]
+fn a_bare_name_is_refused_before_it_is_written_and_who_names_the_refused_acts() {
+    let dir = std::env::temp_dir().join(format!("canon-bare-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(&canon, "human:june", &["grant", "Mira", "house"]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains("human:Mira"), "{out}");
+    let raw = std::fs::read_to_string(canon.join("acts.jsonl")).unwrap();
+    assert!(!raw.contains("\"holder\":\"Mira\""), "{raw}");
+    // A self-grant without holding is written and refused; `who` says so.
+    let (_, out) = canon_as(&canon, "human:sam", &["grant", "human:sam", "house"]);
+    assert!(out.contains("NOT APPLIED"), "{out}");
+    let (_, who) = canon_as(&canon, "human:june", &["who"]);
+    assert!(
+        who.contains("governance act(s) written without standing"),
+        "{who}"
+    );
+}
+
+#[test]
+fn add_keeps_why_it_is_a_rule_and_where_it_came_from() {
+    // Sam's two asks in the guests and quiet scenes: the reason at the
+    // first writing, and the scattered source with it, never retyped into
+    // the rule's text.
+    let dir = std::env::temp_dir().join(format!("canon-add-source-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(
+        &canon,
+        "human:june",
+        &[
+            "add",
+            "Guests stay three nights.",
+            "-m",
+            "Sam's cousin stayed two weeks.",
+            "--cite",
+            "the house chat, 2025-06",
+        ],
+    );
+    assert_eq!(code, 0, "{out}");
+    let id = out.split_whitespace().next().unwrap_or_default();
+    let (code, why) = canon_as(&canon, "human:june", &["why", id]);
+    assert_eq!(code, 0, "{why}");
+    assert!(why.contains("Sam's cousin stayed two weeks."), "{why}");
+    assert!(why.contains("the house chat, 2025-06"), "{why}");
+}
+
+#[test]
+fn help_topics_explain_profiles_and_scopes_and_an_unknown_topic_says_so() {
+    let nowhere = scratch("topics").join(".canon");
+    let (code, out) = canon_as(&nowhere, "human:alex", &["help", "profile"]);
+    assert_eq!(code, 0, "{out}");
+    for word in ["personal", "code", "house"] {
+        assert!(out.contains(word), "{out}");
+    }
+    let (code, out) = canon_as(&nowhere, "human:alex", &["help", "scopes"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("house.quiet"), "{out}");
+    let (code, out) = canon_as(&nowhere, "human:alex", &["help", "nonsense"]);
+    assert_ne!(code, 0, "{out}");
+    assert!(out.contains("no such topic"), "{out}");
+    assert!(!nowhere.exists(), "asking wrote nothing");
+}
+
+#[test]
+fn a_house_is_told_how_its_rules_are_made_and_a_replaced_rule_says_so() {
+    // xenia's coliving house (canon 53f64f3): init never named the rule it
+    // founded, so the three argued for days over `policy set` and
+    // `ratification set`; and once Sam set unanimous, `ratification show`
+    // still called standing "in force since" beside the one deciding.
+    let dir = std::env::temp_dir().join(format!("canon-how-made-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("canon ratification set unanimous"), "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (code, out) = canon_as(&canon, "human:june", &["ratification", "set", "unanimous"]);
+    assert_eq!(code, 0, "{out}");
+    let uid = out
+        .split_whitespace()
+        .next()
+        .unwrap_or_default()
+        .to_string();
+    let (code, show) = canon_as(&canon, "human:june", &["ratification", "show"]);
+    assert_eq!(code, 0, "{show}");
+    assert!(
+        show.contains(&format!("replaced: {uid} decides now")),
+        "{show}"
+    );
+    assert_eq!(show.matches("in force since").count(), 1, "{show}");
+}
+
+#[test]
+fn why_explains_a_governance_act_and_the_log_names_a_ratification() {
+    // The June's setup: a ratification id from `log` answered "no record
+    // matching", and the log's "ratify majority" hid which policy changed.
+    let dir = std::env::temp_dir().join(format!("canon-why-act-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let canon = dir.join(".canon");
+    let (code, out) = canon_as(&canon, "human:june", &["init", "--profile", "house"]);
+    assert_eq!(code, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (_, log) = canon_as(&canon, "human:june", &["log"]);
+    assert!(
+        log.contains("ratify     standing — A holder's word"),
+        "the log hides the ratification's policy: {log}"
+    );
+    let id = |line: &str| {
+        line.split_whitespace()
+            .next()
+            .unwrap_or_default()
+            .to_string()
+    };
+    let rid = log
+        .lines()
+        .find(|l| l.contains("ratify"))
+        .map(id)
+        .unwrap_or_default();
+    let (code, why) = canon_as(&canon, "human:june", &["why", &rid]);
+    assert_eq!(code, 0, "{why}");
+    assert!(why.contains("ratification"), "{why}");
+    assert!(why.contains("A holder's word"), "{why}");
+    let gid = log
+        .lines()
+        .find(|l| l.contains("grant"))
+        .map(id)
+        .unwrap_or_default();
+    let (code, why) = canon_as(&canon, "human:june", &["why", &gid]);
+    assert_eq!(code, 0, "{why}");
+    assert!(why.contains("holder: human:june"), "{why}");
+    assert!(why.contains("founded this canon"), "{why}");
+}
+
+#[test]
+fn voice_lists_standing_as_the_house_holds_it() {
+    // `voice` read grants from the raw log: a grant refused for want of
+    // standing was listed as held, and a withdrawal over a wider scope did
+    // not end the narrower grant under it.
+    let dir = fresh("voice");
+    canon_as(&dir, "human:alex", &["grant", "human:alex", "house"]);
+    tick();
+    canon_as(&dir, "human:alex", &["grant", "human:bo", "house.kitchen"]);
+    tick();
+    let (_, out) = canon_as(&dir, "human:mal", &["grant", "human:mal", "house.garden"]);
+    assert!(out.contains("NOT APPLIED"), "{out}");
+    tick();
+    canon_as(&dir, "human:alex", &["withdraw", "human:bo", "house"]);
+
+    let (code, out) = canon_as(&dir, "human:alex", &["voice", "human:bo"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("over house.kitchen, granted by alex"), "{out}");
+    assert!(out.contains(", ended "), "{out}");
+    assert!(!out.contains("no end date"), "{out}");
+
+    let (_, out) = canon_as(&dir, "human:alex", &["voice", "human:mal"]);
+    assert!(out.contains("has not put anything in this canon"), "{out}");
+}
+
+#[test]
+fn a_leaver_leaves_their_question_without_their_name_and_only_their_own() {
+    // `canon leave` was a verb of its own for a withdrawal and a question;
+    // it is `withdraw <you> <scope> --ask` now.
+    let dir = fresh("ask");
+    canon_as(&dir, "human:alex", &["grant", "human:alex", "house"]);
+    tick();
+    canon_as(&dir, "human:alex", &["grant", "human:bo", "house.kitchen"]);
+    tick();
+    let before = canon_as(&dir, "human:bo", &["log", "--json"]).1;
+    let (code, out) = canon_as(
+        &dir,
+        "human:bo",
+        &["withdraw", "human:alex", "house", "--ask", "Why?"],
+    );
+    assert_ne!(code, 0, "{out}");
+    assert_eq!(canon_as(&dir, "human:bo", &["log", "--json"]).1, before);
+
+    let (code, out) = canon_as(
+        &dir,
+        "human:bo",
+        &[
+            "withdraw",
+            "human:bo",
+            "house.kitchen",
+            "--ask",
+            "Who waters the plants?",
+        ],
+    );
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("no longer holds house.kitchen"), "{out}");
+    assert!(out.contains("recorded without your name"), "{out}");
+    let log = canon_as(&dir, "human:bo", &["log", "--json"]).1;
+    let asked = log
+        .lines()
+        .find(|l| l.contains("Who waters the plants?"))
+        .unwrap_or_else(|| panic!("no question in:\n{log}"));
+    assert!(asked.contains(r#""actor":"anonymous""#), "{asked}");
+}
+
+#[test]
+fn a_verb_nobody_declared_is_refused_with_the_short_help() {
+    // Dispatch reads cli::VERBS; a name outside it reaches no handler.
+    let dir = fresh("unknown");
+    let (code, out) = canon_as(&dir, "human:alex", &["frobnicate"]);
+    assert_eq!(code, 2, "{out}");
+    assert!(out.contains("unknown command `frobnicate`"), "{out}");
+    assert!(out.contains("canon help all"), "{out}");
+    let (code, out) = canon_as(&dir, "human:alex", &["--version"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.starts_with("canon "), "{out}");
 }

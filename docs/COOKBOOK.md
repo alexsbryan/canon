@@ -580,14 +580,13 @@ to take a seat away.
 When someone steps back, take the thing they know with them:
 
 ```sh
-canon leave house.kitchen -m "nobody has ever written down which pans are shared"
+canon withdraw human:priya house.kitchen --ask "nobody has ever written down which pans are shared"
 ```
 
 ```text
-human:priya no longer holds house.kitchen
+human:priya no longer holds house.kitchen, or anything under it
 can-fab1fa47a5db  ? nobody has ever written down which pans are shared
-  recorded without your name.
-  it sits next to your withdrawal in the log, so treat the anonymity as thin.
+  recorded without your name; it sits next to your withdrawal in the log, so treat the anonymity as thin.
 ```
 
 Their standing ends and the thing they know outlives the seat — with the tool

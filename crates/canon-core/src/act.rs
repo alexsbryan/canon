@@ -108,8 +108,10 @@ pub enum ActKind {
         /// file that arrived with no git history.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         from: Option<ActId>,
-        /// Where the text was drafted from, when it was extracted rather than
-        /// authored. A drafted commitment with no citation is never written.
+        /// Where the text came from, or why: a chat or a document it was
+        /// read from, or the reason a person gave when they wrote it. A
+        /// drafted commitment with no citation is never written; a hand
+        /// write may carry one with `-m` or `--cite`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         source: Option<String>,
     },
@@ -544,6 +546,6 @@ impl Act {
     /// Adjudication — everything except `Assert`, `Question` and `Adopt` — is
     /// expected to be human-authored. See [`crate::Canon::unattended`].
     pub fn is_human(&self) -> bool {
-        self.actor.starts_with("human:")
+        crate::person::Person::of(&self.actor).is_some()
     }
 }

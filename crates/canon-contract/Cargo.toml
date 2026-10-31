@@ -1,6 +1,6 @@
 [package]
 name = "canon-contract"
-description = "Development-only inspection of canon's checked Rust contract"
+description = "canon's contract as checked-in files, and the test helper that holds the code to them"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,7 +9,5 @@ repository.workspace = true
 publish = false
 
 [dependencies]
-serde_json = { workspace = true, features = ["std"] }
 syn = { version = "2", features = ["full", "visit-mut"] }
 quote = "1"
-proc-macro2 = { version = "1", features = ["span-locations"] }

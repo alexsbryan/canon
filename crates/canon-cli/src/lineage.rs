@@ -23,7 +23,7 @@ use std::io::Read;
 use std::path::Path;
 use std::process::Command;
 
-use canon_core::{ActKind, Divergence, Fate, Log, Snapshot};
+use canon_core::{ActId, ActKind, Canon, Divergence, Fate, Log, Snapshot};
 
 use crate::cmds::{fail, has, positionals};
 use crate::profile::Profile;
@@ -82,35 +82,56 @@ pub fn adopt(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    if let Some(a) = &canon.ancestry {
-        return fail(format!(
-            "this canon already descends from {}@{} — `canon upgrade <gen>` takes a newer \
-             generation of it",
-            a.lineage, a.generation
-        ));
+    let rebasing = has(args, "--rebase");
+    match (canon.ancestry(), rebasing) {
+        (Some(a), false) => {
+            return fail(format!(
+                "this canon already descends from {}@{} — `canon upgrade <gen>` takes a newer \
+                 generation of it, and `canon adopt <url>@<gen> --rebase` moves it onto \
+                 another base",
+                a.lineage, a.generation
+            ))
+        }
+        (None, true) => {
+            return fail(
+                "this canon descends from no lineage, so there is nothing to move — `canon \
+                 adopt` without --rebase adopts one",
+            )
+        }
+        _ => {}
+    }
+    if rebasing && has(args, "--except") {
+        return fail(
+            "--except retracts rules as a canon first adopts them; a canon moving onto a new \
+             base keeps its own retractions. Nothing was written",
+        );
     }
 
     let pos = positionals(args);
-    let (snapshot, source) = if has(args, "--paste") {
+    let (snapshot, log, source) = if has(args, "--paste") {
         let mut block = String::new();
         if let Err(e) = std::io::stdin().read_to_string(&mut block) {
             return fail(format!("reading the pasted block: {e}"));
         }
         match Snapshot::parse(&block) {
-            Ok(s) => (s, "paste".to_string()),
+            Ok(s) => (s, None, "paste".to_string()),
             Err(e) => return fail(e),
         }
     } else if let Some(target) = pos.first() {
         let (url, gen) = split_generation(target);
         match fetch(&dir, url, gen) {
-            Ok((s, _)) => (s, url.to_string()),
+            Ok((s, log)) => (s, Some(log), url.to_string()),
             Err(e) => return fail(e),
         }
     } else {
         return fail(
-            "usage: canon adopt <url>[@generation] | --paste  [--except <id>,… -m \"<why>\"]",
+            "usage: canon adopt <url>[@generation] | --paste  [--except <id>,… -m \"<why>\"] \
+             [--rebase]",
         );
     };
+    if rebasing {
+        return onto::onto(&dir, &canon, args, &snapshot, log.as_ref(), &source);
+    }
 
     // Resolved before anything is written: a typo in one id must not leave
     // a half-adopted canon behind it.
@@ -137,6 +158,15 @@ pub fn adopt(args: &[String]) -> i32 {
                 );
             }
             println!("  canon diff --upstream   how you have diverged, later");
+            if source == "paste" {
+                // A pasted fork has no URL to fetch from, and nothing at
+                // adoption used to say how it takes a later generation.
+                println!(
+                    "  later generations: a newer `canon share` block of {}, piped into \
+                     `canon upgrade --paste`",
+                    snapshot.lineage
+                );
+            }
             0
         }
         Err(e) => fail(e),
@@ -247,6 +277,23 @@ fn git(args: &[&str], cwd: Option<&Path>) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out.stdout).to_string())
 }
 
+/// Create the lineage cache, carrying a `.gitignore` of its own.
+///
+/// `init` lists `lineages/` now, but a canon founded before it did has a
+/// `.gitignore` this tool never rewrites, and `git add .canon` there
+/// committed a nested clone. The cache ignores itself instead, the way
+/// `secrets/` does, so the fix reaches every canon that clones a lineage
+/// without editing a file its group may have edited on purpose.
+fn ignore_cache(dir: &Path) -> Result<(), String> {
+    let cache = dir.join(CACHE_DIR);
+    std::fs::create_dir_all(&cache).map_err(|e| format!("creating the lineage cache: {e}"))?;
+    let ignore = cache.join(".gitignore");
+    if !ignore.exists() {
+        std::fs::write(&ignore, "*\n").map_err(|e| format!("writing {}: {e}", ignore.display()))?;
+    }
+    Ok(())
+}
+
 /// Clone or refresh a lineage and read what is live at `generation`.
 ///
 /// The adopter never types git: this is the whole reason it is here.
@@ -256,13 +303,14 @@ pub fn fetch(
     generation: Option<&str>,
 ) -> Result<(Snapshot, canon_core::Canon), String> {
     let cache = dir.join(CACHE_DIR).join(slug(url));
+    // Before either branch: a cache cloned before this existed is ignored
+    // from its next fetch on.
+    ignore_cache(dir)?;
     if cache.join(".git").is_dir() {
         // Not --quiet: a rejected tag update is reported on stderr and is
         // exactly the thing worth seeing.
         git(&["fetch", "--tags", "origin"], Some(&cache))?;
     } else {
-        std::fs::create_dir_all(cache.parent().unwrap_or(&cache))
-            .map_err(|e| format!("creating the lineage cache: {e}"))?;
         git(&["clone", "--quiet", url, &cache.to_string_lossy()], None)?;
     }
     if let Some(g) = generation {
@@ -273,26 +321,11 @@ pub fn fetch(
             )
         })?;
     }
-    // A lineage repository publishes `acts.jsonl` at its root; a project
-    // repository carries the same file inside `.canon/`. Both shapes are real
-    // and a maintainer should not have to restructure to publish, so look in
-    // both — and SAY which one was read, because "it adopted something, but
-    // what?" is the confusing failure.
-    let root = cache.join(store::FILE);
-    let nested = cache.join(store::DIR).join(store::FILE);
-    let (file, home) = if root.is_file() {
-        (root, cache.clone())
-    } else if nested.is_file() {
-        (nested, cache.join(store::DIR))
-    } else {
-        return Err(format!(
-            "{url} does not look like a lineage: no {} at its root and none in {}/",
-            store::FILE,
-            store::DIR
-        ));
-    };
+    // Look at the root and in `.canon/` — and SAY which one was read,
+    // because "it adopted something, but what?" is the confusing failure.
+    let (raw, file, home) =
+        store::published(&cache).map_err(|e| format!("{url} does not look like a lineage: {e}"))?;
     eprintln!("reading {}", file.display());
-    let raw = std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
     let upstream = Log::parse(&raw)
         .map_err(|e| format!("{}: {e}", file.display()))?
         .derive();
@@ -381,6 +414,79 @@ pub fn load_seed(dir: &Path) -> Result<Snapshot, String> {
     serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))
 }
 
+/// Which local commitment holds each rule of the base this canon moved onto.
+///
+/// Written by `adopt --rebase`, beside the seed. A canon that moves keeps
+/// its record, and its inherited rules carry `from` the lineage it first
+/// adopted; the record is append-only, so the link to the new base lives
+/// here instead, and every divergence is computed through it
+/// ([`Divergence::compute_carried`]). Absent for a canon that never moved.
+pub const CARRIED_FILE: &str = "carried.json";
+
+pub fn load_carried(dir: &Path) -> Result<Vec<(ActId, ActId)>, String> {
+    let path = dir.join(UPSTREAM_DIR).join(CARRIED_FILE);
+    let Ok(raw) = std::fs::read_to_string(&path) else {
+        return Ok(Vec::new());
+    };
+    let pairs: Vec<serde_json::Value> =
+        serde_json::from_str(&raw).map_err(|e| format!("{}: {e}", path.display()))?;
+    pairs
+        .iter()
+        .map(|p| match (p["upstream"].as_str(), p["local"].as_str()) {
+            (Some(u), Some(l)) => Ok((ActId::from_raw(u), ActId::from_raw(l))),
+            _ => Err(format!(
+                "{}: an entry without `upstream` and `local` — refusing to diff against a \
+                 half-read base",
+                path.display()
+            )),
+        })
+        .collect()
+}
+
+pub fn save_carried(dir: &Path, pairs: &[(ActId, ActId)]) -> Result<(), String> {
+    let up = dir.join(UPSTREAM_DIR);
+    std::fs::create_dir_all(&up).map_err(|e| format!("creating {}: {e}", up.display()))?;
+    let body: Vec<serde_json::Value> = pairs
+        .iter()
+        .map(|(u, l)| serde_json::json!({ "upstream": u.as_str(), "local": l.as_str() }))
+        .collect();
+    let path = up.join(CARRIED_FILE);
+    std::fs::write(
+        &path,
+        serde_json::to_string_pretty(&body).map_err(|e| e.to_string())? + "\n",
+    )
+    .map_err(|e| format!("writing {}: {e}", path.display()))
+}
+
+/// How this canon has diverged from its seed, through whatever it carried
+/// when it moved. The one way every verb here computes it.
+pub fn diverged(dir: &Path, seed: &Snapshot, canon: &Canon) -> Result<Divergence, String> {
+    Ok(Divergence::compute_carried(
+        seed,
+        canon,
+        &load_carried(dir)?,
+    ))
+}
+
+/// The local commitment that holds the seed rule `upstream`: the one whose
+/// `from` names it, else the one the move carried it onto.
+pub fn local_of<'a>(
+    canon: &'a Canon,
+    carried: &[(ActId, ActId)],
+    upstream: &ActId,
+) -> Option<&'a canon_core::Commitment> {
+    canon
+        .commitments()
+        .iter()
+        .find(|c| c.from() == Some(upstream))
+        .or_else(|| {
+            carried
+                .iter()
+                .find(|(u, _)| u == upstream)
+                .and_then(|(_, l)| canon.get(l))
+        })
+}
+
 // ── diff --upstream ─────────────────────────────────────────
 
 pub fn diff(args: &[String]) -> i32 {
@@ -395,7 +501,10 @@ pub fn diff(args: &[String]) -> i32 {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let d = Divergence::compute(&seed, &canon);
+    let d = match diverged(&dir, &seed, &canon) {
+        Ok(d) => d,
+        Err(e) => return fail(e),
+    };
     if has(args, "--json") {
         println!("{}", serde_json::to_string_pretty(&d).unwrap_or_default());
         return 0;
@@ -467,7 +576,7 @@ fn render_divergence(d: &Divergence, canon: &canon_core::Canon, seed: &Snapshot)
     }
     for id in &d.added {
         if let Some(c) = canon.get(id) {
-            out.push_str(&format!("\nADDED       {}\n  \"{}\"\n", c.id, c.text));
+            out.push_str(&format!("\nADDED       {}\n  \"{}\"\n", c.id(), c.text()));
         }
     }
     out
@@ -507,7 +616,7 @@ fn render_proposal(d: &Divergence, canon: &canon_core::Canon) -> String {
     for id in &d.added {
         if let Some(c) = canon.get(id) {
             n += 1;
-            out.push_str(&format!("ADD\n  \"{}\"\n", c.text));
+            out.push_str(&format!("ADD\n  \"{}\"\n", c.text()));
         }
     }
     out.push_str(&format!("--- {n} change(s) · no rationales included\n"));
@@ -518,29 +627,64 @@ fn render_proposal(d: &Divergence, canon: &canon_core::Canon) -> String {
 
 pub fn upgrade(args: &[String]) -> i32 {
     let pos = positionals(args);
-    let Some(generation) = pos.first() else {
-        return fail("usage: canon upgrade <generation>");
-    };
+    let pasted = has(args, "--paste");
+    let generation = pos.first().copied();
+    if generation.is_none() && !pasted {
+        return fail("usage: canon upgrade <generation> | --paste");
+    }
     let (dir, _, canon) = match crate::cmds::load() {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let Some(ancestry) = canon.ancestry.clone() else {
+    let Some(ancestry) = canon.ancestry().clone() else {
         return fail("this canon was not adopted from a lineage — nothing to upgrade");
-    };
-    let Some(url) = ancestry.source.clone().filter(|s| s != "paste") else {
-        return fail(
-            "this canon was adopted from a pasted block, which has no upstream to fetch. \
-             Ask for a fresh block and `canon adopt --paste` into a new canon",
-        );
     };
     let seed = match load_seed(&dir) {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let (next, upstream) = match fetch(&dir, &url, Some(generation)) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
+    // **Two ways in, one way through.** A canon adopted by paste has no
+    // upstream to fetch, and `upgrade` used to refuse it and advise adopting
+    // into a new canon, which discards the fork's own record. A newer block
+    // of the same lineage is read instead: its header names the lineage and
+    // the generation, and everything after this point is the same.
+    let (next, upstream, source) = if pasted {
+        let mut block = String::new();
+        if let Err(e) = std::io::stdin().read_to_string(&mut block) {
+            return fail(format!("reading the pasted block: {e}"));
+        }
+        let next = match Snapshot::parse(&block) {
+            Ok(s) => s,
+            Err(e) => return fail(e),
+        };
+        if next.lineage != ancestry.lineage {
+            return fail(format!(
+                "that block is {}@{}, and this canon descends from {} — nothing was written. \
+                 `canon adopt --paste --rebase` moves a canon onto another lineage",
+                next.lineage, next.generation, ancestry.lineage
+            ));
+        }
+        // A snapshot carries no supersession history, so a rule upstream
+        // rewrote arrives as a new rule and the withdrawal of the old one.
+        // Said, because the held list below can then name both halves.
+        eprintln!(
+            "reading a pasted {}@{}: a block carries no history, so a rule upstream reworded \
+             reads as a new rule and a withdrawn one",
+            next.lineage, next.generation
+        );
+        (next, Log::default().derive(), "paste".to_string())
+    } else {
+        let Some(url) = ancestry.source.clone().filter(|s| s != "paste") else {
+            return fail(
+                "this canon was adopted from a pasted block, which has no upstream to fetch. \
+                 Ask for a newer block of the same lineage and pipe it into \
+                 `canon upgrade --paste`",
+            );
+        };
+        match fetch(&dir, &url, generation) {
+            Ok((next, upstream)) => (next, upstream, url),
+            Err(e) => return fail(e),
+        }
     };
     if next.generation == seed.generation {
         println!(
@@ -550,19 +694,18 @@ pub fn upgrade(args: &[String]) -> i32 {
         return 0;
     }
 
-    let d = Divergence::compute(&seed, &canon);
+    let carried = match load_carried(&dir) {
+        Ok(c) => c,
+        Err(e) => return fail(e),
+    };
+    let d = Divergence::compute_carried(&seed, &canon, &carried);
     let fate_of = |upstream_id: &canon_core::ActId| -> Option<&Fate> {
         d.inherited
             .iter()
             .find(|i| &i.upstream == upstream_id)
             .map(|i| &i.fate)
     };
-    let local_of = |upstream_id: &canon_core::ActId| {
-        canon
-            .commitments
-            .iter()
-            .find(|c| c.from.as_ref() == Some(upstream_id))
-    };
+    let local_of = |upstream_id: &canon_core::ActId| local_of(&canon, &carried, upstream_id);
 
     let mut applied = 0;
     let mut held: Vec<String> = Vec::new();
@@ -581,8 +724,8 @@ pub fn upgrade(args: &[String]) -> i32 {
                         &dir,
                         ActKind::Supersede {
                             text: c.text.clone(),
-                            old: vec![local.id.clone()],
-                            rationale: format!("upstream {}@{generation}", next.lineage),
+                            old: vec![local.id().clone()],
+                            rationale: format!("upstream {}@{}", next.lineage, next.generation),
                         },
                     ) {
                         return fail(e);
@@ -630,8 +773,11 @@ pub fn upgrade(args: &[String]) -> i32 {
                 if let Err(e) = crate::cmds::write(
                     &dir,
                     ActKind::Retract {
-                        target: local.id.clone(),
-                        rationale: format!("withdrawn upstream in {}@{generation}", next.lineage),
+                        target: local.id().clone(),
+                        rationale: format!(
+                            "withdrawn upstream in {}@{}",
+                            next.lineage, next.generation
+                        ),
                     },
                 ) {
                     return fail(e);
@@ -653,7 +799,7 @@ pub fn upgrade(args: &[String]) -> i32 {
         ActKind::Adopt {
             lineage: next.lineage.clone(),
             generation: next.generation.clone(),
-            source: Some(url.clone()),
+            source: Some(source.clone()),
         },
     ) {
         return fail(e);
@@ -675,10 +821,15 @@ pub fn upgrade(args: &[String]) -> i32 {
         for h in &held {
             println!("{h}\n");
         }
-        println!(
-            "  `canon rebase --onto {}@{generation}` proposes how to carry your law onto the new base.",
-            url
-        );
+        if source == "paste" {
+            println!("  `canon diff --upstream` shows where this canon now stands against it.");
+        } else {
+            println!(
+                "  `canon adopt {source}@{} --rebase --dry-run` proposes how to carry your law onto \
+                 the new base.",
+                next.generation
+            );
+        }
     }
     0
 }
@@ -723,8 +874,8 @@ fn seed_ancestor(
             return Some(cur);
         }
         seen.push(cur.clone());
-        if let Some(c) = upstream.commitments.iter().find(|c| c.id == cur) {
-            frontier.extend(c.replaces.iter().cloned());
+        if let Some(c) = upstream.commitments().iter().find(|c| c.id() == &cur) {
+            frontier.extend(c.replaces().iter().cloned());
         }
     }
     None
@@ -780,6 +931,8 @@ pub fn merge_driver(args: &[String]) -> i32 {
         }
     }
 }
+
+mod onto;
 
 #[cfg(test)]
 mod tests;

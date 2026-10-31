@@ -23,9 +23,8 @@ pub enum Key {
     /// One key for one leg, not six keys for six legs. Extraction is the leg
     /// the evidence speaks to — it is 24 of a maple-house run's ~36 calls, it
     /// is the only leg whose miss is silent (a rule never found cannot be
-    /// recovered by any later stage), and it is the leg a convergence arm
-    /// samples repeatedly. The other five get a key when a measurement asks
-    /// for one.
+    /// recovered by any later stage). The other five get a key when a
+    /// measurement asks for one.
     ExtractModel,
 }
 

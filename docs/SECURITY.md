@@ -33,7 +33,7 @@ makes, and a break in any of them is the sharpest kind of bug this project
 can have.
 
 **A passage reaching an endpoint that shouldn't have it.** `draft`,
-`check`, `tensions` and `rebase` send passages from your own documents to a
+`check`, `tensions` and `adopt --rebase` send passages from your own documents to a
 model. A call is refused unless the endpoint resolves to this machine,
 unless the person running it passes `--allow-remote`, and every call prints
 the endpoint it used. Any path that sends a passage without that gate, or

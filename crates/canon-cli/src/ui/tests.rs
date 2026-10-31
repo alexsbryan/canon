@@ -252,18 +252,18 @@ fn a_rule_can_be_proposed_changed_and_taken_away_from_the_page() {
     assert_eq!(r.status, 303);
     let (_, st) = load(&c).unwrap();
     let bins = st
-        .commitments
+        .commitments()
         .iter()
-        .find(|x| x.text == "Bins go out on Tuesday.")
+        .find(|x| x.text() == "Bins go out on Tuesday.")
         .unwrap();
-    assert_eq!(st.scope_of(&bins.id).map(|s| s.as_str()), Some("house"));
+    assert_eq!(st.scope_of(bins.id()).map(|s| s.as_str()), Some("house"));
     assert!(
-        matches!(bins.status, canon_core::Status::Active),
+        matches!(bins.status(), canon_core::Status::Active),
         "alex holds house"
     );
 
     // A change needs its reason, and the reason is kept.
-    let id = bins.id.as_str().to_string();
+    let id = bins.id().as_str().to_string();
     let bare = respond(
         &at(
             "/replace",
@@ -282,12 +282,12 @@ fn a_rule_can_be_proposed_changed_and_taken_away_from_the_page() {
     assert_eq!(r.status, 303);
     let (_, st) = load(&c).unwrap();
     let monday = st
-        .commitments
+        .commitments()
         .iter()
-        .find(|x| x.text == "Bins go out on Monday.")
+        .find(|x| x.text() == "Bins go out on Monday.")
         .unwrap();
     assert_eq!(
-        st.scope_of(&monday.id).map(|s| s.as_str()),
+        st.scope_of(monday.id()).map(|s| s.as_str()),
         Some("house"),
         "the room carries over"
     );
@@ -308,7 +308,7 @@ fn a_rule_can_be_proposed_changed_and_taken_away_from_the_page() {
             "/retract",
             &format!(
                 "token={TOKEN}&id={}&because=No+collection",
-                monday.id.as_str()
+                monday.id().as_str()
             ),
         ),
         &c,
@@ -316,7 +316,7 @@ fn a_rule_can_be_proposed_changed_and_taken_away_from_the_page() {
     assert_eq!(gone.status, 303);
     let (_, st) = load(&c).unwrap();
     assert!(matches!(
-        st.get(&monday.id).unwrap().status,
+        st.get(monday.id()).unwrap().status(),
         canon_core::Status::Retracted { .. }
     ));
 }
@@ -342,7 +342,7 @@ fn something_left_unwritten_needs_its_reason_and_can_be_lifted() {
     );
     let (_, st) = load(&c).unwrap();
     let s = st
-        .silences
+        .silences()
         .iter()
         .find(|s| s.about == "guests")
         .unwrap()
@@ -363,7 +363,7 @@ fn something_left_unwritten_needs_its_reason_and_can_be_lifted() {
     assert!(load(&c)
         .unwrap()
         .1
-        .silences
+        .silences()
         .iter()
         .all(|x| x.about != "guests"));
 }

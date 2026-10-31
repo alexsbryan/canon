@@ -1,0 +1,34 @@
+{"id":"can-f560feecef80","v":2,"ts_unix":1748736000,"actor":"human:priya","op":"adopt","lineage":"rust-service-canon","generation":"g7","source":"https://example.org/rust-service-canon"}
+{"id":"can-020b025a00d6","v":2,"ts_unix":1748822400,"actor":"human:priya","op":"assert","text":"Nothing lands on main without a second pair of eyes.","from":"can-eng000000002"}
+{"id":"can-375b71e00b5d","v":2,"ts_unix":1748822400,"actor":"human:priya","op":"assert","text":"One implementation per threshold, scorer, schema and key.","from":"can-eng000000003"}
+{"id":"can-593e50098aa0","v":2,"ts_unix":1748822400,"actor":"human:priya","op":"assert","text":"No unwrap in library code; a library that panics takes its caller with it.","from":"can-eng000000001"}
+{"id":"can-08b06965ad13","v":2,"ts_unix":1748908800,"actor":"human:priya","op":"grant","holder":"human:noor","scope":"engine"}
+{"id":"can-32118c32a5e6","v":2,"ts_unix":1748908800,"actor":"human:priya","op":"grant","holder":"human:eli","scope":"engine"}
+{"id":"can-54a9d408f348","v":2,"ts_unix":1748908800,"actor":"human:priya","op":"grant","holder":"human:omar","scope":"engine"}
+{"id":"can-5d8391df3e30","v":2,"ts_unix":1748908800,"actor":"human:priya","op":"grant","holder":"human:tess","scope":"engine"}
+{"id":"can-de28750d1d9b","v":2,"ts_unix":1748908800,"actor":"human:priya","op":"grant","holder":"human:sena","scope":"engine"}
+{"id":"can-fc447ff2b90f","v":2,"ts_unix":1748908800,"actor":"human:priya","op":"grant","holder":"human:priya","scope":"engine","rationale":"maintainer"}
+{"id":"can-1abb0c298240","v":2,"ts_unix":1748995200,"actor":"human:priya","op":"grant","holder":"human:noor","scope":"engine.wire","rationale":"owns the format"}
+{"id":"can-5be1c8c386b0","v":2,"ts_unix":1748995200,"actor":"human:priya","op":"grant","holder":"human:omar","scope":"engine.parser","rationale":"wrote it, maintains it"}
+{"id":"can-d199ea22e57f","v":2,"ts_unix":1749081600,"actor":"human:priya","op":"grant","holder":"agent:depbot","scope":"engine.deps","horizon":1767225600,"rationale":"dependency bumps only, until the new year"}
+{"id":"can-aaa9ceccd4b8","v":2,"ts_unix":1749168000,"actor":"human:priya","op":"policy","text":"One reasoned objection stops a change. Amending a principle takes the group. Anything we cannot roll back is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"entrenched","protected":["principle"],"base":{"rule":"consent"}}}}
+{"id":"can-3aa7f1d7c040","v":2,"ts_unix":1749254400,"actor":"human:priya","op":"policy","text":"Whoever owns the module decides the module.","rule":{"rule":"subsidiarity"},"scope":"engine.parser"}
+{"id":"can-4cc0b1dace80","v":2,"ts_unix":1749340800,"actor":"human:priya","op":"policy","text":"Break the wire once and a reviewer signs it off. Twice and the group does. Three times and the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}},"scope":"engine.wire"}
+{"id":"can-c34a786d7df3","v":2,"ts_unix":1749513600,"actor":"human:omar","op":"assert","text":"The parser allocates once per document, not once per token."}
+{"id":"can-cdeebe9d3f02","v":2,"ts_unix":1749513600,"actor":"human:omar","op":"assert","text":"A wire format change is a breaking change until every reader is upgraded."}
+{"id":"can-18ad083ab2e0","v":2,"ts_unix":1749600000,"actor":"human:tess","op":"assert","text":"A test is named for the failure it prevents, not for the function it calls."}
+{"id":"can-2a3db306b342","v":2,"ts_unix":1749600000,"actor":"human:tess","op":"assert","text":"Four spaces, never tabs."}
+{"id":"can-1292df43b3f9","v":2,"ts_unix":1749686400,"actor":"human:noor","op":"position","about":"can-cdeebe9d3f02","pull":"toward","because":"the format owner agrees: readers first, then the writer"}
+{"id":"can-48852a3221d6","v":2,"ts_unix":1749686400,"actor":"human:priya","op":"scoped","commitment":"can-cdeebe9d3f02","scope":"engine.wire"}
+{"id":"can-c51178fcaad1","v":2,"ts_unix":1749686400,"actor":"human:priya","op":"scoped","commitment":"can-c34a786d7df3","scope":"engine.parser"}
+{"id":"can-7e46708d99f6","v":2,"ts_unix":1749772800,"actor":"human:priya","op":"rank","commitment":"can-2a3db306b342","rank":"convention"}
+{"id":"can-c5cbf07dae25","v":2,"ts_unix":1749772800,"actor":"human:priya","op":"rank","commitment":"can-375b71e00b5d","rank":"principle"}
+{"id":"can-d29dbc115520","v":2,"ts_unix":1749772800,"actor":"human:priya","op":"rank","commitment":"can-cdeebe9d3f02","rank":"principle"}
+{"id":"can-fff72ad26d01","v":2,"ts_unix":1749772800,"actor":"human:priya","op":"rank","commitment":"can-593e50098aa0","rank":"principle"}
+{"id":"can-438c8bf8c573","v":2,"ts_unix":1750377600,"actor":"human:tess","op":"silence","about":"how much comment is enough","rationale":"every rule anyone proposed would have been worse than the judgement people already exercise, and a line count would be gamed the week it landed"}
+{"id":"can-f97aae0ba727","v":2,"ts_unix":1754006400,"actor":"human:omar","op":"policy","text":"Parser changes need two objections to stop.","rule":{"rule":"threshold","against":2},"scope":"engine.parser"}
+{"id":"can-1f1a9456d984","v":2,"ts_unix":1754784000,"actor":"agent:depbot","op":"position","about":"bump serde to 1.0.210","citing":"can-cdeebe9d3f02","pull":"against","because":"the bump changes a derived representation that crosses the wire"}
+{"id":"can-69538d532cfd","v":2,"ts_unix":1754870400,"actor":"agent:depbot","op":"dismiss","a":"can-cdeebe9d3f02","b":"can-c34a786d7df3","rationale":"not a real conflict"}
+{"id":"can-0768bb9fbfb2","v":2,"ts_unix":1767657600,"actor":"human:noor","op":"decided","about":"renaming a wire field","outcome":"conflicts","authority":"ask-one","rationale":"shipped with a reader shim"}
+{"id":"can-33cb7ece1f0f","v":2,"ts_unix":1767744000,"actor":"human:noor","op":"decided","about":"renaming a wire field","outcome":"conflicts","authority":"ask-panel","rationale":"the team agreed one more, then no more"}
+{"id":"can-f7ab1b8fcf5c","v":2,"ts_unix":1767830400,"actor":"human:omar","op":"accept","a":"can-593e50098aa0","b":"can-c34a786d7df3","rationale":"the header is validated one frame earlier and the branch is measurable; revisit when the validator moves","revisit":"2026-07-01"}

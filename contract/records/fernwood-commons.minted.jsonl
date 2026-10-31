@@ -1,0 +1,64 @@
+{"id":"can-e50464d75aaf","v":2,"ts_unix":1756684800,"actor":"human:mira","op":"adopt","lineage":"coliving-commons","generation":"g3","source":"https://example.org/coliving-commons"}
+{"id":"can-2770cbad964d","v":2,"ts_unix":1756771200,"actor":"human:mira","op":"assert","text":"A guest staying more than three nights is raised with the house first.","from":"can-up0000000002"}
+{"id":"can-600c8fef6f84","v":2,"ts_unix":1756771200,"actor":"human:mira","op":"assert","text":"Anything bought for the whole house is agreed before it is bought.","from":"can-up0000000003"}
+{"id":"can-8514a8499247","v":2,"ts_unix":1756771200,"actor":"human:mira","op":"assert","text":"Between 11pm and 7am the house is quiet.","from":"can-up0000000001"}
+{"id":"can-2423000ae6d1","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:rae","scope":"house"}
+{"id":"can-2d18d2569757","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:juno","scope":"house"}
+{"id":"can-4b4f06e8d624","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:ben","scope":"house"}
+{"id":"can-52d54fe44413","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:mira","scope":"house","rationale":"founding member"}
+{"id":"can-746f3704d8e4","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:ola","scope":"house"}
+{"id":"can-9fcb028b54d2","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:lila","scope":"house"}
+{"id":"can-bd590729048e","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:ines","scope":"house"}
+{"id":"can-e09e5e00aa01","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:arjun","scope":"house"}
+{"id":"can-e2d6124f8523","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:dana","scope":"house"}
+{"id":"can-ed37ad62e8c9","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:theo","scope":"house"}
+{"id":"can-fafd1ebca820","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:kit","scope":"house"}
+{"id":"can-fec6464b5ee8","v":2,"ts_unix":1756857600,"actor":"human:mira","op":"grant","holder":"human:sam","scope":"house"}
+{"id":"can-56607ccc6faf","v":2,"ts_unix":1756944000,"actor":"human:mira","op":"grant","holder":"human:dana","scope":"house.kitchen","rationale":"cooks most nights"}
+{"id":"can-f8f5e681e964","v":2,"ts_unix":1756944000,"actor":"human:mira","op":"grant","holder":"human:sam","scope":"house.kitchen","rationale":"cooks most nights"}
+{"id":"can-010d28684d45","v":2,"ts_unix":1757030400,"actor":"human:mira","op":"grant","holder":"agent:helper","scope":"house.kitchen","horizon":1769817600,"rationale":"drafts the rotation; three months, then we look again"}
+{"id":"can-af5f27ae772d","v":2,"ts_unix":1757116800,"actor":"human:mira","op":"policy","text":"We decide by consent: one reasoned objection stops a thing, and saying nothing is not an objection. Anything we cannot undo is not decided by silence.","rule":{"rule":"cautious","base":{"rule":"consent"}}}
+{"id":"can-8772ec61327e","v":2,"ts_unix":1757203200,"actor":"human:mira","op":"policy","text":"The allotment is decided by whoever holds it.","rule":{"rule":"subsidiarity"},"scope":"allotment"}
+{"id":"can-a67b93be73d0","v":2,"ts_unix":1757203200,"actor":"human:mira","op":"policy","text":"Whoever holds the kitchen decides the kitchen.","rule":{"rule":"subsidiarity"},"scope":"house.kitchen"}
+{"id":"can-234d3ab85052","v":2,"ts_unix":1757289600,"actor":"human:mira","op":"policy","text":"The first time we ask. The second time the house asks together. The third time the answer is no.","rule":{"rule":"graduated","ladder":["ask-one","ask-panel","refuse"],"base":{"rule":"default"}},"scope":"house.laundry"}
+{"id":"can-794c8d460ba0","v":2,"ts_unix":1757808000,"actor":"human:dana","op":"assert","text":"The hall stays clear enough to get a stroller through."}
+{"id":"can-f3110e135d4d","v":2,"ts_unix":1757808000,"actor":"human:dana","op":"assert","text":"Bikes live in the hall, against the left wall."}
+{"id":"can-1bcbe8e9b728","v":2,"ts_unix":1757894400,"actor":"human:sam","op":"assert","text":"The kitchen door is never locked."}
+{"id":"can-1de7b517b436","v":2,"ts_unix":1757894400,"actor":"human:sam","op":"assert","text":"Whoever cooks wipes the stovetop before leaving the kitchen."}
+{"id":"can-af322e2306a7","v":2,"ts_unix":1757980800,"actor":"human:rae","op":"assert","text":"Everyone who lives here can open the front door."}
+{"id":"can-0085d182fcc7","v":2,"ts_unix":1758067200,"actor":"human:sam","op":"scoped","commitment":"can-1de7b517b436","scope":"house.kitchen"}
+{"id":"can-0a3eaa5ddc1f","v":2,"ts_unix":1758067200,"actor":"human:sam","op":"scoped","commitment":"can-1bcbe8e9b728","scope":"house.kitchen"}
+{"id":"can-2d2e4dfad33c","v":2,"ts_unix":1758326400,"actor":"human:mira","op":"silence","about":"who cooks on a wednesday","rationale":"it has sorted itself out every week for two years, and a rotation would turn a kindness into a duty"}
+{"id":"can-df8c29b61e9d","v":2,"ts_unix":1761955200,"actor":"human:dana","op":"policy","text":"Two of us have to object before a kitchen thing stops.","rule":{"rule":"threshold","against":2},"scope":"house.kitchen"}
+{"id":"can-da745edab0b3","v":2,"ts_unix":1762560000,"actor":"human:theo","op":"position","about":"bikes in the hall","citing":"can-f3110e135d4d","pull":"toward","because":"the hall is where bikes were agreed to live"}
+{"id":"can-8af1573a9b56","v":2,"ts_unix":1762646400,"actor":"agent:helper","op":"position","about":"bikes in the hall","citing":"can-794c8d460ba0","pull":"against","because":"two bikes narrow the hall below the width the rule names"}
+{"id":"can-006a587422ab","v":2,"ts_unix":1762732800,"actor":"agent:helper","op":"dismiss","a":"can-794c8d460ba0","b":"can-f3110e135d4d","rationale":"tensions flagged these two. Read both: against the left wall leaves room for a stroller. Not a conflict."}
+{"id":"can-98e33116baa2","v":2,"ts_unix":1771200000,"actor":"human:mira","op":"decided","about":"laundry after midnight","outcome":"conflicts","authority":"ask-one","rationale":"asked once, quietly"}
+{"id":"can-269cf651c740","v":2,"ts_unix":1771286400,"actor":"human:mira","op":"decided","about":"laundry after midnight","outcome":"conflicts","authority":"ask-panel","rationale":"the house talked about it"}
+{"id":"can-58914bbead76","v":2,"ts_unix":1771372800,"actor":"human:dana","op":"accept","a":"can-794c8d460ba0","b":"can-f3110e135d4d","rationale":"there is nowhere else for the bikes and the hall is wide enough at the far end","revisit":"2026-06-01"}
+{"id":"can-ff19008f1ce9","v":2,"ts_unix":1771545600,"actor":"human:mira","op":"draw_commit","scope":"house","count":3,"after_ts":1772323200,"rationale":"three people to look at the hall for a month"}
+{"id":"can-04c8778a04f5","v":2,"ts_unix":1771632000,"actor":"human:mira","op":"draw_secret","commit":"can-ff19008f1ce9","digest":"eb6654fee77d239f9aa6b02836368927afb1684517e2d784cdb9f8d9d4701e93"}
+{"id":"can-422e6661792e","v":2,"ts_unix":1771632000,"actor":"human:dana","op":"draw_secret","commit":"can-ff19008f1ce9","digest":"32950938192d901d4a7fc6eddf3daf70b0491696d78156ddf156315a4773ba34"}
+{"id":"can-90fe29644e06","v":2,"ts_unix":1771632000,"actor":"human:sam","op":"draw_secret","commit":"can-ff19008f1ce9","digest":"6ddc52f7f818072b6c7dabd6a108f931f9cb73435dab906c5994a427ab917e26"}
+{"id":"can-344f096ee8c3","v":2,"ts_unix":1771718400,"actor":"human:rae","op":"draw_secret","commit":"can-ff19008f1ce9","digest":"c225acddfb06453f096ba7e0a2fe6656f5d22059268509435c2e3f48be771661"}
+{"id":"can-dd8a18db383f","v":2,"ts_unix":1771718400,"actor":"human:ola","op":"draw_secret","commit":"can-ff19008f1ce9","digest":"f097ced1aa14b84ba96397e7a8e022bddd780a4539160e3b4e6efac689d32a78"}
+{"id":"can-afa0cef00c31","v":2,"ts_unix":1772409600,"actor":"human:mira","op":"draw_reveal","commit":"can-ff19008f1ce9","secret":"fernwood-mira-2026-panel"}
+{"id":"can-b21752dad8d0","v":2,"ts_unix":1772409600,"actor":"human:sam","op":"draw_reveal","commit":"can-ff19008f1ce9","secret":"fernwood-sam-2026-panel"}
+{"id":"can-c86737920288","v":2,"ts_unix":1772409600,"actor":"human:dana","op":"draw_reveal","commit":"can-ff19008f1ce9","secret":"fernwood-dana-2026-panel"}
+{"id":"can-8c697089915c","v":2,"ts_unix":1772496000,"actor":"human:rae","op":"draw_reveal","commit":"can-ff19008f1ce9","secret":"fernwood-rae-2026-panel"}
+{"id":"can-12fe44548cc7","v":2,"ts_unix":1772668800,"actor":"human:dana","op":"ratification","text":"Both cooks agree, or it is not a kitchen rule.","rule":{"rule":"joint","holders":["human:dana","human:sam"]},"scope":"house.kitchen"}
+{"id":"can-75744b2771e9","v":2,"ts_unix":1772755200,"actor":"human:theo","op":"scoped","commitment":"can-f926a9b41499","scope":"house.kitchen"}
+{"id":"can-f926a9b41499","v":2,"ts_unix":1772755200,"actor":"human:theo","op":"assert","text":"Wash your own pan before you sit down to eat."}
+{"id":"can-7aca48cd6c15","v":2,"ts_unix":1772841600,"actor":"human:dana","op":"position","about":"can-f926a9b41499","pull":"toward","because":"it is what we already do"}
+{"id":"can-9f4aa442f45b","v":2,"ts_unix":1772928000,"actor":"human:sam","op":"position","about":"can-f926a9b41499","pull":"toward","because":"fine by me"}
+{"id":"can-31809930a7e1","v":2,"ts_unix":1773014400,"actor":"agent:helper","op":"scoped","commitment":"can-fa8e93054410","scope":"house.kitchen"}
+{"id":"can-fa8e93054410","v":2,"ts_unix":1773014400,"actor":"agent:helper","op":"assert","text":"The dishwasher runs only when it is full."}
+{"id":"can-ef4981254394","v":2,"ts_unix":1773100800,"actor":"human:dana","op":"position","about":"can-fa8e93054410","pull":"against","because":"half-loads on Sunday night, or nobody has a clean pan on Monday"}
+{"id":"can-cab9466d70c6","v":2,"ts_unix":1775001600,"actor":"human:mira","op":"grant","holder":"human:ola","scope":"house.garden","rationale":"digs most of it"}
+{"id":"can-fb4dd3649971","v":2,"ts_unix":1775001600,"actor":"human:mira","op":"grant","holder":"human:juno","scope":"house.garden","rationale":"digs the rest"}
+{"id":"can-3760cc7eeb33","v":2,"ts_unix":1775088000,"actor":"human:ola","op":"ratification","text":"A garden rule is carried twice, and somebody new has to have joined in between.","rule":{"rule":"twice","each":{"rule":"standing"},"between":{"between":"turnover"}},"scope":"house.garden"}
+{"id":"can-5c69c36552b5","v":2,"ts_unix":1775174400,"actor":"human:juno","op":"assert","text":"Water before nine or after seven."}
+{"id":"can-edcd0efe4e1a","v":2,"ts_unix":1775174400,"actor":"human:juno","op":"scoped","commitment":"can-5c69c36552b5","scope":"house.garden"}
+{"id":"can-5ab1357ce179","v":2,"ts_unix":1775779200,"actor":"human:ola","op":"position","about":"can-5c69c36552b5","pull":"toward","because":"yes, obviously"}
+{"id":"can-31f817516d03","v":2,"ts_unix":1777593600,"actor":"human:mira","op":"grant","holder":"human:kit","scope":"house.garden","rationale":"moved in with a trowel"}
+{"id":"can-3b66b1531f13","v":2,"ts_unix":1777766400,"actor":"human:ola","op":"position","about":"can-5c69c36552b5","pull":"toward","because":"still yes"}

@@ -87,61 +87,26 @@ probabilistic conformance guarantee is claimed.
 
 ## Changing the contract
 
-The gate computes compatibility; the author links its evidence in the
-[pull request template](../.github/PULL_REQUEST_TEMPLATE.md).
+The contract is also written down, as files in [contract/](../contract/) that
+the suite holds the code to:
 
-```sh
-python3 scripts/contract-check.py
-```
+| File | What it holds | Test |
+|---|---|---|
+| `api.txt` | every public item of `canon-core`, with its signature or definition | `canon_cores_public_surface_is_the_checked_in_one` in [canon-contract](../crates/canon-contract/src/lib.rs) |
+| `cli.txt` | every verb and the flags it takes | `every_verb_and_flag_is_the_checked_in_one` in [the CLI's tests](../crates/canon-cli/src/cli/tests.rs) |
+| `records/` | what the `fernwood-commons` and `eleven-principles` fixtures decide, and the acts they mint, ids included | `the_fixtures_decide_and_mint_what_is_checked_in` in [contract.rs](../crates/canon-cli/tests/contract.rs) |
 
-The standard is a full commit ID in [contract-baseline](../.github/contract-baseline).
-The gate reads it from git, keeps its tests, fixtures, expectations, and test
-dependencies, and substitutes the candidate implementation. Candidate edits to
-those checks cannot redefine a pass. A Rust syntax inspector derives old consumers
-with exhaustive enum matches and typed public-field accesses. Both the reference
-and candidate must compile those consumers. Fixture decisions, minted record
-bytes (including IDs), and readings of the reference's old records are compared.
+A change that moves any of them fails `cargo test` in the commit that makes
+it. When the change is meant, `CANON_BLESS=1 cargo test` rewrites the files,
+and their diff is the record of what changed: a line gone from `cli.txt` is a
+verb gone, a changed line in `records/` is an existing record that now reads
+differently and needs a migration or reinterpretation test. A change to a law
+is a change to the table above and its test, reviewed the same way. A
+breaking change is named in the [changelog](../CHANGELOG.md) under "Before
+you upgrade".
 
-| Computed result | Evidence |
-|---|---|
-| `preserves_checked_contract` | Existing inspected declarations and law statements remain intact; the baseline suite, consumers, boundary, and record comparisons pass. |
-| `extends_checked_contract` | New inspected public items are added while that existing evidence remains intact. |
-| `breaks_checked_contract` | An inspected item or law disappears, an old consumer is rejected, a baseline law has a counterexample, or an observed record meaning changes. |
-| `not_established` | A declaration, law, or format specification changes without sufficient compatibility evidence, a new law lacks baseline-owned checks, checks cannot run/pass, or the inspector encounters unsupported syntax. |
-
-Only preservation and extension pass. The report and logs live under `target/`;
-`target/contract-report.json` names the baseline, candidate fingerprint, and
-observed differences. This is a checked subset of source and record compatibility,
-not a semantic-equivalence proof. An added enum variant can reject an old exhaustive
-consumer; a private implementation change can alter record identity.
-
-[Contract CI](../.github/workflows/contract.yml) uses the PR base branch's workflow,
-evaluator, and inspector. Its one-time installation uses the new evaluator against
-the pre-existing `d65a6f1` standard; subsequent PRs cannot replace that evaluator.
-The local gate uses your checkout's evaluator, judged against the pin `origin/main`
-holds rather than your checkout's own, so a local pin move fails before the push
-as it would in CI. A ruleset on `main` requires a pull request and the
-**Contract compatibility** check. Admins may push to `main` directly; such a push
-still runs the local gate, and Contract CI judges it against the selected
-standard and stays red until a later commit fixes it. A separate publisher attaches the verdict to the candidate commit; it
-does not execute candidate code or consume candidate-authored result labels.
-
-Adopting a new contract is a separate governance decision, made in this order:
-
-1. The holder reads the verdict against the current standard and decides.
-2. The holder sets the `CANON_CONTRACT_BASELINE` Actions variable to the adopted
-   commit. CI refuses to judge anything while it is unset.
-3. A pull request moves the pin to the same commit and adds its entry to
-   [CONTRACT_ADOPTIONS.md](./CONTRACT_ADOPTIONS.md): what broke against the old
-   standard and the evidence old records still read. The evaluator refuses a
-   standard without an entry.
-
-A candidate cannot move the pin to make its own checks pass. A breaking adoption
-needs old-record migration or reinterpretation tests in the new standard. Its
-desirability is a human decision; its observed compatibility result is not.
-
-An agent working in this repository can draft step 3 and nothing before it.
-Hooks in [.claude/settings.json](../.claude/settings.json) refuse its edits to
-the pin and the variable, ask before it touches the evaluator or pushes to `main`
-with the holder's credentials, and do not let it finish a turn with
-contract-judged changes it has not run the check on.
+The decision sits at the edit. An agent's edit of `contract/`, or a run with
+`CANON_BLESS`, asks the person first
+([contract-guard.py](../.claude/hooks/contract-guard.py)), and
+[CODEOWNERS](../.github/CODEOWNERS) puts `contract/` in front of its owner in
+review.

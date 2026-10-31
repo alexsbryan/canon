@@ -1,5 +1,16 @@
 # The primitives — what a governance library must expose, and what it must not
 
+canon keeps a group's agreements as an append-only **ledger** of acts: four
+**structural ops** enter, replace, withdraw or undo commitments, and open
+**annotations** say things about them; **resolvers** read the group's own text
+into typed evidence; **positions** take a side, citing a commitment or speaking
+for an actor, and give a reason; **boundaries** say who holds standing over
+which scope; **policy** turns all of that into an outcome and an authority for
+any proposal, including whether it becomes a rule; and over the same record,
+two **standing queries** report what contradicts what and what has gone stale,
+a **fair draw** picks people nobody can steer, and **appropriation** says whose
+turn it is.
+
 The ten, at a glance. Each has a section below; the argument for why the set stops at ten comes after them.
 
 | # | Primitive | What it is | Status |

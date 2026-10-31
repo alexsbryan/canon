@@ -74,7 +74,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | All of this as a page in your browser: decide, propose, change a rule, identify | `canon ui` |
 | Propose a rule; it's a proposal until its room ratifies it | `canon add "Quiet hours run 11pm to 7am." --scope house.quiet` |
 | What's in force now, and what's still proposed | `canon list` |
-| Where a rule came from, and what it replaced | `canon why can-ffc1` |
+| Where an entry came from, and what it replaced | `canon why can-ffc1` |
 | Replace a rule, keeping the reason | `canon supersede can-ffc1 "Guests may stay up to three nights." -m "Sam's cousin stayed two weeks and nobody knew how to raise it."` |
 | Withdraw a rule with no replacement | `canon retract can-ffc1 -m "Nobody was using it."` |
 | Undo an entry — yours, or one you hold a seat over | `canon undo can-0ea2 -m "That was the wrong room."` |
@@ -108,7 +108,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | Record what the group decided | `canon decide "guest room request" --outcome supported --authority act -m "Dana ruled; the guest stays to Friday."` |
 | Mark a rule as a principle, not a convention | `canon rank can-ffc1 principle` |
 | What someone raised, and what came of it | `canon voice human:dana` |
-| Leave a room, and leave a question behind | `canon leave house.kitchen -m "Who waters the plants while I'm gone?"` |
+| Leave a room, and leave a question behind | `canon withdraw human:you house.kitchen --ask "Who waters the plants while I'm gone?"` |
 | Make it so only your key can write as you | `canon identify ~/.ssh/id_ed25519_sk.pub` |
 | Who you are here, and what doesn't count | `canon identify` |
 
@@ -173,9 +173,12 @@ of the model is what moves quality here. Measure yours with
 
 A canon is a file; you can fork one, carry your own rules onto a different
 base, and diff the two. `canon share` prints a pasteable snapshot, `canon
-adopt --paste` forks one, and `canon rebase --onto <url>` carries your rules
-onto a different base (*model*). `canon mcp` serves the same verbs to an agent
-over MCP.
+adopt --paste` forks one, and a newer block piped into `canon upgrade
+--paste` takes its next generation. `canon adopt <url>@<gen> --rebase --dry-run`
+proposes how your rules land on a different base (*model*, only for what the
+base does not settle word for word), and without `--dry-run` it makes the move,
+keeping your own record and refusing where the proposal would mark a
+conflict. `canon mcp` serves the same verbs to an agent over MCP.
 
 For a small canon, `canon_list` shows every rule. Above fifty rules it first
 shows counts by scope. Pass `scope` and/or `query` to narrow the list; `limit`

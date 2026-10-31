@@ -209,7 +209,7 @@ fn scratch_in(name: &str, proposals: &[(&str, &str)]) -> (PathBuf, Vec<ActId>) {
     let _ = std::fs::remove_dir_all(&root);
     let d = root.join(".canon");
     std::fs::create_dir_all(&d).unwrap();
-    std::fs::write(d.join(store::FILE), "").unwrap();
+    store::create(&d).unwrap();
     let then = store::now() - 3600;
     store::append(
         &d,
@@ -371,15 +371,12 @@ fn quitting_midway_keeps_what_was_decided_and_asks_nothing_more() {
 #[test]
 fn an_agent_is_refused_before_anything_is_shown_or_written() {
     let (d, _) = scratch("agent", &["Quiet after ten."]);
-    let before = std::fs::read_to_string(d.join(store::FILE)).unwrap();
+    let before = std::fs::read_to_string(store::file(&d)).unwrap();
     let mut script = Script::new(&["a"]);
     let code = session(&d, "agent:euphemia", "CANON_ACTOR", true, None, &mut script);
     assert_eq!(code, 2);
     assert!(script.said.is_empty() && script.asked.is_empty());
-    assert_eq!(
-        std::fs::read_to_string(d.join(store::FILE)).unwrap(),
-        before
-    );
+    assert_eq!(std::fs::read_to_string(store::file(&d)).unwrap(), before);
     let why = door(true, "agent:euphemia", "CANON_ACTOR").unwrap_err();
     assert!(
         why.contains("agent:euphemia") && why.contains("CANON_ACTOR"),
@@ -390,15 +387,12 @@ fn an_agent_is_refused_before_anything_is_shown_or_written() {
 #[test]
 fn without_a_terminal_it_is_refused_before_anything_is_shown_or_written() {
     let (d, _) = scratch("tty", &["Quiet after ten."]);
-    let before = std::fs::read_to_string(d.join(store::FILE)).unwrap();
+    let before = std::fs::read_to_string(store::file(&d)).unwrap();
     let mut script = Script::new(&["a"]);
     let code = session(&d, "human:alex", "git user.name", false, None, &mut script);
     assert_eq!(code, 2);
     assert!(script.said.is_empty() && script.asked.is_empty());
-    assert_eq!(
-        std::fs::read_to_string(d.join(store::FILE)).unwrap(),
-        before
-    );
+    assert_eq!(std::fs::read_to_string(store::file(&d)).unwrap(), before);
     assert!(door(false, "human:alex", "git user.name")
         .unwrap_err()
         .contains("terminal"));
@@ -409,7 +403,7 @@ fn without_a_terminal_it_is_refused_before_anything_is_shown_or_written() {
 fn an_act_that_cannot_be_written_is_counted_and_exits_one() {
     use std::os::unix::fs::PermissionsExt as _;
     let (d, _) = scratch("readonly", &["Quiet after ten."]);
-    let file = d.join(store::FILE);
+    let file = store::file(&d);
     std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o444)).unwrap();
     let (code, script) = alex(&d, &["a"]);
     std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o644)).unwrap();

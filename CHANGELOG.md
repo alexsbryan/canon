@@ -7,6 +7,67 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Removed
+
+- `canon rebase --onto <url>@<gen>` is `canon adopt <url>@<gen> --rebase
+  --dry-run`: the same reading, printed, nothing written. The move and its
+  preview now read one divergence the same way.
+- `canon leave <scope> -m "<question>"` is `canon withdraw <you> <scope>
+  --ask "<question>"`.
+- `draft` no longer takes `--samples`, `--refold`, `--k` or `--live-from`.
+  They measured extraction (several readings of each passage, folded by
+  agreement) and cut a recording at a stage to re-run only the stages after
+  it; neither served drafting a canon. `canon draft --replay <run.json>`
+  still replays a whole recorded run, and a run that was killed or failed
+  after extraction is finished with `--continue <run.json>`. Run files
+  written with `samples` still read. `scripts/converge-sweep.sh` is gone
+  with them, and so is `draft --out`, which only `--refold` read.
+
+### Changes
+
+- `canon adopt <url>` no longer leaves its clone of the lineage where
+  `git add .canon` commits it. `canon init` lists `lineages/` in
+  `.canon/.gitignore`, and the cache writes a `.gitignore` of its own the
+  next time `adopt`, `upgrade` or `rebase` fetches, so a canon founded
+  before this is covered without its `.gitignore` being edited. A clone
+  already committed stays in git until you `git rm -r --cached
+  .canon/lineages`.
+- `canon rebase --onto <url>@<gen>` decides in code every change the new base settles
+  word for word before it asks a model: a retraction of a rule the base
+  holds verbatim carries onto it, one the base withdrew too is already
+  there, and an added rule the base already says is already there. Only
+  the rest is sent, and a canon whose changes all settle needs no endpoint.
+  The proposal no longer cites an unrelated rule as the one an added rule
+  lands "onto": the rules and the changes in the model's prompt are
+  numbered apart, so a reply naming a change's own number is not read as a
+  rule.
+  A rule you replaced whose original the new base withdrew (including one
+  it excepted on adoption) carries as your own rule there, decided in code,
+  with the `canon add` that puts it on the new base.
+- A canon forked with `canon share | canon adopt --paste` can take its
+  upstream's later generations: pipe a newer `canon share` block of the same
+  lineage into `canon upgrade --paste`. It applies the block as `upgrade
+  <gen>` applies a fetched generation, and refuses a block from another
+  lineage without writing anything. `adopt --paste` now says so on its
+  success line. A block carries no history, so a rule upstream reworded
+  arrives as a new rule and the withdrawal of the old one.
+- `canon adopt <url>@<gen> --rebase` (or `--paste --rebase`) moves a canon
+  that already descends from one lineage onto another, keeping its own
+  record: its additions, retractions, positions and history stay as they
+  are, and `diff --upstream` and `upgrade` then read against the new base.
+  It writes one `adopt` act, asserts the base's rules this canon has no
+  counterpart of, and retracts inherited rules the base does not hold that
+  this canon never changed, as `upgrade` does; it refuses, writing nothing,
+  wherever `canon rebase --onto <url>@<gen>` would mark a conflict, so it needs an
+  endpoint when a change is not settled word for word. The pairing of the
+  base's rules with the ones this canon holds is kept beside the seed, in
+  `.canon/upstream/carried.json`; commit it with the rest.
+  When the person judges a reported conflict does not hold, `--carry <id>
+  -m "<why>"` (repeatable, by the local id the refusal prints) moves the
+  canon anyway and records the ruling as an `accept` of the pair they
+  author, so `diff --upstream` shows the base rule as carried knowingly.
+  Refusal stays the default, and a carry needs its reason.
+
 ## 0.5.0 — 2026-10-17
 
 ### Before you upgrade

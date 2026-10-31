@@ -1,0 +1,248 @@
+{
+  "a-committer-elsewhere-does-not": {
+    "authority": "ask-one",
+    "because": "subsidiarity: `engine.parser` is held by human:omar — not you",
+    "cites": [
+      "can-c34a786d7df3"
+    ],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "subsidiarity",
+    "silence": false,
+    "voices": []
+  },
+  "a-judgement-call-is-not-a-gap": {
+    "authority": "act-and-notify",
+    "because": "consent: nothing bears on it and nobody objected, but nobody looked either",
+    "cites": [],
+    "outcome": "unaddressed",
+    "refused": 0,
+    "rule": "cautious/entrenched/consent",
+    "silence": true,
+    "voices": []
+  },
+  "act": {
+    "act": "can-f7ab1b8fcf5c"
+  },
+  "after-the-conflict": {
+    "acts": 34,
+    "carried": 0,
+    "live": 7,
+    "open_questions": 0,
+    "proposed": 0,
+    "tolerated": 1,
+    "ungoverned": 1
+  },
+  "amending-a-convention": {
+    "authority": "act",
+    "because": "consent: no objection",
+    "cites": [],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "cautious/entrenched/consent",
+    "silence": false,
+    "voices": [
+      "human:sena"
+    ]
+  },
+  "amending-a-principle": {
+    "authority": "ask-panel",
+    "because": "entrenched: amends a `principle` (consent: no objection)",
+    "cites": [],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "cautious/entrenched/consent",
+    "silence": false,
+    "voices": [
+      "human:sena"
+    ]
+  },
+  "an-irreversible-change-nothing-supports": {
+    "authority": "refuse",
+    "because": "cautious: irreversible (consent: nothing bears on it and nobody objected, but nobody looked either)",
+    "cites": [],
+    "outcome": "unaddressed",
+    "refused": 0,
+    "rule": "cautious/entrenched/consent",
+    "silence": false,
+    "voices": []
+  },
+  "before-the-conflict": {
+    "acts": 33,
+    "carried": 0,
+    "live": 7,
+    "open_questions": 0,
+    "proposed": 0,
+    "tolerated": 0,
+    "ungoverned": 1
+  },
+  "forked-from-the-engineering-canon": {
+    "generation": "g7",
+    "inherited": 3,
+    "lineage": "rust-service-canon",
+    "local": 4
+  },
+  "the-bot-tries-to-adjudicate": {
+    "act": "can-69538d532cfd"
+  },
+  "the-bots-adjudication-is-surfaced": {
+    "unattended": [
+      "can-69538d532cfd"
+    ]
+  },
+  "the-bots-commit-rights-lapsed": {
+    "count": 1,
+    "targets": [
+      "can-d199ea22e57f"
+    ]
+  },
+  "the-bots-record-is-queryable": {
+    "answered": 0,
+    "asked": 0,
+    "decided": 0,
+    "open": 0,
+    "positions": 1
+  },
+  "the-crate-above-the-module": {
+    "deciders": [
+      "human:eli",
+      "human:noor",
+      "human:omar",
+      "human:priya",
+      "human:sena",
+      "human:tess"
+    ],
+    "holders": [
+      "human:eli",
+      "human:noor",
+      "human:omar",
+      "human:priya",
+      "human:sena",
+      "human:tess"
+    ],
+    "policy": "cautious/entrenched/consent"
+  },
+  "the-fork-keeps-what-it-wrote": {
+    "generation": "g7",
+    "inherited": 3,
+    "lineage": "rust-service-canon",
+    "local": 4
+  },
+  "the-module-inside-the-crate": {
+    "deciders": [
+      "human:noor",
+      "human:eli",
+      "human:omar",
+      "human:priya",
+      "human:sena",
+      "human:tess"
+    ],
+    "holders": [
+      "human:noor"
+    ],
+    "policy": "graduated/default"
+  },
+  "the-new-year": {
+    "now": "2026-01-05"
+  },
+  "the-owner-decides-the-parser": {
+    "authority": "act",
+    "because": "subsidiarity: `engine.parser` is held by human:omar — including you",
+    "cites": [
+      "can-c34a786d7df3"
+    ],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "subsidiarity",
+    "silence": false,
+    "voices": []
+  },
+  "the-parser-owner-changes-the-parsers-rule": {
+    "act": "can-f97aae0ba727"
+  },
+  "the-parser-under-its-new-rule": {
+    "authority": "act",
+    "because": "threshold: 1 against, 2 needed",
+    "cites": [],
+    "outcome": "supported",
+    "refused": 0,
+    "rule": "threshold",
+    "silence": false,
+    "voices": [
+      "human:tess"
+    ]
+  },
+  "the-same-change-behind-a-flag": {
+    "authority": "act-and-notify",
+    "because": "consent: nothing bears on it and nobody objected, but nobody looked either",
+    "cites": [],
+    "outcome": "unaddressed",
+    "refused": 0,
+    "rule": "cautious/entrenched/consent",
+    "silence": false,
+    "voices": []
+  },
+  "unwrap-against-the-parser": {
+    "authority": "refuse",
+    "because": "consent: 1 reasoned objection(s); one is enough",
+    "cites": [
+      "can-593e50098aa0",
+      "can-c34a786d7df3"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "cautious/entrenched/consent",
+    "silence": false,
+    "voices": []
+  },
+  "who-owns-the-parser": {
+    "deciders": [
+      "human:omar",
+      "human:eli",
+      "human:noor",
+      "human:priya",
+      "human:sena",
+      "human:tess"
+    ],
+    "holders": [
+      "human:omar"
+    ],
+    "policy": "subsidiarity"
+  },
+  "wire-break-first": {
+    "authority": "ask-one",
+    "because": "graduated: 0 prior decision(s) about `renaming a wire field` -> rung 1 of 3 (default: at least one commitment pulls against)",
+    "cites": [
+      "can-cdeebe9d3f02"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "graduated/default",
+    "silence": false,
+    "voices": []
+  },
+  "wire-break-second": {
+    "authority": "ask-panel",
+    "because": "graduated: 1 prior decision(s) about `renaming a wire field` -> rung 2 of 3 (default: at least one commitment pulls against)",
+    "cites": [
+      "can-cdeebe9d3f02"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "graduated/default",
+    "silence": false,
+    "voices": []
+  },
+  "wire-break-third": {
+    "authority": "refuse",
+    "because": "graduated: 2 prior decision(s) about `renaming a wire field` -> rung 3 of 3 (default: at least one commitment pulls against)",
+    "cites": [
+      "can-cdeebe9d3f02"
+    ],
+    "outcome": "conflicts",
+    "refused": 0,
+    "rule": "graduated/default",
+    "silence": false,
+    "voices": []
+  }
+}

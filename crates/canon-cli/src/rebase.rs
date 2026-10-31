@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! `canon rebase --onto <url>@<gen>` — carrying your law onto a different base.
+//! The rebase reading behind `canon adopt <url>@<gen> --rebase`: carrying
+//! your law onto a different base.
 //!
 //! Three-way, like every rebase: the seed you adopted, the law you wrote on
 //! top of it, and the base you want to land on. The first two are pure
@@ -9,22 +10,21 @@
 //! model call — affordable because a canon that fits in a chat message fits
 //! in a context window.
 //!
-//! **It emits a proposal and writes nothing.** Every carried change comes out
-//! as a command the person running it can read, edit, or ignore; a conflict
-//! comes out marked and with no command at all. Nothing auto-resolves, and
-//! anything they do run is authored by them — which is the point, because
-//! after a rebase the law is theirs to answer for.
+//! **`--dry-run` prints it as a proposal and writes nothing.** Every carried
+//! change comes out as a command the person can read, edit, or ignore; a
+//! conflict comes out marked and with no command at all. Nothing
+//! auto-resolves. Without `--dry-run` the move is made only once the reading
+//! leaves nothing for a person ([`obstacles`]), and every act it writes is
+//! authored by whoever runs it — after a rebase the law is theirs to answer
+//! for.
 //!
 //! The number that matters is the first line: **how much of your law survives
 //! before you commit to the move.**
 
-use canon_core::{Canon, Divergence, Fate, Snapshot};
+use canon_core::{ActId, Canon, Divergence, Fate, Snapshot, SnapshotCommitment};
 use serde::Deserialize;
-use serde_json::{json, Value};
 
-use crate::cmds::{fail, flag, has};
-use crate::lineage;
-use crate::model::{self, Client, ModelError, Schema};
+use crate::model::{Client, ModelError, Schema};
 
 const SYSTEM: &str = "\
 You are checking whether changes someone made to a set of rules still apply \
@@ -41,7 +41,8 @@ redundant now.
 Rules:
 - Judge each change on its own.
 - `already` and `conflicts` both require naming a target rule.
-- Say which target rule in `target`, or null for orphaned.
+- Say which target rule in `target`, or null for orphaned. The rules and the \
+changes are numbered apart: `target` is a rule's number, never a change's.
 - A change that ADDS a new rule is never orphaned. There was no earlier rule for it to be about, so it is `carries` unless the target already says it (`already`) or says something incompatible (`conflicts`).
 - One sentence in `because`.";
 
@@ -106,11 +107,41 @@ enum Kind {
     Addition,
 }
 
+/// What a change was done to, kept whole so code can place it against the
+/// new base before a model is asked anything.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Basis {
+    /// An inherited rule, withdrawn with no replacement.
+    Retracted { upstream: ActId, text: String },
+    /// An inherited rule, replaced by `now`.
+    Superseded {
+        upstream: ActId,
+        text: String,
+        now: String,
+    },
+    /// An inherited rule, carried knowingly against another.
+    Accepted { upstream: ActId, text: String },
+    /// A rule this canon wrote.
+    Added { text: String },
+}
+
+/// The base a rebase lands on: what is live there, and its log when it came
+/// by git, which says where each of its rules came from.
+pub(crate) struct Base<'a> {
+    pub snapshot: &'a Snapshot,
+    pub log: Option<&'a Canon>,
+}
+
 /// One thing this canon did to its inherited law, in a form both the model
 /// and the renderer can read.
 #[derive(Debug, Clone)]
 struct Change {
     kind: Kind,
+    basis: Basis,
+    /// The local commitment the change left in force, when there is one:
+    /// the rule added, the replacement, the rule carried knowingly. What
+    /// `adopt --rebase --carry` names.
+    local: Option<ActId>,
     /// What the person did, in one line, for the prompt.
     did: String,
     /// The command that reproduces it against the new base, with `{}` where
@@ -124,8 +155,14 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
     let mut out = Vec::new();
     for i in &d.inherited {
         match &i.fate {
-            Fate::Superseded { text, .. } => out.push(Change {
+            Fate::Superseded { text, by } => out.push(Change {
                 kind: Kind::Edit,
+                local: Some(by.clone()),
+                basis: Basis::Superseded {
+                    upstream: i.upstream.clone(),
+                    text: i.text.clone(),
+                    now: text.clone(),
+                },
                 did: format!("replaced \"{}\" with \"{}\"", i.text, text),
                 command: Some(format!(
                     "canon supersede {{}} \"{}\" -m \"<why, in your words>\"",
@@ -135,12 +172,27 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
             }),
             Fate::Retracted => out.push(Change {
                 kind: Kind::Edit,
+                // Retracted: nothing of it is in force to carry.
+                local: None,
+                basis: Basis::Retracted {
+                    upstream: i.upstream.clone(),
+                    text: i.text.clone(),
+                },
                 did: format!("withdrew \"{}\" with no replacement", i.text),
                 command: Some("canon retract {} -m \"<why, in your words>\"".into()),
                 standalone: None,
             }),
             Fate::Accepted { rationale } => out.push(Change {
                 kind: Kind::Edit,
+                local: canon
+                    .commitments()
+                    .iter()
+                    .find(|c| c.from() == Some(&i.upstream))
+                    .map(|c| c.id().clone()),
+                basis: Basis::Accepted {
+                    upstream: i.upstream.clone(),
+                    text: i.text.clone(),
+                },
                 did: format!(
                     "chose to carry \"{}\" knowingly against another rule ({rationale})",
                     i.text
@@ -155,9 +207,13 @@ fn describe(d: &Divergence, canon: &Canon) -> Vec<Change> {
         if let Some(c) = canon.get(id) {
             out.push(Change {
                 kind: Kind::Addition,
-                did: format!("added \"{}\", which the seed did not have", c.text),
+                local: Some(c.id().clone()),
+                basis: Basis::Added {
+                    text: c.text().to_string(),
+                },
+                did: format!("added \"{}\", which the seed did not have", c.text()),
                 command: None,
-                standalone: Some(format!("canon add \"{}\"", c.text)),
+                standalone: Some(format!("canon add \"{}\"", c.text())),
             });
         }
     }
@@ -209,30 +265,37 @@ fn map_changes(
     for c in &seed.commitments {
         user.push_str(&format!("- {}\n", c.text));
     }
+    // **Numbered apart.** Both lists counted from 1, and for an addition,
+    // which has no target rule, the model gave its own change number as the
+    // target, so "new rule 43" in its reason was change 43 while the line
+    // above it printed target rule 43. The changes now number on from the
+    // last rule, and a target that names a change is out of range.
+    let first = target.commitments.len() + 1;
     user.push_str("\nThe rules they want to land on:\n");
     for (i, c) in target.commitments.iter().enumerate() {
         user.push_str(&format!("{}. {}\n", i + 1, c.text));
     }
     user.push_str("\nThe changes they made:\n");
     for (i, c) in changes.iter().enumerate() {
-        user.push_str(&format!("{}. They {}\n", i + 1, c.did));
+        user.push_str(&format!("{}. They {}\n", first + i, c.did));
     }
     user.push_str("\nFor each change, say whether it carries onto the new rules.");
 
     let mapped: Mapped = client.complete_json(SYSTEM, &user, "changes", &SCHEMA)?;
 
     let mut out = Vec::new();
+    let mut reread = 0;
     for m in mapped.changes {
         let Some(change) = m
             .change
             .get()
-            .filter(|n| *n >= 1)
-            .and_then(|n| changes.get(n - 1))
+            .filter(|n| *n >= first)
+            .and_then(|n| changes.get(n - first))
         else {
             eprintln!(
-                "warning: dropped a mapping for change {} — only 1..{} exist",
+                "warning: dropped a mapping for change {} — only {first}..{} exist",
                 m.change,
-                changes.len()
+                first + changes.len() - 1
             );
             continue;
         };
@@ -247,12 +310,12 @@ fn map_changes(
         // to be about. Corrected here rather than trusted to the prompt — and
         // named, because a silent correction is the thing this codebase most
         // wants not to do.
+        //
+        // Said once, with the count: ersilia's real move printed it 23 times.
+        // The additions still go to the model, because whether one conflicts
+        // with the base is the judgement the move refuses on.
         if change.kind == Kind::Addition && verdict == Verdict::Orphaned {
-            eprintln!(
-                "note: change {} adds a rule, so `orphaned` is not a fate it can have — \
-                 reading it as `carries`",
-                m.change
-            );
+            reread += 1;
             verdict = Verdict::Carries;
         }
         // A target number out of range is dropped rather than clamped: a
@@ -277,90 +340,142 @@ fn map_changes(
             because: m.because.trim().to_string(),
         });
     }
+    if reread > 0 {
+        eprintln!(
+            "note: the reading called {reread} added rule(s) orphaned, which an added rule \
+             cannot be — read as `carries`"
+        );
+    }
     Ok(out)
 }
 
-pub fn run(args: &[String]) -> i32 {
-    let Some(onto) = flag(args, "--onto") else {
-        return fail("usage: canon rebase --onto <url>@<generation>");
-    };
-    let (dir, _, canon) = match crate::cmds::load() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let seed = match lineage::load_seed(&dir) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
-    let (url, generation) = match onto.rsplit_once('@') {
-        Some((u, g)) if !u.is_empty() && !g.contains('/') && !g.contains(':') => (u, Some(g)),
-        _ => (onto, None),
-    };
-    let (target, _) = match lineage::fetch(&dir, url, generation) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-
-    let d = Divergence::compute(&seed, &canon);
-    let changes = describe(&d, &canon);
-    if changes.is_empty() {
-        println!(
-            "nothing to rebase — this canon has not changed anything it inherited from {}@{}.",
-            seed.lineage, seed.generation
+/// Place every change against the new base: in code wherever the base holds
+/// the rule word for word or withdrew it too ([`settle`]), and through the
+/// model, acquired only when something is left for it, for the rest.
+fn land(
+    client: impl FnOnce() -> Result<Client, ModelError>,
+    changes: &[Change],
+    seed: &Snapshot,
+    base: &Base,
+) -> Result<Vec<Landed>, ModelError> {
+    let (mut landed, rest) = settle::settle(changes, base);
+    if !landed.is_empty() {
+        eprintln!(
+            "decided {} change(s) in code: the new base holds the rule word for word, or \
+             withdrew it too",
+            landed.len()
         );
-        println!(
-            "  `canon upgrade {}` takes the newer generation directly.",
-            generation.unwrap_or("<gen>")
+    }
+    if !rest.is_empty() {
+        let client = client()?;
+        eprintln!(
+            "mapping {} local change(s) onto {}@{} on {}",
+            rest.len(),
+            base.snapshot.lineage,
+            base.snapshot.generation,
+            client.describe()
         );
-        return 0;
+        landed.extend(map_changes(&client, &rest, seed, base.snapshot)?);
     }
-
-    let client = match model::client_for(&dir, has(args, "--allow-remote")) {
-        Ok(c) => c,
-        Err(e) => return model::report(e),
-    };
-    eprintln!(
-        "mapping {} local change(s) onto {}@{} on {}",
-        changes.len(),
-        target.lineage,
-        target.generation,
-        client.describe()
-    );
-    let landed = match map_changes(&client, &changes, &seed, &target) {
-        Ok(v) => v,
-        Err(e) => return model::report(e),
-    };
-
-    if has(args, "--json") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&payload(&target, &landed)).unwrap_or_default()
-        );
-    } else {
-        print!("{}", render(&seed, &target, &changes, &landed));
-    }
-    // Exit 1 when something conflicts, so a script can tell a clean rebase
-    // from one needing a person. Not 2: the changes are not unaddressed, they
-    // are addressed and they collide.
-    if landed.iter().any(|l| l.verdict == Verdict::Conflicts) {
-        return 1;
-    }
-    0
+    // In the order the changes came, whichever decided them.
+    landed.sort_by_key(|l| changes.iter().position(|c| c.did == l.change.did));
+    Ok(landed)
 }
 
-fn payload(target: &Snapshot, landed: &[Landed]) -> Value {
-    json!({
-        "onto": { "lineage": target.lineage, "generation": target.generation },
-        "changes": landed
-            .iter()
-            .map(|l| json!({
-                "change": l.change.did,
-                "fate": l.verdict.label().to_ascii_lowercase(),
-                "target": l.target.and_then(|n| target.commitments.get(n - 1)).map(|c| c.id.to_string()),
-                "because": l.because,
-            }))
-            .collect::<Vec<_>>(),
-    })
+/// One change a rebase onto a base leaves for a person.
+pub(crate) struct Obstacle {
+    /// The local commitment the change left in force, if any.
+    pub local: Option<ActId>,
+    /// The base rule a conflict was read against, if it named one.
+    pub against: Option<SnapshotCommitment>,
+    /// A conflict, rather than a change nothing placed.
+    pub conflict: bool,
+    /// How the reading put it, for the refusal.
+    pub line: String,
+}
+
+impl Obstacle {
+    /// Can the person carry this one anyway? Only a conflict with a rule in
+    /// force here and a base rule it was read against: the `accept` that
+    /// records the carry names both.
+    pub fn carriable(&self) -> bool {
+        self.conflict && self.local.is_some() && self.against.is_some()
+    }
+}
+
+/// The rebase reading: each change this canon made to what it inherited, and
+/// where the model placed it on the new base. One model call, made once, so
+/// the move and its dry run say the same thing.
+pub(crate) struct Reading {
+    changes: Vec<Change>,
+    landed: Vec<Landed>,
+}
+
+pub(crate) fn read(
+    client: impl FnOnce() -> Result<Client, ModelError>,
+    d: &Divergence,
+    canon: &Canon,
+    seed: &Snapshot,
+    base: &Base,
+) -> Result<Reading, ModelError> {
+    let changes = describe(d, canon);
+    let landed = land(client, &changes, seed, base)?;
+    Ok(Reading { changes, landed })
+}
+
+/// The reading as a proposal a person reads before moving: `canon adopt
+/// <url>@<gen> --rebase --dry-run`.
+pub(crate) fn proposal(r: &Reading, seed: &Snapshot, target: &Snapshot) -> String {
+    render(seed, target, &r.changes, &r.landed)
+}
+
+/// What the reading leaves for a person: each change it marks as a conflict,
+/// and each change nothing placed. `canon adopt --rebase` moves a canon only
+/// when every one is empty or carried by the person, so the move refuses
+/// exactly where the proposal says "decide this one yourself". A model's reply
+/// here can only refuse the move; nothing it says is written.
+pub(crate) fn obstacles(r: &Reading, base: &Snapshot) -> Vec<Obstacle> {
+    let (changes, landed) = (&r.changes, &r.landed);
+    let mut out = Vec::new();
+    for l in landed.iter().filter(|l| l.verdict == Verdict::Conflicts) {
+        let against = l.target.and_then(|n| base.commitments.get(n - 1)).cloned();
+        let onto = against
+            .as_ref()
+            .map(|c| format!("\n    against {}  \"{}\"", c.id, c.text))
+            .unwrap_or_default();
+        let id = l
+            .change
+            .local
+            .as_ref()
+            .map(|i| format!("{i}  "))
+            .unwrap_or_default();
+        out.push(Obstacle {
+            local: l.change.local.clone(),
+            against,
+            conflict: true,
+            line: format!(
+                "  CONFLICTS  {id}you {}{onto}\n    {}",
+                l.change.did, l.because
+            ),
+        });
+    }
+    // A change the reading said nothing about has not been shown not to
+    // conflict, and "did not answer" is not "answered: no".
+    for c in changes
+        .iter()
+        .filter(|c| !landed.iter().any(|l| l.change.did == c.did))
+    {
+        out.push(Obstacle {
+            local: c.local.clone(),
+            against: None,
+            conflict: false,
+            line: format!(
+                "  UNMAPPED   you {} — the reading said nothing about it",
+                c.did
+            ),
+        });
+    }
+    out
 }
 
 fn render(seed: &Snapshot, target: &Snapshot, changes: &[Change], landed: &[Landed]) -> String {
@@ -439,6 +554,8 @@ fn render(seed: &Snapshot, target: &Snapshot, changes: &[Change], landed: &[Land
     );
     out
 }
+
+mod settle;
 
 #[cfg(test)]
 mod tests;

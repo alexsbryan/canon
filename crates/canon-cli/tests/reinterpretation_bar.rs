@@ -53,7 +53,7 @@ fn reads_as_before(name: &str, text: &str) {
         Verified::default(),
         "{name}: a record with no key act has nothing set aside"
     );
-    assert!(log.derive().unverified.is_empty(), "{name}");
+    assert!(log.derive().unverified().is_empty(), "{name}");
     for line in text.lines().filter(|l| !l.trim().is_empty()) {
         let act: Act = serde_json::from_str(line).unwrap();
         assert!(act.v <= UNSIGNED_VERSION, "{name}: {line}");

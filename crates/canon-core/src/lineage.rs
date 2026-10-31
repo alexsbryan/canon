@@ -244,6 +244,23 @@ pub struct Divergence {
 
 impl Divergence {
     pub fn compute(seed: &Snapshot, canon: &Canon) -> Self {
+        Self::compute_carried(seed, canon, &[])
+    }
+
+    /// [`Divergence::compute`], for a canon that moved onto a new base.
+    ///
+    /// Its inherited rules carry `from` the lineage it first adopted, and
+    /// the record is append-only, so that link cannot be rewritten to name
+    /// the new base. `carried` pairs a seed commitment's id with the local
+    /// commitment that holds it, as decided when the canon moved; a seed
+    /// commitment no local `from` names is looked up there.
+    pub fn compute_carried(seed: &Snapshot, canon: &Canon, carried: &[(ActId, ActId)]) -> Self {
+        let carried_for = |s: &ActId| {
+            carried
+                .iter()
+                .find(|(up, _)| up == s)
+                .and_then(|(_, local)| canon.get(local))
+        };
         let mut inherited = Vec::new();
         for s in &seed.commitments {
             // The link is `from`, recorded in the act, NOT position or text
@@ -252,7 +269,8 @@ impl Divergence {
             let local = canon
                 .commitments
                 .iter()
-                .find(|c| c.from.as_ref() == Some(&s.id));
+                .find(|c| c.from.as_ref() == Some(&s.id))
+                .or_else(|| carried_for(&s.id));
             let fate = match local {
                 None => Fate::Absent,
                 Some(c) => match &c.status {
@@ -296,6 +314,12 @@ impl Divergence {
                     .is_some_and(|f| seed.commitments.iter().any(|s| &s.id == f))
             })
             .map(|c| c.id.clone())
+            .chain(
+                seed.commitments
+                    .iter()
+                    .filter_map(|s| carried_for(&s.id))
+                    .map(|c| c.id.clone()),
+            )
             .collect();
         // Transitive: superseding a supersession is still not an addition.
         loop {

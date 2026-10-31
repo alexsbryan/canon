@@ -46,7 +46,7 @@ fn every_citation_is_a_slice_of_its_passage() {
             for last in first..=(first + SPAN_MAX - 1).min(spans.len()) {
                 if let Ok(quoted) = cite(text, &spans, first, last, SPAN_MAX) {
                     assert!(
-                        text.contains(&quoted),
+                        text.contains(quoted.as_str()),
                         "cite({first},{last}) is not in its passage:\n{quoted}"
                     );
                 }
@@ -98,7 +98,7 @@ fn a_span_carries_the_document_between_its_sentences() {
     let quoted = cite(ORDINANCE, &spans, 1, 2, SPAN_MAX).unwrap();
     assert!(quoted.starts_with("(2) Type \"B\" permit"), "{quoted}");
     assert!(quoted.contains("whichever\ndistance is closer"), "{quoted}");
-    assert!(ORDINANCE.contains(&quoted));
+    assert!(ORDINANCE.contains(quoted.as_str()));
 }
 
 // ── the segmenter, against text that broke the old path ─────
@@ -409,4 +409,25 @@ fn one_long_line_is_one_unit_and_stays_that_way() {
     let (spans, basis) = units(&text);
     assert_eq!(basis, Basis::Sentences);
     assert_eq!(spans.len(), 1);
+}
+
+#[test]
+fn a_quote_read_back_is_kept_only_where_its_passage_has_it() {
+    let passage = "Any single guest may stay no more than two consecutive\nnights within any seven-day period, so that rooms turn over.";
+    // Verbatim.
+    let q = Quote::within(passage, "rooms turn over").unwrap();
+    assert_eq!(q, "rooms turn over");
+    // A run that collapsed the line break gets the passage's own bytes back,
+    // and a quote may stop inside a word: `period` of `period,`.
+    let q = Quote::within(
+        passage,
+        "two consecutive nights within any seven-day period",
+    )
+    .unwrap();
+    assert_eq!(q, "two consecutive\nnights within any seven-day period");
+    assert!(passage.contains(q.as_str()));
+    // Not there, or nothing at all, is no quote.
+    assert!(Quote::within(passage, "three consecutive nights").is_none());
+    assert!(Quote::within(passage, "consecutive nights within any month").is_none());
+    assert!(Quote::within(passage, "  ").is_none());
 }

@@ -76,6 +76,17 @@ impl Profile {
         }
     }
 
+    /// The scope that is the whole canon on this profile: a house, a repo,
+    /// or the person's own. The founder's grant is made over it, so `who`
+    /// answers "who holds this canon" with the scope a person would name.
+    pub fn scope(self) -> &'static str {
+        match self {
+            Profile::Personal => "personal",
+            Profile::Code => "repo",
+            Profile::House => "house",
+        }
+    }
+
     /// `1 rule`, `3 rules`.
     pub fn count(self, n: usize) -> String {
         format!("{n} {}", if n == 1 { self.noun() } else { self.nouns() })

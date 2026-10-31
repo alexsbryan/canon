@@ -74,7 +74,7 @@ fn every_flag_the_code_reads_is_declared() {
     // documented command. So the suite fails first.
     let declared: std::collections::BTreeSet<&str> = VERBS
         .iter()
-        .flat_map(|(_, valued, switches)| valued.iter().chain(switches.iter()).copied())
+        .flat_map(|(_, valued, switches, _)| valued.iter().chain(switches.iter()).copied())
         .collect();
 
     let src = root().join("crates/canon-cli/src");
@@ -163,7 +163,7 @@ fn every_command_line_in_the_documentation_still_parses() {
             let Some((verb, rest)) = tokens.split_first() else {
                 continue;
             };
-            if !VERBS.iter().any(|(v, _, _)| v == verb) {
+            if !VERBS.iter().any(|(v, ..)| v == verb) {
                 continue;
             }
             checked += 1;
@@ -257,7 +257,7 @@ fn a_refused_argument_speaks_the_way_the_rest_of_the_tool_does() {
     let listed = check("add", &args(&["a rule", "--nonsense-flag"])).unwrap_err();
     assert_eq!(
         listed,
-        "`canon add` has no `--nonsense-flag` — it takes `--scope`"
+        "`canon add` has no `--nonsense-flag` — it takes `--cite`, `--scope`, `-m`"
     );
 
     // Past a handful, the list stops being a hint and becomes a wall.
@@ -322,4 +322,23 @@ fn a_refusal_nobody_anticipated_keeps_claps_words() {
     let said = passed_through(&e);
     assert!(!said.starts_with("error: "), "{said}");
     assert!(!said.is_empty());
+}
+
+#[test]
+fn every_verb_and_flag_is_the_checked_in_one() {
+    // What a person can type is part of the contract: a verb or flag that
+    // goes is a line gone from contract/cli.txt, in the same diff.
+    let mut lines: Vec<String> = VERBS
+        .iter()
+        .map(|(verb, valued, switches, _)| {
+            let mut valued = valued.to_vec();
+            let mut switches = switches.to_vec();
+            valued.sort_unstable();
+            switches.sort_unstable();
+            let line = format!("{verb}  {}  | {}", valued.join(" "), switches.join(" "));
+            format!("{}\n", line.trim_end())
+        })
+        .collect();
+    lines.sort();
+    canon_contract::golden("cli.txt", &lines.concat());
 }

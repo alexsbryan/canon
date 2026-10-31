@@ -33,9 +33,9 @@ pub fn one_line(text: &str) -> String {
 /// Every surface that used to print a bare id goes through here.
 pub fn named(canon: &Canon, id: &ActId) -> String {
     if let Some(c) = canon.get(id) {
-        return format!("\"{}\"  {id}", one_line(&c.text));
+        return format!("\"{}\"  {id}", one_line(c.text()));
     }
-    match canon.questions.iter().find(|q| q.id == *id) {
+    match canon.questions().iter().find(|q| q.id == *id) {
         Some(q) => format!("the question \"{}\"  {id}", one_line(&q.text)),
         None => format!("{id}  (not in this canon)"),
     }
@@ -44,7 +44,9 @@ pub fn named(canon: &Canon, id: &ActId) -> String {
 /// A person by name. `human:` is the format's business, not the reader's;
 /// an agent keeps its prefix because "agent:helper" is the fact.
 pub fn person(actor: &str) -> &str {
-    actor.strip_prefix("human:").unwrap_or(actor)
+    actor
+        .strip_prefix(canon_core::person::PREFIX)
+        .unwrap_or(actor)
 }
 
 /// What follows "refused" on a line that says so: " by Kai", then ", <date>"
@@ -108,7 +110,7 @@ impl Explanation {
 pub fn resolve(canon: &Canon, needle: &str) -> Result<ActId, String> {
     pick(
         canon,
-        canon.commitments.iter().map(|c| &c.id),
+        canon.commitments().iter().map(|c| c.id()),
         needle,
         "commitment",
     )
@@ -121,11 +123,56 @@ pub fn resolve(canon: &Canon, needle: &str) -> Result<ActId, String> {
 /// not a second vocabulary.
 pub fn resolve_any(canon: &Canon, needle: &str) -> Result<ActId, String> {
     let ids = canon
-        .commitments
+        .commitments()
         .iter()
-        .map(|c| &c.id)
-        .chain(canon.questions.iter().map(|q| &q.id));
+        .map(|c| c.id())
+        .chain(canon.questions().iter().map(|q| &q.id));
     pick(canon, ids, needle, "record")
+}
+
+/// Resolve anything `why` can explain: any act the log holds. A silence was
+/// the first non-rule, non-question id that answered "no record matching"
+/// (2026-10-28); the house audit then hit the same wall with a ratification
+/// and a grant (2026-10-29), so the log is the list now.
+pub fn resolve_why(canon: &Canon, log: &Log, needle: &str) -> Result<ActId, String> {
+    let mut ids: Vec<&ActId> = log.acts().iter().map(|a| &a.id).collect();
+    for id in canon
+        .commitments()
+        .iter()
+        .map(|c| c.id())
+        .chain(canon.questions().iter().map(|q| &q.id))
+        .chain(canon.silences().iter().map(|s| &s.act))
+    {
+        if !ids.contains(&id) {
+            ids.push(id);
+        }
+    }
+    pick_acts(canon, ids.into_iter(), needle)
+}
+
+fn pick_acts<'a>(
+    canon: &'a Canon,
+    ids: impl Iterator<Item = &'a ActId>,
+    needle: &str,
+) -> Result<ActId, String> {
+    let matches = |id: &ActId| id.as_str() == needle || id.as_str().starts_with(needle);
+    let mut hits: Vec<&ActId> = ids.filter(|id| matches(id)).collect();
+    // An adopted rule is known by its upstream id, which has no local act.
+    if hits.is_empty() {
+        hits = canon
+            .commitments()
+            .iter()
+            .filter(|c| c.from().is_some_and(matches))
+            .map(|c| c.id())
+            .collect();
+    }
+    match hits.len() {
+        1 => Ok(hits[0].clone()),
+        0 => Err(format!("no record matching `{needle}`")),
+        n => Err(format!(
+            "`{needle}` matches {n} records — use more characters"
+        )),
+    }
 }
 
 /// Resolve a question by id or unique prefix.
@@ -136,7 +183,7 @@ pub fn resolve_any(canon: &Canon, needle: &str) -> Result<ActId, String> {
 pub fn resolve_question(canon: &Canon, needle: &str) -> Result<ActId, String> {
     pick(
         canon,
-        canon.questions.iter().map(|q| &q.id),
+        canon.questions().iter().map(|q| &q.id),
         needle,
         "question",
     )
@@ -151,12 +198,12 @@ pub fn resolve_question(canon: &Canon, needle: &str) -> Result<ActId, String> {
 /// waiting under `governs: all` prints the same hint and resolves here too.
 pub fn resolve_proposal(canon: &Canon, needle: &str) -> Result<ActId, String> {
     let ids = canon
-        .commitments
+        .commitments()
         .iter()
-        .map(|c| &c.id)
-        .chain(canon.ratifications.iter().map(|r| &r.act))
-        .chain(canon.retractions.iter().map(|r| &r.act))
-        .chain(canon.pending_policies.iter().map(|p| &p.act));
+        .map(|c| c.id())
+        .chain(canon.ratifications().iter().map(|r| &r.act))
+        .chain(canon.retractions().iter().map(|r| &r.act))
+        .chain(canon.pending_policies().iter().map(|p| &p.act));
     pick(canon, ids, needle, "proposal")
 }
 
@@ -178,10 +225,10 @@ fn pick<'a>(
     let hits: Vec<&ActId> = ids.filter(|id| matches(id)).collect();
     let hits = if hits.is_empty() {
         canon
-            .commitments
+            .commitments()
             .iter()
-            .filter(|c| c.from.as_ref().is_some_and(matches))
-            .map(|c| &c.id)
+            .filter(|c| c.from().is_some_and(matches))
+            .map(|c| c.id())
             .collect()
     } else {
         hits
@@ -196,24 +243,35 @@ fn pick<'a>(
 }
 
 pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, String> {
+    if let Some(s) = canon.silences().iter().find(|s| &s.act == id) {
+        return Ok(explain_silence(s));
+    }
     if let Some(q) = canon.question(id) {
         return Ok(explain_question(canon, q));
     }
-    let c = canon
-        .get(id)
-        .ok_or_else(|| format!("no commitment `{id}`"))?;
+    let c = match canon.get(id) {
+        Some(c) => c,
+        None => {
+            // Any other act in the log: a ratification, a grant, a position,
+            // an adoption. `why` used to stop at rules and questions.
+            if let Some(act) = log.acts().iter().find(|a| &a.id == id) {
+                return Ok(explain_act(act, canon));
+            }
+            return Err(format!("no record matching `{id}`"));
+        }
+    };
 
-    let headline = format!("{}  {}", c.id, c.text);
+    let headline = format!("{}  {}", c.id(), c.text());
     let mut lines = vec![format!(
         "written {} by {}{}",
-        store::ymd(c.asserted_at),
-        person(&c.actor),
-        c.source
+        store::ymd(c.asserted_at()),
+        person(c.actor()),
+        c.source()
             .as_ref()
             .map_or_else(String::new, |src| format!(", from {src}"))
     )];
 
-    if let Some(up) = &c.from {
+    if let Some(up) = &c.from() {
         lines.push(format!("inherited from upstream {up}"));
     }
 
@@ -233,16 +291,16 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         }
     }
 
-    for old in &c.replaces {
+    for old in c.replaces() {
         lines.push(format!("replaced {}", named(canon, old)));
     }
 
-    match &c.status {
+    match &c.status() {
         // How it became a rule, in a canon somebody holds. "Why is this rule
         // like this" includes who made it one — and, under `twice`, who
         // had joined by the second vote.
         Status::Active => match canon.ratify(c, store::now()) {
-            canon_core::Verdict::Ratified { how, .. } if !canon.grants.is_empty() => {
+            canon_core::Verdict::Ratified { how, .. } if !canon.grants().is_empty() => {
                 lines.push(format!("in force — {}", person_in(&how)))
             }
             _ => lines.push("in force".into()),
@@ -273,9 +331,9 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
             // retracted" over a rule still in force would be untrue.
             ActKind::Retract { target, rationale } if target == id => {
                 use canon_core::Verdict;
-                let put = canon.retractions.iter().find(|r| r.act == act.id);
+                let put = canon.retractions().iter().find(|r| r.act == act.id);
                 match put.map(|r| &r.verdict) {
-                    Some(Verdict::Proposed { needs }) => {
+                    Some(Verdict::Proposed { needs, .. }) => {
                         lines.push(format!(
                             "{} proposed retracting it, {}{}",
                             person(&act.actor),
@@ -288,7 +346,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                             act.id
                         ));
                     }
-                    Some(Verdict::Refused { at, by, why }) => {
+                    Some(Verdict::Refused { at, by, why, .. }) => {
                         lines.push(format!(
                             "{} proposed retracting it, {}{}",
                             person(&act.actor),
@@ -310,7 +368,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                         lines.push(format!("  {}", person_in(how)));
                     }
                     None if !rationale.is_empty()
-                        && !canon.ungoverned.iter().any(|(x, _)| *x == act.id) =>
+                        && !canon.ungoverned().iter().any(|(x, _)| *x == act.id) =>
                     {
                         lines.push(format!("reason it was retracted: {rationale}"))
                     }
@@ -328,7 +386,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
     for act in log
         .acts()
         .iter()
-        .filter(|a| canon.ungoverned.iter().any(|(x, _)| x == &a.id))
+        .filter(|a| canon.ungoverned().iter().any(|(x, _)| x == &a.id))
     {
         let (verb, a, b, why) = match &act.kind {
             ActKind::Dismiss { a, b, rationale } => {
@@ -359,7 +417,11 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         ));
     }
 
-    for conflict in canon.conflicts.iter().filter(|x| x.a == *id || x.b == *id) {
+    for conflict in canon
+        .conflicts()
+        .iter()
+        .filter(|x| x.a == *id || x.b == *id)
+    {
         let other = if conflict.a == *id {
             &conflict.b
         } else {
@@ -441,19 +503,71 @@ pub fn person_in(text: &str) -> String {
     // name a scope that does not exist.
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
-    while let Some(i) = rest.find("human:") {
+    while let Some(i) = rest.find(canon_core::person::PREFIX) {
         out.push_str(&rest[..i]);
-        let after = &rest[i + "human:".len()..];
+        let after = &rest[i + canon_core::person::PREFIX.len()..];
         let word = after
             .find(|c: char| c.is_whitespace() || matches!(c, ',' | ';' | ')' | '`'))
             .map_or(after, |end| &after[..end]);
         if word.trim_end_matches('.').contains('.') {
-            out.push_str("human:");
+            out.push_str(canon_core::person::PREFIX);
         }
         rest = after;
     }
     out.push_str(rest);
     out
+}
+
+/// A silence, as the act that recorded it: what is unwritten, when, by
+/// whom, and the reason it is kept unwritten. The same words `canon silence`
+/// prints, with the `why` headline so every explanation reads alike.
+fn explain_silence(s: &canon_core::Silence) -> Explanation {
+    Explanation {
+        headline: format!("{}  unwritten on purpose: \"{}\"", s.act, s.about),
+        lines: vec![
+            format!("written {} by {}", store::ymd(s.at), person(&s.actor)),
+            s.rationale.clone(),
+            format!(
+                "`canon check --about \"{}\"` will say so rather than call it a gap",
+                s.about
+            ),
+        ],
+    }
+}
+
+/// A governance act as the act that recorded it: who and when, its own
+/// fields, and whether the fold took it. The June's setup: a ratification in
+/// the log was unexplainable, so the house refused the record.
+fn explain_act(act: &canon_core::Act, canon: &Canon) -> Explanation {
+    let kind = serde_json::to_value(&act.kind).unwrap_or(serde_json::Value::Null);
+    let op = kind
+        .get("op")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("act");
+    let mut lines = vec![format!(
+        "written {} by {}",
+        store::ymd(act.ts_unix),
+        person(&act.actor)
+    )];
+    if let serde_json::Value::Object(fields) = &kind {
+        for (k, v) in fields {
+            if k == "op" {
+                continue;
+            }
+            let v = match v {
+                serde_json::Value::String(s) => s.clone(),
+                other => other.to_string(),
+            };
+            lines.push(format!("{k}: {v}"));
+        }
+    }
+    if let Some((_, why)) = canon.ungoverned().iter().find(|(id, _)| id == &act.id) {
+        lines.push(format!("NOT APPLIED: {why}"));
+    }
+    Explanation {
+        headline: format!("{}  {op}", act.id),
+        lines,
+    }
 }
 
 fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {

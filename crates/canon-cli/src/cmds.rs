@@ -13,64 +13,18 @@ use crate::store;
 
 // ── plumbing ────────────────────────────────────────────────
 
-/// Flags that take a value, so [`positionals`] does not read the value as one.
+/// Does `flag` take a value, so [`positionals`] does not read the value as one?
 ///
-/// One list rather than a `matches!` per call site: a flag added in one place
-/// and forgotten in the other makes its VALUE look like a positional
-/// argument, which is how `--scope house.kitchen` becomes a proposal called
-/// "house.kitchen".
-const VALUED: &[&str] = &[
-    "-m",
-    "--about",
-    "--after",
-    "--as",
-    "--amends",
-    "--authority",
-    "--citing",
-    "--commit",
-    "--count",
-    "--endpoint",
-    "--entrench",
-    "--except",
-    "--expect",
-    "--from",
-    "--from-proposal",
-    "--governs",
-    "--graduated",
-    "--horizon",
-    "--k",
-    "--live-from",
-    "--max-chunks",
-    "--objections",
-    "--of",
-    "--out",
-    "--secret",
-    "--why",
-    "--onto",
-    "--outcome",
-    "--policy",
-    "--profile",
-    "--ratification",
-    "--refold",
-    "--replay",
-    "--revisit",
-    "--samples",
-    "--scenario",
-    "--scope",
-    "--named",
-    "--unit",
-    "--order",
-    "--from-draw",
-    "--step",
-    "--per",
-    "--personal",
-    "--at",
-    "--since",
-    "--base",
-    "--slack",
-    "--check",
-    "--write-scenario",
-];
+/// Read from the verb table in [`crate::cli`] rather than kept beside it: a
+/// list here drifted from the table (it lacked `--carry` and `--continue` and
+/// carried two flags no verb takes), and a flag missing from it makes its
+/// VALUE look like a positional, which is how `--scope house.kitchen` becomes
+/// a proposal called "house.kitchen".
+fn takes_value(flag: &str) -> bool {
+    crate::cli::VERBS
+        .iter()
+        .any(|(_, valued, ..)| valued.contains(&flag))
+}
 
 pub fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter()
@@ -101,7 +55,7 @@ pub fn positionals(args: &[String]) -> Vec<&str> {
             skip = false;
             continue;
         }
-        if VALUED.contains(&a.as_str()) {
+        if takes_value(a) {
             skip = true;
             continue;
         }
@@ -140,18 +94,18 @@ pub fn report_status(d: &Path, id: &ActId) {
     let Some(c) = canon.get(id) else {
         // A change to how a scope decides is a proposal too, judged under
         // the rule it is changing, and the person who set it hears so here.
-        if let Some(r) = canon.ratifications.iter().find(|r| r.act == *id) {
+        if let Some(r) = canon.ratifications().iter().find(|r| r.act == *id) {
             report_verdict(id, &r.verdict);
         }
         // So is a retraction written without standing.
-        if let Some(r) = canon.retractions.iter().find(|r| r.act == *id) {
+        if let Some(r) = canon.retractions().iter().find(|r| r.act == *id) {
             report_retraction(r);
         }
         // And a change of policy, where the scope's rule reaches policy.
         if let Some(v) = canon
-            .pending_policies
+            .pending_policies()
             .iter()
-            .chain(&canon.policies)
+            .chain(canon.policies())
             .find(|p| p.act == *id)
             .and_then(|p| p.verdict.as_ref())
         {
@@ -159,13 +113,13 @@ pub fn report_status(d: &Path, id: &ActId) {
         }
         return;
     };
-    match &c.status {
+    match &c.status() {
         // How it became a rule, in a canon somebody holds — the same line
         // `why` prints. In a founding script this is where "nobody held it
         // before this was written; it was open" shows up, on the act it is
         // about, rather than a second later as a proposal nobody expected.
         Status::Active => match canon.ratify(c, store::now()) {
-            canon_core::Verdict::Ratified { how, .. } if !canon.grants.is_empty() => {
+            canon_core::Verdict::Ratified { how, .. } => {
                 println!(
                     "{}",
                     crate::wrap::hang("  in force — ", &crate::explain::person_in(&how))
@@ -199,7 +153,7 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
     use canon_core::Verdict;
     match v {
         Verdict::Ratified { since, .. } => println!("  in force since {}", store::ymd(*since)),
-        Verdict::Proposed { needs } => {
+        Verdict::Proposed { needs, .. } => {
             println!(
                 "{}",
                 crate::wrap::hang("  PROPOSED, not yet how this scope decides — needs ", needs)
@@ -224,14 +178,14 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
 pub fn report_retraction(r: &canon_core::Retraction) {
     use canon_core::Verdict;
     match &r.verdict {
-        Verdict::Ratified { since, how } => println!(
+        Verdict::Ratified { since, how, .. } => println!(
             "{}",
             crate::wrap::hang(
                 &format!("  retracted {} since {} — ", r.target, store::ymd(*since)),
                 &crate::explain::person_in(how)
             )
         ),
-        Verdict::Proposed { needs } => {
+        Verdict::Proposed { needs, .. } => {
             println!(
                 "{}",
                 crate::wrap::hang("  PROPOSED, not yet retracted — needs ", needs)
@@ -276,14 +230,14 @@ pub fn took(d: &Path, id: &ActId) -> Took {
         return Took::Applied;
     };
     let canon = log.derive_at(store::now());
-    if let Some((_, why)) = canon.ungoverned.iter().find(|(x, _)| x == id) {
+    if let Some((_, why)) = canon.ungoverned().iter().find(|(x, _)| x == id) {
         return Took::Refused(why.clone());
     }
-    if let Some((_, why)) = canon.bootstrap.iter().find(|(x, _)| x == id) {
+    if let Some((_, why)) = canon.bootstrap().iter().find(|(x, _)| x == id) {
         return Took::Open(why.clone());
     }
-    if let Some(r) = canon.retractions.iter().find(|r| r.act == *id) {
-        if let canon_core::Verdict::Proposed { needs } = &r.verdict {
+    if let Some(r) = canon.retractions().iter().find(|r| r.act == *id) {
+        if let canon_core::Verdict::Proposed { needs, .. } = &r.verdict {
             return Took::Proposed(needs.clone());
         }
     }
@@ -378,7 +332,7 @@ pub fn init(args: &[String]) -> i32 {
             Err(e) => return fail(e),
         },
     };
-    if base.join(store::FILE).exists() {
+    if store::exists(&base) {
         return fail(format!("a canon already exists at {}", base.display()));
     }
     if let Err(e) = std::fs::create_dir_all(&base) {
@@ -387,7 +341,7 @@ pub fn init(args: &[String]) -> i32 {
     if let Err(e) = std::fs::write(base.join("profile"), format!("{}\n", profile.as_str())) {
         return fail(e);
     }
-    if let Err(e) = std::fs::write(base.join(store::FILE), "") {
+    if let Err(e) = store::create(&base) {
         return fail(e);
     }
     store::ignore_local(&base);
@@ -399,6 +353,7 @@ pub fn init(args: &[String]) -> i32 {
     // `--plain` founds one it can, with neither knob, which is how every
     // canon before 0.3 began.
     let plain = has(args, "--plain");
+    let open = has(args, "--open");
     if !plain {
         let kind = ActKind::Ratification {
             text: "A holder's word is a rule at once. A change of policy waits like any \
@@ -413,6 +368,30 @@ pub fn init(args: &[String]) -> i32 {
             return fail(e);
         }
     }
+    // **The founding grant.** A canon whose founder holds it cannot be
+    // taken by the first person to write in it: the founder's word is the
+    // house's, and everyone else's is a proposal until they hold a scope.
+    // An agent cannot seat itself, so its founding waits for a person;
+    // `--open` is the old shared start, and writes there are unguarded.
+    let founder = store::actor();
+    let granted = if plain || open || canon_core::Person::of(&founder).is_none() {
+        false
+    } else {
+        let scope = match canon_core::Scope::new(profile.scope()) {
+            Some(s) => s,
+            None => return fail(format!("`{}` is not a scope", profile.scope())),
+        };
+        let kind = ActKind::Grant {
+            holder: founder.clone(),
+            scope,
+            horizon: None,
+            rationale: format!("founded this canon; {founder} holds it"),
+        };
+        if let Err(e) = write(&base, kind) {
+            return fail(e);
+        }
+        true
+    };
     // **The whole tool, in three lines, at the moment somebody needs it.**
     // This is the n+1 explanation: if the next person cannot be handed the
     // thing in two sentences it does not spread, and `canon --help` is
@@ -425,11 +404,38 @@ pub fn init(args: &[String]) -> i32 {
     if !plain {
         // Said on the way in, because it is the one thing init decides for
         // the group, and the group can change it with `ratification set`.
-        println!("  policy changes wait like rules do, and human:<you>.… is yours alone");
-        if !store::actor().starts_with("human:") {
+        if granted {
+            println!(
+                "  {founder} holds this canon ({}) — you write, it is in force.",
+                profile.scope()
+            );
+            println!(
+                "  grant the others: canon grant human:<them> {}",
+                profile.scope()
+            );
+            println!(
+                "  sign it: canon identify <your key.pub> — so only your key can decide as you"
+            );
+        } else if open {
+            println!("  nothing holds this canon: it is open, and any write takes.");
+            println!("  hold it: canon grant {founder} {}", profile.scope());
+        }
+        println!("  a holder's word is a rule at once; to need everyone: canon ratification set unanimous");
+        match store::actor().strip_prefix(canon_core::person::PREFIX) {
+            Some(name) => {
+                println!("  policy changes wait like rules do, and human:{name}.… is yours alone")
+            }
+            None => println!("  policy changes wait like rules do"),
+        }
+        if canon_core::Person::of(&store::actor()).is_none() {
             println!(
                 "  written by {}, so it waits for a person to approve it",
                 store::actor()
+            );
+            println!(
+                "  the founding grant waits too: canon grant {} {}",
+                store::actor(),
+                profile.scope()
             );
         }
     }
@@ -459,23 +465,60 @@ pub fn init(args: &[String]) -> i32 {
     println!();
     println!("that is the whole thing. `canon help all` when you want the rest —");
     println!("who decides what, how you decide, what has gone stale, drawing lots.");
+    println!("Profile or scope? `canon help profile` and `canon help scopes`.");
     0
 }
 
 pub fn add(args: &[String]) -> i32 {
     let pos = positionals(args);
     let Some(text) = pos.first() else {
-        return fail("usage: canon add \"<commitment>\" [--scope <scope>]");
+        return fail("usage: canon add \"<commitment>\" [--scope <scope>] [-m \"<why>\"] [--cite \"<where>\"]");
     };
     let scope = match scope_arg(args) {
         Ok(s) => s,
         Err(e) => return fail(e),
     };
-    let d = match dir() {
-        Ok(d) => d,
+    let (d, _, st) = match load() {
+        Ok(v) => v,
         Err(e) => return fail(e),
     };
-    match propose(&d, &store::actor(), text, scope) {
+    // A near-duplicate is a warning, not a refusal: the write still lands,
+    // and the person can retract it. The warning is on stderr, so a pipe
+    // and `--json` keep their contract. It comes before the new act so the
+    // person sees what it resembles while it is still cheap to stop.
+    if let Some(like) = crate::similar::nearest(&st, text) {
+        eprintln!(
+            "warning: this looks like {} ({}): {}",
+            like.id,
+            like.status,
+            crate::explain::one_line(like.text)
+        );
+        if like.status == "proposed" {
+            eprintln!(
+                "  if it is the same decision, approve or object to that one; if it changes it, \
+                 `canon supersede {}`",
+                like.id
+            );
+        } else {
+            eprintln!(
+                "  if it changes it, `canon supersede {}`; if it is the same, do not add a second",
+                like.id
+            );
+        }
+    }
+    // Why it is a rule, or where it was written: both are the commitment's
+    // source, which `why` shows as "from …". The group's repeated want was
+    // to keep the neighbours' complaint or the old chat with the rule,
+    // instead of retyping it into the text.
+    let source = flag(args, "-m")
+        .into_iter()
+        .chain(flag(args, "--cite"))
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join(" — ");
+    let source = (!source.is_empty()).then_some(source);
+    match propose(&d, &store::actor(), text, scope, source.as_deref()) {
         Ok(act) => {
             println!("{}  {}", act.id, text);
             report_status(&d, &act.id);
@@ -492,13 +535,14 @@ pub fn propose(
     actor: &str,
     text: &str,
     scope: Option<canon_core::Scope>,
+    source: Option<&str>,
 ) -> Result<Act, String> {
     let act = write_as(
         d,
         ActKind::Assert {
             text: text.to_string(),
             from: None,
-            source: None,
+            source: source.map(str::to_string),
         },
         actor,
     )?;
@@ -709,7 +753,7 @@ pub fn list(args: &[String]) -> i32 {
         return 0;
     }
     for c in &live {
-        println!("{}", crate::wrap::hang(&format!("{}  ", c.id), &c.text));
+        println!("{}", crate::wrap::hang(&format!("{}  ", c.id()), c.text()));
     }
     println!("\n{} live", profile.count(live.len()));
     // Proposals are shown with the rules and apart from them: written, by
@@ -717,7 +761,7 @@ pub fn list(args: &[String]) -> i32 {
     // that tells the room who has to act.
     let proposed: Vec<_> = st.proposed().collect();
     let retractions: Vec<_> = st
-        .retractions
+        .retractions()
         .iter()
         .filter(|r| matches!(r.verdict, canon_core::Verdict::Proposed { .. }))
         .collect();
@@ -727,8 +771,8 @@ pub fn list(args: &[String]) -> i32 {
             proposed.len() + retractions.len()
         );
         for c in &proposed {
-            println!("{}", crate::wrap::hang(&format!("{}  ", c.id), &c.text));
-            if let Status::Proposed { needs } = &c.status {
+            println!("{}", crate::wrap::hang(&format!("{}  ", c.id()), c.text()));
+            if let Status::Proposed { needs } = &c.status() {
                 println!("{}", crate::wrap::hang("                  needs ", needs));
             }
         }
@@ -743,23 +787,23 @@ pub fn list(args: &[String]) -> i32 {
                 }
             );
             println!("{}", crate::wrap::hang(&format!("{}  ", r.act), &what));
-            if let canon_core::Verdict::Proposed { needs } = &r.verdict {
+            if let canon_core::Verdict::Proposed { needs, .. } = &r.verdict {
                 println!("{}", crate::wrap::hang("                  needs ", needs));
             }
         }
     }
     let refused = st
-        .commitments
+        .commitments()
         .iter()
-        .filter(|c| matches!(c.status, Status::Refused { .. }))
+        .filter(|c| matches!(c.status(), Status::Refused { .. }))
         .count();
     if refused > 0 {
         println!("{refused} refused — `canon why <id>` says why");
     }
-    if !st.ungoverned.is_empty() {
+    if !st.ungoverned().is_empty() {
         println!(
             "{} governance act(s) written without standing were not applied — `canon log`",
-            st.ungoverned.len()
+            st.ungoverned().len()
         );
     }
     let carried = st.tolerated().count();
@@ -767,36 +811,36 @@ pub fn list(args: &[String]) -> i32 {
         println!("{carried} contradiction(s) carried knowingly — `canon list --json` for detail");
     }
     // A hole in the record is louder than a missing feature.
-    if !st.dangling.is_empty() {
+    if !st.dangling().is_empty() {
         eprintln!(
             "\nwarning: {} act(s) reference a commitment that is not in this log:",
-            st.dangling.len()
+            st.dangling().len()
         );
-        for (act, missing) in &st.dangling {
+        for (act, missing) in st.dangling() {
             eprintln!("  {act} -> {missing}");
         }
     }
     // Absence of attribution is reported, never defaulted — counted by
     // kind, because thirty ids on one line is reported and not readable.
     // The ids are in `--json`, and `canon log` names each one's actor.
-    if !st.unattended.is_empty() {
+    if !st.unattended().is_empty() {
         eprintln!(
             "\nwarning: {} adjudication(s) were not authored by a person: {}",
-            st.unattended.len(),
-            by_kind(&log, &st.unattended)
+            st.unattended().len(),
+            by_kind(&log, st.unattended())
         );
         eprintln!("  `canon log` shows them; `canon list --json` has their ids under `unattended`");
     }
     // A forgery is louder than an unsigned agent: somebody wrote as
     // somebody else.
-    if !st.unverified.is_empty() {
+    if !st.unverified().is_empty() {
         eprintln!(
             "\nwarning: {} act(s) under a name that has bound a key were not signed by it, and \
              do not count: {}",
-            st.unverified.len(),
+            st.unverified().len(),
             by_kind(
                 &log,
-                &st.unverified
+                &st.unverified()
                     .iter()
                     .map(|(id, _)| id.clone())
                     .collect::<Vec<_>>()
@@ -867,7 +911,7 @@ pub fn why(args: &[String]) -> i32 {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let id = match crate::explain::resolve_any(&st, needle) {
+    let id = match crate::explain::resolve_why(&st, &log, needle) {
         Ok(i) => i,
         Err(e) => return fail(e),
     };
@@ -878,6 +922,12 @@ pub fn why(args: &[String]) -> i32 {
                     .get(&id)
                     .and_then(|c| serde_json::to_value(c).ok())
                     .or_else(|| st.question(&id).and_then(|q| serde_json::to_value(q).ok()))
+                    .or_else(|| {
+                        st.silences()
+                            .iter()
+                            .find(|s| s.act == id)
+                            .and_then(|s| serde_json::to_value(s).ok())
+                    })
                     .unwrap_or(serde_json::Value::Null);
                 println!(
                     "{}",
@@ -1085,16 +1135,16 @@ pub fn undo(args: &[String]) -> i32 {
 /// extensible, and carrying it *silently* would let a canon answer as though
 /// it had read everything when it had not.
 pub fn carried_note(canon: &Canon) -> Option<String> {
-    if canon.carried.is_empty() {
+    if canon.carried().is_empty() {
         return None;
     }
-    let mut kinds: Vec<&str> = canon.carried.iter().map(|(_, k)| k.as_str()).collect();
+    let mut kinds: Vec<&str> = canon.carried().iter().map(|(_, k)| k.as_str()).collect();
     kinds.sort_unstable();
     kinds.dedup();
     Some(format!(
         "  {} act(s) carried but not interpreted by this build ({}) — `canon log` shows them.\n  \
          They had no effect on the answer above. A newer canon may read them.",
-        canon.carried.len(),
+        canon.carried().len(),
         kinds.join(", ")
     ))
 }
@@ -1158,9 +1208,11 @@ pub fn log(args: &[String]) -> i32 {
                 Some(sc) => format!("policy     {} over {sc}", rule.name()),
                 None => format!("policy     {}", rule.name()),
             },
-            ActKind::Ratification { rule, scope, .. } => match scope {
-                Some(sc) => format!("ratify     {} over {sc}", rule.name()),
-                None => format!("ratify     {}", rule.name()),
+            ActKind::Ratification {
+                text, rule, scope, ..
+            } => match scope {
+                Some(sc) => format!("ratify     {} over {sc} — {text}", rule.name()),
+                None => format!("ratify     {} — {text}", rule.name()),
             },
             ActKind::Allot {
                 unit, units, scope, ..
@@ -1227,20 +1279,20 @@ pub fn log(args: &[String]) -> i32 {
         // A governance act the fold refused is on the record and changed
         // nothing; `list` counts them and sends the reader here, so here
         // has to say which.
-        if let Some((_, why)) = st.ungoverned.iter().find(|(x, _)| *x == act.id) {
+        if let Some((_, why)) = st.ungoverned().iter().find(|(x, _)| *x == act.id) {
             println!("{}", crate::wrap::hang("    NOT APPLIED: ", why));
         }
         // Under a name that has bound a key, and not signed by it: carried,
         // and the fold never saw it.
-        if let Some((_, why)) = st.unverified.iter().find(|(x, _)| *x == act.id) {
+        if let Some((_, why)) = st.unverified().iter().find(|(x, _)| *x == act.id) {
             println!("{}", crate::wrap::hang("    DOES NOT COUNT: ", why));
         }
         // A retraction written without standing is neither applied nor
         // refused when written; say which it has since become.
-        if let Some(r) = st.retractions.iter().find(|r| r.act == act.id) {
+        if let Some(r) = st.retractions().iter().find(|r| r.act == act.id) {
             let said = match &r.verdict {
-                canon_core::Verdict::Proposed { needs } => format!("PROPOSED: needs {needs}"),
-                canon_core::Verdict::Ratified { since, how } => {
+                canon_core::Verdict::Proposed { needs, .. } => format!("PROPOSED: needs {needs}"),
+                canon_core::Verdict::Ratified { since, how, .. } => {
                     format!("applied {}: {how}", store::ymd(*since))
                 }
                 canon_core::Verdict::Refused { by, why, .. } => format!(

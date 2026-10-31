@@ -550,8 +550,7 @@ fn governance_bar() {
     //
     // Four ways to fall short of a measurement, and all of them are refused
     // here. `failed` means a
-    // stage errored. `stopped_after` means a run stopped on purpose — a
-    // convergence arm reads passages N times and stops at extraction, so it
+    // stage errored. `stopped_after` means a run stopped on purpose, so it
     // has no tensions at all; scored as a finished run it would read as
     // recall 0.00 and kill the bar for a measurement that never claimed to
     // make one. `checkpoint` means the process was killed mid-run and this is
@@ -577,13 +576,11 @@ fn governance_bar() {
             Some((p.clone(), why))
         })
         .collect();
-    // A hybrid run is SCORED, and said so.
+    // A replayed run is SCORED, and said so.
     //
-    // Its later stages are real calls and its earlier ones came off a
-    // recording — which holds extraction constant across arms, making it a
-    // better controlled experiment than two live sweeps, not a worse one. But
-    // a reader who cannot see that a number came from a partly replayed run
-    // cannot compare it with one that did not.
+    // Its stages are the current build's code over a recording's replies. A
+    // reader who cannot see that a number came from a replayed run cannot
+    // compare it with one that did not.
     for p in &paths {
         if let Some(from) = std::fs::read_to_string(p)
             .ok()
@@ -1461,7 +1458,7 @@ fn two_up_once(
             String::from_utf8_lossy(&out.stderr).trim()
         ))
     };
-    must(&["init", "--profile", "house"])?;
+    must(&["init", "--profile", "house", "--open"])?;
     // `add` prints `<id>  <text>`. With a window we have to know WHICH pair
     // came back, not merely that something did.
     let added = |text: &str| -> Result<String, String> {

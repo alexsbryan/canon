@@ -40,21 +40,31 @@ pub enum Status {
 }
 
 /// A commitment as it stands now.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+///
+/// Only the fold makes one, and outside this crate it is read, never
+/// written, so whether it is in force is the fold's answer and nobody
+/// else's:
+///
+/// ```compile_fail,E0616
+/// fn force(c: &mut canon_core::Commitment) {
+///     c.status = canon_core::Status::Active;
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Commitment {
-    pub id: ActId,
-    pub text: String,
-    pub status: Status,
-    pub asserted_at: i64,
-    pub actor: String,
+    pub(crate) id: ActId,
+    pub(crate) text: String,
+    pub(crate) status: Status,
+    pub(crate) asserted_at: i64,
+    pub(crate) actor: String,
     /// Commitments this one replaced, when it arrived via `Supersede`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub replaces: Vec<ActId>,
+    pub(crate) replaces: Vec<ActId>,
     /// Upstream provenance, when inherited from an adopted seed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub from: Option<ActId>,
+    pub(crate) from: Option<ActId>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub source: Option<String>,
+    pub(crate) source: Option<String>,
 }
 
 /// Something the canon does not cover yet.
@@ -158,7 +168,7 @@ pub struct Silence {
 }
 
 /// A policy this canon adopted, and the prose it was adopted as.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Adopted {
     /// Which scope it governs. `None` is the whole canon.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -211,7 +221,7 @@ pub enum Keyed<'a> {
 /// a non-holder, for a person who could have retracted the commitment
 /// themselves to approve it. Their approval is them adopting it, so it takes
 /// effect from then; their reasoned objection first refuses it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Retraction {
     /// The `retract` act.
     pub act: ActId,
@@ -239,83 +249,96 @@ pub struct Ancestry {
 ///
 /// Named for the essence rather than the mechanism: a fold produces state,
 /// but the thing it produces *is* a canon, an authoritative body of norms.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+///
+/// [`crate::Log::derive`] is the only way to get one. Outside this crate
+/// it has no constructor and its fields are read through methods of the
+/// same name, so no front end can build a canon or edit what one says:
+///
+/// ```compile_fail,E0599
+/// let forged = canon_core::Canon::default();
+/// ```
+///
+/// ```compile_fail,E0616
+/// let mut canon = canon_core::Log::default().derive();
+/// canon.commitments.clear();
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Canon {
-    pub commitments: Vec<Commitment>,
+    pub(crate) commitments: Vec<Commitment>,
     /// What the canon does not cover. Answering one is superseding it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub questions: Vec<Question>,
+    pub(crate) questions: Vec<Question>,
     /// Conflicts someone has ruled on. Only `Tolerated` and `Dismissed`
     /// appear here — see [`Disposition::Open`].
-    pub conflicts: Vec<Conflict>,
-    pub ancestry: Option<Ancestry>,
+    pub(crate) conflicts: Vec<Conflict>,
+    pub(crate) ancestry: Option<Ancestry>,
     /// Adjudications not authored by a person. Reported, never hidden —
     /// absence of attribution is surfaced rather than defaulted.
-    pub unattended: Vec<ActId>,
+    pub(crate) unattended: Vec<ActId>,
     /// `(act, missing target)` — an act referencing a commitment that is not
     /// in this log. A truncated or hand-edited file, or a snapshot adopted
     /// without its history. Surfaced rather than silently ignored: a
     /// supersession whose target is absent is a hole in the record, not a
     /// no-op.
-    pub dangling: Vec<(ActId, ActId)>,
+    pub(crate) dangling: Vec<(ActId, ActId)>,
     /// Who holds standing, over what. Ostrom's first principle.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub grants: Vec<crate::scope::Grant>,
+    pub(crate) grants: Vec<crate::scope::Grant>,
     /// Which scope a commitment belongs to. Last write wins.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub scopes: Vec<(ActId, crate::scope::Scope)>,
+    pub(crate) scopes: Vec<(ActId, crate::scope::Scope)>,
     /// Positions people and commitments have taken, by what they are about.
     ///
     /// Recorded here rather than resolved into an outcome: turning positions
     /// into a verdict is policy's job, and the fold has no policy.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub positions: Vec<Stated>,
+    pub(crate) positions: Vec<Stated>,
     /// The policies this canon decides under, by scope.
     ///
     /// In the ledger rather than beside it — see [`crate::ActKind::Policy`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub policies: Vec<Adopted>,
+    pub(crate) policies: Vec<Adopted>,
     /// Changes of policy still waiting on the group, or refused by it. Only
     /// a scope whose ratification rule `governs: all` has any.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub pending_policies: Vec<Adopted>,
+    pub(crate) pending_policies: Vec<Adopted>,
     /// What the group has decided, in order. Decisions, never observations.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub rulings: Vec<Ruling>,
+    pub(crate) rulings: Vec<Ruling>,
     /// What this canon leaves unwritten on purpose. Last word per subject.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub silences: Vec<Silence>,
+    pub(crate) silences: Vec<Silence>,
     /// Draws announced.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub draws: Vec<crate::draw::Committed>,
+    pub(crate) draws: Vec<crate::draw::Committed>,
     /// Digests published before a draw's boundary. First per (draw, actor).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub sealed: Vec<crate::draw::Sealed>,
+    pub(crate) sealed: Vec<crate::draw::Sealed>,
     /// Secrets published after it. First per (draw, actor).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub opened: Vec<crate::draw::Opened>,
+    pub(crate) opened: Vec<crate::draw::Opened>,
     /// Dates attached to acts. Last write per target wins, so a horizon can
     /// be moved as well as set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub horizons: Vec<crate::horizon::Horizon>,
+    pub(crate) horizons: Vec<crate::horizon::Horizon>,
     /// Which commitments are ranked, and as what. Last write wins.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ranks: Vec<(ActId, String)>,
+    pub(crate) ranks: Vec<(ActId, String)>,
     /// How proposals become rules, by scope. See [`crate::ratify`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ratifications: Vec<crate::ratify::AdoptedRatify>,
+    pub(crate) ratifications: Vec<crate::ratify::AdoptedRatify>,
     /// The pools this canon holds, by scope. See [`crate::allot`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub allotments: Vec<crate::allot::Allotment>,
+    pub(crate) allotments: Vec<crate::allot::Allotment>,
     /// How each pool is shared out.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub allocations: Vec<crate::allot::AdoptedAllocation>,
+    pub(crate) allocations: Vec<crate::allot::AdoptedAllocation>,
     /// Governance acts written by somebody without standing to write them —
     /// a grant, a policy, a ratification rule — and therefore not applied.
     /// Surfaced, never silently dropped: the act is in the log, the house
     /// should see that it was tried.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ungoverned: Vec<(ActId, String)>,
+    pub(crate) ungoverned: Vec<(ActId, String)>,
     /// Governance acts that applied only because no grant covering their
     /// scope predated them — the canon, or that corner of it, was still
     /// open. The other half of `ungoverned`: a refusal says who lacked
@@ -324,12 +347,12 @@ pub struct Canon {
     /// rules took this way; a reader that cannot say so reads a notebook as
     /// a governed canon.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub bootstrap: Vec<(ActId, String)>,
+    pub(crate) bootstrap: Vec<(ActId, String)>,
     /// Retractions of somebody else's commitment by someone without standing
     /// over it, put to its scope as a proposal rather than refused. A
     /// ratified one has taken effect; the rest wait. See [`Retraction`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub retractions: Vec<Retraction>,
+    pub(crate) retractions: Vec<Retraction>,
     /// Annotations this build carried without interpreting, by op.
     ///
     /// The §4.3 mitigation, and it is required rather than a courtesy.
@@ -339,16 +362,165 @@ pub struct Canon {
     /// could have been affected reports this rather than rendering a shorter
     /// answer with no note (§18.3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub carried: Vec<(ActId, String)>,
+    pub(crate) carried: Vec<(ActId, String)>,
     /// Acts under a name that has bound a key, which no bound key signed and
     /// the name never vouched for. Carried and not applied, with why — the
     /// fold never saw them. See [`crate::sign`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub unverified: Vec<(ActId, String)>,
+    pub(crate) unverified: Vec<(ActId, String)>,
     /// When personal scopes were honoured. Derived, never rendered: it is a
     /// reading of `ratifications`, carried so standing can ask it mid-fold.
     #[serde(skip)]
     pub(crate) personal: crate::ratify::Personal,
+}
+
+/// Read access to what the fold derived. Each field is `pub(crate)`, so
+/// these are all a front end has: it can read a canon and cannot write one.
+impl Canon {
+    pub fn commitments(&self) -> &[Commitment] {
+        &self.commitments
+    }
+    pub fn questions(&self) -> &[Question] {
+        &self.questions
+    }
+    pub fn conflicts(&self) -> &[Conflict] {
+        &self.conflicts
+    }
+    pub fn ancestry(&self) -> &Option<Ancestry> {
+        &self.ancestry
+    }
+    pub fn unattended(&self) -> &[ActId] {
+        &self.unattended
+    }
+    pub fn dangling(&self) -> &[(ActId, ActId)] {
+        &self.dangling
+    }
+    pub fn grants(&self) -> &[crate::scope::Grant] {
+        &self.grants
+    }
+    pub fn scopes(&self) -> &[(ActId, crate::scope::Scope)] {
+        &self.scopes
+    }
+    pub fn positions(&self) -> &[Stated] {
+        &self.positions
+    }
+    pub fn policies(&self) -> &[Adopted] {
+        &self.policies
+    }
+    pub fn pending_policies(&self) -> &[Adopted] {
+        &self.pending_policies
+    }
+    pub fn rulings(&self) -> &[Ruling] {
+        &self.rulings
+    }
+    pub fn silences(&self) -> &[Silence] {
+        &self.silences
+    }
+    pub fn draws(&self) -> &[crate::draw::Committed] {
+        &self.draws
+    }
+    pub fn sealed(&self) -> &[crate::draw::Sealed] {
+        &self.sealed
+    }
+    pub fn opened(&self) -> &[crate::draw::Opened] {
+        &self.opened
+    }
+    pub fn horizons(&self) -> &[crate::horizon::Horizon] {
+        &self.horizons
+    }
+    pub fn ranks(&self) -> &[(ActId, String)] {
+        &self.ranks
+    }
+    pub fn ratifications(&self) -> &[crate::ratify::AdoptedRatify] {
+        &self.ratifications
+    }
+    pub fn allotments(&self) -> &[crate::allot::Allotment] {
+        &self.allotments
+    }
+    pub fn allocations(&self) -> &[crate::allot::AdoptedAllocation] {
+        &self.allocations
+    }
+    pub fn ungoverned(&self) -> &[(ActId, String)] {
+        &self.ungoverned
+    }
+    pub fn bootstrap(&self) -> &[(ActId, String)] {
+        &self.bootstrap
+    }
+    pub fn retractions(&self) -> &[Retraction] {
+        &self.retractions
+    }
+    pub fn carried(&self) -> &[(ActId, String)] {
+        &self.carried
+    }
+    pub fn unverified(&self) -> &[(ActId, String)] {
+        &self.unverified
+    }
+}
+
+impl Canon {
+    /// Nothing derived yet: where every fold starts. Not `Default`, because a
+    /// trait impl would be public and hand any caller an empty canon to show.
+    pub(crate) fn empty() -> Self {
+        Self {
+            commitments: Vec::new(),
+            questions: Vec::new(),
+            conflicts: Vec::new(),
+            ancestry: None,
+            unattended: Vec::new(),
+            dangling: Vec::new(),
+            grants: Vec::new(),
+            scopes: Vec::new(),
+            positions: Vec::new(),
+            policies: Vec::new(),
+            pending_policies: Vec::new(),
+            rulings: Vec::new(),
+            silences: Vec::new(),
+            draws: Vec::new(),
+            sealed: Vec::new(),
+            opened: Vec::new(),
+            horizons: Vec::new(),
+            ranks: Vec::new(),
+            ratifications: Vec::new(),
+            allotments: Vec::new(),
+            allocations: Vec::new(),
+            ungoverned: Vec::new(),
+            bootstrap: Vec::new(),
+            retractions: Vec::new(),
+            carried: Vec::new(),
+            unverified: Vec::new(),
+            personal: crate::ratify::Personal::default(),
+        }
+    }
+}
+
+/// Read access to a commitment. The fields are `pub(crate)`.
+impl Commitment {
+    pub fn id(&self) -> &ActId {
+        &self.id
+    }
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+    /// In force, proposed, refused, superseded or retracted: the fold's
+    /// answer.
+    pub fn status(&self) -> &Status {
+        &self.status
+    }
+    pub fn asserted_at(&self) -> i64 {
+        self.asserted_at
+    }
+    pub fn actor(&self) -> &str {
+        &self.actor
+    }
+    pub fn replaces(&self) -> &[ActId] {
+        &self.replaces
+    }
+    pub fn from(&self) -> Option<&ActId> {
+        self.from.as_ref()
+    }
+    pub fn source(&self) -> Option<&str> {
+        self.source.as_deref()
+    }
 }
 
 impl Canon {
@@ -615,10 +787,11 @@ impl Voice<'_> {
 
 /// Derive current state from the acts.
 ///
-/// Acts are folded in the order given; [`crate::Log`] sorts by `(ts_unix, id)`
-/// on parse, so the result is identical regardless of how lines interleaved
-/// during a merge.
-pub fn derive(acts: &[Act]) -> Canon {
+/// Acts are folded in the order given, which is why this is not public:
+/// outside this crate the only way in is [`crate::Log`], whose constructors
+/// sort by `(ts_unix, id)` and dedupe by id, so how lines interleaved during
+/// a merge cannot reach the fold.
+pub(crate) fn derive(acts: &[Act]) -> Canon {
     checked(acts, None)
 }
 
@@ -921,7 +1094,7 @@ fn is_second(actor: &str, pull: crate::standing::Pull) -> bool {
 }
 
 /// Derive current state as of `now`. See [`crate::Log::derive_at`].
-pub fn derive_at(acts: &[Act], now: i64) -> Canon {
+pub(crate) fn derive_at(acts: &[Act], now: i64) -> Canon {
     checked(acts, Some(now))
 }
 
@@ -936,7 +1109,7 @@ pub fn derive_at(acts: &[Act], now: i64) -> Canon {
 fn seeded(acts: &[Act], seed: &crate::ratify::Personal) -> Canon {
     let mut canon = Canon {
         personal: seed.clone(),
-        ..Canon::default()
+        ..Canon::empty()
     };
     if seed.on.is_empty() {
         return canon;

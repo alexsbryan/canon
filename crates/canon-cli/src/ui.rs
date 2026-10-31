@@ -463,7 +463,7 @@ fn propose(form: &Form, ctx: &Ctx) -> Response {
             }
         },
     };
-    match crate::cmds::propose(&ctx.dir, &ctx.actor, text, scope) {
+    match crate::cmds::propose(&ctx.dir, &ctx.actor, text, scope, None) {
         Ok(act) => Response::see(&format!("/?done={}", act.id.as_str())),
         Err(e) => home(ctx, None, None, Some(not_written(&e))),
     }
@@ -474,7 +474,7 @@ fn in_force_rule(ctx: &Ctx, id: &str) -> Result<(ActId, Option<canon_core::Scope
     let (_, st) = load(ctx)?;
     let id = ActId::from_raw(id);
     match st.get(&id) {
-        Some(c) if matches!(c.status, canon_core::Status::Active) => {
+        Some(c) if matches!(c.status(), canon_core::Status::Active) => {
             Ok((id.clone(), st.scope_of(&id).cloned()))
         }
         _ => Err("that rule is not in force any more".into()),
@@ -547,7 +547,7 @@ fn silence(form: &Form, ctx: &Ctx) -> Response {
 fn lift(form: &Form, ctx: &Ctx) -> Response {
     let id = ActId::from_raw(form.get("id"));
     let current = load(ctx)
-        .map(|(_, st)| st.silences.iter().any(|s| s.act == id))
+        .map(|(_, st)| st.silences().iter().any(|s| s.act == id))
         .unwrap_or(false);
     if !current {
         return home(
@@ -671,9 +671,9 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         let id = ActId::from_raw(id);
         let what = st
             .get(&id)
-            .map(|c| c.text.clone())
+            .map(|c| c.text().to_string())
             .or_else(|| {
-                st.ratifications
+                st.ratifications()
                     .iter()
                     .find(|r| r.act == id)
                     .map(|r| r.text.clone())
@@ -722,7 +722,7 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
     }
 
     let rooms: std::collections::BTreeSet<String> = st
-        .grants
+        .grants()
         .iter()
         .map(|g| g.scope.as_str().to_string())
         .collect();
@@ -878,7 +878,7 @@ fn in_force(st: &Canon) -> String {
         std::collections::BTreeMap::new();
     for c in st.active() {
         let room = st
-            .scope_of(&c.id)
+            .scope_of(c.id())
             .map_or_else(|| "The whole canon".to_string(), |s| s.as_str().to_string());
         rooms.entry(room).or_default().push(c);
     }
@@ -896,8 +896,8 @@ fn in_force(st: &Canon) -> String {
         for c in rules {
             b.push_str(&format!(
                 "<li><a href=\"/why/{}\">{}</a></li>",
-                esc(c.id.as_str()),
-                esc(&c.text)
+                esc(c.id().as_str()),
+                esc(c.text())
             ));
         }
         b.push_str("</ul>");
@@ -912,10 +912,10 @@ fn unwritten(ctx: &Ctx, st: &Canon) -> String {
         "<section class=\"charter\"><h2>Unwritten on purpose</h2>\
          <p class=\"quiet\">Things the group decided not to make rules about, and why.</p>",
     );
-    if !st.silences.is_empty() {
+    if !st.silences().is_empty() {
         b.push_str("<ul class=\"silences\">");
     }
-    for s in &st.silences {
+    for s in st.silences() {
         b.push_str(&format!(
             "<li><p class=\"about\">{}</p><p class=\"because\">{}</p>\
              <p class=\"meta\">Left unwritten by {} on {}.</p>\
@@ -931,7 +931,7 @@ fn unwritten(ctx: &Ctx, st: &Canon) -> String {
             esc(s.act.as_str())
         ));
     }
-    if !st.silences.is_empty() {
+    if !st.silences().is_empty() {
         b.push_str("</ul>");
     }
     b.push_str(&format!(
@@ -1093,7 +1093,7 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
     b.push_str("</ul>");
     if st
         .get(&id)
-        .is_some_and(|c| matches!(c.status, canon_core::Status::Active))
+        .is_some_and(|c| matches!(c.status(), canon_core::Status::Active))
     {
         let hidden = format!(
             "{}<input type=\"hidden\" name=\"id\" value=\"{}\">",

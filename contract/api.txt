@@ -1,0 +1,339 @@
+act::ANONYMOUS  pub const ANONYMOUS : & str = "anonymous" ;
+act::Act  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Act { pub id : ActId , pub v : u32 , pub ts_unix : i64 , pub actor : String , # [serde (flatten)] pub kind : ActKind , # [serde (default , skip_serializing_if = "BTreeMap::is_empty")] pub refs : BTreeMap < ActId , String > , # [serde (default , skip_serializing_if = "Option::is_none")] pub sig : Option < String > , }
+act::Act::is_human  fn is_human (& self) -> bool
+act::Act::new  fn new (_ : ActKind , _ : i64 , _ : impl Into < String >) -> Self
+act::ActKind  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "op" , rename_all = "snake_case" , remote = "Self")] pub enum ActKind { Assert { text : String , # [serde (default , skip_serializing_if = "Option::is_none")] from : Option < ActId > , # [serde (default , skip_serializing_if = "Option::is_none")] source : Option < String > , } , Supersede { text : String , old : Vec < ActId > , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Retract { target : ActId , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Accept { a : ActId , b : ActId , rationale : String , # [serde (default , skip_serializing_if = "Option::is_none")] revisit : Option < String > , } , Dismiss { a : ActId , b : ActId , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Revert { targets : Vec < ActId > , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Question { text : String , # [serde (default , skip_serializing_if = "Option::is_none")] proposal : Option < String > , } , Adopt { lineage : String , generation : String , # [serde (default , skip_serializing_if = "Option::is_none")] source : Option < String > , } , Position { about : String , # [serde (default , skip_serializing_if = "Option::is_none")] citing : Option < ActId > , pull : crate :: standing :: Pull , because : String , } , Grant { holder : String , scope : crate :: scope :: Scope , # [serde (default , skip_serializing_if = "Option::is_none")] horizon : Option < i64 > , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Withdraw { holder : String , scope : crate :: scope :: Scope , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Scoped { commitment : ActId , scope : crate :: scope :: Scope , } , Policy { text : String , rule : crate :: policy :: Rule , # [serde (default , skip_serializing_if = "Option::is_none")] scope : Option < crate :: scope :: Scope > , } , Ratification { text : String , rule : crate :: ratify :: Ratify , # [serde (default , skip_serializing_if = "Option::is_none")] scope : Option < crate :: scope :: Scope > , # [serde (default , skip_serializing_if = "Option::is_none")] governs : Option < crate :: ratify :: Governs > , # [serde (default , skip_serializing_if = "Option::is_none")] personal : Option < bool > , } , Allot { text : String , unit : String , units : Vec < String > , scope : crate :: scope :: Scope , } , Allocation { text : String , rule : crate :: allot :: Allocation , scope : crate :: scope :: Scope , } , Decided { about : String , outcome : crate :: standing :: Outcome , authority : crate :: policy :: Authority , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , # [serde (default , skip_serializing_if = "Vec::is_empty")] citing : Vec < ActId > , } , Horizon { target : ActId , at : i64 , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Rank { commitment : ActId , rank : String } , Silence { about : String , rationale : String } , DrawCommit { scope : crate :: scope :: Scope , count : usize , after_ts : i64 , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , DrawSecret { commit : ActId , digest : String } , DrawReveal { commit : ActId , secret : String } , Key { keys : Vec < String > , # [serde (default , skip_serializing_if = "Vec::is_empty")] prior : Vec < String > , } , # [serde (skip)] Annotation { kind : String , body : serde_json :: Map < String , serde_json :: Value > , } , }
+act::ActKind::impl::Deserialize < 'de >  < 'de >
+act::ActKind::impl::Serialize  
+act::ActKind::min_version  fn min_version (& self) -> u32
+act::FORMAT_VERSION  pub const FORMAT_VERSION : u32 = 4 ;
+act::KNOWN_ANNOTATIONS  pub const KNOWN_ANNOTATIONS : [& str ; 20] = ["ratification" , "allot" , "allocation" , "accept" , "dismiss" , "question" , "adopt" , "position" , "grant" , "withdraw" , "scoped" , "policy" , "decided" , "rank" , "horizon" , "draw_commit" , "draw_secret" , "draw_reveal" , "silence" , "key" ,] ;
+act::SIGNED_VERSION  pub const SIGNED_VERSION : u32 = 3 ;
+act::STRUCTURAL  pub const STRUCTURAL : [& str ; 4] = ["assert" , "supersede" , "retract" , "revert"] ;
+act::UNSIGNED_VERSION  pub const UNSIGNED_VERSION : u32 = 2 ;
+allot::AdoptedAllocation  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct AdoptedAllocation { pub scope : Scope , pub rule : Allocation , pub text : String , pub at : i64 , pub actor : String , pub act : ActId , }
+allot::Allocation  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "rule" , rename_all = "snake_case")] pub enum Allocation { Rotation { order : Order , step : i64 , per : i64 } , }
+allot::Allocation::name  fn name (& self) -> String
+allot::Allocation::prose  fn prose (& self) -> String
+allot::Allotment  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Allotment { pub scope : Scope , pub unit : String , pub units : Vec < String > , pub text : String , pub at : i64 , pub actor : String , pub act : ActId , }
+allot::Award  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Award { pub unit : String , pub actor : String , }
+allot::Canon::allocation_for  fn allocation_for (& self , _ : & Scope) -> Option < & AdoptedAllocation >
+allot::Canon::allotment_for  fn allotment_for (& self , _ : & Scope) -> Option < & Allotment >
+allot::Canon::pool_at  fn pool_at (& self , _ : & Scope , _ : i64) -> Result < Schedule , PoolError >
+allot::Order  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "order" , rename_all = "snake_case")] pub enum Order { Holders , Given { actors : Vec < String > } , FromDraw { commit : ActId } , }
+allot::PoolError  # [derive (Debug , Clone , PartialEq , Eq)] pub enum PoolError { NoAllotment , NoRule , NobodyHolds , Draw (String) , }
+allot::PoolError::impl::core :: fmt :: Display  
+allot::Schedule  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Schedule { pub scope : Scope , pub unit : String , pub period : i64 , pub rule : String , pub awards : Vec < Award > , pub idle : Vec < String > , pub free : Vec < String > , }
+date::parse_ymd  fn parse_ymd (_ : & str) -> Option < i64 >
+date::ymd  fn ymd (_ : i64) -> String
+draw::Canon::draw  fn draw (& self , _ : & ActId) -> Result < Drawn , DrawError >
+draw::Canon::draws_announced  fn draws_announced (& self) -> & [Committed]
+draw::Committed  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Committed { pub act : ActId , pub scope : Scope , pub count : usize , pub after_ts : i64 , pub at : i64 , pub drawer : String , # [serde (default , skip_serializing_if = "String::is_empty")] pub rationale : String , }
+draw::DrawError  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "error" , rename_all = "snake_case")] pub enum DrawError { NoSuchDraw { commit : ActId , } , BoundaryNotInFuture { after_ts : i64 , committed_at : i64 , } , NothingRevealed , EmptyPool { scope : Scope , } , PoolTooSmall { pool : usize , count : usize , } , NoSeats , }
+draw::DrawError::impl::core :: error :: Error  
+draw::DrawError::impl::core :: fmt :: Display  
+draw::Drawn  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Drawn { pub commit : ActId , pub seats : Vec < String > , pub pool : Vec < String > , pub seed : String , pub contributed : Vec < String > , pub withheld : Vec < String > , }
+draw::Opened  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Opened { pub commit : ActId , pub actor : String , pub secret : String , pub at : i64 , }
+draw::Sealed  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Sealed { pub commit : ActId , pub actor : String , pub digest : String , pub at : i64 , }
+export::ANONYMOUS  act::ANONYMOUS
+export::Act  act::Act
+export::ActId  id::ActId
+export::ActKind  act::ActKind
+export::Adopted  fold::Adopted
+export::AdoptedAllocation  allot::AdoptedAllocation
+export::AdoptedRatify  ratify::AdoptedRatify
+export::Allocation  allot::Allocation
+export::Allotment  allot::Allotment
+export::Ancestry  fold::Ancestry
+export::Attributes  policy::Attributes
+export::Authority  policy::Authority
+export::Award  allot::Award
+export::BadBar  ratify::BadBar
+export::Bar  ratify::Bar
+export::Between  ratify::Between
+export::Binding  sign::Binding
+export::Canon  fold::Canon
+export::Commitment  fold::Commitment
+export::Conflict  fold::Conflict
+export::Decision  policy::Decision
+export::Disposition  fold::Disposition
+export::Divergence  lineage::Divergence
+export::DrawError  draw::DrawError
+export::Drawn  draw::Drawn
+export::Due  horizon::Due
+export::FORMAT_VERSION  act::FORMAT_VERSION
+export::Fate  lineage::Fate
+export::Governs  ratify::Governs
+export::Grant  scope::Grant
+export::Horizon  horizon::Horizon
+export::ID_PREFIX  id::ID_PREFIX
+export::Inherited  lineage::Inherited
+export::Key  sign::Key
+export::Keyed  fold::Keyed
+export::LadderKey  policy::LadderKey
+export::Log  log::Log
+export::NotARule  ratify::NotARule
+export::Order  allot::Order
+export::Outcome  standing::Outcome
+export::Overdue  horizon::Overdue
+export::ParseError  log::ParseError
+export::Person  person::Person
+export::Policy  policy::Policy
+export::PoolError  allot::PoolError
+export::Position  standing::Position
+export::Proposal  ratify::Proposal
+export::Pull  standing::Pull
+export::Question  fold::Question
+export::Ratify  ratify::Ratify
+export::Retraction  fold::Retraction
+export::Rule  policy::Rule
+export::Ruling  fold::Ruling
+export::SIGNED_VERSION  act::SIGNED_VERSION
+export::Schedule  allot::Schedule
+export::Scope  scope::Scope
+export::Seat  ratify::Seat
+export::Silence  fold::Silence
+export::Snapshot  lineage::Snapshot
+export::SnapshotCommitment  lineage::SnapshotCommitment
+export::Source  standing::Source
+export::Standing  standing::Standing
+export::Stated  fold::Stated
+export::Status  fold::Status
+export::UNSIGNED_VERSION  act::UNSIGNED_VERSION
+export::Verdict  ratify::Verdict
+export::Verified  sign::Verified
+export::Voice  fold::Voice
+export::default_outcome  policy::default_outcome
+export::short_digest  id::short_digest
+fold::Adopted  # [derive (Debug , Clone , PartialEq , Eq , Serialize)] pub struct Adopted { # [serde (default , skip_serializing_if = "Option::is_none")] pub scope : Option < crate :: scope :: Scope > , pub rule : crate :: policy :: Rule , pub text : String , pub at : i64 , pub actor : String , pub act : ActId , # [serde (default , skip_serializing_if = "Option::is_none")] pub verdict : Option < crate :: ratify :: Verdict > , }
+fold::Ancestry  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Ancestry { pub lineage : String , pub generation : String , pub source : Option < String > , pub at : i64 , }
+fold::Canon  # [derive (Debug , Clone , PartialEq , Eq , Serialize)] pub struct Canon { pub (crate) commitments : Vec < Commitment > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) questions : Vec < Question > , pub (crate) conflicts : Vec < Conflict > , pub (crate) ancestry : Option < Ancestry > , pub (crate) unattended : Vec < ActId > , pub (crate) dangling : Vec < (ActId , ActId) > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) grants : Vec < crate :: scope :: Grant > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) scopes : Vec < (ActId , crate :: scope :: Scope) > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) positions : Vec < Stated > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) policies : Vec < Adopted > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) pending_policies : Vec < Adopted > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) rulings : Vec < Ruling > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) silences : Vec < Silence > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) draws : Vec < crate :: draw :: Committed > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) sealed : Vec < crate :: draw :: Sealed > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) opened : Vec < crate :: draw :: Opened > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) horizons : Vec < crate :: horizon :: Horizon > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) ranks : Vec < (ActId , String) > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) ratifications : Vec < crate :: ratify :: AdoptedRatify > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) allotments : Vec < crate :: allot :: Allotment > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) allocations : Vec < crate :: allot :: AdoptedAllocation > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) ungoverned : Vec < (ActId , String) > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) bootstrap : Vec < (ActId , String) > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) retractions : Vec < Retraction > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) carried : Vec < (ActId , String) > , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) unverified : Vec < (ActId , String) > , # [serde (skip)] pub (crate) personal : crate :: ratify :: Personal , }
+fold::Canon::active  fn active (& self) -> impl Iterator < Item = & Commitment >
+fold::Canon::allocations  fn allocations (& self) -> & [crate :: allot :: AdoptedAllocation]
+fold::Canon::allotments  fn allotments (& self) -> & [crate :: allot :: Allotment]
+fold::Canon::ancestry  fn ancestry (& self) -> & Option < Ancestry >
+fold::Canon::bootstrap  fn bootstrap (& self) -> & [(ActId , String)]
+fold::Canon::carried  fn carried (& self) -> & [(ActId , String)]
+fold::Canon::commitments  fn commitments (& self) -> & [Commitment]
+fold::Canon::conflicts  fn conflicts (& self) -> & [Conflict]
+fold::Canon::dangling  fn dangling (& self) -> & [(ActId , ActId)]
+fold::Canon::draws  fn draws (& self) -> & [crate :: draw :: Committed]
+fold::Canon::get  fn get (& self , _ : & ActId) -> Option < & Commitment >
+fold::Canon::grants  fn grants (& self) -> & [crate :: scope :: Grant]
+fold::Canon::horizons  fn horizons (& self) -> & [crate :: horizon :: Horizon]
+fold::Canon::is_settled  fn is_settled (& self , _ : & ActId , _ : & ActId) -> bool
+fold::Canon::ladder  fn ladder (& self , _ : Keyed < '_ > , _ : bool) -> Vec < & Ruling >
+fold::Canon::open  fn open (& self) -> impl Iterator < Item = & Question >
+fold::Canon::opened  fn opened (& self) -> & [crate :: draw :: Opened]
+fold::Canon::pending_policies  fn pending_policies (& self) -> & [Adopted]
+fold::Canon::policies  fn policies (& self) -> & [Adopted]
+fold::Canon::policy_act  fn policy_act (& self , _ : Option < & crate :: scope :: Scope >) -> Option < & Adopted >
+fold::Canon::policy_for  fn policy_for (& self , _ : Option < & crate :: scope :: Scope >) -> & crate :: policy :: Rule
+fold::Canon::positions  fn positions (& self) -> & [Stated]
+fold::Canon::prior_decisions  fn prior_decisions (& self , _ : & str) -> Vec < & Ruling >
+fold::Canon::proposed  fn proposed (& self) -> impl Iterator < Item = & Commitment >
+fold::Canon::question  fn question (& self , _ : & ActId) -> Option < & Question >
+fold::Canon::questions  fn questions (& self) -> & [Question]
+fold::Canon::rank_of  fn rank_of (& self , _ : & ActId) -> Option < & str >
+fold::Canon::ranks  fn ranks (& self) -> & [(ActId , String)]
+fold::Canon::ratifications  fn ratifications (& self) -> & [crate :: ratify :: AdoptedRatify]
+fold::Canon::retractions  fn retractions (& self) -> & [Retraction]
+fold::Canon::rulings  fn rulings (& self) -> & [Ruling]
+fold::Canon::scope_of  fn scope_of (& self , _ : & ActId) -> Option < & crate :: scope :: Scope >
+fold::Canon::scopes  fn scopes (& self) -> & [(ActId , crate :: scope :: Scope)]
+fold::Canon::sealed  fn sealed (& self) -> & [crate :: draw :: Sealed]
+fold::Canon::seconds  fn seconds (& self , _ : & ActId) -> usize
+fold::Canon::silence_about  fn silence_about (& self , _ : & str) -> Option < & Silence >
+fold::Canon::silences  fn silences (& self) -> & [Silence]
+fold::Canon::standing_of  fn standing_of (& self , _ : & str , _ : & crate :: scope :: Scope , _ : i64) -> bool
+fold::Canon::tolerated  fn tolerated (& self) -> impl Iterator < Item = & Conflict >
+fold::Canon::unattended  fn unattended (& self) -> & [ActId]
+fold::Canon::ungoverned  fn ungoverned (& self) -> & [(ActId , String)]
+fold::Canon::unverified  fn unverified (& self) -> & [(ActId , String)]
+fold::Canon::voice_of  fn voice_of (& self , _ : & str) -> Voice < '_ >
+fold::Canon::who_decides  fn who_decides (& self , _ : & crate :: scope :: Scope , _ : i64) -> Vec < & crate :: scope :: Grant >
+fold::Commitment  # [derive (Debug , Clone , PartialEq , Eq , Serialize)] pub struct Commitment { pub (crate) id : ActId , pub (crate) text : String , pub (crate) status : Status , pub (crate) asserted_at : i64 , pub (crate) actor : String , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub (crate) replaces : Vec < ActId > , # [serde (default , skip_serializing_if = "Option::is_none")] pub (crate) from : Option < ActId > , # [serde (default , skip_serializing_if = "Option::is_none")] pub (crate) source : Option < String > , }
+fold::Commitment::actor  fn actor (& self) -> & str
+fold::Commitment::asserted_at  fn asserted_at (& self) -> i64
+fold::Commitment::from  fn from (& self) -> Option < & ActId >
+fold::Commitment::id  fn id (& self) -> & ActId
+fold::Commitment::replaces  fn replaces (& self) -> & [ActId]
+fold::Commitment::source  fn source (& self) -> Option < & str >
+fold::Commitment::status  fn status (& self) -> & Status
+fold::Commitment::text  fn text (& self) -> & str
+fold::Conflict  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Conflict { pub a : ActId , pub b : ActId , pub disposition : Disposition , # [serde (default)] pub at : i64 , }
+fold::Conflict::is_pair  fn is_pair (& self , _ : & ActId , _ : & ActId) -> bool
+fold::Disposition  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "disposition" , rename_all = "snake_case")] pub enum Disposition { Open { reason : String } , Tolerated { rationale : String , # [serde (default , skip_serializing_if = "Option::is_none")] revisit : Option < String > , } , Dismissed { # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , }
+fold::Keyed  # [derive (Debug , Clone , Copy , PartialEq , Eq)] pub enum Keyed < 'a > { About (& 'a str) , Cited (& 'a [ActId]) , }
+fold::Question  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Question { pub id : ActId , pub text : String , pub status : Status , pub asked_at : i64 , pub actor : String , # [serde (default , skip_serializing_if = "Option::is_none")] pub proposal : Option < String > , }
+fold::Retraction  # [derive (Debug , Clone , PartialEq , Eq , Serialize)] pub struct Retraction { pub act : ActId , pub target : ActId , # [serde (default , skip_serializing_if = "Option::is_none")] pub scope : Option < crate :: scope :: Scope > , pub actor : String , pub at : i64 , # [serde (default , skip_serializing_if = "String::is_empty")] pub rationale : String , pub verdict : crate :: ratify :: Verdict , }
+fold::Ruling  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Ruling { pub about : String , pub outcome : crate :: standing :: Outcome , pub authority : crate :: policy :: Authority , # [serde (default , skip_serializing_if = "String::is_empty")] pub rationale : String , pub at : i64 , pub actor : String , pub act : ActId , # [serde (default , skip_serializing_if = "Vec::is_empty")] pub citing : Vec < ActId > , }
+fold::Silence  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Silence { pub about : String , pub rationale : String , pub at : i64 , pub actor : String , pub act : ActId , }
+fold::Stated  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Stated { pub about : String , pub position : crate :: standing :: Position , pub by : String , pub at : i64 , pub act : ActId , }
+fold::Status  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "status" , rename_all = "snake_case")] pub enum Status { Active , Superseded { by : ActId , } , Retracted { at : i64 , } , Proposed { needs : String , } , Refused { at : i64 , by : String , why : String , } , }
+fold::Voice  # [derive (Debug)] pub struct Voice < 'a > { pub asked : Vec < & 'a Question > , pub positions : Vec < & 'a Stated > , pub decided : Vec < & 'a Ruling > , pub silences : Vec < & 'a Silence > , }
+fold::Voice < '_ >::answered  fn answered (& self) -> usize
+fold::Voice < '_ >::is_empty  fn is_empty (& self) -> bool
+fold::Voice < '_ >::open  fn open (& self) -> usize
+horizon::Canon::overdue  fn overdue (& self , _ : i64) -> Vec < Overdue >
+horizon::Canon::unreadable_dates  fn unreadable_dates (& self) -> Vec < (ActId , String) >
+horizon::Due  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "kind" , rename_all = "snake_case")] pub enum Due { Horizon { # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Revisit { other : ActId , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Standing { holder : String , scope : Scope } , }
+horizon::Horizon  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Horizon { pub target : ActId , pub at : i64 , # [serde (default , skip_serializing_if = "String::is_empty")] pub rationale : String , pub set_at : i64 , pub act : ActId , }
+horizon::Overdue  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Overdue { pub target : ActId , pub due : i64 , pub what : Due , }
+id::ActId  # [derive (Debug , Clone , PartialEq , Eq , PartialOrd , Ord , Hash , Serialize , Deserialize)] # [serde (transparent)] pub struct ActId (String) ;
+id::ActId::as_str  fn as_str (& self) -> & str
+id::ActId::derive  fn derive (_ : i64 , _ : & str , _ : & str) -> Self
+id::ActId::from_raw  fn from_raw (_ : impl Into < String >) -> Self
+id::ActId::impl::core :: fmt :: Display  
+id::ID_PREFIX  pub const ID_PREFIX : & str = "can" ;
+id::digest_hex  fn digest_hex (_ : & [u8]) -> String
+id::short_digest  fn short_digest (_ : & str) -> String
+lineage::Divergence  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Divergence { pub lineage : String , pub generation : String , pub inherited : Vec < Inherited > , pub added : Vec < ActId > , }
+lineage::Divergence::compute  fn compute (_ : & Snapshot , _ : & Canon) -> Self
+lineage::Divergence::compute_carried  fn compute_carried (_ : & Snapshot , _ : & Canon , _ : & [(ActId , ActId)]) -> Self
+lineage::Divergence::count  fn count (& self , _ : impl Fn (& Fate) -> bool) -> usize
+lineage::Fate  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "fate" , rename_all = "snake_case")] pub enum Fate { Untouched , Superseded { by : ActId , text : String } , Retracted , Accepted { rationale : String } , Absent , }
+lineage::Inherited  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Inherited { pub upstream : ActId , pub text : String , pub fate : Fate , }
+lineage::Snapshot  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Snapshot { pub lineage : String , pub generation : String , pub profile : String , pub at : i64 , pub commitments : Vec < SnapshotCommitment > , }
+lineage::Snapshot::of  fn of (_ : & Canon , _ : impl Into < String > , _ : impl Into < String > , _ : i64 ,) -> Self
+lineage::Snapshot::parse  fn parse (_ : & str) -> Result < Self , String >
+lineage::Snapshot::render  fn render (& self , _ : & str) -> String
+lineage::SnapshotCommitment  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct SnapshotCommitment { pub id : ActId , pub text : String , }
+lineage::generation_of  fn generation_of (_ : & [SnapshotCommitment]) -> String
+log::Log  # [derive (Debug , Clone , Default)] pub struct Log { acts : Vec < Act > , }
+log::Log::acts  fn acts (& self) -> & [Act]
+log::Log::derive  fn derive (& self) -> crate :: fold :: Canon
+log::Log::derive_at  fn derive_at (& self , _ : i64) -> crate :: fold :: Canon
+log::Log::from_acts  fn from_acts (_ : Vec < Act >) -> Self
+log::Log::is_empty  fn is_empty (& self) -> bool
+log::Log::len  fn len (& self) -> usize
+log::Log::parse  fn parse (_ : & str) -> Result < Self , ParseError >
+log::Log::push  fn push (& mut self , _ : Act)
+log::Log::render  fn render (& self) -> String
+log::ParseError  # [derive (Debug)] pub enum ParseError { UnknownVersion { line : usize , found : u32 , } , Malformed { line : usize , detail : String , } , }
+log::ParseError::impl::core :: error :: Error  
+log::ParseError::impl::core :: fmt :: Display  
+module::act  public module
+module::allot  public module
+module::date  public module
+module::draw  public module
+module::fold  public module
+module::horizon  public module
+module::id  public module
+module::lineage  public module
+module::log  public module
+module::person  public module
+module::policy  public module
+module::ratify  public module
+module::scope  public module
+module::sign  public module
+module::standing  public module
+person::PREFIX  pub const PREFIX : & str = "human:" ;
+person::Person  # [derive (Debug , Clone , Copy , PartialEq , Eq , PartialOrd , Ord)] pub struct Person < 'a > (& 'a str) ;
+person::Person < '_ >::impl::fmt :: Display  
+person::Person < 'a >::actor  fn actor (self) -> & 'a str
+person::Person < 'a >::of  fn of (_ : & 'a str) -> Option < Self >
+policy::Attributes  # [derive (Debug , Clone , Default , PartialEq , Eq , Serialize , Deserialize)] pub struct Attributes { # [serde (default , skip_serializing_if = "String::is_empty")] pub about : String , # [serde (default , skip_serializing_if = "Option::is_none")] pub actor : Option < String > , # [serde (default , skip_serializing_if = "Option::is_none")] pub scope : Option < Scope > , # [serde (default , skip_serializing_if = "Option::is_none")] pub reversible : Option < bool > , # [serde (default , skip_serializing_if = "Option::is_none")] pub amends : Option < ActId > , # [serde (default)] pub now : i64 , }
+policy::Attributes::about  fn about (_ : impl Into < String >) -> Self
+policy::Attributes::amending  fn amending (mut self , _ : ActId) -> Self
+policy::Attributes::at  fn at (mut self , _ : i64) -> Self
+policy::Attributes::by  fn by (mut self , _ : impl Into < String >) -> Self
+policy::Attributes::in_scope  fn in_scope (mut self , _ : Scope) -> Self
+policy::Attributes::reversible  fn reversible (mut self , _ : bool) -> Self
+policy::Authority  # [derive (Debug , Clone , Copy , PartialEq , Eq , PartialOrd , Ord , Serialize , Deserialize)] # [serde (rename_all = "kebab-case")] pub enum Authority { Act , ActAndNotify , AskOne , AskPanel , Refuse , }
+policy::Authority::as_str  fn as_str (self) -> & 'static str
+policy::Authority::impl::core :: fmt :: Display  
+policy::Authority::parse  fn parse (_ : & str) -> Option < Self >
+policy::Authority::prose  fn prose (self) -> & 'static str
+policy::Authority::raise  fn raise (self , _ : Self) -> Self
+policy::Decision  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Decision { pub outcome : Outcome , pub authority : Authority , pub because : String , }
+policy::LadderKey  # [derive (Debug , Clone , Copy , PartialEq , Eq , Serialize , Deserialize)] # [serde (rename_all = "snake_case")] pub enum LadderKey { About , Cited , }
+policy::Policy  pub trait Policy { fn name (& self) -> String ; fn decide (& self , _ : & Standing , _ : & Attributes , _ : & Canon) -> Decision ; }
+policy::Rule  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "rule" , rename_all = "snake_case")] pub enum Rule { Default , Consent , Threshold { against : usize } , Supermajority { numerator : u32 , denominator : u32 } , Subsidiarity , Graduated { ladder : Vec < Authority > , base : Box < Rule > , # [serde (default , skip_serializing_if = "Option::is_none")] key : Option < LadderKey > , # [serde (default , skip_serializing_if = "Option::is_none")] repair : Option < bool > , } , Entrenched { protected : Vec < String > , base : Box < Rule > , } , Cautious { base : Box < Rule > } , }
+policy::Rule::impl::Policy  
+policy::Rule::prose  fn prose (& self) -> String
+policy::Rule::uses_v4  fn uses_v4 (& self) -> bool
+policy::default_outcome  fn default_outcome (_ : & Standing) -> Outcome
+ratify::AdoptedRatify  # [derive (Debug , Clone , PartialEq , Eq , Serialize)] pub struct AdoptedRatify { # [serde (default , skip_serializing_if = "Option::is_none")] pub scope : Option < Scope > , pub rule : Ratify , pub text : String , pub at : i64 , pub actor : String , pub act : ActId , pub verdict : Verdict , pub under : Ratify , # [serde (default , skip_serializing_if = "Option::is_none")] pub governs : Option < Governs > , # [serde (default , skip_serializing_if = "Option::is_none")] pub personal : Option < bool > , }
+ratify::BadBar  # [derive (Debug , Clone , Copy , PartialEq , Eq)] pub enum BadBar { OutOfNothing , Nobody , MoreThanEveryone , }
+ratify::BadBar::impl::core :: fmt :: Display  
+ratify::Bar  # [derive (Debug , Clone , Copy , PartialEq , Eq , Serialize , Deserialize)] # [serde (try_from = "BarFields")] pub struct Bar { numerator : u32 , denominator : u32 , more_than : bool , }
+ratify::Bar::denominator  fn denominator (& self) -> u32
+ratify::Bar::impl::TryFrom < BarFields >  
+ratify::Bar::is_everyone  fn is_everyone (& self) -> bool
+ratify::Bar::more_than  fn more_than (& self) -> bool
+ratify::Bar::needed  fn needed (& self , _ : usize) -> usize
+ratify::Bar::new  fn new (_ : u32 , _ : u32 , _ : bool) -> Result < Self , BadBar >
+ratify::Bar::numerator  fn numerator (& self) -> u32
+ratify::Bar::phrase  fn phrase (& self) -> String
+ratify::Between  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "between" , rename_all = "snake_case")] pub enum Between { Days { days : u32 } , Turnover , }
+ratify::Canon::adopted_at  fn adopted_at (& self , _ : Option < & Scope > , _ : i64) -> Option < & AdoptedRatify >
+ratify::Canon::canon_scopes  fn canon_scopes (& self , _ : i64) -> Vec < & Scope >
+ratify::Canon::counts  fn counts (& self , _ : & crate :: scope :: Grant , _ : Option < & Scope > , _ : i64) -> bool
+ratify::Canon::governs_at  fn governs_at (& self , _ : Option < & Scope > , _ : i64) -> Governs
+ratify::Canon::judge_retraction  fn judge_retraction (& self , _ : & Proposal , _ : i64) -> Verdict
+ratify::Canon::may_govern  fn may_govern (& self , _ : & str , _ : Option < & Scope > , _ : i64) -> bool
+ratify::Canon::owned_at  fn owned_at < 's > (& self , _ : & 's Scope , _ : i64) -> Option < & 's str >
+ratify::Canon::proposal_of  fn proposal_of < 'a > (& 'a self , _ : & 'a Commitment) -> Proposal < 'a >
+ratify::Canon::ratification_for  fn ratification_for (& self , _ : Option < & Scope >) -> & Ratify
+ratify::Canon::ratification_for_at  fn ratification_for_at (& self , _ : Option < & Scope > , _ : i64) -> & Ratify
+ratify::Canon::ratify  fn ratify (& self , _ : & Commitment , _ : i64) -> Verdict
+ratify::Canon::ratify_proposal  fn ratify_proposal (& self , _ : & Proposal , _ : i64) -> Verdict
+ratify::Canon::ratify_under  fn ratify_under (& self , _ : & Ratify , _ : & Proposal , _ : i64) -> Verdict
+ratify::Canon::seat  fn seat (& self , _ : & str , _ : Option < & Scope > , _ : i64) -> Seat
+ratify::Governs  # [derive (Debug , Clone , Copy , PartialEq , Eq , Serialize , Deserialize)] # [serde (rename_all = "snake_case")] pub enum Governs { Commitments , All , }
+ratify::NotARule  # [derive (Debug , Clone , Copy , PartialEq , Eq)] pub enum NotARule { Unknown , Share , Bar (BadBar) , }
+ratify::NotARule::impl::core :: fmt :: Display  
+ratify::Personal  # [derive (Debug , Clone , Default , PartialEq , Eq)] pub struct Personal { pub (crate) declared : bool , pub (crate) on : Vec < (i64 , Option < i64 > , ActId) > , }
+ratify::Proposal  # [derive (Debug , Clone , Copy)] pub struct Proposal < 'a > { pub id : & 'a ActId , pub scope : Option < & 'a Scope > , pub at : i64 , pub actor : & 'a str , }
+ratify::Ratify  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "rule" , rename_all = "snake_case")] pub enum Ratify { Standing , Joint { holders : Vec < String > } , Threshold { approve : usize , block : usize } , Majority , Unanimous , Share (Bar) , Consent { days : u32 } , Twice { each : Box < Ratify > , between : Between } , }
+ratify::Ratify::bar  fn bar (& self) -> Option < Bar >
+ratify::Ratify::impl::core :: str :: FromStr  
+ratify::Ratify::name  fn name (& self) -> String
+ratify::Ratify::parse  fn parse (_ : & str) -> Option < Self >
+ratify::Ratify::prose  fn prose (& self) -> String
+ratify::Seat  # [derive (Debug , Clone , Copy , PartialEq , Eq)] pub enum Seat { Held , Open , Lacking , }
+ratify::Verdict  # [derive (Debug , Clone , PartialEq , Eq , Serialize)] # [serde (tag = "verdict" , rename_all = "snake_case")] pub enum Verdict { # [non_exhaustive] Ratified { since : i64 , how : String } , # [non_exhaustive] Proposed { needs : String } , # [non_exhaustive] Refused { at : i64 , by : String , why : String } , }
+ratify::personal_owner  fn personal_owner (_ : & Scope) -> Option < & str >
+scope::Grant  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Grant { pub actor : String , pub scope : Scope , # [serde (default , skip_serializing_if = "Option::is_none")] pub horizon : Option < i64 > , pub granted_at : i64 , # [serde (default , skip_serializing_if = "Option::is_none")] pub withdrawn_at : Option < i64 > , pub act : ActId , }
+scope::Grant::held_at  fn held_at (& self , _ : i64) -> bool
+scope::Grant::lapsed  fn lapsed (& self , _ : i64) -> bool
+scope::Scope  # [derive (Debug , Clone , PartialEq , Eq , PartialOrd , Ord , Hash , Serialize , Deserialize)] # [serde (try_from = "String" , into = "String")] pub struct Scope (String) ;
+scope::Scope::as_str  fn as_str (& self) -> & str
+scope::Scope::covers  fn covers (& self , _ : & Scope) -> bool
+scope::Scope::depth  fn depth (& self) -> usize
+scope::Scope::impl::TryFrom < String >  
+scope::Scope::impl::core :: fmt :: Display  
+scope::Scope::new  fn new (_ : & str) -> Option < Self >
+scope::Scope::parent  fn parent (& self) -> Option < Self >
+scope::String::impl::From < Scope >  
+sign::Binding  # [derive (Debug , Clone , PartialEq , Eq)] pub struct Binding { pub actor : String , pub keys : Vec < Key > , pub acts : Vec < ActId > , pub contested : bool , }
+sign::Key  # [derive (Debug , Clone , PartialEq , Eq)] pub struct Key { blob : Vec < u8 > , point : [u8 ; 32] , application : Option < Vec < u8 > > , }
+sign::Key::fingerprint  fn fingerprint (& self) -> String
+sign::Key::openssh  fn openssh (& self) -> String
+sign::Key::parse  fn parse (_ : & str) -> Result < Self , String >
+sign::Key::touch_required  fn touch_required (& self) -> bool
+sign::NAMESPACE  pub const NAMESPACE : & str = "canon" ;
+sign::Verified  # [derive (Debug , Clone , Default , PartialEq , Eq)] pub struct Verified { pub bindings : BTreeMap < String , Binding > , pub unverified : Vec < (ActId , String) > , }
+sign::base64_decode  fn base64_decode (_ : & str) -> Option < Vec < u8 > >
+sign::base64_encode  fn base64_encode (_ : & [u8]) -> String
+sign::canonical  fn canonical (_ : & Act) -> String
+sign::digest  fn digest (_ : & Act) -> String
+sign::prepare  fn prepare (_ : & mut Act , _ : & [Act]) -> String
+sign::verifies  fn verifies (_ : & Key , _ : & [u8] , _ : & str) -> bool
+sign::verify  fn verify (_ : & [Act]) -> Verified
+standing::Outcome  # [derive (Debug , Clone , Copy , PartialEq , Eq , Serialize , Deserialize)] # [serde (rename_all = "snake_case")] pub enum Outcome { Supported , Conflicts , Unaddressed , }
+standing::Outcome::describe  fn describe (self) -> & 'static str
+standing::Position  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Position { pub source : Source , pub pull : Pull , pub because : String , }
+standing::Position::actor  fn actor (& self) -> Option < & str >
+standing::Position::by  fn by (_ : impl Into < String > , _ : Pull , _ : impl Into < String >) -> Self
+standing::Position::commitment  fn commitment (& self) -> Option < & ActId >
+standing::Position::of  fn of (_ : ActId , _ : Pull , _ : impl Into < String >) -> Self
+standing::Pull  # [derive (Debug , Clone , Copy , PartialEq , Eq , Serialize , Deserialize)] # [serde (rename_all = "snake_case")] pub enum Pull { Toward , Against , }
+standing::Source  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (rename_all = "snake_case")] pub enum Source { Commitment (ActId) , Actor (String) , }
+standing::Standing  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Standing { pub proposal : String , pub positions : Vec < Position > , }
+standing::Standing::against  fn against (& self) -> impl Iterator < Item = & Position >
+standing::Standing::cited  fn cited (_ : & Canon , _ : impl Into < String > , _ : Vec < Position > ,) -> (Self , Vec < Position >)
+standing::Standing::cited_commitments  fn cited_commitments (& self) -> impl Iterator < Item = & Position >
+standing::Standing::outcome  fn outcome (& self) -> Outcome
+standing::Standing::toward  fn toward (& self) -> impl Iterator < Item = & Position >

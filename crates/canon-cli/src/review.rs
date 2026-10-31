@@ -85,12 +85,12 @@ pub struct Item {
 /// position. `None` when it is not a proposal-shaped thing at all.
 fn standing(st: &Canon, id: &ActId) -> Option<String> {
     if let Some(c) = st.get(id) {
-        return Some(format!("{:?}", c.status));
+        return Some(format!("{:?}", c.status()));
     }
-    if let Some(r) = st.ratifications.iter().find(|r| r.act == *id) {
+    if let Some(r) = st.ratifications().iter().find(|r| r.act == *id) {
         return Some(format!("{:?}", r.verdict));
     }
-    st.retractions
+    st.retractions()
         .iter()
         .find(|r| r.act == *id)
         .map(|r| format!("{:?}", r.verdict))
@@ -100,7 +100,7 @@ fn standing(st: &Canon, id: &ActId) -> Option<String> {
 pub fn outcome(st: &Canon, id: &ActId) -> String {
     let verdict = |v: &Verdict, done: &str| match v {
         Verdict::Ratified { .. } => done.to_string(),
-        Verdict::Proposed { needs } => format!("still waiting — needs {needs}"),
+        Verdict::Proposed { needs, .. } => format!("still waiting — needs {needs}"),
         Verdict::Refused { by, why, .. } => {
             format!(
                 "refused{}: {}",
@@ -110,7 +110,7 @@ pub fn outcome(st: &Canon, id: &ActId) -> String {
         }
     };
     if let Some(c) = st.get(id) {
-        return match &c.status {
+        return match &c.status() {
             Status::Active => "in force".into(),
             Status::Proposed { needs } => format!("still waiting — needs {needs}"),
             Status::Refused { by, why, .. } => {
@@ -124,10 +124,10 @@ pub fn outcome(st: &Canon, id: &ActId) -> String {
             Status::Retracted { .. } => "retracted".into(),
         };
     }
-    if let Some(r) = st.ratifications.iter().find(|r| r.act == *id) {
+    if let Some(r) = st.ratifications().iter().find(|r| r.act == *id) {
         return verdict(&r.verdict, "in force: this is how the room decides now");
     }
-    if let Some(r) = st.retractions.iter().find(|r| r.act == *id) {
+    if let Some(r) = st.retractions().iter().find(|r| r.act == *id) {
         return verdict(&r.verdict, "retracted");
     }
     "no longer in this canon".into()
@@ -139,7 +139,7 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
     let mut items = Vec::new();
     let text_of = |id: &ActId| -> String {
         st.get(id)
-            .map(|c| c.text.clone())
+            .map(|c| c.text().to_string())
             .or_else(|| st.question(id).map(|q| format!("the question: {}", q.text)))
             .unwrap_or_else(|| "(not in this canon)".into())
     };
@@ -155,30 +155,34 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
             })
             .unwrap_or_default()
     };
-    for c in &st.commitments {
-        let Status::Proposed { needs } = &c.status else {
+    for c in st.commitments() {
+        let Status::Proposed { needs } = &c.status() else {
             continue;
         };
         items.push(Item {
-            id: c.id.clone(),
-            kind: if c.replaces.is_empty() {
+            id: c.id().clone(),
+            kind: if c.replaces().is_empty() {
                 Kind::Rule
             } else {
                 Kind::Change
             },
-            text: c.text.clone(),
-            by: c.actor.clone(),
-            at: c.asserted_at,
-            scope: st.scope_of(&c.id).map(|s| s.as_str().to_string()),
-            source: c.source.clone(),
-            replaces: c.replaces.iter().map(|o| (o.clone(), text_of(o))).collect(),
-            because: rationale(&c.id),
+            text: c.text().to_string(),
+            by: c.actor().to_string(),
+            at: c.asserted_at(),
+            scope: st.scope_of(c.id()).map(|s| s.as_str().to_string()),
+            source: c.source().map(str::to_string),
+            replaces: c
+                .replaces()
+                .iter()
+                .map(|o| (o.clone(), text_of(o)))
+                .collect(),
+            because: rationale(c.id()),
             needs: needs.clone(),
             yours: false,
         });
     }
-    for r in &st.retractions {
-        let Verdict::Proposed { needs } = &r.verdict else {
+    for r in st.retractions() {
+        let Verdict::Proposed { needs, .. } = &r.verdict else {
             continue;
         };
         items.push(Item {
@@ -195,8 +199,8 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
             yours: false,
         });
     }
-    for r in &st.ratifications {
-        let Verdict::Proposed { needs } = &r.verdict else {
+    for r in st.ratifications() {
+        let Verdict::Proposed { needs, .. } = &r.verdict else {
             continue;
         };
         items.push(Item {
@@ -216,7 +220,8 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
 
     // The fold, asked. Signatures are set aside first: what does not count
     // already does not, and a hypothetical position cannot be signed.
-    let out: std::collections::BTreeSet<&ActId> = st.unverified.iter().map(|(id, _)| id).collect();
+    let out: std::collections::BTreeSet<&ActId> =
+        st.unverified().iter().map(|(id, _)| id).collect();
     let base: Vec<Act> = log
         .acts()
         .iter()
@@ -224,7 +229,7 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
         .cloned()
         .collect();
     let decided: std::collections::BTreeSet<&str> = st
-        .positions
+        .positions()
         .iter()
         .filter(|p| p.by == actor)
         .map(|p| p.about.as_str())
@@ -382,7 +387,7 @@ impl Prompt for Terminal {
 /// somebody deciding as you is `canon identify`. `--json` reads and decides
 /// nothing, so it is not behind this door.
 pub fn door(terminal: bool, actor: &str, from: &str) -> Result<(), String> {
-    if !actor.starts_with("human:") {
+    if canon_core::Person::of(actor).is_none() {
         return Err(format!(
             "`canon review` decides as a person, and {actor} (from {from}) is not one; \
              `canon review --json` lists what is waiting"
@@ -556,7 +561,7 @@ fn walk(
     let now = store::now();
     let st = log.derive_at(now);
     let answered: std::collections::BTreeSet<&str> = st
-        .positions
+        .positions()
         .iter()
         .filter(|p| p.by == actor)
         .map(|p| p.about.as_str())
