@@ -22,8 +22,31 @@ impl Drop for Page {
 fn exchange(port: u16, request: &str) -> String {
     let mut s = TcpStream::connect(("127.0.0.1", port)).unwrap();
     s.write_all(request.as_bytes()).unwrap();
+    // HTTP completion is Content-Length, not a clean TCP EOF. Linux can reset
+    // a closing socket after a complete response; incomplete bodies still fail.
+    let mut s = BufReader::new(s);
     let mut out = String::new();
-    s.read_to_string(&mut out).unwrap();
+    loop {
+        let mut line = String::new();
+        assert!(
+            s.read_line(&mut line).unwrap() > 0,
+            "incomplete headers for {request}"
+        );
+        out.push_str(&line);
+        if line == "\r\n" {
+            break;
+        }
+    }
+    let length: usize = out
+        .lines()
+        .find_map(|l| l.strip_prefix("Content-Length: "))
+        .unwrap()
+        .parse()
+        .unwrap();
+    let mut body = vec![0; length];
+    s.read_exact(&mut body)
+        .unwrap_or_else(|e| panic!("incomplete response for {request}: {out}: {e}"));
+    out.push_str(std::str::from_utf8(&body).unwrap());
     out
 }
 
@@ -258,13 +281,18 @@ fn an_empty_launch_directory_reaches_setup_and_founds_the_same_record_as_init() 
             .status
             .success());
         let read = |dir: &std::path::Path| {
-            canon_core::Log::parse(&std::fs::read_to_string(dir.join(".canon/acts.jsonl")).unwrap())
-                .unwrap()
+            let raw = std::fs::read_to_string(dir.join(".canon/acts.jsonl")).unwrap();
+            canon_core::Log::parse(&raw).unwrap();
+            // Compare append order: canonical ID order can change when the
+            // browser and CLI creations land in different Unix seconds.
+            raw.lines()
+                .map(|l| serde_json::from_str::<canon_core::Act>(l).unwrap())
+                .collect::<Vec<_>>()
         };
         let a = read(&browser);
         let b = read(&terminal);
-        assert_eq!(a.acts().len(), b.acts().len());
-        for (a, b) in a.acts().iter().zip(b.acts()) {
+        assert_eq!(a.len(), b.len());
+        for (a, b) in a.iter().zip(&b) {
             assert_eq!(a.kind, b.kind);
             assert_eq!(a.actor, b.actor);
             assert_eq!(a.v, b.v);
