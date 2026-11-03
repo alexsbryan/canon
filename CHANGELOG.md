@@ -7,6 +7,8 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.6.0 — 2026-11-02
+
 ### Before you upgrade
 
 - canon-core adds the opt-in `Effect` / read-only `Projection` API. It applies
