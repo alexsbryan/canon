@@ -39,7 +39,7 @@ use std::process::Command;
 
 use serde::Serialize;
 
-use crate::cmds::{fail, flag, has, positionals};
+use crate::cmds::{fail, flag, has, or_fail, positionals};
 use crate::store;
 
 /// A day. The default slack: an offline append that lands a few hours after
@@ -321,20 +321,14 @@ fn located() -> Result<(PathBuf, Repo), String> {
 /// that knows what a pull request is against. `--gate` exits 1 on any
 /// finding in either mode.
 pub fn witness(args: &[String]) -> i32 {
-    let (dir, repo) = match located() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (dir, repo) = or_fail!(located());
     if !tracked(&repo) {
         return fail(format!(
             "{} is not tracked by git; commit it before asking git to witness it",
             repo.ledger
         ));
     }
-    let slack = match slack_from(args) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
+    let slack = or_fail!(slack_from(args));
     let gate = has(args, "--gate");
     if let Some(base) = flag(args, "--base") {
         let parent = show(&repo, base).unwrap_or_default();
@@ -377,10 +371,7 @@ pub fn witness(args: &[String]) -> i32 {
         return i32::from(gate && !findings.is_empty());
     }
 
-    let h = match history(&repo, slack) {
-        Ok(h) => h,
-        Err(e) => return fail(e),
-    };
+    let h = or_fail!(history(&repo, slack));
     let total: usize = h.commits.iter().map(|(_, f)| f.len()).sum();
     if has(args, "--json") {
         let rows: Vec<serde_json::Value> = h
@@ -563,20 +554,14 @@ fn protection(repo: &Repo) -> Result<Option<bool>, String> {
 }
 
 fn guard_show(args: &[String]) -> i32 {
-    let dir = match crate::cmds::dir() {
-        Ok(d) => d,
-        Err(e) => return fail(e),
-    };
+    let dir = or_fail!(crate::cmds::dir());
     let Some(repo) = repo_for(&dir) else {
         println!(
             "no guard: this canon trusts its log. `canon guard git` if it lives in a repository."
         );
         return 0;
     };
-    let slack = match slack_from(args) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
+    let slack = or_fail!(slack_from(args));
     println!("guard: git, at {}", repo.root.display());
     let yes = |b: bool| if b { "yes" } else { "no " };
     let is_tracked = tracked(&repo);
@@ -623,10 +608,7 @@ fn guard_show(args: &[String]) -> i32 {
 }
 
 fn guard_git(args: &[String]) -> i32 {
-    let (_, repo) = match located() {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+    let (_, repo) = or_fail!(located());
     if !tracked(&repo) {
         return fail(format!(
             "{} is not tracked by git; commit it first, then git can witness it",

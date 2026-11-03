@@ -13,6 +13,7 @@
 //! Pairs already ruled on are filtered out through [`Canon::is_settled`], so
 //! a decision someone already made is never re-served as news.
 
+use crate::cmds::or_fail;
 use canon_core::{ActId, Canon, Commitment, Conflict, Disposition};
 use serde::{Deserialize, Serialize};
 
@@ -498,10 +499,7 @@ pub fn render(canon: &Canon, open: &[Conflict], settled: usize) -> String {
 }
 
 pub fn run(args: &[String]) -> i32 {
-    let (dir, _, canon) = match crate::cmds::load() {
-        Ok(v) => v,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let (dir, _, canon) = or_fail!(crate::cmds::load());
     let live: Vec<&Commitment> = canon.active().collect();
     let json = crate::cmds::has(args, "--json");
     if live.len() < 2 {

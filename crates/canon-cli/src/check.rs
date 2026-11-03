@@ -14,6 +14,7 @@
 //! on someone's inner life would do harm the codebase profile cannot, and
 //! that is enforced here by [`exit_code`] and pinned by a test.
 
+use crate::cmds::or_fail;
 use canon_core::{
     Attributes, Authority, Canon, Commitment, Decision, Disposition, Outcome, Policy, Position,
     Pull, Scope, Standing, Status,
@@ -560,11 +561,8 @@ pub fn run(args: &[String]) -> i32 {
     else {
         return crate::cmds::fail("usage: canon check \"<proposal>\"");
     };
-    let (dir, _, canon) = crate::cmds::or_fail!(crate::cmds::load());
-    let profile = match Profile::load(&dir) {
-        Ok(p) => p,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let (dir, _, canon) = or_fail!(crate::cmds::load());
+    let profile = or_fail!(Profile::load(&dir));
     if canon.active().next().is_none() {
         eprintln!(
             "this canon has no live {} — nothing to check against.\n  canon add \"<the first one>\"",
@@ -573,10 +571,7 @@ pub fn run(args: &[String]) -> i32 {
         return 2;
     }
     // Before the endpoint, not after: a mistyped scope should cost nothing.
-    let attrs = match attributes(args, proposal) {
-        Ok(a) => a,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let attrs = or_fail!(attributes(args, proposal));
     let client = match model::client_for(&dir, crate::cmds::has(args, "--allow-remote")) {
         Ok(c) => c,
         Err(e) => return model::report(e),

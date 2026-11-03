@@ -34,7 +34,7 @@ use canon_core::{
 };
 use serde_json::{json, Map, Value};
 
-use crate::cmds::{fail, flag, has, positionals};
+use crate::cmds::{fail, flag, has, or_fail, positionals};
 
 // ── the seed dialect ────────────────────────────────────────
 
@@ -1085,10 +1085,7 @@ pub fn run(args: &[String]) -> i32 {
         std::fs::read_to_string(dir.join(name))
             .map_err(|e| format!("reading {}: {e}", dir.join(name).display()))
     };
-    let seed = match crate::store::raw(dir) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
+    let seed = or_fail!(crate::store::raw(dir));
 
     // Where the questions come from, in order: the file you named, the one
     // sitting beside the acts, or — the case that decides whether anyone
@@ -1101,10 +1098,7 @@ pub fn run(args: &[String]) -> i32 {
         None => match read("scenario.jsonl") {
             Ok(s) => (s, None),
             Err(_) => {
-                let (acts, _) = match load_acts(&seed) {
-                    Ok(v) => v,
-                    Err(e) => return fail(e),
-                };
+                let (acts, _) = or_fail!(load_acts(&seed));
                 let last = acts.iter().map(|a| a.ts_unix).max().unwrap_or(0);
                 let now = crate::store::now().max(last);
                 let canon = Log::from_acts(acts).derive_at(now);
@@ -1159,10 +1153,12 @@ pub fn run(args: &[String]) -> i32 {
         },
     };
     let started = std::time::Instant::now();
-    let replay = match run_scenario(&seed, &scenario, forced.clone(), forced_ratify.clone()) {
-        Ok(r) => r,
-        Err(e) => return fail(e),
-    };
+    let replay = or_fail!(run_scenario(
+        &seed,
+        &scenario,
+        forced.clone(),
+        forced_ratify.clone()
+    ));
 
     // The counterfactual, decided twice. A forced run on its own can say what
     // happened under the other rule; it takes the adopted rule's own pass to

@@ -31,7 +31,7 @@ use std::path::Path;
 
 use canon_core::{ActId, ActKind, Canon, Commitment, Snapshot, SnapshotCommitment, Status};
 
-use crate::cmds::fail;
+use crate::cmds::{fail, or_fail};
 use crate::model;
 use crate::rebase::{self, Base};
 
@@ -61,10 +61,7 @@ pub(super) fn onto(
     let allow_remote = crate::cmds::has(args, "--allow-remote");
     let carry = crate::cmds::flags(args, "--carry");
     let why = crate::cmds::flag(args, "-m").unwrap_or_default();
-    let seed = match super::load_seed(dir) {
-        Ok(s) => s,
-        Err(e) => return fail(e),
-    };
+    let seed = or_fail!(super::load_seed(dir));
     if target.lineage == seed.lineage {
         return fail(format!(
             "this canon already descends from {} — `canon upgrade` takes a newer generation \
@@ -72,10 +69,7 @@ pub(super) fn onto(
             seed.lineage
         ));
     }
-    let carried = match super::load_carried(dir) {
-        Ok(c) => c,
-        Err(e) => return fail(e),
-    };
+    let carried = or_fail!(super::load_carried(dir));
     let d = canon_core::Divergence::compute_carried(&seed, canon, &carried);
     let base = Base {
         snapshot: target,
@@ -105,10 +99,7 @@ pub(super) fn onto(
         // clean move from one that would refuse.
         return i32::from(!stops.is_empty());
     }
-    let carries = match carried_anyway(&stops, &carry, why) {
-        Ok(c) => c,
-        Err(e) => return fail(e),
-    };
+    let carries = or_fail!(carried_anyway(&stops, &carry, why));
     let left: Vec<&rebase::Obstacle> = stops
         .iter()
         .filter(|o| !carries.iter().any(|(l, _)| o.local.as_ref() == Some(l)))
@@ -143,10 +134,7 @@ pub(super) fn onto(
         ));
     }
 
-    let plan = match plan(&seed, canon, &carried, target, target_log) {
-        Ok(p) => p,
-        Err(e) => return fail(e),
-    };
+    let plan = or_fail!(plan(&seed, canon, &carried, target, target_log));
     // **The new `adopt` must sort after the old one.** The fold reads
     // ancestry from the last `adopt` in `(ts_unix, id)` order, so a move in
     // the same second as the adoption it replaces could sort first, by id,

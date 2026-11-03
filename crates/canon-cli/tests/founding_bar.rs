@@ -410,9 +410,76 @@ fn a_bare_name_is_refused_before_it_is_written_and_who_names_the_refused_acts() 
     assert!(out.contains("NOT APPLIED"), "{out}");
     let (_, who) = canon_as(&canon, "human:june", &["who"]);
     assert!(
-        who.contains("change(s) to who decides came from someone not in charge"),
+        who.contains("human:sam asks to be put in charge of house"),
         "{who}"
     );
+}
+
+#[test]
+fn a_give_from_someone_not_in_charge_is_a_request_the_holder_can_approve() {
+    // xenia row 17: the student's `give` was written, refused, and reached
+    // nobody; `approve` on its id said "no proposal matching".
+    let canon = scratch("request").join(".canon");
+    assert_eq!(
+        canon_as(&canon, "human:mira", &["init", "--profile", "house"]).0,
+        0
+    );
+    let (_, who) = canon_as(&canon, "human:mira", &["who"]);
+    assert!(
+        who.contains("give the others a say: canon give human:<them> house"),
+        "{who}"
+    );
+    tick();
+    let (code, out) = canon_as(&canon, "human:priya", &["give", "human:priya", "house"]);
+    assert_eq!(code, 1, "{out}");
+    let ask = id_of(&out);
+    assert!(
+        flat(&out).contains(&format!(
+            "on the record as {ask} — a request to human:mira; they say yes with canon approve {ask}"
+        )),
+        "{out}"
+    );
+    for verb in [&["list"][..], &["who"][..]] {
+        let (_, out) = canon_as(&canon, "human:mira", verb);
+        assert!(
+            out.contains(&format!(
+                "human:priya asks to be put in charge of house — `canon approve {ask}`"
+            )),
+            "{verb:?}: {out}"
+        );
+    }
+    let acts = || {
+        std::fs::read_to_string(canon.join("acts.jsonl"))
+            .unwrap()
+            .lines()
+            .count()
+    };
+    let before = acts();
+    // Neither a bystander's yes nor anyone's no writes a thing.
+    let (code, out) = canon_as(&canon, "human:june", &["approve", &ask]);
+    assert_eq!(code, 2, "{out}");
+    assert!(
+        out.contains("only someone in charge of it can say yes: human:mira"),
+        "{out}"
+    );
+    let (code, out) = canon_as(&canon, "human:mira", &["object", &ask, "-m", "not yet"]);
+    assert_eq!(code, 2, "{out}");
+    assert!(out.contains("nothing was written"), "{out}");
+    assert_eq!(acts(), before);
+    let (code, out) = canon_as(&canon, "human:mira", &["approve", &ask, "-m", "welcome"]);
+    assert_eq!(code, 0, "{out}");
+    assert!(out.contains("human:priya is in charge of house"), "{out}");
+    let (_, who) = canon_as(&canon, "human:mira", &["who"]);
+    assert!(who.contains("human:priya  in charge of house"), "{who}");
+    assert!(!who.contains("asks to be put"), "{who}");
+    assert!(!who.contains("every yes here is theirs alone"), "{who}");
+    let raw = std::fs::read_to_string(canon.join("acts.jsonl")).unwrap();
+    let grant = raw.lines().last().unwrap();
+    assert!(
+        grant.contains(&format!("approves {ask}: welcome")),
+        "{grant}"
+    );
+    assert!(grant.contains("\"actor\":\"human:mira\""), "{grant}");
 }
 
 #[test]
