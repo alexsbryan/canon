@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "adoption": {
+    "charter": "Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule.",
+    "actor": "agent:helper",
+    "cases": [
+      {"id": "pending-repeal", "phase": "pending", "verb": "repeal", "authorized": true, "expect": {"status": "retracted"}},
+      {"id": "adopted-repeal", "phase": "adopted", "verb": "repeal", "authorized": false, "expect": {"status": "active"}},
+      {"id": "pending-undo", "phase": "pending", "verb": "undo", "authorized": true, "expect": {"status": "absent"}},
+      {"id": "adopted-undo", "phase": "adopted", "verb": "undo", "authorized": false, "expect": {"status": "active"}},
+      {"id": "stranger-repeal", "phase": "adopted", "verb": "repeal", "actor": "agent:stranger", "authorized": false, "expect": {"status": "active"}}
+    ]
+  },
+  "courtyard": {
+    "charter": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.",
+    "actor": "human:Mira",
+    "cases": [
+      {"id": "local", "verb": "approve", "scope": "house_a", "authorized": true, "expect": {"status": "active"}},
+      {"id": "one-house", "verb": "approve", "scope": "courtyard", "authorized": false, "expect": {"status": "proposed", "original_status": "active"}},
+      {"id": "both-houses", "verb": "approve", "scope": "courtyard", "sam_approved": true, "authorized": true, "expect": {"status": "active", "original_status": "superseded"}},
+      {"id": "remove-delegate", "verb": "withdraw", "authorized": false, "expect": {"sam_holds": true}},
+      {"id": "move-rule", "verb": "area", "authorized": false, "expect": {"scope": "courtyard", "status": "active"}}
+    ]
+  }
+}

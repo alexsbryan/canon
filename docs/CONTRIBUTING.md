@@ -98,6 +98,10 @@ it's short and it explains why each half is there.
 
 ## The development loop
 
+For the next browser releases, follow the [UI implementation plan](./UI_PLAN.md).
+It gives the first four PRs, acceptance checks, and scope cuts; the linked
+research report holds the architectural background.
+
 The gate is local and it is fast enough that there's no reason to skip it.
 
 ```sh

@@ -116,15 +116,6 @@ fn a_person_can_identify_and_then_write_signed_from_the_page() {
             .env("GIT_CONFIG_GLOBAL", "/dev/null")
             .env("GIT_CONFIG_NOSYSTEM", "1");
     };
-    let mut init = Command::new(env!("CARGO_BIN_EXE_canon"));
-    env(&mut init);
-    assert!(init
-        .args(["init", "--profile", "house", "--open"])
-        .output()
-        .unwrap()
-        .status
-        .success());
-
     let mut ui = Command::new(env!("CARGO_BIN_EXE_canon"));
     env(&mut ui);
     let mut child = ui
@@ -170,6 +161,8 @@ fn a_person_can_identify_and_then_write_signed_from_the_page() {
         )
     };
 
+    assert!(get("/").contains("Create a canon"));
+    assert!(post("/setup", &format!("token={token}&profile=house")).starts_with("HTTP/1.1 303"));
     let offered = get("/identify");
     let fingerprint = offered
         .split("value=\"SHA256:")
@@ -194,12 +187,95 @@ fn a_person_can_identify_and_then_write_signed_from_the_page() {
     );
     assert!(wrote.starts_with("HTTP/1.1 303"), "{wrote}");
     let record = std::fs::read_to_string(root.join(".canon/acts.jsonl")).unwrap();
-    // The founding act `init` wrote, then the key and the silence. The
-    // founding act predates the key, so it is unsigned and counts through
-    // the binding's `prior`; everything after it is signed.
-    assert_eq!(record.lines().count(), 3, "{record}");
+    // The procedure and founding seat predate identification. The key and
+    // subsequent silence are signed, including after browser-first setup.
+    assert_eq!(record.lines().count(), 4, "{record}");
     assert!(
-        record.lines().skip(1).all(|l| l.contains("\"sig\":")),
+        record.lines().skip(2).all(|l| l.contains("\"sig\":")),
         "both signed: {record}"
     );
+}
+
+#[test]
+fn an_empty_launch_directory_reaches_setup_and_founds_the_same_record_as_init() {
+    let root = std::env::temp_dir().join(format!("canon-ui-first-run-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(root.join("home")).unwrap();
+    for profile in ["personal", "house", "code"] {
+        let browser = root.join(profile).join("browser");
+        let terminal = root.join(profile).join("terminal");
+        std::fs::create_dir_all(&browser).unwrap();
+        std::fs::create_dir_all(&terminal).unwrap();
+        let command = || {
+            let mut c = Command::new(env!("CARGO_BIN_EXE_canon"));
+            c.env_remove("CANON_DIR")
+                .env("HOME", root.join("home"))
+                .env("CANON_ACTOR", "human:alex");
+            c
+        };
+        let mut child = command()
+            .arg("ui")
+            .current_dir(&browser)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let stdout = child.stdout.take().unwrap();
+        let _page = Page(child);
+        let url = BufReader::new(stdout)
+            .lines()
+            .map_while(Result::ok)
+            .find_map(|l| l.trim().strip_prefix("http://").map(str::to_string))
+            .expect("setup prints a browser URL");
+        let (host, rest) = url.split_once('/').unwrap();
+        let port: u16 = host.strip_prefix("127.0.0.1:").unwrap().parse().unwrap();
+        let token = rest.strip_prefix("?t=").unwrap();
+        let first = exchange(
+            port,
+            &format!("GET /{rest} HTTP/1.1\r\nHost: {host}\r\n\r\n"),
+        );
+        let cookie = first
+            .lines()
+            .find_map(|l| l.strip_prefix("Set-Cookie: "))
+            .unwrap()
+            .split(';')
+            .next()
+            .unwrap();
+        let setup = exchange(
+            port,
+            &format!("GET / HTTP/1.1\r\nHost: {host}\r\nCookie: {cookie}\r\n\r\n"),
+        );
+        assert!(setup.contains("Create a canon"));
+        assert!(!browser.join(".canon").exists(), "GET never initializes");
+        let body = format!("token={token}&profile={profile}");
+        let made = exchange(port, &format!("POST /setup HTTP/1.1\r\nHost: {host}\r\nCookie: {cookie}\r\nOrigin: http://{host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {}\r\n\r\n{body}", body.len()));
+        assert!(made.starts_with("HTTP/1.1 303"), "{made}");
+        assert!(command()
+            .args(["init", "--profile", profile])
+            .current_dir(&terminal)
+            .output()
+            .unwrap()
+            .status
+            .success());
+        let read = |dir: &std::path::Path| {
+            canon_core::Log::parse(&std::fs::read_to_string(dir.join(".canon/acts.jsonl")).unwrap())
+                .unwrap()
+        };
+        let a = read(&browser);
+        let b = read(&terminal);
+        assert_eq!(a.acts().len(), b.acts().len());
+        for (a, b) in a.acts().iter().zip(b.acts()) {
+            assert_eq!(a.kind, b.kind);
+            assert_eq!(a.actor, b.actor);
+            assert_eq!(a.v, b.v);
+            assert_eq!(
+                a.id,
+                canon_core::Act::new(a.kind.clone(), a.ts_unix, &a.actor).id
+            );
+        }
+        assert_eq!(
+            std::fs::read(browser.join(".canon/profile")).unwrap(),
+            std::fs::read(terminal.join(".canon/profile")).unwrap()
+        );
+    }
 }

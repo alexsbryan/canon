@@ -18,6 +18,8 @@ fn ctx(name: &str, log: &canon_core::Log) -> Ctx {
         actor: "human:alex".into(),
         token: TOKEN.into(),
         port: PORT,
+        draft: None,
+        can_create: Arc::new(AtomicBool::new(log.acts().is_empty())),
     }
 }
 
@@ -39,6 +41,10 @@ fn get(path: &str, cookie: bool) -> Request {
 fn post(body: &str, origin: Option<&str>) -> Request {
     let mut r = get("/decide", true);
     r.method = "POST".into();
+    r.headers.push((
+        "Content-Type".into(),
+        "application/x-www-form-urlencoded".into(),
+    ));
     if let Some(o) = origin {
         r.headers.push(("Origin".into(), o.into()));
     }
@@ -128,6 +134,10 @@ fn approving_writes_a_position_and_says_where_it_stands() {
     );
     let page = respond(&get(&format!("/?done={}", quiet.as_str()), true), &c).body;
     assert!(page.contains("is in force"), "{page}");
+    let before = acts(&c);
+    let stale = respond(&post(&body, Some(&format!("http://127.0.0.1:{PORT}"))), &c);
+    assert!(stale.body.contains("not waiting on you"));
+    assert_eq!(acts(&c), before, "a stale decision is not repeated");
 }
 
 #[test]
@@ -219,6 +229,7 @@ fn every_write_goes_through_the_same_door() {
     let c = ctx("door", &log);
     let before = acts(&c);
     for path in [
+        "/setup",
         "/propose",
         "/replace",
         "/retract",
@@ -403,4 +414,267 @@ fn a_form_from_the_page_keeps_its_origin_and_a_null_one_is_refused() {
     let c = ctx("null-origin", &log);
     let body = format!("token={TOKEN}&id={}&decision=approve", quiet.as_str());
     assert_eq!(respond(&post(&body, Some("null")), &c).status, 403);
+}
+
+#[test]
+fn setup_is_deliberate_and_uses_the_launch_target_and_actor() {
+    let c = ctx("setup", &Log::from_acts(vec![]));
+    std::fs::remove_dir_all(&c.dir).unwrap();
+    let page = respond(&get("/", true), &c);
+    assert_eq!(page.status, 200);
+    assert!(page.body.contains("Create a canon"), "{}", page.body);
+    assert!(page.body.contains("human:alex") && page.body.contains("house"));
+    assert!(!c.dir.exists(), "looking at setup must write nothing");
+    assert_eq!(respond(&at("/setup", "profile=house"), &c).status, 403);
+    let invalid = respond(&at("/setup", &format!("token={TOKEN}&profile=wrong")), &c);
+    assert_eq!(invalid.status, 422);
+    assert!(!c.dir.exists());
+    let body = format!("token={TOKEN}&profile=house&path=/ignored&actor=human:other");
+    assert_eq!(respond(&at("/setup", &body), &c).status, 303);
+    let (log, st) = load(&c).unwrap();
+    assert_eq!(log.acts().len(), 2);
+    assert!(log.acts().iter().all(|a| a.actor == "human:alex"));
+    assert_eq!(st.grants()[0].scope.as_str(), "house");
+    assert_eq!(st.grants()[0].actor, "human:alex");
+    assert_eq!(
+        crate::profile::Profile::load(&c.dir).unwrap(),
+        crate::profile::Profile::House
+    );
+    let before = acts(&c);
+    assert_ne!(respond(&at("/setup", &body), &c).status, 303);
+    assert_eq!(
+        acts(&c),
+        before,
+        "a repeated setup must not re-found the record"
+    );
+    assert!(respond(&get("/", true), &c).body.contains("Propose a rule"));
+    std::fs::remove_file(store::file(&c.dir)).unwrap();
+    assert_eq!(
+        respond(&get("/", true), &c).status,
+        503,
+        "a lost record is not a fresh setup"
+    );
+}
+
+#[test]
+fn history_opens_governance_acts_and_read_failure_is_not_an_empty_queue() {
+    let (log, quiet, _) = crate::review::tests::house();
+    let c = ctx("all-history", &log);
+    let grant = &log.acts()[0].id;
+    let page = respond(&get(&format!("/why/{grant}"), true), &c);
+    assert_eq!(page.status, 200, "{}", page.body);
+    std::fs::write(store::file(&c.dir), "broken record\n").unwrap();
+    assert_eq!(respond(&get("/", true), &c).status, 503);
+    let before = acts(&c);
+    let response = respond(
+        &at(
+            "/decide",
+            &format!("token={TOKEN}&id={quiet}&decision=approve"),
+        ),
+        &c,
+    );
+    assert_eq!(response.status, 503);
+    assert!(!response.body.contains("not waiting on you"));
+    assert_eq!(acts(&c), before);
+}
+
+#[test]
+fn invalid_forms_retain_their_escaped_values_in_the_original_form() {
+    let (log, _, _) = crate::review::tests::house();
+    let c = ctx("retain", &log);
+    let before = acts(&c);
+    let response = respond(
+        &at(
+            "/propose",
+            &format!("token={TOKEN}&text=%3Cscript%3Ekeep+me%3C%2Fscript%3E&scope=wrong..room"),
+        ),
+        &c,
+    );
+    assert!(
+        response
+            .body
+            .contains("&lt;script&gt;keep me&lt;/script&gt;</textarea>"),
+        "{}",
+        response.body
+    );
+    assert!(response.body.contains("value=\"wrong..room\""));
+    assert!(response.body.contains("<details class=\"act\" open>"));
+    assert!(!response.body.contains("<script>"));
+    assert_eq!(acts(&c), before);
+}
+
+#[test]
+fn a_pending_policy_can_be_read_and_decided_from_the_page() {
+    let (log, _, _) = crate::review::tests::house();
+    let seat = canon_core::Act::new(
+        ActKind::Grant {
+            holder: "human:sam".into(),
+            scope: canon_core::Scope::new("house").unwrap(),
+            horizon: None,
+            rationale: String::new(),
+        },
+        100,
+        "human:alex",
+    );
+    let rule = canon_core::Act::new(
+        ActKind::Ratification {
+            text: "Both people agree to changes".into(),
+            rule: canon_core::Ratify::Joint {
+                holders: vec!["human:alex".into(), "human:sam".into()],
+            },
+            scope: Some(canon_core::Scope::new("house").unwrap()),
+            governs: Some(canon_core::Governs::All),
+            personal: None,
+        },
+        300,
+        "human:alex",
+    );
+    let policy = canon_core::Act::new(
+        ActKind::Policy {
+            text: "Decide disagreements in the smallest affected room".into(),
+            rule: canon_core::Rule::Subsidiarity,
+            scope: Some(canon_core::Scope::new("house").unwrap()),
+        },
+        400,
+        "human:sam",
+    );
+    let log = Log::from_acts([log.acts().to_vec(), vec![seat, rule, policy.clone()]].concat());
+    let c = ctx("policy", &log);
+    let page = respond(&get("/", true), &c);
+    assert!(page.body.contains(&policy.id.to_string()), "{}", page.body);
+    assert!(page.body.contains("Decide disagreements"));
+    let before = log.acts().len();
+    let response = respond(
+        &at(
+            "/decide",
+            &format!("token={TOKEN}&id={}&decision=approve", policy.id),
+        ),
+        &c,
+    );
+    assert_eq!(response.status, 303, "{}", response.body);
+    let (after, st) = load(&c).unwrap();
+    assert_eq!(after.acts().len(), before + 1);
+    assert!(st.policies().iter().any(|p| p.act == policy.id));
+    assert!(review::outcome(&st, &policy.id).starts_with("in force"));
+    let receipt = respond(&get(&format!("/?done={}", policy.id), true), &c);
+    assert!(receipt
+        .body
+        .contains("Decide disagreements in the smallest affected room"));
+}
+
+#[test]
+fn partial_writes_and_unread_outcomes_are_not_reported_as_unwritten_or_applied() {
+    let (log, quiet, _) = crate::review::tests::house();
+    let c = ctx("partial", &log);
+    let _reset = store::faults::after_appends(1);
+    let r = respond(
+        &at(
+            "/propose",
+            &format!("token={TOKEN}&text=Keep+my+proposal&scope=house"),
+        ),
+        &c,
+    );
+    let after = store::read(&c.dir).unwrap();
+    let partial = after
+        .acts()
+        .iter()
+        .find(|a| matches!(&a.kind, ActKind::Assert { text, .. } if text == "Keep my proposal"))
+        .unwrap();
+    assert_eq!(after.acts().len(), log.acts().len() + 1);
+    assert!(r.body.contains("some entries may have been recorded"));
+    assert!(
+        r.body.contains(&format!("href=\"/why/{}\"", partial.id)),
+        "{}",
+        r.body
+    );
+    assert!(!r.body.contains("Nothing was written"));
+    assert!(r.body.contains("Keep my proposal</textarea>"));
+    let c = ctx("unread-outcome", &log);
+    let _reset = store::faults::read_after_write();
+    let r = respond(
+        &at(
+            "/decide",
+            &format!("token={TOKEN}&id={quiet}&decision=object&because=Keep+my+reason"),
+        ),
+        &c,
+    );
+    assert!(
+        r.body.to_lowercase().contains("injected read failure"),
+        "{}",
+        r.body.split("</style>").last().unwrap()
+    );
+    assert!(!r.body.contains("Nothing was written"));
+    assert!(r.body.contains("Keep my reason"));
+    std::fs::write(store::file(&c.dir), "broken\n").unwrap();
+    assert!(matches!(
+        crate::cmds::took(&c.dir, &quiet),
+        crate::cmds::Took::Unknown(_)
+    ));
+}
+
+#[test]
+fn a_failed_founding_does_not_publish_an_empty_usable_record() {
+    let c = ctx("failed-setup", &Log::from_acts(vec![]));
+    std::fs::remove_file(store::file(&c.dir)).unwrap();
+    let _reset = store::faults::after_appends(1);
+    let response = respond(&at("/setup", &format!("token={TOKEN}&profile=house")), &c);
+    assert_eq!(response.status, 422);
+    assert!(!store::exists(&c.dir));
+    assert!(!c.dir.join(".initializing").exists());
+    assert_eq!(
+        respond(&at("/setup", &format!("token={TOKEN}&profile=house")), &c).status,
+        303
+    );
+    assert_eq!(load(&c).unwrap().0.acts().len(), 2);
+}
+
+#[test]
+fn malformed_form_framing_and_nonforms_are_refused_before_writing() {
+    for extra in [
+        "Content-Length: 80",
+        "Content-Length: wrong",
+        "Content-Length: 1\r\nContent-Length: 2",
+        "Transfer-Encoding: chunked",
+        "",
+    ] {
+        let wire = format!("POST /setup HTTP/1.1\r\nHost: 127.0.0.1:{PORT}\r\n{extra}\r\n\r\nx");
+        assert!(read_request(&mut wire.as_bytes()).is_err(), "{extra}");
+    }
+    let (log, quiet, _) = crate::review::tests::house();
+    let c = ctx("form-type", &log);
+    let mut r = at(
+        "/decide",
+        &format!("token={TOKEN}&id={quiet}&decision=approve"),
+    );
+    r.headers.retain(|(k, _)| k != "Content-Type");
+    r.headers.push(("Content-Type".into(), "text/plain".into()));
+    let before = acts(&c);
+    assert_eq!(respond(&r, &c).status, 415);
+    assert_eq!(acts(&c), before);
+}
+
+#[test]
+fn an_agent_founder_does_not_gain_a_seat_and_setup_cannot_replace_a_damaged_record() {
+    let mut c = ctx("agent-setup", &Log::from_acts(vec![]));
+    std::fs::remove_file(store::file(&c.dir)).unwrap();
+    c.actor = "agent:helper".into();
+    assert_eq!(
+        respond(&at("/setup", &format!("token={TOKEN}&profile=house")), &c).status,
+        303
+    );
+    let (log, st) = load(&c).unwrap();
+    assert_eq!(log.acts().len(), 1);
+    assert!(st.grants().is_empty());
+    std::fs::write(store::file(&c.dir), "damaged\n").unwrap();
+    let before = acts(&c);
+    assert_eq!(respond(&get("/", true), &c).status, 503);
+    assert_eq!(
+        respond(&at("/setup", &format!("token={TOKEN}&profile=code")), &c).status,
+        409
+    );
+    assert_eq!(acts(&c), before);
+    assert_eq!(
+        crate::profile::Profile::load(&c.dir).unwrap(),
+        crate::profile::Profile::House
+    );
 }

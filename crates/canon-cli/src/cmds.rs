@@ -81,7 +81,7 @@ pub fn load() -> Result<(PathBuf, Log, Canon), String> {
     let log = store::read(&d)?;
     // At the wall clock: a consent window that has run out and standing that
     // has lapsed read as such today, whatever the last act's date was.
-    let st = log.derive_at(store::now());
+    let st = canon_institution::legacy(&log, Some(store::now()));
     Ok((d, log, st))
 }
 
@@ -208,6 +208,8 @@ pub fn report_retraction(r: &canon_core::Retraction) {
 /// How the fold judged a governance act, read back after the write.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Took {
+    /// The write happened, but its outcome could not be read.
+    Unknown(String),
     /// Applied, by somebody who held standing over what it touched.
     Applied,
     /// Applied only because nothing covering the scope predated it. The
@@ -226,8 +228,9 @@ pub enum Took {
 /// typed it should hear which from the same command rather than find it in
 /// `list`.
 pub fn took(d: &Path, id: &ActId) -> Took {
-    let Ok(log) = store::read(d) else {
-        return Took::Applied;
+    let log = match store::read(d) {
+        Ok(log) => log,
+        Err(e) => return Took::Unknown(e),
     };
     let canon = log.derive_at(store::now());
     if let Some((_, why)) = canon.ungoverned().iter().find(|(x, _)| x == id) {
@@ -254,6 +257,10 @@ pub fn took(d: &Path, id: &ActId) -> Took {
 /// headline and then says so. Returns the exit code.
 pub fn announce(t: &Took, id: &ActId, headline: impl FnOnce()) -> i32 {
     match t {
+        Took::Unknown(why) => {
+            eprintln!("on the record as {id}; outcome unknown: {why}");
+            2
+        }
         Took::Refused(why) => {
             println!("{}", crate::wrap::hang("NOT APPLIED: ", why));
             println!("  on the record as {id}; somebody in charge has to do it.");
@@ -332,78 +339,92 @@ pub fn write_as(d: &Path, kind: ActKind, actor: &str) -> Result<Act, String> {
 
 // ── record ──────────────────────────────────────────────────
 
+/// Shared founding behavior. Publish only after both founding acts are written;
+/// a failed setup must not leave an apparently usable, ungoverned ledger.
+pub fn initialize(
+    base: &Path,
+    profile: Profile,
+    founder: &str,
+    plain: bool,
+    open: bool,
+) -> Result<bool, String> {
+    if store::exists(base) {
+        return Err(format!("a canon already exists at {}", base.display()));
+    }
+    std::fs::create_dir_all(base).map_err(|e| e.to_string())?;
+    let staging = base.join(".initializing");
+    std::fs::create_dir(&staging).map_err(|e| {
+        format!(
+            "setup at {} is running or interrupted: {e}",
+            staging.display()
+        )
+    })?;
+    let result = (|| {
+        std::fs::write(staging.join("profile"), format!("{}\n", profile.as_str()))
+            .map_err(|e| e.to_string())?;
+        store::create(&staging)?;
+        // **The batteries, written as the canon's first act.** A change of
+        // policy waits like any other change, and a person's own scope is
+        // theirs. `standing` keeps the founding sitting what it always was; the
+        // knobs bite once the group picks a rule that waits. The act is v4, so
+        // a build from before the knobs cannot open this canon and says so;
+        // `--plain` founds one it can, with neither knob, which is how every
+        // canon before 0.3 began.
+        if !plain {
+            let kind = ActKind::Ratification {
+                text: "Whoever is in charge decides at once. A change to the rulings waits like \
+                   any other change, and a person's own area is theirs."
+                    .to_string(),
+                rule: canon_core::Ratify::Standing,
+                scope: None,
+                governs: Some(canon_core::Governs::All),
+                personal: Some(true),
+            };
+            write_as(&staging, kind, founder)?;
+        }
+        // **The founding grant.** A canon whose founder holds it cannot be
+        // taken by the first person to write in it: the founder's word is the
+        // house's, and everyone else's is a proposal until they hold a scope.
+        // An agent cannot seat itself, so its founding waits for a person;
+        // `--open` is the old shared start, and writes there are unguarded.
+        let granted = if plain || open || canon_core::Person::of(founder).is_none() {
+            false
+        } else {
+            let scope = match canon_core::Scope::new(profile.scope()) {
+                Some(s) => s,
+                None => return Err(format!("`{}` is not an area", profile.scope())),
+            };
+            let kind = ActKind::Grant {
+                holder: founder.to_string(),
+                scope,
+                horizon: None,
+                rationale: format!("founded this canon; {founder} is in charge of it"),
+            };
+            write_as(&staging, kind, founder)?;
+            true
+        };
+        std::fs::rename(staging.join("profile"), base.join("profile"))
+            .map_err(|e| e.to_string())?;
+        store::publish(&staging, base)?;
+        store::ignore_local(base);
+        Ok(granted)
+    })();
+    let _ = std::fs::remove_dir_all(&staging);
+    result
+}
+
 pub fn init(args: &[String]) -> i32 {
-    let profile = match Profile::parse(flag(args, "--profile").unwrap_or("personal")) {
-        Ok(p) => p,
-        Err(e) => return fail(e),
-    };
+    let profile = or_fail!(Profile::parse(
+        flag(args, "--profile").unwrap_or("personal")
+    ));
     let base = match std::env::var("CANON_DIR") {
         Ok(d) => PathBuf::from(d),
-        Err(_) => match std::env::current_dir() {
-            Ok(c) => c.join(store::DIR),
-            Err(e) => return fail(e),
-        },
+        Err(_) => or_fail!(std::env::current_dir()).join(store::DIR),
     };
-    if store::exists(&base) {
-        return fail(format!("a canon already exists at {}", base.display()));
-    }
-    if let Err(e) = std::fs::create_dir_all(&base) {
-        return fail(e);
-    }
-    if let Err(e) = std::fs::write(base.join("profile"), format!("{}\n", profile.as_str())) {
-        return fail(e);
-    }
-    if let Err(e) = store::create(&base) {
-        return fail(e);
-    }
-    store::ignore_local(&base);
-    // **The batteries, written as the canon's first act.** A change of
-    // policy waits like any other change, and a person's own scope is
-    // theirs. `standing` keeps the founding sitting what it always was; the
-    // knobs bite once the group picks a rule that waits. The act is v4, so
-    // a build from before the knobs cannot open this canon and says so;
-    // `--plain` founds one it can, with neither knob, which is how every
-    // canon before 0.3 began.
     let plain = has(args, "--plain");
     let open = has(args, "--open");
-    if !plain {
-        let kind = ActKind::Ratification {
-            text: "Whoever is in charge decides at once. A change to the rulings waits like \
-                   any other change, and a person's own area is theirs."
-                .to_string(),
-            rule: canon_core::Ratify::Standing,
-            scope: None,
-            governs: Some(canon_core::Governs::All),
-            personal: Some(true),
-        };
-        if let Err(e) = write(&base, kind) {
-            return fail(e);
-        }
-    }
-    // **The founding grant.** A canon whose founder holds it cannot be
-    // taken by the first person to write in it: the founder's word is the
-    // house's, and everyone else's is a proposal until they hold a scope.
-    // An agent cannot seat itself, so its founding waits for a person;
-    // `--open` is the old shared start, and writes there are unguarded.
     let founder = store::actor();
-    let granted = if plain || open || canon_core::Person::of(&founder).is_none() {
-        false
-    } else {
-        let scope = match canon_core::Scope::new(profile.scope()) {
-            Some(s) => s,
-            None => return fail(format!("`{}` is not an area", profile.scope())),
-        };
-        let kind = ActKind::Grant {
-            holder: founder.clone(),
-            scope,
-            horizon: None,
-            rationale: format!("founded this canon; {founder} is in charge of it"),
-        };
-        if let Err(e) = write(&base, kind) {
-            return fail(e);
-        }
-        true
-    };
+    let granted = or_fail!(initialize(&base, profile, &founder, plain, open));
     // **The whole tool, in three lines, at the moment somebody needs it.**
     // This is the n+1 explanation: if the next person cannot be handed the
     // thing in two sentences it does not spread, and `canon --help` is
@@ -565,7 +586,8 @@ pub fn propose(
                 scope: s,
             },
             actor,
-        )?;
+        )
+        .map_err(|e| format!("{e}; {} was recorded, but its room was not", act.id))?;
     }
     Ok(act)
 }
@@ -599,7 +621,8 @@ pub fn replace(
                 scope: s,
             },
             actor,
-        )?;
+        )
+        .map_err(|e| format!("{e}; {} was recorded, but its room was not", act.id))?;
     }
     Ok(act)
 }

@@ -61,6 +61,7 @@ export::Divergence  lineage::Divergence
 export::DrawError  draw::DrawError
 export::Drawn  draw::Drawn
 export::Due  horizon::Due
+export::Effect  projection::Effect
 export::FORMAT_VERSION  act::FORMAT_VERSION
 export::Fate  lineage::Fate
 export::Governs  ratify::Governs
@@ -81,6 +82,8 @@ export::Person  person::Person
 export::Policy  policy::Policy
 export::PoolError  allot::PoolError
 export::Position  standing::Position
+export::Projection  projection::Projection
+export::ProjectionError  projection::ProjectionError
 export::Proposal  ratify::Proposal
 export::Pull  standing::Pull
 export::Question  fold::Question
@@ -225,6 +228,7 @@ module::lineage  public module
 module::log  public module
 module::person  public module
 module::policy  public module
+module::projection  public module
 module::ratify  public module
 module::scope  public module
 module::sign  public module
@@ -255,6 +259,25 @@ policy::Rule::impl::Policy
 policy::Rule::prose  fn prose (& self) -> String
 policy::Rule::uses_v4  fn uses_v4 (& self) -> bool
 policy::default_outcome  fn default_outcome (_ : & Standing) -> Outcome
+projection::Effect  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (deny_unknown_fields)] pub struct Effect { pub source : ActId , pub effective_at : i64 , }
+projection::Projection  # [derive (Debug)] pub struct Projection { state : Canon , live : Vec < ActId > , }
+projection::Projection::bindings  fn bindings (& self) -> & [(ActId , Scope)]
+projection::Projection::carried  fn carried (& self) -> & [(ActId , String)]
+projection::Projection::commitments  fn commitments (& self) -> & [Commitment]
+projection::Projection::from_effects  fn from_effects (_ : & Log , _ : & [Effect] , _ : i64) -> Result < Self , ProjectionError >
+projection::Projection::get  fn get (& self , _ : & ActId) -> Option < & Commitment >
+projection::Projection::grants  fn grants (& self) -> & [Grant]
+projection::Projection::holders_at  fn holders_at (& self , _ : Option < & Scope > , _ : i64) -> alloc :: collections :: BTreeSet < & str >
+projection::Projection::impl::Serialize  
+projection::Projection::is_live  fn is_live (& self , _ : & ActId) -> bool
+projection::Projection::policies  fn policies (& self) -> & [crate :: Adopted]
+projection::Projection::procedure_at  fn procedure_at (& self , _ : Option < & Scope > , _ : i64) -> Option < & Ratify >
+projection::Projection::ratifications  fn ratifications (& self) -> & [crate :: AdoptedRatify]
+projection::Projection::ratify_under  fn ratify_under (& self , _ : & Ratify , _ : & Proposal < '_ > , _ : i64) -> Verdict
+projection::Projection::scope_of  fn scope_of (& self , _ : & ActId) -> Option < & Scope >
+projection::ProjectionError  # [derive (Debug , Clone , PartialEq , Eq)] # [non_exhaustive] pub enum ProjectionError { UnknownSource (ActId) , UnverifiedSource (ActId) , DuplicateSource (ActId) , BeforeSource (ActId) , FutureEffect (ActId) , BeforeTarget (ActId) , }
+projection::ProjectionError::impl::core :: error :: Error  
+projection::ProjectionError::impl::core :: fmt :: Display  
 ratify::AdoptedRatify  # [derive (Debug , Clone , PartialEq , Eq , Serialize)] pub struct AdoptedRatify { # [serde (default , skip_serializing_if = "Option::is_none")] pub scope : Option < Scope > , pub rule : Ratify , pub text : String , pub at : i64 , pub actor : String , pub act : ActId , pub verdict : Verdict , pub under : Ratify , # [serde (default , skip_serializing_if = "Option::is_none")] pub governs : Option < Governs > , # [serde (default , skip_serializing_if = "Option::is_none")] pub personal : Option < bool > , }
 ratify::BadBar  # [derive (Debug , Clone , Copy , PartialEq , Eq)] pub enum BadBar { OutOfNothing , Nobody , MoreThanEveryone , }
 ratify::BadBar::impl::core :: fmt :: Display  

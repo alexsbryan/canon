@@ -1,0 +1,402 @@
+{
+  "interpretation": "shared-assent-v2",
+  "boundary": "explicit arrangements, temporal admission",
+  "interpreter_binary_sha256": "791dfcafdaddfafa0ba0ad299941323db0bc0660e5dc85f36511aeb136ffa5f5",
+  "baseline_report_sha256": "811fd6a36c6ec89b0256bd7b876852310e993e8d45c25cf6f0c38a442210f849",
+  "summary": {
+    "holds": 10,
+    "fails": 0,
+    "could_not_judge": 0,
+    "original_controls": 6,
+    "preserved_controls": 6
+  },
+  "results": [
+    {
+      "experiment": "adoption",
+      "case": "pending-repeal",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "retracted"
+      },
+      "observed": {
+        "status": "retracted"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [],
+          "source": "can-db4c4cca9b3b",
+          "status": "admitted"
+        },
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-708765109a78",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "2936f49fed6321249e95192b7440cd87875241e46c925f5a3e5beeaacfb3f88c",
+      "source_sha256": "f20557c2ab31c2feb0985ef808a946753086e8001b2e33d6945f3282e57c6feb"
+    },
+    {
+      "experiment": "adoption",
+      "case": "adopted-repeal",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-eb2f1d1e4c55",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "84029b68cbc847295cf9cc5a63637ef1ce7cbd5ead952b545a55bdf5443c6c22",
+      "source_sha256": "91912b9f73ac712c0278eab1abf86e4e51549de3b96d6bfb8f9e738a3541cfcf"
+    },
+    {
+      "experiment": "adoption",
+      "case": "pending-undo",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "absent"
+      },
+      "observed": {
+        "status": "absent"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [],
+          "source": "can-59fdd69c518f",
+          "status": "admitted"
+        },
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-58071415ddbb",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "bb451971d2fc845ee93e1209cd38fa0397d327ceb3a4140230d5107ebd941f03",
+      "source_sha256": "5258468516d02712c7587f738e473aba4060d5266de692eaa56ebcbfaef4c7bf"
+    },
+    {
+      "experiment": "adoption",
+      "case": "adopted-undo",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-f5c42ebd973a",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "bd058ac5e33b7087fe69e4cd9dd512316d0537429f1b3aa1e88053e7418935b6",
+      "source_sha256": "635acade8c3f63e86796025a0eb2f4a2b3a0124d207d4ecb176a623494520321"
+    },
+    {
+      "experiment": "adoption",
+      "case": "stranger-repeal",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-8d3038ccc30e",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "7715602cf90a4c5dc05574dc3a9f10b2b1ec3e83e63826a08f723e1151faf145",
+      "source_sha256": "a25d97fd3d1a63630b33633ec7d4b597378e7b8e6f0b76d519e7a3caa393161b"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "local",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "standing"
+              },
+              "scope": "house_a",
+              "verdict": {
+                "how": "approved by human:Mira, in charge of house_a",
+                "since": 1793637169,
+                "verdict": "ratified"
+              }
+            }
+          ],
+          "source": "can-a9fe4fe17e50",
+          "status": "admitted"
+        }
+      ],
+      "basis_sha256": "95700db24e4eeecadec7358d5fef8c7caa86329e882fdb3a81aa5e7fa43785bc",
+      "source_sha256": "0e6f19743e30786b98fb43cef6c16a50e0dc3a281f0d35563322f74d08ba4f32"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "one-house",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "proposed",
+        "original_status": "active"
+      },
+      "observed": {
+        "status": "proposed",
+        "original_status": "active"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-6823ca8efabc",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "2cc5928ef7c500410ea17435220d6ee486be43fbf8f251b8068f934951051d92",
+      "source_sha256": "8a39d1d7c8b5a32420d1d1b7ed0d5135c21548f2bf6f940bfc0f9ee35a490411"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "both-houses",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "active",
+        "original_status": "superseded"
+      },
+      "observed": {
+        "status": "active",
+        "original_status": "superseded"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "how": "approved jointly by human:Mira, human:Sam",
+                "since": 1793637169,
+                "verdict": "ratified"
+              }
+            }
+          ],
+          "source": "can-169f752ed1fb",
+          "status": "admitted"
+        }
+      ],
+      "basis_sha256": "2e6ca9bec5f8ce8c20629052becdbc132e02f774f799c7813dd2c5145b8041d2",
+      "source_sha256": "6f9710f7d8fb9502758633b28ac346fb62ea4c51808fd271bf25422d40b200f4"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "remove-delegate",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "sam_holds": true
+      },
+      "observed": {
+        "sam_holds": true
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-b4dff47c0d36",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "689fd18cfdbaee389135417e59e31b36bb75a18c5fdf439d1eed18edc86b99b8",
+      "source_sha256": "55593752cc43cca054e50e66af8737eddd4dc96a14b0e00fcc8d1de5235c849f"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "move-rule",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "scope": "courtyard",
+        "status": "active"
+      },
+      "observed": {
+        "scope": "courtyard",
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v2",
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            },
+            {
+              "rule": {
+                "rule": "standing"
+              },
+              "scope": "house_a",
+              "verdict": {
+                "how": "human:Mira is in charge of house_a",
+                "since": 1793637169,
+                "verdict": "ratified"
+              }
+            }
+          ],
+          "source": "can-22b569d43d78",
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "d694e71af0ee340e187909686bb20feee524d67c97ee41813afcdd688b083edd",
+      "source_sha256": "7aaaf71036d46294df2708d2863638200d2247db6607a6a947c085e08b36be71"
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+[
+ {
+  "key": "adoption · missed · authority · the terminal",
+  "scene": "adoption",
+  "kind": "missed",
+  "hard": true,
+  "screen": "the terminal",
+  "element": "canon repeal can-b77b8f1f2882",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`adoption`: 1 of 1 accounts (Helper run 1)"
+  ],
+  "happened": [
+   "`adoption` run 1, Helper: passed, did the scene, and said they were done. authority “canon repeal can-b77b8f1f2882”: shown none; the oracle fails, cases.json adoption/adopted-repeal: 1793637166322282000-4550: Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule.",
+   "`adoption` run 1, Helper: passed, did the scene, and said they were done. authority “canon undo can-023f780aae07”: shown none; the oracle fails, cases.json adoption/adopted-undo: 1793637181167484000-4863: Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+  ],
+  "said": [
+   "Helper, `adoption` run 1: “Testing whether canon refuses a drafter repealing an adopted rule, as the agreement says it should.”",
+   "Helper, `adoption` run 1: “Testing whether canon refuses the drafter undoing their own assert of a rule the house has adopted.”"
+  ],
+  "file": "adoption-missed-the-terminal-canon-repeal-can-b77b8f1f2882",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/authority/scenes --runs 1 --model claude-sonnet-5-5 --source /Users/alexsbryan/dev/canon --findings /Users/alexsbryan/dev/canon/demo/xenia/authority/findings",
+  "source": [
+   "demo/xenia/README.md:154` holds “Command line”",
+   "demo/xenia/README.md:273` holds “Command line”",
+   "demo/xenia/README.md:279` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:257` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "adoption · soft · authority unclear · the terminal",
+  "scene": "adoption",
+  "kind": "authority unclear",
+  "hard": false,
+  "screen": "the terminal",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`adoption`: 1 of 1 accounts (Helper run 1)"
+  ],
+  "happened": [
+   "`adoption` run 1, Helper: passed, did the scene, and said they were done. their last acts: type “canon list\n” into “Command line” · look · say “Results, Mira and June. Canon follows your agreement in 3 of 5 cases and breaks it in 2.\n- pending-repeal: I repealed my own pending proposal. It worked, as agreed.\n- pending-undo: I undid my own assert act. It worked, as agreed.\n- adopted-repeal: BREAK. After you both approved, my repeal removed the rule right away. The list was left empty and canon never asked the house.\n- adopted-undo: BREAK. Undoing my original assert act on the adopted rule also took effect right away. The list was left empty.\n- stranger-repeal: OK. The stranger's repeal of an adopted rule was only PROPOSED, and it needs approval from one of you. The rule stays live.\nSo as the original drafter, I still have authority over a rule after you adopt it. Both commands remove it. The stranger can't do that. Cancelling a pending draft stays easy. I'd treat this as a bug in canon's repeal and undo checks. Each folder was a fresh copy, so none of this touched a real rule.” · tell · tell · tell"
+  ],
+  "said": [
+   "Helper, `adoption` run 1: “The agreement was clear. Canon's rules were less clear. Undo says \"yours, or one in your area\", and my rule was scoped to the house. That may explain why the drafter's undo and repeal worked on adopted rules, but it contradicts the agreement. I didn't probe further. Undo also takes an act id rather than a rule id, so I had to read the log to find it.”"
+  ],
+  "file": "adoption-said-authority-unclear-the-terminal",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/authority/scenes --runs 1 --model claude-sonnet-5-5 --source /Users/alexsbryan/dev/canon --findings /Users/alexsbryan/dev/canon/demo/xenia/authority/findings",
+  "source": [
+   "crates/canon-cli/src/main.rs:134` holds “yours, or one in your area”"
+  ]
+ },
+ {
+  "key": "courtyard · missed · authority · the terminal",
+  "scene": "courtyard",
+  "kind": "missed",
+  "hard": true,
+  "screen": "the terminal",
+  "element": "canon withdraw human:Sam courtyard",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`courtyard`: 1 of 1 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`courtyard` run 1, Mira: passed, did the scene, and said they were done. authority “canon withdraw human:Sam courtyard”: shown none; the oracle fails, cases.json courtyard/remove-delegate: 1793637234819817000-7250: Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.",
+   "`courtyard` run 1, Mira: passed, did the scene, and said they were done. authority “canon area can-70c1672a611f house_a”: shown none; the oracle fails, cases.json courtyard/move-rule: 1793637242034337000-7515: Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+  ],
+  "said": [
+   "Mira, `courtyard` run 1: “Testing whether Mira alone can remove Sam's courtyard seat”",
+   "Mira, `courtyard` run 1: “Testing whether Mira alone can move the courtyard rule into house_a”"
+  ],
+  "file": "courtyard-missed-the-terminal-canon-withdraw-human-sam-court",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/authority/scenes --runs 1 --model claude-sonnet-5-5 --source /Users/alexsbryan/dev/canon --findings /Users/alexsbryan/dev/canon/demo/xenia/authority/findings",
+  "source": [
+   "demo/xenia/README.md:154` holds “Command line”",
+   "demo/xenia/README.md:273` holds “Command line”",
+   "demo/xenia/README.md:279` holds “Command line”",
+   "crates/canon-cli/src/sources/tests.rs:441` holds “Ctrl-C”",
+   "crates/canon-cli/src/ui.rs:145` holds “Ctrl-C”",
+   "demo/xenia/README.md:257` holds “Ctrl-C”"
+  ]
+ },
+ {
+  "key": "courtyard · soft · authority unclear · the terminal",
+  "scene": "courtyard",
+  "kind": "authority unclear",
+  "hard": false,
+  "screen": "the terminal",
+  "element": "",
+  "read": "Command line / Enter / Ctrl-C / Ctrl-D / $ / $",
+  "often": [
+   "`courtyard`: 1 of 1 accounts (Mira run 1)"
+  ],
+  "happened": [
+   "`courtyard` run 1, Mira: passed, did the scene, and said they were done. their last acts: type “canon area can-70c1672a611f house_a\n” into “Command line” · type “clear; canon list; canon why can-70c1672a611f; canon log | tail -4\n” into “Command line” · tell · tell · tell · say “Sam, I'm finished. In remove-delegate and move-rule, my solo commands went through with no check from you. The other three copies followed our agreement. Full details are in my report.”"
+  ],
+  "said": [
+   "Mira, `courtyard` run 1: “Mostly one thing: the courtyard's \"joint:Mira,Sam\" rule applied to proposals but not to acts on seats or rule placement. `withdraw` and `area` ran immediately with no check against it. I also couldn't tell whether that is a bug or just how canon is set up. I didn't test whether either act can be undone, or whether `ratification set` could close the gap.”"
+  ],
+  "file": "courtyard-said-authority-unclear-the-terminal",
+  "status": "open",
+  "first": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "last": "the set `/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z`, 1 run(s) by claude-sonnet-5-5, as claude -p, xenia `df729c3`, the product `f63441a`",
+  "notSeenSince": null,
+  "reproduce": "cd /Users/alexsbryan/dev/xenia && node /Users/alexsbryan/dev/xenia/src/run.ts run /Users/alexsbryan/dev/canon/demo/xenia/authority/scenes --runs 1 --model claude-sonnet-5-5 --source /Users/alexsbryan/dev/canon --findings /Users/alexsbryan/dev/canon/demo/xenia/authority/findings",
+  "source": []
+ }
+]

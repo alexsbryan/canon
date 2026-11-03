@@ -1,0 +1,4 @@
+# Full before/after observations stay here locally; report.json keeps commands,
+# outputs, appended acts, hashes and source provenance without duplicating seeds.
+/adoption/
+/courtyard/

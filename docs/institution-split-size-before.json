@@ -1,0 +1,280 @@
+[
+  {
+    "path": "crates/canon-core/src",
+    "product": 4815,
+    "files": [
+      {
+        "path": "crates/canon-core/src/act.rs",
+        "product": 258,
+        "physical": 551
+      },
+      {
+        "path": "crates/canon-core/src/allot.rs",
+        "product": 206,
+        "physical": 602
+      },
+      {
+        "path": "crates/canon-core/src/date.rs",
+        "product": 38,
+        "physical": 117
+      },
+      {
+        "path": "crates/canon-core/src/draw.rs",
+        "product": 226,
+        "physical": 326
+      },
+      {
+        "path": "crates/canon-core/src/fold.rs",
+        "product": 1333,
+        "physical": 1909
+      },
+      {
+        "path": "crates/canon-core/src/horizon.rs",
+        "product": 112,
+        "physical": 177
+      },
+      {
+        "path": "crates/canon-core/src/id.rs",
+        "product": 36,
+        "physical": 74
+      },
+      {
+        "path": "crates/canon-core/src/lib.rs",
+        "product": 44,
+        "physical": 60
+      },
+      {
+        "path": "crates/canon-core/src/lineage.rs",
+        "product": 251,
+        "physical": 357
+      },
+      {
+        "path": "crates/canon-core/src/log.rs",
+        "product": 105,
+        "physical": 162
+      },
+      {
+        "path": "crates/canon-core/src/person.rs",
+        "product": 17,
+        "physical": 42
+      },
+      {
+        "path": "crates/canon-core/src/policy.rs",
+        "product": 459,
+        "physical": 667
+      },
+      {
+        "path": "crates/canon-core/src/ratify.rs",
+        "product": 1193,
+        "physical": 1903
+      },
+      {
+        "path": "crates/canon-core/src/scope.rs",
+        "product": 68,
+        "physical": 230
+      },
+      {
+        "path": "crates/canon-core/src/sign.rs",
+        "product": 364,
+        "physical": 506
+      },
+      {
+        "path": "crates/canon-core/src/standing.rs",
+        "product": 105,
+        "physical": 343
+      }
+    ]
+  },
+  {
+    "path": "crates/canon-cli/src",
+    "product": 15293,
+    "files": [
+      {
+        "path": "crates/canon-cli/src/check.rs",
+        "product": 466,
+        "physical": 625
+      },
+      {
+        "path": "crates/canon-cli/src/cli.rs",
+        "product": 276,
+        "physical": 417
+      },
+      {
+        "path": "crates/canon-cli/src/cmds.rs",
+        "product": 1229,
+        "physical": 1454
+      },
+      {
+        "path": "crates/canon-cli/src/config.rs",
+        "product": 134,
+        "physical": 249
+      },
+      {
+        "path": "crates/canon-cli/src/draft.rs",
+        "product": 1679,
+        "physical": 2523
+      },
+      {
+        "path": "crates/canon-cli/src/draw_cmd.rs",
+        "product": 299,
+        "physical": 347
+      },
+      {
+        "path": "crates/canon-cli/src/explain.rs",
+        "product": 464,
+        "physical": 728
+      },
+      {
+        "path": "crates/canon-cli/src/govern.rs",
+        "product": 1405,
+        "physical": 1714
+      },
+      {
+        "path": "crates/canon-cli/src/guard.rs",
+        "product": 649,
+        "physical": 821
+      },
+      {
+        "path": "crates/canon-cli/src/identify.rs",
+        "product": 399,
+        "physical": 478
+      },
+      {
+        "path": "crates/canon-cli/src/lineage/onto.rs",
+        "product": 407,
+        "physical": 487
+      },
+      {
+        "path": "crates/canon-cli/src/lineage.rs",
+        "product": 748,
+        "physical": 929
+      },
+      {
+        "path": "crates/canon-cli/src/locate.rs",
+        "product": 272,
+        "physical": 469
+      },
+      {
+        "path": "crates/canon-cli/src/main.rs",
+        "product": 268,
+        "physical": 413
+      },
+      {
+        "path": "crates/canon-cli/src/mcp.rs",
+        "product": 381,
+        "physical": 456
+      },
+      {
+        "path": "crates/canon-cli/src/model.rs",
+        "product": 787,
+        "physical": 1252
+      },
+      {
+        "path": "crates/canon-cli/src/profile.rs",
+        "product": 64,
+        "physical": 158
+      },
+      {
+        "path": "crates/canon-cli/src/quantify.rs",
+        "product": 248,
+        "physical": 481
+      },
+      {
+        "path": "crates/canon-cli/src/rebase/settle.rs",
+        "product": 94,
+        "physical": 133
+      },
+      {
+        "path": "crates/canon-cli/src/rebase.rs",
+        "product": 436,
+        "physical": 561
+      },
+      {
+        "path": "crates/canon-cli/src/render.rs",
+        "product": 103,
+        "physical": 140
+      },
+      {
+        "path": "crates/canon-cli/src/replay.rs",
+        "product": 1169,
+        "physical": 1735
+      },
+      {
+        "path": "crates/canon-cli/src/resolver.rs",
+        "product": 92,
+        "physical": 196
+      },
+      {
+        "path": "crates/canon-cli/src/review.rs",
+        "product": 682,
+        "physical": 831
+      },
+      {
+        "path": "crates/canon-cli/src/seen.rs",
+        "product": 104,
+        "physical": 165
+      },
+      {
+        "path": "crates/canon-cli/src/similar.rs",
+        "product": 65,
+        "physical": 117
+      },
+      {
+        "path": "crates/canon-cli/src/sources.rs",
+        "product": 393,
+        "physical": 665
+      },
+      {
+        "path": "crates/canon-cli/src/status.rs",
+        "product": 51,
+        "physical": 67
+      },
+      {
+        "path": "crates/canon-cli/src/store.rs",
+        "product": 167,
+        "physical": 357
+      },
+      {
+        "path": "crates/canon-cli/src/subject.rs",
+        "product": 95,
+        "physical": 166
+      },
+      {
+        "path": "crates/canon-cli/src/tensions.rs",
+        "product": 372,
+        "physical": 548
+      },
+      {
+        "path": "crates/canon-cli/src/term.rs",
+        "product": 30,
+        "physical": 80
+      },
+      {
+        "path": "crates/canon-cli/src/ui.rs",
+        "product": 1231,
+        "physical": 1375
+      },
+      {
+        "path": "crates/canon-cli/src/wrap.rs",
+        "product": 34,
+        "physical": 76
+      }
+    ]
+  },
+  {
+    "path": "demo/xenia/authority/interpreter/src",
+    "product": 295,
+    "files": [
+      {
+        "path": "demo/xenia/authority/interpreter/src/admission.rs",
+        "product": 269,
+        "physical": 282
+      },
+      {
+        "path": "demo/xenia/authority/interpreter/src/main.rs",
+        "product": 26,
+        "physical": 31
+      }
+    ]
+  }
+]

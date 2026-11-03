@@ -35,6 +35,10 @@
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::time::Duration;
 
 use canon_core::{ActId, ActKind, Canon, Log};
@@ -44,11 +48,24 @@ use crate::review::{self, Item, Kind};
 use crate::store;
 
 /// What a running page knows.
+#[derive(Clone)]
 pub struct Ctx {
     pub dir: PathBuf,
     pub actor: String,
     pub token: String,
     pub port: u16,
+    draft: Option<(String, Form)>,
+    can_create: Arc<AtomicBool>,
+}
+
+impl Ctx {
+    fn field(&self, path: &str, id: Option<&str>, name: &str) -> Option<&str> {
+        self.draft
+            .as_ref()
+            .filter(|(p, f)| p == path && id.is_none_or(|id| f.get("id") == id))
+            .and_then(|(_, f)| f.0.iter().find(|(k, _)| k == name))
+            .map(|(_, v)| v.as_str())
+    }
 }
 
 pub struct Request {
@@ -97,8 +114,8 @@ impl Response {
     /// Put a status line at the top of a rendered page.
     fn with_note(mut self, note: &str) -> Self {
         self.body = self.body.replacen(
-            "<main>",
-            &format!("<p class=\"note\" role=\"status\">{}</p><main>", esc(note)),
+            "<main",
+            &format!("<p class=\"note\" role=\"status\">{}</p><main", esc(note)),
             1,
         );
         self
@@ -120,7 +137,10 @@ pub fn run(args: &[String]) -> i32 {
     let _ = positionals(args);
     let d = match dir() {
         Ok(d) => d,
-        Err(e) => return fail(e),
+        Err(_) => match std::env::current_dir() {
+            Ok(cwd) => cwd.join(store::DIR),
+            Err(e) => return fail(e),
+        },
     };
     let listener = match TcpListener::bind(("127.0.0.1", 0)) {
         Ok(l) => l,
@@ -135,10 +155,14 @@ pub fn run(args: &[String]) -> i32 {
         return fail(format!("no randomness for the page's token: {e}"));
     }
     let ctx = Ctx {
+        can_create: Arc::new(AtomicBool::new(
+            store::uninitialized(&d) && !d.join("profile").exists(),
+        )),
         dir: d,
         actor: store::actor(),
         token: raw.iter().map(|b| format!("{b:02x}")).collect(),
         port,
+        draft: None,
     };
     let url = format!("http://127.0.0.1:{port}/?t={}", ctx.token);
     println!("canon is open for {} at\n\n  {url}\n", ctx.actor);
@@ -249,6 +273,9 @@ fn read_request(stream: &mut impl Read) -> Result<Request, String> {
         buf.extend_from_slice(&chunk[..n]);
     };
     let head = String::from_utf8(buf[..end].to_vec()).map_err(|_| "headers are not text")?;
+    if end > HEAD {
+        return Err("headers too large".into());
+    }
     let mut lines = head.split("\r\n");
     let mut first = lines.next().unwrap_or("").split(' ');
     let (method, target) = (first.next().unwrap_or(""), first.next().unwrap_or("/"));
@@ -256,11 +283,22 @@ fn read_request(stream: &mut impl Read) -> Result<Request, String> {
         .filter_map(|l| l.split_once(':'))
         .map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))
         .collect();
-    let length: usize = headers
+    let lengths: Vec<_> = headers
         .iter()
-        .find(|(k, _)| k.eq_ignore_ascii_case("content-length"))
-        .and_then(|(_, v)| v.parse().ok())
-        .unwrap_or(0);
+        .filter(|(k, _)| k.eq_ignore_ascii_case("content-length"))
+        .collect();
+    if lengths.len() > 1
+        || headers
+            .iter()
+            .any(|(k, _)| k.eq_ignore_ascii_case("transfer-encoding"))
+    {
+        return Err("ambiguous request framing".into());
+    }
+    let length: usize = match lengths.first() {
+        Some((_, v)) => v.parse().map_err(|_| "invalid content length")?,
+        None if method == "POST" => return Err("a form needs a content length".into()),
+        None => 0,
+    };
     if length > BODY {
         return Err("body too large".into());
     }
@@ -268,7 +306,7 @@ fn read_request(stream: &mut impl Read) -> Result<Request, String> {
     while body.len() < length {
         let n = stream.read(&mut chunk).map_err(|e| e.to_string())?;
         if n == 0 {
-            break;
+            return Err("form ended early".into());
         }
         body.extend_from_slice(&chunk[..n]);
     }
@@ -335,16 +373,45 @@ pub fn respond(req: &Request, ctx: &Ctx) -> Response {
         }
         ("POST", path) => match posted(req, ctx) {
             Err(refused) => refused,
-            Ok(form) => match path {
-                "/decide" => decide(&form, ctx),
-                "/propose" => propose(&form, ctx),
-                "/replace" => replace(&form, ctx),
-                "/retract" => retract(&form, ctx),
-                "/silence" => silence(&form, ctx),
-                "/lift" => lift(&form, ctx),
-                "/identify" => identify(&form, ctx),
-                _ => Response::html(404, page("Not here", "<p><a href=\"/\">Back</a></p>")),
-            },
+            Ok(form) => {
+                let ctx = &Ctx {
+                    draft: Some((path.to_string(), form.clone())),
+                    ..ctx.clone()
+                };
+                let mut response = match path {
+                    "/setup" => setup(&form, ctx),
+                    "/decide" => decide(&form, ctx),
+                    "/propose" => propose(&form, ctx),
+                    "/replace" => replace(&form, ctx),
+                    "/retract" => retract(&form, ctx),
+                    "/silence" => silence(&form, ctx),
+                    "/lift" => lift(&form, ctx),
+                    "/identify" => identify(&form, ctx),
+                    _ => Response::html(404, page("Not here", "<p><a href=\"/\">Back</a></p>")),
+                };
+                if response.status != 303
+                    && (!response.body.contains(&format!("action=\"{path}\""))
+                        || (!form.get("id").is_empty()
+                            && !response.body.contains(&format!(
+                                "name=\"id\" value=\"{}\"",
+                                esc(form.get("id"))
+                            ))))
+                {
+                    let saved = form
+                        .0
+                        .iter()
+                        .filter(|(k, _)| {
+                            ["text", "because", "scope", "about", "id", "profile"]
+                                .contains(&k.as_str())
+                        })
+                        .map(|(k, v)| format!("<dt>{}</dt><dd><pre>{}</pre></dd>", esc(k), esc(v)))
+                        .collect::<String>();
+                    if !saved.is_empty() {
+                        response.body = response.body.replace("</main>", &format!("<section><h2>Your unsent input</h2><dl>{saved}</dl></section></main>"));
+                    }
+                }
+                response
+            }
         },
         ("GET", _) => Response::html(
             404,
@@ -387,9 +454,24 @@ fn posted(req: &Request, ctx: &Ctx) -> Result<Form, Response> {
             ),
         ));
     }
+    if !req.header("content-type").is_some_and(|v| {
+        v.split(';').next().is_some_and(|v| {
+            v.trim()
+                .eq_ignore_ascii_case("application/x-www-form-urlencoded")
+        })
+    }) {
+        return Err(Response::html(
+            415,
+            page(
+                "Not a form",
+                "<p>Submit a form from this page. Nothing was written.</p>",
+            ),
+        ));
+    }
     Ok(form)
 }
 
+#[derive(Clone)]
 struct Form(Vec<(String, String)>);
 
 impl Form {
@@ -410,6 +492,70 @@ fn token_field(ctx: &Ctx) -> String {
     )
 }
 
+fn setup_page(ctx: &Ctx, error: Option<&str>) -> Response {
+    let options = crate::profile::Profile::ALL
+        .iter()
+        .map(|p| {
+            format!(
+                "<option value=\"{}\"{}>{} — {}</option>",
+                p.as_str(),
+                if ctx.field("/setup", None, "profile") == Some(p.as_str()) {
+                    " selected"
+                } else {
+                    ""
+                },
+                p.as_str(),
+                p.nouns()
+            )
+        })
+        .collect::<String>();
+    Response::html(if error.is_some() { 422 } else { 200 }, page("Create a canon", &format!(
+        "{}<main><h1>Create a canon</h1><p>Keep your agreements and the reasons they change. No model is needed.</p>\
+         {}\
+         <p>The record will live at <code>{}</code>. You are acting as <strong>{}</strong>.</p>\
+         <p>A human founder holds the first seat: personal, repo, or house, according to the profile. \
+         Whoever holds a room decides at once until you change that procedure. An agent cannot give itself a seat. \
+         Names are unsigned until you identify with a key.</p>\
+         <form method=\"post\" action=\"/setup\" class=\"keys\">{}\
+         <label>What are you keeping?<select name=\"profile\" required>{options}</select></label>\
+         <button class=\"carry\">Create this canon</button></form></main>",
+        context(ctx), error.map(|e| format!("<p class=\"note bad\" role=\"alert\">{}</p>", esc(e))).unwrap_or_default(), esc(&ctx.dir.display().to_string()), esc(&ctx.actor), token_field(ctx)
+    )))
+}
+
+fn setup(form: &Form, ctx: &Ctx) -> Response {
+    if !ctx.can_create.load(Ordering::SeqCst) {
+        return Response::html(409, page("Already set up", "<main><p>This record has already been set up. <a href=\"/\">Open the record</a>.</p></main>"));
+    }
+    let result = crate::profile::Profile::parse(form.get("profile"))
+        .and_then(|p| crate::cmds::initialize(&ctx.dir, p, &ctx.actor, false, false));
+    match result {
+        Ok(_) => {
+            ctx.can_create.store(false, Ordering::SeqCst);
+            Response::see("/")
+        }
+        Err(e) => setup_page(ctx, Some(&e)),
+    }
+}
+
+fn context(ctx: &Ctx) -> String {
+    let nav = if ctx.can_create.load(Ordering::SeqCst) && store::uninitialized(&ctx.dir) {
+        "<a href=\"/\">Setup</a>"
+    } else {
+        "<a href=\"/#for-you\">For you</a> · <a href=\"/#rules\">Rules</a> · <a href=\"/identify\">Identity</a>"
+    };
+    format!("<header><p class=\"canon\"><a href=\"/\">{}</a></p>\
+        <p class=\"meta\">Record: <code>{}</code><br>Acting as {} · Standard reader · Current view</p>\
+        <nav aria-label=\"Record\">{nav}</nav></header>",
+        esc(&crate::lineage::name_of(&ctx.dir)), esc(&ctx.dir.display().to_string()), esc(&ctx.actor))
+}
+
+fn unavailable(ctx: &Ctx, error: &str) -> Response {
+    Response::html(503, page("Record unavailable", &format!(
+        "{}<main><h1>The record could not be read</h1><p class=\"note bad\" role=\"alert\">{}</p>\
+         <p>No outcome could be checked. <a href=\"/\">Reload the record</a> before retrying a change.</p></main>", context(ctx), esc(error))))
+}
+
 fn decide(form: &Form, ctx: &Ctx) -> Response {
     let field = |k: &str| form.get(k);
     let id = ActId::from_raw(field("id"));
@@ -420,9 +566,11 @@ fn decide(form: &Form, ctx: &Ctx) -> Response {
     };
     // Only what is waiting on this person: the form is not a way to write
     // a position about anything at all.
-    let waiting = load(ctx)
-        .map(|(log, st)| review::queue(&log, &st, &ctx.actor, store::now()))
-        .unwrap_or_default();
+    let (log, st) = match load(ctx) {
+        Ok(v) => v,
+        Err(e) => return unavailable(ctx, &e),
+    };
+    let waiting = review::queue(&log, &st, &ctx.actor, store::now());
     if !waiting.iter().any(|i| i.yours && i.id == id) {
         return home(
             ctx,
@@ -433,12 +581,16 @@ fn decide(form: &Form, ctx: &Ctx) -> Response {
     }
     match review::decide(&ctx.dir, &ctx.actor, &id, approve, field("because")) {
         Ok(_) => Response::see(&format!("/?done={}", id.as_str())),
-        Err(e) => home(ctx, None, None, Some(not_written(&e))),
+        Err(e) => home(ctx, None, None, Some(write_error(&e))),
     }
 }
 
 fn not_written(e: &str) -> String {
     format!("{} Nothing was written.", sentence(e))
+}
+
+fn write_error(e: &str) -> String {
+    format!("{} The request did not complete; some entries may have been recorded. Inspect the record before retrying.", sentence(e))
 }
 
 /// Propose a rule, in a room or for the whole canon.
@@ -465,7 +617,7 @@ fn propose(form: &Form, ctx: &Ctx) -> Response {
     };
     match crate::cmds::propose(&ctx.dir, &ctx.actor, text, scope, None) {
         Ok(act) => Response::see(&format!("/?done={}", act.id.as_str())),
-        Err(e) => home(ctx, None, None, Some(not_written(&e))),
+        Err(e) => home(ctx, None, None, Some(write_error(&e))),
     }
 }
 
@@ -496,7 +648,7 @@ fn replace(form: &Form, ctx: &Ctx) -> Response {
     }
     match crate::cmds::replace(&ctx.dir, &ctx.actor, &old, text, why, scope) {
         Ok(act) => Response::see(&format!("/why/{}?did={}", act.id.as_str(), act.id.as_str())),
-        Err(e) => back(not_written(&e)),
+        Err(e) => back(write_error(&e)),
     }
 }
 
@@ -516,7 +668,7 @@ fn retract(form: &Form, ctx: &Ctx) -> Response {
     };
     match crate::cmds::write_as(&ctx.dir, act, &ctx.actor) {
         Ok(a) => Response::see(&format!("/why/{}?did={}", target.as_str(), a.id.as_str())),
-        Err(e) => back(not_written(&e)),
+        Err(e) => back(write_error(&e)),
     }
 }
 
@@ -539,16 +691,18 @@ fn silence(form: &Form, ctx: &Ctx) -> Response {
     };
     match crate::cmds::write_as(&ctx.dir, act, &ctx.actor) {
         Ok(a) => Response::see(&format!("/?did={}", a.id.as_str())),
-        Err(e) => home(ctx, None, None, Some(not_written(&e))),
+        Err(e) => home(ctx, None, None, Some(write_error(&e))),
     }
 }
 
 /// Stop leaving something unwritten: `canon undo` on the silence.
 fn lift(form: &Form, ctx: &Ctx) -> Response {
     let id = ActId::from_raw(form.get("id"));
-    let current = load(ctx)
-        .map(|(_, st)| st.silences().iter().any(|s| s.act == id))
-        .unwrap_or(false);
+    let (_, st) = match load(ctx) {
+        Ok(v) => v,
+        Err(e) => return unavailable(ctx, &e),
+    };
+    let current = st.silences().iter().any(|s| s.act == id);
     if !current {
         return home(
             ctx,
@@ -563,7 +717,7 @@ fn lift(form: &Form, ctx: &Ctx) -> Response {
     };
     match crate::cmds::write_as(&ctx.dir, act, &ctx.actor) {
         Ok(a) => Response::see(&format!("/?did={}", a.id.as_str())),
-        Err(e) => home(ctx, None, None, Some(not_written(&e))),
+        Err(e) => home(ctx, None, None, Some(write_error(&e))),
     }
 }
 
@@ -579,7 +733,7 @@ fn identify(form: &Form, ctx: &Ctx) -> Response {
     }
     match crate::identify::identify_by_fingerprint(&ctx.dir, &ctx.actor, fingerprint) {
         Ok(said) => home(ctx, None, None, None).with_note(&said),
-        Err(e) => identify_page(ctx, Some(not_written(&e))),
+        Err(e) => identify_page(ctx, Some(write_error(&e))),
     }
 }
 
@@ -593,6 +747,9 @@ fn did_note(ctx: &Ctx, log: &Log, st: &Canon, id: &str) -> Option<String> {
         Took::Applied | Took::Open(_) => done.to_string(),
         Took::Proposed(needs) => format!("Put to the room: it needs {needs}."),
         Took::Refused(why) => format!("Written, and not applied: {why}"),
+        Took::Unknown(why) => {
+            format!("Recorded; outcome unknown: {why}. Reload the record before retrying.")
+        }
     };
     Some(match &act.kind {
         ActKind::Supersede { text, .. } => {
@@ -612,24 +769,27 @@ fn quote(s: &str) -> String {
 }
 
 fn load(ctx: &Ctx) -> Result<(Log, Canon), String> {
+    load_at(ctx, store::now())
+}
+
+fn load_at(ctx: &Ctx, now: i64) -> Result<(Log, Canon), String> {
     let log = store::read(&ctx.dir)?;
-    let st = log.derive_at(store::now());
+    let st = canon_institution::legacy(&log, Some(now));
     Ok((log, st))
 }
 
 // ── pages ───────────────────────────────────────────────────
 
 fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>) -> Response {
-    let (log, st) = match load(ctx) {
-        Ok(v) => v,
-        Err(e) => {
-            return Response::html(
-                200,
-                page("canon", &format!("<p class=\"note bad\">{}</p>", esc(&e))),
-            )
-        }
-    };
+    if ctx.can_create.load(Ordering::SeqCst) && store::uninitialized(&ctx.dir) {
+        return setup_page(ctx, None);
+    }
     let now = store::now();
+    let (log, st) = match load_at(ctx, now) {
+        Ok(v) => v,
+        Err(e) => return unavailable(ctx, &e),
+    };
+    ctx.can_create.store(false, Ordering::SeqCst);
     let items = review::queue(&log, &st, &ctx.actor, now);
     let (mine, others): (Vec<&Item>, Vec<&Item>) = items.iter().partition(|i| i.yours);
     let name = crate::lineage::name_of(&ctx.dir);
@@ -651,14 +811,12 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
             esc(crate::explain::person(&ctx.actor))
         )
     };
-    b.push_str(&format!(
-        "<header><p class=\"canon\">{}</p><p class=\"who\">{who}</p></header>",
-        esc(&name)
-    ));
+    b.push_str(&context(ctx));
+    b.push_str(&format!("<p class=\"who\">{who}</p>"));
     if let Some(e) = error {
         b.push_str(&format!(
             "<p class=\"note bad\" role=\"alert\">{}</p>",
-            esc(&e)
+            linked(&e)
         ));
     }
     if let Some(note) = did.and_then(|id| did_note(ctx, &log, &st, id)) {
@@ -678,6 +836,13 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
                     .find(|r| r.act == id)
                     .map(|r| r.text.clone())
             })
+            .or_else(|| {
+                st.pending_policies()
+                    .iter()
+                    .chain(st.policies())
+                    .find(|p| p.act == id)
+                    .map(|p| p.text.clone())
+            })
             .unwrap_or_else(|| id.as_str().to_string());
         // The outcome can end in somebody's own reason, full stop included.
         let outcome = review::outcome(&st, &id);
@@ -693,7 +858,7 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         ));
     }
 
-    b.push_str("<main>");
+    b.push_str("<main id=\"for-you\">");
     b.push_str(&format!("<h1>{}</h1>", esc(&waiting_line(mine.len()))));
     if mine.is_empty() {
         b.push_str("<p class=\"quiet\">When someone proposes a rule for an area you are in charge of, it appears here for you to approve or object to.</p>");
@@ -713,7 +878,8 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         ));
         for item in &others {
             b.push_str(&format!(
-                "<li><span class=\"rule\">{}</span><span class=\"meta\">Needs {}</span></li>",
+                "<li><a class=\"rule\" href=\"/why/{}\">{}</a><span class=\"meta\">Needs {}</span></li>",
+                esc(item.id.as_str()),
                 esc(&item.text),
                 esc(&item.needs)
             ));
@@ -727,13 +893,14 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         .map(|g| g.scope.as_str().to_string())
         .collect();
     b.push_str(&format!(
-        "<details class=\"act\"><summary>Propose a rule</summary>\
+        "<details class=\"act\"{}><summary>Propose a rule</summary>\
          <form method=\"post\" action=\"/propose\">{}\
-         <label>The rule, as you would want it read<textarea name=\"text\" required rows=\"3\"></textarea></label>\
-         <label>Which room it belongs to, if one<input name=\"scope\" list=\"rooms\" placeholder=\"the whole canon\"></label>\
+         <label>The rule, as you would want it read<textarea name=\"text\" required rows=\"3\">{}</textarea></label>\
+         <label>Which room it belongs to, if one<input name=\"scope\" list=\"rooms\" placeholder=\"the whole canon\" value=\"{}\"></label>\
          <datalist id=\"rooms\">{}</datalist>\
          <button class=\"carry\">Propose it</button></form></details>",
-        token_field(ctx),
+        if ctx.field("/propose", None, "text").is_some() { " open" } else { "" },
+        token_field(ctx), esc(ctx.field("/propose", None, "text").unwrap_or("")), esc(ctx.field("/propose", None, "scope").unwrap_or("")),
         rooms
             .iter()
             .map(|r| format!("<option value=\"{}\">", esc(r)))
@@ -748,7 +915,7 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
 
 fn waiting_line(n: usize) -> String {
     match n {
-        0 => "Nothing is waiting on you.".into(),
+        0 => "No decisions are waiting on you.".into(),
         1 => "One proposal is waiting on you.".into(),
         n => format!("{} proposals are waiting on you.", words(n)),
     }
@@ -801,7 +968,7 @@ fn motion(ctx: &Ctx, item: &Item, now: i64, touch: bool) -> String {
                 esc(&item.text)
             ));
         }
-        Kind::Rule | Kind::DecisionRule => {
+        Kind::Rule | Kind::DecisionRule | Kind::Policy => {
             m.push_str(&format!("<p class=\"rule\">{}</p>", esc(&item.text)));
         }
     }
@@ -815,16 +982,18 @@ fn motion(ctx: &Ctx, item: &Item, now: i64, touch: bool) -> String {
     if let Some(src) = &item.source {
         match review::passage(&ctx.dir, src) {
             Some(p) => m.push_str(&format!(
-                "<figure class=\"source\"><blockquote>{}</blockquote><figcaption>{}</figcaption></figure>",
+                "<figure class=\"source\"><blockquote>{}</blockquote><figcaption>Current file excerpt: {} (not a saved quotation)</figcaption></figure>",
                 esc(&p),
                 esc(src)
             )),
-            None => m.push_str(&format!("<p class=\"meta\">Drafted from {}</p>", esc(src))),
+            None => m.push_str(&format!("<p class=\"meta\">Source reference: {}. No excerpt is available here.</p>", esc(src))),
         }
+    } else {
+        m.push_str("<p class=\"meta\">No source passage was recorded.</p>");
     }
     m.push_str(&format!(
-        "<p class=\"needs\">Needs {}</p>",
-        esc(&item.needs)
+        "<p class=\"needs\">Needs {}</p><p class=\"meta\"><a href=\"/why/{}\">History and supporting entries</a></p>",
+        esc(&item.needs), esc(item.id.as_str())
     ));
     let hidden = format!(
         "<input type=\"hidden\" name=\"token\" value=\"{}\"><input type=\"hidden\" name=\"id\" value=\"{}\">",
@@ -834,10 +1003,12 @@ fn motion(ctx: &Ctx, item: &Item, now: i64, touch: bool) -> String {
     m.push_str(&format!(
         "<div class=\"decide\"><form method=\"post\" action=\"/decide\">{hidden}\
          <button name=\"decision\" value=\"approve\" class=\"carry\">{}</button></form>\
-         <details><summary>Object</summary><form method=\"post\" action=\"/decide\">{hidden}\
-         <label>Your reason, which everyone will see<textarea name=\"because\" required rows=\"3\"></textarea></label>\
+          <details{}><summary>Object</summary><form method=\"post\" action=\"/decide\">{hidden}\
+          <label>Your reason, which everyone will see<textarea name=\"because\" required rows=\"3\">{}</textarea></label>\
          <button name=\"decision\" value=\"object\" class=\"object\">Object</button></form></details></div>",
-        if item.kind == Kind::Retraction { "Approve taking it away" } else { "Approve" }
+        if item.kind == Kind::Retraction { "Approve taking it away" } else { "Approve" },
+        if ctx.field("/decide", Some(item.id.as_str()), "because").is_some() { " open" } else { "" },
+        esc(ctx.field("/decide", Some(item.id.as_str()), "because").unwrap_or(""))
     ));
     if touch {
         m.push_str("<p class=\"meta\">Your key will ask for a touch in the terminal running this page.</p>");
@@ -851,7 +1022,7 @@ fn kind_class(k: Kind) -> &'static str {
         Kind::Rule => "new",
         Kind::Change => "change",
         Kind::Retraction => "retract",
-        Kind::DecisionRule => "procedure",
+        Kind::DecisionRule | Kind::Policy => "procedure",
     }
 }
 
@@ -884,7 +1055,7 @@ fn in_force(st: &Canon) -> String {
     }
     let n: usize = rooms.values().map(Vec::len).sum();
     let mut b = format!(
-        "<section class=\"charter\"><h2>In force</h2><p class=\"quiet\">{}</p>",
+        "<section class=\"charter\" id=\"rules\"><h2>In force</h2><p class=\"quiet\">{}</p>",
         match n {
             0 => "No rules yet.".to_string(),
             1 => "One rule.".to_string(),
@@ -919,28 +1090,30 @@ fn unwritten(ctx: &Ctx, st: &Canon) -> String {
         b.push_str(&format!(
             "<li><p class=\"about\">{}</p><p class=\"because\">{}</p>\
              <p class=\"meta\">Left unwritten by {} on {}.</p>\
-             <details class=\"act\"><summary>Lift this</summary>\
+              <details class=\"act\"{}><summary>Lift this</summary>\
              <form method=\"post\" action=\"/lift\">{}<input type=\"hidden\" name=\"id\" value=\"{}\">\
-             <label>Why it should no longer be left unwritten<textarea name=\"because\" rows=\"2\"></textarea></label>\
+              <label>Why it should no longer be left unwritten<textarea name=\"because\" rows=\"2\">{}</textarea></label>\
              <button class=\"object\">Lift it</button></form></details></li>",
             esc(&s.about),
             esc(&s.rationale),
             esc(crate::explain::person(&s.actor)),
             store::ymd(s.at),
+            if ctx.field("/lift", Some(s.act.as_str()), "because").is_some() { " open" } else { "" },
             token_field(ctx),
-            esc(s.act.as_str())
+            esc(s.act.as_str()), esc(ctx.field("/lift", Some(s.act.as_str()), "because").unwrap_or(""))
         ));
     }
     if !st.silences().is_empty() {
         b.push_str("</ul>");
     }
     b.push_str(&format!(
-        "<details class=\"act\"><summary>Leave something unwritten on purpose</summary>\
+        "<details class=\"act\"{}><summary>Leave something unwritten on purpose</summary>\
          <form method=\"post\" action=\"/silence\">{}\
-         <label>What it is about<input name=\"about\" required></label>\
-         <label>What leaving it unwritten protects<textarea name=\"because\" required rows=\"2\"></textarea></label>\
+          <label>What it is about<input name=\"about\" required value=\"{}\"></label>\
+          <label>What leaving it unwritten protects<textarea name=\"because\" required rows=\"2\">{}</textarea></label>\
          <button class=\"carry\">Record it</button></form></details></section>",
-        token_field(ctx)
+        if ctx.field("/silence", None, "about").is_some() { " open" } else { "" },
+        token_field(ctx), esc(ctx.field("/silence", None, "about").unwrap_or("")), esc(ctx.field("/silence", None, "because").unwrap_or(""))
     ));
     b
 }
@@ -949,21 +1122,13 @@ fn unwritten(ctx: &Ctx, st: &Canon) -> String {
 fn identify_page(ctx: &Ctx, error: Option<String>) -> Response {
     let log = match store::read(&ctx.dir) {
         Ok(l) => l,
-        Err(e) => {
-            return Response::html(
-                200,
-                page("canon", &format!("<p class=\"note bad\">{}</p>", esc(&e))),
-            )
-        }
+        Err(e) => return unavailable(ctx, &e),
     };
-    let mut b = format!(
-        "<header><p class=\"canon\"><a href=\"/\">{}</a></p></header>",
-        esc(&crate::lineage::name_of(&ctx.dir))
-    );
+    let mut b = context(ctx);
     if let Some(e) = error {
         b.push_str(&format!(
             "<p class=\"note bad\" role=\"alert\">{}</p>",
-            esc(&e)
+            linked(&e)
         ));
     }
     b.push_str("<main>");
@@ -1039,14 +1204,9 @@ fn identify_page(ctx: &Ctx, error: Option<String>) -> Response {
 fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Response {
     let (log, st) = match load(ctx) {
         Ok(v) => v,
-        Err(e) => {
-            return Response::html(
-                200,
-                page("canon", &format!("<p class=\"note bad\">{}</p>", esc(&e))),
-            )
-        }
+        Err(e) => return unavailable(ctx, &e),
     };
-    let Ok(id) = crate::explain::resolve_any(&st, needle) else {
+    let Ok(id) = crate::explain::resolve_why(&st, &log, needle) else {
         return Response::html(
             404,
             page("Not in this canon", "<p><a href=\"/\">Back</a></p>"),
@@ -1062,14 +1222,11 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
         .headline
         .split_once("  ")
         .map_or(e.headline.as_str(), |(_, t)| t);
-    let mut b = format!(
-        "<header><p class=\"canon\"><a href=\"/\">{}</a></p></header>",
-        esc(&crate::lineage::name_of(&ctx.dir))
-    );
+    let mut b = context(ctx);
     if let Some(e) = error {
         b.push_str(&format!(
             "<p class=\"note bad\" role=\"alert\">{}</p>",
-            esc(&e)
+            linked(&e)
         ));
     }
     if let Some(note) = did.and_then(|d| did_note(ctx, &log, &st, d)) {
@@ -1101,17 +1258,21 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
             esc(id.as_str())
         );
         b.push_str(&format!(
-            "<div class=\"changes\"><details class=\"act\"><summary>Change the wording</summary>\
+            "<div class=\"changes\"><details class=\"act\"{}><summary>Change the wording</summary>\
              <form method=\"post\" action=\"/replace\">{hidden}\
              <label>The new wording<textarea name=\"text\" required rows=\"3\">{}</textarea></label>\
-             <label>Why it is changing, which everyone will see<textarea name=\"because\" required rows=\"2\"></textarea></label>\
+              <label>Why it is changing, which everyone will see<textarea name=\"because\" required rows=\"2\">{}</textarea></label>\
              <button class=\"carry\">Change it</button></form></details>\
-             <details class=\"act\"><summary>Take it away</summary>\
+              <details class=\"act\"{}><summary>Take it away</summary>\
              <form method=\"post\" action=\"/retract\">{hidden}\
-             <label>Why it should go, which everyone will see<textarea name=\"because\" required rows=\"2\"></textarea></label>\
+              <label>Why it should go, which everyone will see<textarea name=\"because\" required rows=\"2\">{}</textarea></label>\
              <button class=\"object\">Take it away</button></form></details></div>\
              <p class=\"meta\">If you are not in charge of this rule's area, a change is put to whoever is.</p>",
-            esc(text)
+            if ctx.field("/replace", Some(id.as_str()), "text").is_some() { " open" } else { "" },
+            esc(ctx.field("/replace", Some(id.as_str()), "text").unwrap_or(text)),
+            esc(ctx.field("/replace", Some(id.as_str()), "because").unwrap_or("")),
+            if ctx.field("/retract", Some(id.as_str()), "because").is_some() { " open" } else { "" },
+            esc(ctx.field("/retract", Some(id.as_str()), "because").unwrap_or(""))
         ));
     }
     b.push_str("</main>");
@@ -1287,7 +1448,7 @@ details.act[open] summary{text-decoration-color:currentColor}
 details.act form{margin-top:.5rem}
 details.act label,.keys label{display:block;font-size:.875rem;color:var(--muted);margin:.75rem 0 .25rem}
 details.act button{margin-top:.75rem}
-input[name=scope],input[name=about]{display:block;width:100%;margin-top:.25rem;font:1rem/1.45 var(--sans);
+select,input[name=scope],input[name=about]{display:block;width:100%;margin-top:.25rem;font:1rem/1.45 var(--sans);
   color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:.5rem .625rem}
 .changes{margin-top:2rem;padding-top:.5rem;border-top:1px solid var(--rule)}
 .changes details.act{margin-top:1rem}
@@ -1303,6 +1464,7 @@ input[name=scope],input[name=about]{display:block;width:100%;margin-top:.25rem;f
   color:var(--ink);font-size:1rem;margin:0}
 .keys .choice .meta{display:block;margin:.125rem 0 0}
 ul.keys{padding-left:1.25rem}
+body{overflow-wrap:anywhere}pre{white-space:pre-wrap}nav{flex-basis:100%;font-size:.9375rem}
 @media (max-width:30rem){.rule{font-size:1.3125rem}.motion{padding:1.25rem 1rem 1rem}h1{font-size:1.5rem}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 "#;

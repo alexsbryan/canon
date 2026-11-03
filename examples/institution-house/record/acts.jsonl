@@ -1,0 +1,10 @@
+{"id":"can-73fc0e52ac35","v":2,"ts_unix":1577836800,"actor":"human:Mira","op":"grant","holder":"human:Mira","scope":"house","rationale":"Mira and Sam agreed that both get a say."}
+{"id":"can-84f756e2064f","v":2,"ts_unix":1577836800,"actor":"human:Mira","op":"grant","holder":"human:Sam","scope":"house","rationale":"Mira and Sam agreed that both get a say."}
+{"id":"can-59115926b1a5","v":4,"ts_unix":1577923200,"actor":"human:Mira","op":"ratification","text":"Mira and Sam must both agree to changes to the house's rules.","rule":{"rule":"joint","holders":["human:Mira","human:Sam"]},"scope":"house","governs":"all"}
+{"id":"can-b540f8eee068","v":2,"ts_unix":1578009600,"actor":"agent:Helper","op":"assert","text":"Quiet hours are 10pm to 7am.","source":"Helper's draft, awaiting the house's agreement."}
+{"id":"can-d874f3d4bdc3","v":2,"ts_unix":1578009600,"actor":"agent:Helper","op":"scoped","commitment":"can-b540f8eee068","scope":"house"}
+{"id":"can-9c92251c45ee","v":2,"ts_unix":1578096000,"actor":"human:Mira","op":"position","about":"can-b540f8eee068","pull":"toward","because":"These quiet hours work for me."}
+{"id":"can-1a71f8f992b6","v":2,"ts_unix":1578182400,"actor":"human:Sam","op":"position","about":"can-b540f8eee068","pull":"toward","because":"I agree to these quiet hours too."}
+{"id":"can-05109bf7ce1c","v":2,"ts_unix":1578268800,"actor":"agent:Helper","op":"retract","target":"can-b540f8eee068","rationale":"Please remove this rule."}
+{"id":"can-e1c3185a1952","v":2,"ts_unix":1578355200,"actor":"human:Mira","op":"position","about":"can-05109bf7ce1c","pull":"toward","because":"I agree that we should remove it."}
+{"id":"can-848cd303caf5","v":2,"ts_unix":1578441600,"actor":"human:Sam","op":"position","about":"can-05109bf7ce1c","pull":"toward","because":"I agree to remove it too."}

@@ -22,6 +22,7 @@ pub mod act;
 pub mod allot;
 pub mod date;
 pub mod draw;
+mod effects;
 pub mod fold;
 pub mod horizon;
 pub mod id;
@@ -29,6 +30,7 @@ pub mod lineage;
 pub mod log;
 pub mod person;
 pub mod policy;
+pub mod projection;
 pub mod ratify;
 pub mod scope;
 pub mod sign;
@@ -47,6 +49,7 @@ pub use lineage::{Divergence, Fate, Inherited, Snapshot, SnapshotCommitment};
 pub use log::{Log, ParseError};
 pub use person::Person;
 pub use policy::{default_outcome, Attributes, Authority, Decision, LadderKey, Policy, Rule};
+pub use projection::{Effect, Projection, ProjectionError};
 pub use ratify::{
     AdoptedRatify, BadBar, Bar, Between, Governs, NotARule, Proposal, Ratify, Seat, Verdict,
 };

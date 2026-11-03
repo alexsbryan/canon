@@ -73,6 +73,8 @@ pub fn disorder(dir: &Path) -> Option<String> {
 }
 
 pub fn read(dir: &Path) -> Result<Log, String> {
+    #[cfg(test)]
+    faults::read()?;
     let path = dir.join(FILE);
     let raw =
         std::fs::read_to_string(&path).map_err(|e| format!("reading {}: {e}", path.display()))?;
@@ -91,6 +93,11 @@ pub fn exists(dir: &Path) -> bool {
     dir.join(FILE).is_file()
 }
 
+pub fn uninitialized(dir: &Path) -> bool {
+    std::fs::symlink_metadata(dir.join(FILE))
+        .is_err_and(|e| e.kind() == std::io::ErrorKind::NotFound)
+}
+
 /// An empty ledger, for `init`. Opened to append, never truncated, so a
 /// ledger that appeared since the caller looked is kept.
 pub fn create(dir: &Path) -> Result<(), String> {
@@ -101,6 +108,11 @@ pub fn create(dir: &Path) -> Result<(), String> {
         .open(&path)
         .map(drop)
         .map_err(|e| format!("creating {}: {e}", path.display()))
+}
+
+/// Publish a complete new ledger without replacing one that appeared meanwhile.
+pub fn publish(from: &Path, to: &Path) -> Result<(), String> {
+    std::fs::hard_link(from.join(FILE), to.join(FILE)).map_err(|e| e.to_string())
 }
 
 /// A whole canon written at once: `replay --out` minting a fixture as a
@@ -190,6 +202,8 @@ pub fn ignore_local(dir: &Path) {
 /// Append one act. Append-only: we never rewrite the file, so a concurrent
 /// writer's line is never lost and git sees an additive diff.
 pub fn append(dir: &Path, act: &Act) -> Result<(), String> {
+    #[cfg(test)]
+    faults::append()?;
     let path = dir.join(FILE);
     let line = serde_json::to_string(act).map_err(|e| e.to_string())?;
     let mut f = std::fs::OpenOptions::new()
@@ -212,6 +226,52 @@ pub fn now() -> i64 {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0)
+}
+
+#[cfg(test)]
+pub mod faults {
+    use std::cell::Cell;
+    thread_local! {
+        static APPENDS: Cell<Option<usize>> = const { Cell::new(None) };
+        static AFTER_WRITE: Cell<bool> = const { Cell::new(false) };
+        static READ: Cell<bool> = const { Cell::new(false) };
+    }
+    pub struct Reset;
+    impl Drop for Reset {
+        fn drop(&mut self) {
+            APPENDS.set(None);
+            AFTER_WRITE.set(false);
+            READ.set(false);
+        }
+    }
+    pub fn after_appends(n: usize) -> Reset {
+        APPENDS.set(Some(n));
+        Reset
+    }
+    pub fn read_after_write() -> Reset {
+        AFTER_WRITE.set(true);
+        Reset
+    }
+    pub fn append() -> Result<(), String> {
+        if let Some(n) = APPENDS.get() {
+            if n == 0 {
+                APPENDS.set(None);
+                return Err("injected append failure".into());
+            }
+            APPENDS.set(Some(n - 1));
+        }
+        if AFTER_WRITE.replace(false) {
+            READ.set(true);
+        }
+        Ok(())
+    }
+    pub fn read() -> Result<(), String> {
+        if READ.replace(false) {
+            Err("injected read failure".into())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 /// Who is acting. `CANON_ACTOR`, else git's configured name, else `$USER`.

@@ -1,0 +1,278 @@
+{
+  "interpretation": "shared-assent-v1",
+  "boundary": "fixed-basis admission round",
+  "interpreter_binary_sha256": "791dfcafdaddfafa0ba0ad299941323db0bc0660e5dc85f36511aeb136ffa5f5",
+  "baseline_report_sha256": "811fd6a36c6ec89b0256bd7b876852310e993e8d45c25cf6f0c38a442210f849",
+  "summary": {
+    "holds": 10,
+    "fails": 0,
+    "could_not_judge": 0,
+    "original_controls": 6,
+    "preserved_controls": 6
+  },
+  "results": [
+    {
+      "experiment": "adoption",
+      "case": "pending-repeal",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "retracted"
+      },
+      "observed": {
+        "status": "retracted"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [
+        {
+          "act": "can-db4c4cca9b3b",
+          "because": "own pending proposal or own resignation",
+          "requirements": [],
+          "status": "admitted"
+        }
+      ],
+      "basis_sha256": "6c200398e923ac1da8f23afaffd12f1e6709d5af9877d011cc200cd748cff2a6",
+      "source_sha256": "f20557c2ab31c2feb0985ef808a946753086e8001b2e33d6945f3282e57c6feb"
+    },
+    {
+      "experiment": "adoption",
+      "case": "adopted-repeal",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [
+        {
+          "act": "can-eb2f1d1e4c55",
+          "because": "assent under every affected jurisdiction's established procedure",
+          "requirements": [
+            {
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "edbe45b55bd6b6ad28133bbd29c61d2ad0807c30948d38e1084c29077e01ae45",
+      "source_sha256": "91912b9f73ac712c0278eab1abf86e4e51549de3b96d6bfb8f9e738a3541cfcf"
+    },
+    {
+      "experiment": "adoption",
+      "case": "pending-undo",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "absent"
+      },
+      "observed": {
+        "status": "absent"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [
+        {
+          "act": "can-59fdd69c518f",
+          "because": "own pending proposal or own resignation",
+          "requirements": [],
+          "status": "admitted"
+        }
+      ],
+      "basis_sha256": "500a89f096392dbb7fab28361a292ed5f949d3c29fa5d63cec55a417a5481bb1",
+      "source_sha256": "5258468516d02712c7587f738e473aba4060d5266de692eaa56ebcbfaef4c7bf"
+    },
+    {
+      "experiment": "adoption",
+      "case": "adopted-undo",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [
+        {
+          "act": "can-f5c42ebd973a",
+          "because": "assent under every affected jurisdiction's established procedure",
+          "requirements": [
+            {
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "1f2a9e63e256fb5c9cfd108401ca6efa8381eb03535d155054a9533bbaa08fd4",
+      "source_sha256": "635acade8c3f63e86796025a0eb2f4a2b3a0124d207d4ecb176a623494520321"
+    },
+    {
+      "experiment": "adoption",
+      "case": "stranger-repeal",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [
+        {
+          "act": "can-8d3038ccc30e",
+          "because": "assent under every affected jurisdiction's established procedure",
+          "requirements": [
+            {
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "fe928b7e451636b91b98a63936f1b7d266d55d29abcfe192b105e807a863047d",
+      "source_sha256": "a25d97fd3d1a63630b33633ec7d4b597378e7b8e6f0b76d519e7a3caa393161b"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "local",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [],
+      "basis_sha256": "3617963fe1395574821ab4f6ea6e790056fbdfe144d0d647f190dafcae1bc236",
+      "source_sha256": "0e6f19743e30786b98fb43cef6c16a50e0dc3a281f0d35563322f74d08ba4f32"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "one-house",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "proposed",
+        "original_status": "active"
+      },
+      "observed": {
+        "status": "proposed",
+        "original_status": "active"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [],
+      "basis_sha256": "88b2b26c8becc46facfe1a71b85b168ad21e24f60a7610c23608b976a4331128",
+      "source_sha256": "8a39d1d7c8b5a32420d1d1b7ed0d5135c21548f2bf6f940bfc0f9ee35a490411"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "both-houses",
+      "native_judgment": "holds",
+      "judgment": "holds",
+      "expected": {
+        "status": "active",
+        "original_status": "superseded"
+      },
+      "observed": {
+        "status": "active",
+        "original_status": "superseded"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [],
+      "basis_sha256": "82539dccf5e8672a19c3ecdbb8f2d9fc887765c6f80e14e4af13be5225785c48",
+      "source_sha256": "6f9710f7d8fb9502758633b28ac346fb62ea4c51808fd271bf25422d40b200f4"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "remove-delegate",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "sam_holds": true
+      },
+      "observed": {
+        "sam_holds": true
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [
+        {
+          "act": "can-b4dff47c0d36",
+          "because": "assent under every affected jurisdiction's established procedure",
+          "requirements": [
+            {
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "ab952ac08cf384b6458366b30522a997a4e9bf224f6917588d277416a8ddfa58",
+      "source_sha256": "55593752cc43cca054e50e66af8737eddd4dc96a14b0e00fcc8d1de5235c849f"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "move-rule",
+      "native_judgment": "fails",
+      "judgment": "holds",
+      "expected": {
+        "scope": "courtyard",
+        "status": "active"
+      },
+      "observed": {
+        "scope": "courtyard",
+        "status": "active"
+      },
+      "interpretation": "shared-assent-v1",
+      "admissions": [
+        {
+          "act": "can-22b569d43d78",
+          "because": "assent under every affected jurisdiction's established procedure",
+          "requirements": [
+            {
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            },
+            {
+              "scope": "house_a",
+              "verdict": {
+                "how": "human:Mira is in charge of house_a",
+                "since": 1793637169,
+                "verdict": "ratified"
+              }
+            }
+          ],
+          "status": "proposed"
+        }
+      ],
+      "basis_sha256": "5013e99f771e31688a92fd81860ca50424641af13402832b447a74e5fd70d6ac",
+      "source_sha256": "7aaaf71036d46294df2708d2863638200d2247db6607a6a947c085e08b36be71"
+    }
+  ]
+}

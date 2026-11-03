@@ -64,6 +64,7 @@ help all` lists everything. Grouped here by what you're doing. Anything marked
 | What it does | Example |
 |---|---|
 | Start a notebook here — for a house, yourself, or a codebase | `canon init --profile house` |
+| Open your record in a browser, or create one if none is found | `canon ui` |
 | Point it at a model endpoint for the reading half | `canon config set endpoint http://localhost:9741/v1` |
 
 ### Day to day
@@ -190,6 +191,8 @@ source and history; `canon_open` lists unanswered questions.
 - [Getting started](./GETTING_STARTED.md) — a house's first hour, step by step.
 - [Cookbook](./COOKBOOK.md) — the questions groups actually ask, answered with
   real commands.
+- [Try the institution reader](./INSTITUTIONS.md) — a house adopts a rule and
+  later removes it under the same shared procedure. An experimental preview.
 - [PRIMITIVES.md](./PRIMITIVES.md) — why these ten ideas and no more.
 - [SPEC.md](./SPEC.md) — the file format itself, if you want to read the raw
   notebook.

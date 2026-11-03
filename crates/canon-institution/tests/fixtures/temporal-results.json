@@ -1,0 +1,1676 @@
+[
+  {
+    "case": "pending-repeal",
+    "experiment": "adoption",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [],
+          "source": "can-db4c4cca9b3b",
+          "status": "admitted"
+        },
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-708765109a78",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "2936f49fed6321249e95192b7440cd87875241e46c925f5a3e5beeaacfb3f88c",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-600770d5cda4"
+        },
+        {
+          "effective_at": 1793637169,
+          "source": "can-db4c4cca9b3b"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [
+        {
+          "actor": "agent:helper",
+          "asserted_at": 1578009600,
+          "id": "can-708765109a78",
+          "scope": "house",
+          "status": {
+            "at": 1793637169,
+            "status": "retracted"
+          },
+          "text": "Quiet hours begin at 10pm."
+        }
+      ],
+      "source_sha256": "f20557c2ab31c2feb0985ef808a946753086e8001b2e33d6945f3282e57c6feb",
+      "state": {
+        "ancestry": null,
+        "commitments": [],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-874f24238798",
+            "actor": "human:June",
+            "granted_at": 1577836800,
+            "scope": "house"
+          },
+          {
+            "act": "can-bfd09099e095",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house"
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-8b2d18529abb",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "unanimous"
+            },
+            "scope": "house",
+            "text": "Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          }
+        ],
+        "scopes": [
+          [
+            "can-708765109a78",
+            "house"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "adopted-repeal",
+    "experiment": "adoption",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-eb2f1d1e4c55",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "84029b68cbc847295cf9cc5a63637ef1ce7cbd5ead952b545a55bdf5443c6c22",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-0a038b629da6"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-b77b8f1f2882"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-7875032fa48a"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-0b27d3f043b3"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "91912b9f73ac712c0278eab1abf86e4e51549de3b96d6bfb8f9e738a3541cfcf",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "agent:helper",
+            "asserted_at": 1578009600,
+            "id": "can-b77b8f1f2882",
+            "source": "adopted-repeal",
+            "status": {
+              "status": "active"
+            },
+            "text": "Quiet hours begin at 10pm."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-874f24238798",
+            "actor": "human:June",
+            "granted_at": 1577836800,
+            "scope": "house"
+          },
+          {
+            "act": "can-bfd09099e095",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-b77b8f1f2882",
+            "act": "can-7875032fa48a",
+            "at": 1578096000,
+            "by": "human:Mira",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Mira"
+              }
+            }
+          },
+          {
+            "about": "can-b77b8f1f2882",
+            "act": "can-0b27d3f043b3",
+            "at": 1578182400,
+            "by": "human:June",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:June"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-8b2d18529abb",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "unanimous"
+            },
+            "scope": "house",
+            "text": "Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          }
+        ],
+        "scopes": [
+          [
+            "can-b77b8f1f2882",
+            "house"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "pending-undo",
+    "experiment": "adoption",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [],
+          "source": "can-59fdd69c518f",
+          "status": "admitted"
+        },
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-58071415ddbb",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "bb451971d2fc845ee93e1209cd38fa0397d327ceb3a4140230d5107ebd941f03",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-8f3f00719729"
+        },
+        {
+          "effective_at": 1793637169,
+          "source": "can-59fdd69c518f"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "5258468516d02712c7587f738e473aba4060d5266de692eaa56ebcbfaef4c7bf",
+      "state": {
+        "ancestry": null,
+        "commitments": [],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-874f24238798",
+            "actor": "human:June",
+            "granted_at": 1577836800,
+            "scope": "house"
+          },
+          {
+            "act": "can-bfd09099e095",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house"
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-8b2d18529abb",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "unanimous"
+            },
+            "scope": "house",
+            "text": "Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          }
+        ],
+        "scopes": [
+          [
+            "can-58071415ddbb",
+            "house"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "adopted-undo",
+    "experiment": "adoption",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-f5c42ebd973a",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "bd058ac5e33b7087fe69e4cd9dd512316d0537429f1b3aa1e88053e7418935b6",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-023f780aae07"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-986090f09ac1"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-def1b54e76bd"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-a172577385d7"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "635acade8c3f63e86796025a0eb2f4a2b3a0124d207d4ecb176a623494520321",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "agent:helper",
+            "asserted_at": 1578009600,
+            "id": "can-023f780aae07",
+            "source": "adopted-undo",
+            "status": {
+              "status": "active"
+            },
+            "text": "Quiet hours begin at 10pm."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-874f24238798",
+            "actor": "human:June",
+            "granted_at": 1577836800,
+            "scope": "house"
+          },
+          {
+            "act": "can-bfd09099e095",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-023f780aae07",
+            "act": "can-def1b54e76bd",
+            "at": 1578096000,
+            "by": "human:Mira",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Mira"
+              }
+            }
+          },
+          {
+            "about": "can-023f780aae07",
+            "act": "can-a172577385d7",
+            "at": 1578182400,
+            "by": "human:June",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:June"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-8b2d18529abb",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "unanimous"
+            },
+            "scope": "house",
+            "text": "Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          }
+        ],
+        "scopes": [
+          [
+            "can-023f780aae07",
+            "house"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "stranger-repeal",
+    "experiment": "adoption",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "unanimous"
+              },
+              "scope": "house",
+              "verdict": {
+                "needs": "approval from human:June, human:Mira: everyone in charge of house when it was proposed",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-8d3038ccc30e",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "7715602cf90a4c5dc05574dc3a9f10b2b1ec3e83e63826a08f723e1151faf145",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-679ea901a1f3"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-84770893ca80"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-c65dc34edfea"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-805424bb7db2"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "a25d97fd3d1a63630b33633ec7d4b597378e7b8e6f0b76d519e7a3caa393161b",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "agent:helper",
+            "asserted_at": 1578009600,
+            "id": "can-84770893ca80",
+            "source": "stranger-repeal",
+            "status": {
+              "status": "active"
+            },
+            "text": "Quiet hours begin at 10pm."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-874f24238798",
+            "actor": "human:June",
+            "granted_at": 1577836800,
+            "scope": "house"
+          },
+          {
+            "act": "can-bfd09099e095",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-84770893ca80",
+            "act": "can-c65dc34edfea",
+            "at": 1578096000,
+            "by": "human:Mira",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Mira"
+              }
+            }
+          },
+          {
+            "about": "can-84770893ca80",
+            "act": "can-805424bb7db2",
+            "at": 1578182400,
+            "by": "human:June",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:June"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-8b2d18529abb",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "unanimous"
+            },
+            "scope": "house",
+            "text": "Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          }
+        ],
+        "scopes": [
+          [
+            "can-84770893ca80",
+            "house"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "local",
+    "experiment": "courtyard",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [
+            {
+              "rule": {
+                "rule": "standing"
+              },
+              "scope": "house_a",
+              "verdict": {
+                "how": "approved by human:Mira, in charge of house_a",
+                "since": 1793637169,
+                "verdict": "ratified"
+              }
+            }
+          ],
+          "source": "can-a9fe4fe17e50",
+          "status": "admitted"
+        }
+      ],
+      "arrangements_sha256": "95700db24e4eeecadec7358d5fef8c7caa86329e882fdb3a81aa5e7fa43785bc",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-bd0e112be7fd"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-e6a4a9a87dee"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-556534a25849"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-4e5103cbd15c"
+        },
+        {
+          "effective_at": 1793637169,
+          "source": "can-ef9539b809ad"
+        },
+        {
+          "effective_at": 1793637169,
+          "source": "can-a9fe4fe17e50"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "0e6f19743e30786b98fb43cef6c16a50e0dc3a281f0d35563322f74d08ba4f32",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "human:Mira",
+            "asserted_at": 1578009600,
+            "id": "can-bd0e112be7fd",
+            "source": "local",
+            "status": {
+              "status": "active"
+            },
+            "text": "The courtyard is available to both houses."
+          },
+          {
+            "actor": "agent:helper",
+            "asserted_at": 1578182400,
+            "id": "can-a9fe4fe17e50",
+            "source": "local",
+            "status": {
+              "status": "active"
+            },
+            "text": "House A keeps its bikes inside its own shed."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-19b5c49bcabd",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          },
+          {
+            "act": "can-269e2039a62e",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "house_b"
+          },
+          {
+            "act": "can-63627a34c91b",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house_a"
+          },
+          {
+            "act": "can-c132386aba26",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-bd0e112be7fd",
+            "act": "can-556534a25849",
+            "at": 1578096000,
+            "by": "human:Sam",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Sam"
+              }
+            }
+          },
+          {
+            "about": "can-a9fe4fe17e50",
+            "act": "can-ef9539b809ad",
+            "at": 1793637169,
+            "by": "human:Mira",
+            "position": {
+              "because": "Authority experiment local",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Mira"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-55b94f219aa2",
+            "actor": "human:Sam",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_b",
+            "text": "House B's appointed delegate approves local changes."
+          },
+          {
+            "act": "can-918d73a42198",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "holders": [
+                "human:Mira",
+                "human:Sam"
+              ],
+              "rule": "joint"
+            },
+            "scope": "courtyard",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          {
+            "act": "can-b5d32681a0d6",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_a",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          }
+        ],
+        "scopes": [
+          [
+            "can-bd0e112be7fd",
+            "courtyard"
+          ],
+          [
+            "can-a9fe4fe17e50",
+            "house_a"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "one-house",
+    "experiment": "courtyard",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-6823ca8efabc",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "2cc5928ef7c500410ea17435220d6ee486be43fbf8f251b8068f934951051d92",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-55ee60bbaa08"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-e06d3af52afa"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-1de9a0ec0dff"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-5cb6ccaae2b7"
+        },
+        {
+          "effective_at": 1793637169,
+          "source": "can-66cd1c7f2d58"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [
+        {
+          "actor": "agent:helper",
+          "asserted_at": 1578182400,
+          "id": "can-6823ca8efabc",
+          "scope": "courtyard",
+          "status": {
+            "needs": "assent under the proposal's governing procedure",
+            "status": "proposed"
+          },
+          "text": "The courtyard closes at 9pm."
+        }
+      ],
+      "source_sha256": "8a39d1d7c8b5a32420d1d1b7ed0d5135c21548f2bf6f940bfc0f9ee35a490411",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "human:Mira",
+            "asserted_at": 1578009600,
+            "id": "can-55ee60bbaa08",
+            "source": "one-house",
+            "status": {
+              "status": "active"
+            },
+            "text": "The courtyard is available to both houses."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-19b5c49bcabd",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          },
+          {
+            "act": "can-269e2039a62e",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "house_b"
+          },
+          {
+            "act": "can-63627a34c91b",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house_a"
+          },
+          {
+            "act": "can-c132386aba26",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-55ee60bbaa08",
+            "act": "can-1de9a0ec0dff",
+            "at": 1578096000,
+            "by": "human:Sam",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Sam"
+              }
+            }
+          },
+          {
+            "about": "can-6823ca8efabc",
+            "act": "can-66cd1c7f2d58",
+            "at": 1793637169,
+            "by": "human:Mira",
+            "position": {
+              "because": "Authority experiment one-house",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Mira"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-55b94f219aa2",
+            "actor": "human:Sam",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_b",
+            "text": "House B's appointed delegate approves local changes."
+          },
+          {
+            "act": "can-918d73a42198",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "holders": [
+                "human:Mira",
+                "human:Sam"
+              ],
+              "rule": "joint"
+            },
+            "scope": "courtyard",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          {
+            "act": "can-b5d32681a0d6",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_a",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          }
+        ],
+        "scopes": [
+          [
+            "can-55ee60bbaa08",
+            "courtyard"
+          ],
+          [
+            "can-6823ca8efabc",
+            "courtyard"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "both-houses",
+    "experiment": "courtyard",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": 1793637169,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "how": "approved jointly by human:Mira, human:Sam",
+                "since": 1793637169,
+                "verdict": "ratified"
+              }
+            }
+          ],
+          "source": "can-169f752ed1fb",
+          "status": "admitted"
+        }
+      ],
+      "arrangements_sha256": "2e6ca9bec5f8ce8c20629052becdbc132e02f774f799c7813dd2c5145b8041d2",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-2fe37169a2e7"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-ff02e731ffa5"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-5bc7b49b514e"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-b1211e4d2912"
+        },
+        {
+          "effective_at": 1578268800,
+          "source": "can-2675f2a52dbb"
+        },
+        {
+          "effective_at": 1793637169,
+          "source": "can-8dcb3c0f68b1"
+        },
+        {
+          "effective_at": 1793637169,
+          "source": "can-169f752ed1fb"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "6f9710f7d8fb9502758633b28ac346fb62ea4c51808fd271bf25422d40b200f4",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "human:Mira",
+            "asserted_at": 1578009600,
+            "id": "can-2fe37169a2e7",
+            "source": "both-houses",
+            "status": {
+              "by": "can-169f752ed1fb",
+              "status": "superseded"
+            },
+            "text": "The courtyard is available to both houses."
+          },
+          {
+            "actor": "agent:helper",
+            "asserted_at": 1578182400,
+            "id": "can-169f752ed1fb",
+            "replaces": [
+              "can-2fe37169a2e7"
+            ],
+            "status": {
+              "status": "active"
+            },
+            "text": "The courtyard closes at 9pm."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-19b5c49bcabd",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          },
+          {
+            "act": "can-269e2039a62e",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "house_b"
+          },
+          {
+            "act": "can-63627a34c91b",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house_a"
+          },
+          {
+            "act": "can-c132386aba26",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-2fe37169a2e7",
+            "act": "can-5bc7b49b514e",
+            "at": 1578096000,
+            "by": "human:Sam",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Sam"
+              }
+            }
+          },
+          {
+            "about": "can-169f752ed1fb",
+            "act": "can-2675f2a52dbb",
+            "at": 1578268800,
+            "by": "human:Sam",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Sam"
+              }
+            }
+          },
+          {
+            "about": "can-169f752ed1fb",
+            "act": "can-8dcb3c0f68b1",
+            "at": 1793637169,
+            "by": "human:Mira",
+            "position": {
+              "because": "Authority experiment both-houses",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Mira"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-55b94f219aa2",
+            "actor": "human:Sam",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_b",
+            "text": "House B's appointed delegate approves local changes."
+          },
+          {
+            "act": "can-918d73a42198",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "holders": [
+                "human:Mira",
+                "human:Sam"
+              ],
+              "rule": "joint"
+            },
+            "scope": "courtyard",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          {
+            "act": "can-b5d32681a0d6",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_a",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          }
+        ],
+        "scopes": [
+          [
+            "can-2fe37169a2e7",
+            "courtyard"
+          ],
+          [
+            "can-169f752ed1fb",
+            "courtyard"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "remove-delegate",
+    "experiment": "courtyard",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            }
+          ],
+          "source": "can-b4dff47c0d36",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "689fd18cfdbaee389135417e59e31b36bb75a18c5fdf439d1eed18edc86b99b8",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-1ab35ab04f25"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-356fb38ca41e"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-0fcba50e4f0b"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "55593752cc43cca054e50e66af8737eddd4dc96a14b0e00fcc8d1de5235c849f",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "human:Mira",
+            "asserted_at": 1578009600,
+            "id": "can-356fb38ca41e",
+            "source": "remove-delegate",
+            "status": {
+              "status": "active"
+            },
+            "text": "The courtyard is available to both houses."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-19b5c49bcabd",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          },
+          {
+            "act": "can-269e2039a62e",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "house_b"
+          },
+          {
+            "act": "can-63627a34c91b",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house_a"
+          },
+          {
+            "act": "can-c132386aba26",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-356fb38ca41e",
+            "act": "can-0fcba50e4f0b",
+            "at": 1578096000,
+            "by": "human:Sam",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Sam"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-55b94f219aa2",
+            "actor": "human:Sam",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_b",
+            "text": "House B's appointed delegate approves local changes."
+          },
+          {
+            "act": "can-918d73a42198",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "holders": [
+                "human:Mira",
+                "human:Sam"
+              ],
+              "rule": "joint"
+            },
+            "scope": "courtyard",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          {
+            "act": "can-b5d32681a0d6",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_a",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          }
+        ],
+        "scopes": [
+          [
+            "can-356fb38ca41e",
+            "courtyard"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "case": "move-rule",
+    "experiment": "courtyard",
+    "result": {
+      "admissions": [
+        {
+          "effective_at": null,
+          "requirements": [
+            {
+              "rule": {
+                "holders": [
+                  "human:Mira",
+                  "human:Sam"
+                ],
+                "rule": "joint"
+              },
+              "scope": "courtyard",
+              "verdict": {
+                "needs": "approval from human:Sam",
+                "verdict": "proposed"
+              }
+            },
+            {
+              "rule": {
+                "rule": "standing"
+              },
+              "scope": "house_a",
+              "verdict": {
+                "how": "human:Mira is in charge of house_a",
+                "since": 1793637169,
+                "verdict": "ratified"
+              }
+            }
+          ],
+          "source": "can-22b569d43d78",
+          "status": "proposed"
+        }
+      ],
+      "arrangements_sha256": "d694e71af0ee340e187909686bb20feee524d67c97ee41813afcdd688b083edd",
+      "at": 1793637169,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-232f8ca8769e"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-70c1672a611f"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-1a2a9006a4dd"
+        }
+      ],
+      "interpretation": "shared-assent-v2",
+      "pending": [],
+      "source_sha256": "7aaaf71036d46294df2708d2863638200d2247db6607a6a947c085e08b36be71",
+      "state": {
+        "ancestry": null,
+        "commitments": [
+          {
+            "actor": "human:Mira",
+            "asserted_at": 1578009600,
+            "id": "can-70c1672a611f",
+            "source": "move-rule",
+            "status": {
+              "status": "active"
+            },
+            "text": "The courtyard is available to both houses."
+          }
+        ],
+        "conflicts": [],
+        "dangling": [],
+        "grants": [
+          {
+            "act": "can-19b5c49bcabd",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          },
+          {
+            "act": "can-269e2039a62e",
+            "actor": "human:Sam",
+            "granted_at": 1577836800,
+            "scope": "house_b"
+          },
+          {
+            "act": "can-63627a34c91b",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "house_a"
+          },
+          {
+            "act": "can-c132386aba26",
+            "actor": "human:Mira",
+            "granted_at": 1577836800,
+            "scope": "courtyard"
+          }
+        ],
+        "positions": [
+          {
+            "about": "can-70c1672a611f",
+            "act": "can-1a2a9006a4dd",
+            "at": 1578096000,
+            "by": "human:Sam",
+            "position": {
+              "because": "I agree to this exact proposal.",
+              "pull": "toward",
+              "source": {
+                "actor": "human:Sam"
+              }
+            }
+          }
+        ],
+        "ratifications": [
+          {
+            "act": "can-55b94f219aa2",
+            "actor": "human:Sam",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_b",
+            "text": "House B's appointed delegate approves local changes."
+          },
+          {
+            "act": "can-918d73a42198",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "holders": [
+                "human:Mira",
+                "human:Sam"
+              ],
+              "rule": "joint"
+            },
+            "scope": "courtyard",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          {
+            "act": "can-b5d32681a0d6",
+            "actor": "human:Mira",
+            "at": 1577923200,
+            "effective_at": 1577923200,
+            "governs": "all",
+            "rule": {
+              "rule": "standing"
+            },
+            "scope": "house_a",
+            "text": "Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          }
+        ],
+        "scopes": [
+          [
+            "can-70c1672a611f",
+            "courtyard"
+          ]
+        ]
+      }
+    }
+  }
+]

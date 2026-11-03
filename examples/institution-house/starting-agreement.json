@@ -1,0 +1,9 @@
+{
+  "boundary": 1577923200,
+  "effects": [
+    {"source": "can-73fc0e52ac35", "effective_at": 1577836800},
+    {"source": "can-84f756e2064f", "effective_at": 1577836800},
+    {"source": "can-59115926b1a5", "effective_at": 1577923200}
+  ],
+  "pending": []
+}
