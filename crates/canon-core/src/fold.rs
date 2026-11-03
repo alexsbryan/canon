@@ -960,21 +960,7 @@ fn apply_grant(
     // does this lapse" have two answers. Closing rather than deleting is what
     // keeps "who held this in March" answerable — and what stops a re-grant
     // today from changing a pool that was frozen in March.
-    for g in canon
-        .grants
-        .iter_mut()
-        .filter(|g| g.actor == *holder && g.scope == *scope && g.withdrawn_at.is_none())
-    {
-        g.withdrawn_at = Some(act.ts_unix);
-    }
-    canon.grants.push(crate::scope::Grant {
-        actor: holder.to_string(),
-        scope: scope.clone(),
-        horizon,
-        granted_at: act.ts_unix,
-        withdrawn_at: None,
-        act: act.id.clone(),
-    });
+    crate::effects::grant(&mut canon.grants, act, holder, scope, horizon, act.ts_unix);
 }
 
 /// A `withdraw` act applied, or recorded in `ungoverned`. See [`apply_grant`].
@@ -996,13 +982,7 @@ fn apply_withdraw(canon: &mut Canon, act: &Act, holder: &str, scope: &crate::sco
     // `house.kitchen` while holding `house` would need a negative grant, and a
     // permission system with both grants and denials is one where nobody can
     // answer "may they?" by looking. Re-grant narrower instead.
-    for g in canon
-        .grants
-        .iter_mut()
-        .filter(|g| g.actor == *holder && scope.covers(&g.scope) && g.withdrawn_at.is_none())
-    {
-        g.withdrawn_at = Some(act.ts_unix);
-    }
+    crate::effects::withdraw(&mut canon.grants, holder, scope, act.ts_unix);
 }
 
 /// The standing established by the acts before `i`, ignoring anything an
@@ -1216,65 +1196,8 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
         }
     }
 
-    // Pass 1b — liveness.
-    //
-    // An act is dead iff some LIVE `Revert` targets it; a `Revert` cancelled
-    // by another live `Revert` has no effect, which is revert-of-revert
-    // re-applying the originals.
-    //
-    // This is resolved by reference rather than by position. A backward walk
-    // over the sorted acts looks correct and is not: acts routinely share a
-    // second, and the id tiebreak can place a `Revert` ahead of the very act
-    // it cancels. The recursion is well-founded because an act can only
-    // reference an id that already existed when it was written.
-    let mut reverters: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
-    for (j, act) in acts.iter().enumerate().filter(|(j, _)| in_seat[*j]) {
-        if let ActKind::Revert { targets, .. } = &act.kind {
-            for t in targets {
-                reverters.entry(t.as_str()).or_default().push(j);
-            }
-        }
-    }
-
-    #[derive(Clone, Copy, PartialEq)]
-    enum Mark {
-        Unknown,
-        Walking,
-        Known(bool),
-    }
-    let mut mark = vec![Mark::Unknown; n];
-
-    fn resolve(
-        i: usize,
-        acts: &[Act],
-        reverters: &BTreeMap<&str, Vec<usize>>,
-        mark: &mut Vec<Mark>,
-    ) -> bool {
-        match mark[i] {
-            Mark::Known(v) => return v,
-            // A cycle would mean an act referencing an id minted after it,
-            // which content-addressing makes impossible. Fail live rather
-            // than looping.
-            Mark::Walking => return true,
-            Mark::Unknown => {}
-        }
-        mark[i] = Mark::Walking;
-        let mut alive = true;
-        if let Some(js) = reverters.get(acts[i].id.as_str()) {
-            for &j in js {
-                if resolve(j, acts, reverters, mark) {
-                    alive = false;
-                    break;
-                }
-            }
-        }
-        mark[i] = Mark::Known(alive);
-        alive
-    }
-
-    let live: Vec<bool> = (0..n)
-        .map(|i| resolve(i, acts, &reverters, &mut mark))
-        .collect();
+    // Pass 1b — mechanical liveness consumes the legacy gate's admission mask.
+    let live = crate::effects::liveness(acts, &in_seat);
 
     // Pass 2 — introduce every commitment BEFORE applying any status change.
     //
@@ -1300,42 +1223,15 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
     };
 
     for act in live_acts() {
-        if let ActKind::Question { text, proposal } = &act.kind {
-            q_order.push(act.id.clone());
-            questions.insert(
-                act.id.clone(),
-                Question {
-                    id: act.id.clone(),
-                    text: text.clone(),
-                    status: Status::Active,
-                    asked_at: act.ts_unix,
-                    actor: act.actor.clone(),
-                    proposal: proposal.clone(),
-                },
-            );
+        if let Some(q) = crate::effects::question(act, act.ts_unix) {
+            q_order.push(q.id.clone());
+            questions.insert(q.id.clone(), q);
             continue;
         }
-        let (text, replaces, from, source) = match &act.kind {
-            ActKind::Assert { text, from, source } => {
-                (text, Vec::new(), from.clone(), source.clone())
-            }
-            ActKind::Supersede { text, old, .. } => (text, old.clone(), None, None),
-            _ => continue,
-        };
-        order.push(act.id.clone());
-        by_id.insert(
-            act.id.clone(),
-            Commitment {
-                id: act.id.clone(),
-                text: text.clone(),
-                status: Status::Active,
-                asserted_at: act.ts_unix,
-                actor: act.actor.clone(),
-                replaces,
-                from,
-                source,
-            },
-        );
+        if let Some(c) = crate::effects::commitment(act) {
+            order.push(c.id.clone());
+            by_id.insert(c.id.clone(), c);
+        }
     }
 
     // Pass 3 — effects, in time order, so a later act wins over an earlier one.
@@ -1441,12 +1337,7 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                     (None, None) => canon.dangling.push((act.id.clone(), target.clone())),
                 }
             }
-            ActKind::Accept {
-                a,
-                b,
-                rationale,
-                revisit,
-            } => {
+            ActKind::Accept { a, b, .. } => {
                 // A ruling on a pair takes standing over the pair. An agent
                 // with a kitchen seat ruling on hall rules is outside its
                 // standing: the act is kept, flagged, and not applied.
@@ -1458,40 +1349,13 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                         canon.dangling.push((act.id.clone(), side.clone()));
                     }
                 }
-                canon.conflicts.push(Conflict {
-                    a: a.clone(),
-                    b: b.clone(),
-                    disposition: Disposition::Tolerated {
-                        rationale: rationale.clone(),
-                        revisit: revisit.clone(),
-                    },
-                    at: act.ts_unix,
-                });
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix);
             }
-            ActKind::Dismiss { a, b, rationale } => {
+            ActKind::Dismiss { a, b, .. } => {
                 if !rules_over(&mut canon, act, a, b) {
                     continue;
                 }
-                canon.conflicts.push(Conflict {
-                    a: a.clone(),
-                    b: b.clone(),
-                    disposition: Disposition::Dismissed {
-                        rationale: rationale.clone(),
-                    },
-                    at: act.ts_unix,
-                })
-            }
-            ActKind::Adopt {
-                lineage,
-                generation,
-                source,
-            } => {
-                canon.ancestry = Some(Ancestry {
-                    lineage: lineage.clone(),
-                    generation: generation.clone(),
-                    source: source.clone(),
-                    at: act.ts_unix,
-                })
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix);
             }
             ActKind::Grant {
                 holder,
@@ -1508,25 +1372,8 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                 canon.scopes.retain(|(id, _)| id != commitment);
                 canon.scopes.push((commitment.clone(), scope.clone()));
             }
-            ActKind::Position {
-                about,
-                citing,
-                pull,
-                because,
-            } => {
-                // The act's own actor is the source when nothing is cited.
-                // One place says who.
-                let position = match citing {
-                    Some(id) => crate::standing::Position::of(id.clone(), *pull, because),
-                    None => crate::standing::Position::by(act.actor.clone(), *pull, because),
-                };
-                canon.positions.push(Stated {
-                    about: about.clone(),
-                    position,
-                    by: act.actor.clone(),
-                    at: act.ts_unix,
-                    act: act.id.clone(),
-                });
+            ActKind::Position { .. } => {
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix)
             }
             ActKind::Policy { text, rule, scope } => {
                 if !gate(&mut canon, act, scope.as_ref(), || {
@@ -1590,12 +1437,7 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                     personal: *personal,
                 });
             }
-            ActKind::Allot {
-                text,
-                unit,
-                units,
-                scope,
-            } => {
+            ActKind::Allot { scope, .. } => {
                 // Saying what a commons HAS is a governance act: it draws the
                 // boundary Ostrom's first principle is about, one level down
                 // from who holds it.
@@ -1604,18 +1446,9 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                 }) {
                     continue;
                 }
-                canon.allotments.retain(|a| a.scope != *scope);
-                canon.allotments.push(crate::allot::Allotment {
-                    scope: scope.clone(),
-                    unit: unit.clone(),
-                    units: units.clone(),
-                    text: text.clone(),
-                    at: act.ts_unix,
-                    actor: act.actor.clone(),
-                    act: act.id.clone(),
-                });
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix);
             }
-            ActKind::Allocation { text, rule, scope } => {
+            ActKind::Allocation { scope, .. } => {
                 if !gate(&mut canon, act, Some(scope), || {
                     format!("{} set how {scope} goes round, not in charge", act.actor)
                 }) {
@@ -1624,22 +1457,9 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                 // Kept rather than replaced, like a ratification rule: the
                 // period is counted from adoption, so which turn it is stays
                 // answerable for a rule that has since been superseded.
-                canon.allocations.push(crate::allot::AdoptedAllocation {
-                    scope: scope.clone(),
-                    rule: rule.clone(),
-                    text: text.clone(),
-                    at: act.ts_unix,
-                    actor: act.actor.clone(),
-                    act: act.id.clone(),
-                });
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix);
             }
-            ActKind::Decided {
-                about,
-                outcome,
-                authority,
-                rationale,
-                citing,
-            } => {
+            ActKind::Decided { about, citing, .. } => {
                 // A decision names no scope, so it takes standing in the
                 // canon at all: somebody the house has said is in.
                 if !gate(&mut canon, act, None, || {
@@ -1655,90 +1475,15 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                         canon.dangling.push((act.id.clone(), id.clone()));
                     }
                 }
-                canon.rulings.push(Ruling {
-                    about: about.clone(),
-                    outcome: *outcome,
-                    authority: *authority,
-                    rationale: rationale.clone(),
-                    at: act.ts_unix,
-                    actor: act.actor.clone(),
-                    act: act.id.clone(),
-                    citing: citing.clone(),
-                })
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix);
             }
-            ActKind::Silence { about, rationale } => {
-                canon.silences.retain(|s| s.about != *about);
-                canon.silences.push(Silence {
-                    about: about.clone(),
-                    rationale: rationale.clone(),
-                    at: act.ts_unix,
-                    actor: act.actor.clone(),
-                    act: act.id.clone(),
-                });
-            }
-            ActKind::DrawCommit {
-                scope,
-                count,
-                after_ts,
-                rationale,
-            } => canon.draws.push(crate::draw::Committed {
-                act: act.id.clone(),
-                scope: scope.clone(),
-                count: *count,
-                after_ts: *after_ts,
-                at: act.ts_unix,
-                drawer: act.actor.clone(),
-                rationale: rationale.clone(),
-            }),
-            // FIRST per (draw, actor) wins, for both. A second digest would
-            // let somebody publish several and open whichever flatters them;
-            // a second opening is meaningless once the first was checked.
-            ActKind::DrawSecret { commit, digest } => {
-                if !canon
-                    .sealed
-                    .iter()
-                    .any(|s| s.commit == *commit && s.actor == act.actor)
-                {
-                    canon.sealed.push(crate::draw::Sealed {
-                        commit: commit.clone(),
-                        actor: act.actor.clone(),
-                        digest: digest.clone(),
-                        at: act.ts_unix,
-                    });
-                }
-            }
-            ActKind::DrawReveal { commit, secret } => {
-                if !canon
-                    .opened
-                    .iter()
-                    .any(|o| o.commit == *commit && o.actor == act.actor)
-                {
-                    canon.opened.push(crate::draw::Opened {
-                        commit: commit.clone(),
-                        actor: act.actor.clone(),
-                        secret: secret.clone(),
-                        at: act.ts_unix,
-                    });
-                }
-            }
-            ActKind::Horizon {
-                target,
-                at,
-                rationale,
-            } => {
-                canon.horizons.retain(|h| h.target != *target);
-                canon.horizons.push(crate::horizon::Horizon {
-                    target: target.clone(),
-                    at: *at,
-                    rationale: rationale.clone(),
-                    set_at: act.ts_unix,
-                    act: act.id.clone(),
-                });
-            }
-            ActKind::Rank { commitment, rank } => {
-                canon.ranks.retain(|(id, _)| id != commitment);
-                canon.ranks.push((commitment.clone(), rank.clone()));
-            }
+            ActKind::Adopt { .. }
+            | ActKind::Silence { .. }
+            | ActKind::DrawCommit { .. }
+            | ActKind::DrawSecret { .. }
+            | ActKind::DrawReveal { .. }
+            | ActKind::Horizon { .. }
+            | ActKind::Rank { .. } => crate::effects::apply_selected(&mut canon, act, act.ts_unix),
             // Recorded, never acted on. This arm IS "not interpreted".
             // Read before the fold began, by `crate::sign::verify`: a key
             // act decides which of its actor's acts reach this loop, and

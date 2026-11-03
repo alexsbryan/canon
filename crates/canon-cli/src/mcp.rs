@@ -248,7 +248,7 @@ fn locate() -> Result<PathBuf, String> {
 }
 
 fn render_list(dir: &Path, args: &Value) -> Result<String, String> {
-    let canon = store::read(dir)?.derive();
+    let canon = canon_institution::legacy(&store::read(dir)?, None);
     let mut out = list_of(&canon, args)?;
     // An agent reading the rules should know some lines were set aside, and
     // that they were set aside because they were not who they said.
@@ -384,7 +384,7 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
 }
 
 fn render_open(dir: &Path) -> Result<String, String> {
-    let canon = store::read(dir)?.derive();
+    let canon = canon_institution::legacy(&store::read(dir)?, None);
     let open: Vec<_> = canon.open().collect();
     if open.is_empty() {
         return Ok(
@@ -421,7 +421,7 @@ fn render_check(dir: &Path, proposal: &str, args: &Value) -> Result<String, Stri
         .flatten()
         .collect();
     let attrs = crate::check::attributes(&argv, proposal)?;
-    let canon = store::read(dir)?.derive();
+    let canon = canon_institution::legacy(&store::read(dir)?, None);
     if canon.active().next().is_none() {
         return Err("This canon has no rules yet, so there is nothing to check against.".into());
     }
@@ -447,7 +447,7 @@ fn render_check(dir: &Path, proposal: &str, args: &Value) -> Result<String, Stri
 
 fn render_why(dir: &Path, needle: &str) -> Result<String, String> {
     let log = store::read(dir)?;
-    let canon = log.derive();
+    let canon = canon_institution::legacy(&log, None);
     let id = crate::explain::resolve_any(&canon, needle)?;
     Ok(crate::explain::explain(&log, &canon, &id)?.render(""))
 }

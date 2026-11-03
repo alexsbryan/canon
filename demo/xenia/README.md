@@ -106,6 +106,14 @@ node src/run.ts run <canon>/demo/xenia/houses --runs 1 --model deepseek-flash \
 
 The first coliving set runs once, as the operator cut the rate.
 
+## Authority experiments
+
+[Two optional-charter experiments](authority/README.md) pressure-test what
+happens after a house adopts an agent's proposal, and how two houses govern a
+shared courtyard. They combine independent desired outcomes, deterministic
+state observations and xenia challengers over the real CLI. They leave canon's
+core and contract unchanged; the institutional agreements are optional policy.
+
 ## The first set
 
 The set of 2026-10-28, one run by `claude-sonnet-5-5`, is in `findings/`.

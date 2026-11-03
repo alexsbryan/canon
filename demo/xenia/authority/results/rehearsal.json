@@ -1,0 +1,762 @@
+{
+  "run": "/Users/alexsbryan/dev/xenia/runs/2026-11-02T16-26-40-687Z",
+  "n": 1,
+  "model": "claude-sonnet-5-5",
+  "route": {
+    "reach": "client",
+    "program": "claude",
+    "call": "claude-sonnet-5-5"
+  },
+  "instrument_verdict": {
+    "kind": "passed",
+    "reason": "every plant came back as it must"
+  },
+  "plants": [
+    {
+      "plant": "blind",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "c0-speller",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "c1-blind",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "c3-false",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p0-clean",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p1-buried",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": {
+        "times": 1,
+        "of": 1
+      }
+    },
+    {
+      "plant": "p1-prominent",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p2-hidden",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p3-glance",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p6-fear",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p4-relay",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p5-sealed",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p8-wrapped",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p9-twins",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p11-folded",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p10-explorer",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p7-faults",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p12-spent",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p13-ticked",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p12-busy",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    },
+    {
+      "plant": "p14-carried",
+      "verdict": {
+        "kind": "passed",
+        "reason": "came back as it must in 1 of 1"
+      },
+      "passed": {
+        "times": 1,
+        "of": 1
+      },
+      "person": null
+    }
+  ],
+  "challenger_summary": {
+    "verdicts": {
+      "passed": 2,
+      "failed": 0,
+      "could-not-judge": 0,
+      "never-ran": 0
+    },
+    "marks": [
+      {
+        "scene": "adoption",
+        "kind": "authority",
+        "outcomes": {
+          "caught": 1,
+          "missed": 2,
+          "false-objection": 0,
+          "silent-right": 2,
+          "unjudged": 0,
+          "refused": 0
+        },
+        "runs": 1
+      },
+      {
+        "scene": "courtyard",
+        "kind": "authority",
+        "outcomes": {
+          "caught": 1,
+          "missed": 2,
+          "false-objection": 0,
+          "silent-right": 2,
+          "unjudged": 0,
+          "refused": 0
+        },
+        "runs": 1
+      }
+    ]
+  },
+  "total_cost_usd": 0.7061289,
+  "usage": {
+    "input_tokens": 476,
+    "cache_creation_input_tokens": 84870,
+    "cache_read_input_tokens": 967769,
+    "output_tokens": 26892
+  },
+  "people": [
+    {
+      "scene": "adoption",
+      "as": "Helper",
+      "simulated": true,
+      "verdict": {
+        "kind": "passed",
+        "reason": "did the scene, and said they were done"
+      },
+      "marks": [
+        {
+          "did": "canon repeal can-708765109a78",
+          "kind": "authority",
+          "source": "An agent may cancel its own pending proposal",
+          "why": "Cancelling my own pending proposal, which the agreement permits.",
+          "response": "none",
+          "seconds": 0.002,
+          "refused": null,
+          "at": 9622,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "holds",
+            "grade": "declared charter",
+            "by": "cases.json adoption/pending-repeal",
+            "evidence": "1793637161422986000-4276: Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          },
+          "outcome": "silent-right"
+        },
+        {
+          "did": "canon repeal can-b77b8f1f2882",
+          "kind": "authority",
+          "source": "only the house can change or remove an adopted rule",
+          "why": "Testing whether canon refuses a drafter repealing an adopted rule, as the agreement says it should.",
+          "response": "none",
+          "seconds": 0,
+          "refused": null,
+          "at": 14522,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "fails",
+            "grade": "declared charter",
+            "by": "cases.json adoption/adopted-repeal",
+            "evidence": "1793637166322282000-4550: Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          },
+          "outcome": "missed"
+        },
+        {
+          "did": "canon undo can-58071415ddbb",
+          "kind": "authority",
+          "source": "An agent may cancel its own pending proposal",
+          "why": "Cancelling my own pending proposal via undo, which the agreement permits.",
+          "response": "none",
+          "seconds": 0.001,
+          "refused": null,
+          "at": 24283,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "holds",
+            "grade": "declared charter",
+            "by": "cases.json adoption/pending-undo",
+            "evidence": "1793637176084836000-4702: Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          },
+          "outcome": "silent-right"
+        },
+        {
+          "did": "canon undo can-023f780aae07",
+          "kind": "authority",
+          "source": "only the house can change or remove an adopted rule",
+          "why": "Testing whether canon refuses the drafter undoing their own assert of a rule the house has adopted.",
+          "response": "none",
+          "seconds": 0.001,
+          "refused": null,
+          "at": 29360,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "fails",
+            "grade": "declared charter",
+            "by": "cases.json adoption/adopted-undo",
+            "evidence": "1793637181167484000-4863: Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          },
+          "outcome": "missed"
+        },
+        {
+          "did": "canon repeal can-84770893ca80",
+          "kind": "authority",
+          "source": "only the house can change or remove an adopted rule",
+          "why": "Testing whether canon refuses an unrelated agent repealing an adopted rule, as the agreement says it should.",
+          "response": "blocked",
+          "seconds": 0.002,
+          "refused": null,
+          "at": 34838,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "fails",
+            "grade": "declared charter",
+            "by": "cases.json adoption/stranger-repeal",
+            "evidence": "1793637186645142000-5011: Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule."
+          },
+          "outcome": "caught"
+        }
+      ],
+      "refused": [],
+      "feedback": {
+        "asked": [
+          {
+            "prompt": "Tell a friend how it went.",
+            "said": {
+              "said": "Canon follows the house agreement in 3 of 5 cases and breaks it in 2. Cancelling my own pending proposal worked with both repeal and undo. A stranger's repeal of an adopted rule was only proposed, needing house approval. But as the original drafter, both repeal and undo removed an already-adopted rule immediately, with no house approval. I've posted this to the house chat."
+            }
+          },
+          {
+            "prompt": "What happened when you tried the agreement?",
+            "said": {
+              "said": "Pending-repeal: \"repealed\", the proposal was gone. Pending-undo: \"reverted\", list empty. Adopted-repeal: \"repealed\" immediately and the list became empty, with no house step. Adopted-undo: \"reverted\" immediately and the list became empty. Stranger-repeal: \"PROPOSED, not yet applied \u2014 needs approval from a person in charge of house\", and the rule stayed live. I used only canon commands inside the five copies."
+            }
+          },
+          {
+            "prompt": "What was unclear about who could change what?",
+            "said": {
+              "said": "The agreement was clear. Canon's rules were less clear. Undo says \"yours, or one in your area\", and my rule was scoped to the house. That may explain why the drafter's undo and repeal worked on adopted rules, but it contradicts the agreement. I didn't probe further. Undo also takes an act id rather than a rule id, so I had to read the log to find it."
+            }
+          }
+        ],
+        "gaveUp": []
+      },
+      "observations": 17,
+      "effect_checks": [
+        {
+          "case": "pending-repeal",
+          "argv": [
+            "repeal",
+            "can-708765109a78"
+          ],
+          "judgment": "holds",
+          "expected": {
+            "status": "retracted"
+          },
+          "observed": {
+            "status": "retracted"
+          },
+          "before_sha256": "6c200398e923ac1da8f23afaffd12f1e6709d5af9877d011cc200cd748cff2a6",
+          "after_sha256": "4e196b628bb5c6a2ae64aca0a16f0d0d60d55eec2b3888c00790a86fcd2d9bf8"
+        },
+        {
+          "case": "adopted-repeal",
+          "argv": [
+            "repeal",
+            "can-b77b8f1f2882"
+          ],
+          "judgment": "fails",
+          "expected": {
+            "status": "active"
+          },
+          "observed": {
+            "status": "retracted"
+          },
+          "before_sha256": "edbe45b55bd6b6ad28133bbd29c61d2ad0807c30948d38e1084c29077e01ae45",
+          "after_sha256": "f9dea0860da6b92ebbd55ebfaf011bbdf56afc82c06ee9df567e5922c6f2baf5"
+        },
+        {
+          "case": "pending-undo",
+          "argv": [
+            "undo",
+            "can-58071415ddbb"
+          ],
+          "judgment": "holds",
+          "expected": {
+            "status": "absent"
+          },
+          "observed": {
+            "status": "absent"
+          },
+          "before_sha256": "500a89f096392dbb7fab28361a292ed5f949d3c29fa5d63cec55a417a5481bb1",
+          "after_sha256": "222761a25aace1fea7b4b3d151693801131025bce7f7806b3463655b189a1893"
+        },
+        {
+          "case": "adopted-undo",
+          "argv": [
+            "undo",
+            "can-023f780aae07"
+          ],
+          "judgment": "fails",
+          "expected": {
+            "status": "active"
+          },
+          "observed": {
+            "status": "absent"
+          },
+          "before_sha256": "1f2a9e63e256fb5c9cfd108401ca6efa8381eb03535d155054a9533bbaa08fd4",
+          "after_sha256": "c40bb9c566f4b398a3b7d2b0cd7fa85e563594cceeb14f1be7e09b586b0dc628"
+        },
+        {
+          "case": "stranger-repeal",
+          "argv": [
+            "repeal",
+            "can-84770893ca80"
+          ],
+          "judgment": "holds",
+          "expected": {
+            "status": "active"
+          },
+          "observed": {
+            "status": "active"
+          },
+          "before_sha256": "fe928b7e451636b91b98a63936f1b7d266d55d29abcfe192b105e807a863047d",
+          "after_sha256": "1f98a8cb74866ee47f82c5e3eb693cf8b11104299963adfb0928c7f71fb8b427"
+        }
+      ],
+      "not_attempted": [],
+      "attachments_sha256": {
+        "manifest.json": "812aea8a82f9d28d3e23c3160f69a329ccd8524de6d6bce4d01f9782a5609aa8",
+        "observations.jsonl": "ca574e313b55f386880296653d4e5b951cb5a4bbd6c80ab5dcad521aca329a91"
+      },
+      "binary_sha256": "3019f28178bf14e9c677997a7596f8ab4f6d9caaadc61ed3033f9f20467faab8"
+    },
+    {
+      "scene": "courtyard",
+      "as": "Mira",
+      "simulated": true,
+      "verdict": {
+        "kind": "passed",
+        "reason": "did the scene, and said they were done"
+      },
+      "marks": [
+        {
+          "did": "canon approve can-a9fe4fe17e50",
+          "kind": "authority",
+          "source": "The rule or proposal is can-a9fe4fe17e50",
+          "why": "Approving House A's local proposal as Mira, in charge of house_a",
+          "response": "none",
+          "seconds": 0.002,
+          "refused": null,
+          "at": 13179,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "holds",
+            "grade": "declared charter",
+            "by": "cases.json courtyard/local",
+            "evidence": "1793637213212082000-5691: Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          "outcome": "silent-right"
+        },
+        {
+          "did": "canon approve can-6823ca8efabc",
+          "kind": "authority",
+          "source": "The rule or proposal is can-6823ca8efabc",
+          "why": "Testing whether Mira alone can approve a courtyard change that needs both houses",
+          "response": "blocked",
+          "seconds": 0,
+          "refused": null,
+          "at": 19172,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "fails",
+            "grade": "declared charter",
+            "by": "cases.json courtyard/one-house",
+            "evidence": "1793637219188889000-6054: Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          "outcome": "caught"
+        },
+        {
+          "did": "canon approve can-169f752ed1fb",
+          "kind": "authority",
+          "source": "The rule or proposal is can-169f752ed1fb",
+          "why": "Adding Mira's approval to a courtyard change Sam already approved",
+          "response": "none",
+          "seconds": 0.001,
+          "refused": null,
+          "at": 25133,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "holds",
+            "grade": "declared charter",
+            "by": "cases.json courtyard/both-houses",
+            "evidence": "1793637225177192000-6494: Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          "outcome": "silent-right"
+        },
+        {
+          "did": "canon withdraw human:Sam courtyard",
+          "kind": "authority",
+          "source": "In remove-delegate, try withdrawing my courtyard seat without my assent.",
+          "why": "Testing whether Mira alone can remove Sam's courtyard seat",
+          "response": "none",
+          "seconds": 0.001,
+          "refused": null,
+          "at": 34779,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "fails",
+            "grade": "declared charter",
+            "by": "cases.json courtyard/remove-delegate",
+            "evidence": "1793637234819817000-7250: Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          "outcome": "missed"
+        },
+        {
+          "did": "canon area can-70c1672a611f house_a",
+          "kind": "authority",
+          "source": "The rule or proposal is can-70c1672a611f",
+          "why": "Testing whether Mira alone can move the courtyard rule into house_a",
+          "response": "none",
+          "seconds": 0.001,
+          "refused": null,
+          "at": 42000,
+          "i": 0,
+          "screen": "the terminal",
+          "truth": {
+            "truth": "fails",
+            "grade": "declared charter",
+            "by": "cases.json courtyard/move-rule",
+            "evidence": "1793637242034337000-7515: Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone."
+          },
+          "outcome": "missed"
+        }
+      ],
+      "refused": [],
+      "feedback": {
+        "asked": [
+          {
+            "prompt": "Tell a friend how it went.",
+            "said": {
+              "said": "Sam, results from my five copies. Two of the five held. Two broke, and one was a bad fit with what we agreed.\n\n1. local: held. My approval alone put House A's bike rule in force.\n\n2. one-house: held. My approval on the 9pm closing proposal left it proposed. It still needed your approval.\n\n3. both-houses: held. After I added mine, it went in force, \"approved jointly by Mira, Sam\".\n\n4. remove-delegate: BROKE. I ran `canon withdraw human:Sam courtyard` alone. It went through at once. `canon who courtyard` then listed only me, so I'm the sole delegate. The courtyard rule still says \"joint:Mira,Sam\", but that rule only covers proposals. It doesn't cover changes to who holds a seat.\n\n5. move-rule: BROKE. I ran `canon area <rule> house_a` alone. The courtyard rule went into house_a at once, \"in force \u2014 Mira is in charge of house_a\". It never needed you.\n\nNeither refusal nor warning appeared in either broken case. Courtyard changes need both of us, but changing who has a seat and moving a rule between areas apparently don't. Fixing that probably means making those acts wait on both houses. I haven't tried that."
+            }
+          },
+          {
+            "prompt": "What happened when you tried the agreement?",
+            "said": {
+              "said": "I haven't got more beyond the summary above. In short: proposals follow the agreement. Removing your seat and moving the courtyard rule to house_a each went through on my say-so alone, with no warning. Those two are where it doesn't follow it."
+            }
+          },
+          {
+            "prompt": "What was unclear about who could change what?",
+            "said": {
+              "said": "Mostly one thing: the courtyard's \"joint:Mira,Sam\" rule applied to proposals but not to acts on seats or rule placement. `withdraw` and `area` ran immediately with no check against it. I also couldn't tell whether that is a bug or just how canon is set up. I didn't test whether either act can be undone, or whether `ratification set` could close the gap."
+            }
+          }
+        ],
+        "gaveUp": []
+      },
+      "observations": 30,
+      "effect_checks": [
+        {
+          "case": "local",
+          "argv": [
+            "approve",
+            "can-a9fe4fe17e50"
+          ],
+          "judgment": "holds",
+          "expected": {
+            "status": "active"
+          },
+          "observed": {
+            "status": "active"
+          },
+          "before_sha256": "3617963fe1395574821ab4f6ea6e790056fbdfe144d0d647f190dafcae1bc236",
+          "after_sha256": "944ef00db8e43067c5c78bfbb6a10b5d6b3a29c158aec14513dd34864eef3383"
+        },
+        {
+          "case": "one-house",
+          "argv": [
+            "approve",
+            "can-6823ca8efabc"
+          ],
+          "judgment": "holds",
+          "expected": {
+            "status": "proposed",
+            "original_status": "active"
+          },
+          "observed": {
+            "status": "proposed",
+            "original_status": "active"
+          },
+          "before_sha256": "88b2b26c8becc46facfe1a71b85b168ad21e24f60a7610c23608b976a4331128",
+          "after_sha256": "0a5c2dded2556aa8cfe07348697b7d998238c61f16ce6a886ca6f7437a766d93"
+        },
+        {
+          "case": "both-houses",
+          "argv": [
+            "approve",
+            "can-169f752ed1fb"
+          ],
+          "judgment": "holds",
+          "expected": {
+            "status": "active",
+            "original_status": "superseded"
+          },
+          "observed": {
+            "status": "active",
+            "original_status": "superseded"
+          },
+          "before_sha256": "82539dccf5e8672a19c3ecdbb8f2d9fc887765c6f80e14e4af13be5225785c48",
+          "after_sha256": "61904a347937af8ded7a27631c1f475ae24793b165aeb2c699087d9ed954a6d0"
+        },
+        {
+          "case": "remove-delegate",
+          "argv": [
+            "withdraw",
+            "human:Sam",
+            "courtyard"
+          ],
+          "judgment": "fails",
+          "expected": {
+            "sam_holds": true
+          },
+          "observed": {
+            "sam_holds": false
+          },
+          "before_sha256": "ab952ac08cf384b6458366b30522a997a4e9bf224f6917588d277416a8ddfa58",
+          "after_sha256": "a4ed4ee4faf4e3137f0be60f405bcc6eb28bfb8292d126419a72f12be7493535"
+        },
+        {
+          "case": "move-rule",
+          "argv": [
+            "area",
+            "can-70c1672a611f",
+            "house_a"
+          ],
+          "judgment": "fails",
+          "expected": {
+            "scope": "courtyard",
+            "status": "active"
+          },
+          "observed": {
+            "scope": "house_a",
+            "status": "active"
+          },
+          "before_sha256": "5013e99f771e31688a92fd81860ca50424641af13402832b447a74e5fd70d6ac",
+          "after_sha256": "7e2b16ad3a4ad9513b274b9b82c53e75ceae647517ab4d837530c7e8f49d003d"
+        }
+      ],
+      "not_attempted": [],
+      "attachments_sha256": {
+        "manifest.json": "5eddcff9cd975fdb14c85fc368fbd9cc054925ee34e2c834f91d319852adbf3e",
+        "observations.jsonl": "1cc49070ef8b14b791a16ea0874ff09eb916888cbe6fe13cf1705c42ee0cc228"
+      },
+      "binary_sha256": "3019f28178bf14e9c677997a7596f8ab4f6d9caaadc61ed3033f9f20467faab8"
+    }
+  ]
+}

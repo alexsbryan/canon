@@ -33,6 +33,32 @@ git clone https://github.com/alexsbryan/canon && cd canon
 cargo build --release      # binary at target/release/canon
 ```
 
+### Start in your browser
+
+In the folder where you keep the group's record:
+
+```sh
+canon ui
+```
+
+The page opens the record canon finds, or offers setup when none is found.
+Setup shows the destination and acting name; choose **house** and submit.
+Creation gives the same starting authority as `canon init --profile house`.
+You can then identify with an offered key, propose rules, review
+decisions, and follow their history. This needs no model.
+
+canon looks in this folder, its parents, and your home folder. To start a new
+record here even if you have another elsewhere, choose the target at launch:
+
+```sh
+CANON_DIR="$PWD/.canon" canon ui
+```
+
+The browser cannot change the launch target or acting name. It displays both
+on task pages. Keep the terminal running while you use the page; Ctrl-C closes
+the server. The document-reading and model setup steps below still use the
+terminal.
+
 ### Pointing it at a model
 
 The reference setup is

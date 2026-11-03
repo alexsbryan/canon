@@ -1,0 +1,245 @@
+Raw research archive: the citations below name a local, unpublished working-tree snapshot. They are retained as text, not links that require another checkout to read canon's documentation.
+
+# svrngs frontend architecture: concrete lessons for canon’s front door
+
+## 1. What frontend actually exists, at what revision, and under which boundaries?
+
+### Takeaway
+
+The most transferable implementation is **the embedded home page’s shared primitives, explicit state/effect boundary, and calls into the same Rust application services as the CLI**. The separately deployed phone page is a much larger browser networking/authority system; its delivery and persistence machinery should not be mistaken for prerequisites for canon’s local UI. See [embedded serving](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L90-L179), [state runner](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/machine.js#L1-L48), and [phone bootstrap](file:///Users/alexsbryan/dev/svrngs/web/app.js#L13-L42).
+
+### Cited Findings
+
+#### Snapshot and method
+
+- Inspected `/Users/alexsbryan/dev/svrngs` on **2026-11-02**. Read-only `git status --short --branch` reported `main...origin/main [ahead 207]`; `git rev-parse HEAD` returned **`671a677f40d7ef566e00c0ca0791abc75282e733`**, unchanged on a final check. The working tree was **dirty**, with many Rust/test/doc changes. Within the principal frontend/build paths examined, tracked modifications were `crates/svrngs-node/src/home/page/group.js` and `web/src/lib.rs`; `web/tests/fallback.test.mjs` was untracked. These are observations of command output, not claims about an upstream release. All line citations below identify the **local working-tree source**, relative to this snapshot.
+- The relevant uncommitted frontend delta is the fallback explanation in `home/page/group.js:40–46`; `git diff -- crates/svrngs-node/src/home/page/group.js web/src/lib.rs` also showed the WASM binding changing from a single relay to the first of a relay list. Do not attribute either change to the recorded HEAD or count the untracked test as released evidence. [Group working-tree rendering](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/group.js#L40-L46).
+- Static research only: read source, instructions, manifests, scripts, and test definitions; no build, browser session, tests, migration, deployment, configuration change, commit, or push was performed. The findings establish code responsibilities and specified checks, **not current test pass status, production deployment freshness, or measured usability**. Commons coordination was attempted but unavailable because its binding reported “git rev-parse … must be run in a work tree.”
+
+#### Frontends and delivery
+
+| Surface | Observed implementation and responsibility | Implication for canon |
+|---|---|---|
+| Computer home page | `crates/svrngs-node/src/home/`: `home.js` composes feature modules; one GROUP instance reads each group’s people/lends; native sections/details/forms. Rust serves a fixed asset table using `include_str!` on the existing API listener. [home.js:21–63](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L21-L63); [home.rs:90–179](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L90-L179) | Strong single-binary precedent: frontend modularity does not require a separate deployed server or a runtime npm installation. |
+| Group/phone page | `web/`: ESM `app.js`, composed `page/*.js`, IndexedDB store, service workers, and a separate Rust WASM networking crate. It imports the **same** `home/ui` implementation, copied into static output. [app.js:13–42](file:///Users/alexsbryan/dev/svrngs/web/app.js#L13-L42); [build-web.sh:107–146](file:///Users/alexsbryan/dev/svrngs/scripts/build-web.sh#L107-L146); [web/Cargo.toml:9–41](file:///Users/alexsbryan/dev/svrngs/web/Cargo.toml#L9-L41) | Borrow responsibility boundaries; canon’s local browser need not become its own peer node. |
+| Independent app UIs | `apps/` contains app-owned pages, not one universal frontend framework. For example `apps/doc/app.js` instantiates a Tiptap/Yjs editor and calls a separate DOM-free `sync.js`; its Node server explicitly serves its own file allowlist. [doc/app.js:6–23,77–103,182–238](file:///Users/alexsbryan/dev/svrngs/apps/doc/app.js#L6-L238); [doc/server.mjs:18–30](file:///Users/alexsbryan/dev/svrngs/apps/doc/server.mjs#L18-L30) | These are capability-specific implementations, not a reason to add an app platform to canon. |
+| svrngs’ House rules app | This is a **distinct, deliberately narrow integration**, not the ordinary canon UI. Its inventory explicitly omits draws, rotations, and smaller-group decisions. [apps/canon/README.md:34–56](file:///Users/alexsbryan/dev/svrngs/apps/canon/README.md#L34-L56) | Its existence does not demonstrate coverage of the full canon experience. I did not audit the separate canon repository or re-audit this integration’s domain semantics. |
+
+**Framework and versions actually used:** shared `ui/view.js` imports vendored Preact and hooks and binds htm to Preact’s `h`; the two roots import that shared UI. Vendor provenance pins **Preact 11.1.1** and **htm 3.1.1**, including hashes and two explicit vendoring edits. This is plain JavaScript ESM with htm templates, not a TypeScript/JSX application build. `web/package.json` pins **Playwright 1.59.1** and **oxlint 1.89.0** as development tools, not the rendering framework. [ui/view.js:1–32](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/view.js#L1-L32); [vendor/README.md:3–48](file:///Users/alexsbryan/dev/svrngs/web/vendor/README.md#L3-L48); [web/package.json:1–9](file:///Users/alexsbryan/dev/svrngs/web/package.json#L1-L9).
+
+The phone WASM crate separately pins **iroh =1.0.2**, **wasm-bindgen =0.2.128**, **wasm-bindgen-futures =0.4.78**, **js-sys =0.3.105**, and web-sys =0.3.105. Its build checks the matching wasm-bindgen CLI, creates static output, copies shared JS/CSS, stamps URLs from a content hash, and produces a deep-path 404 shell. Deployment code builds the output and downloads together and invokes Vercel; the script identifies `group.svrnme.sh` and `*.group.svrnme.sh`. These are **configured arrangements**, not independently verified live hosts. [web/Cargo.toml:21–41](file:///Users/alexsbryan/dev/svrngs/web/Cargo.toml#L21-L41); [build-web.sh:36–53,89–146](file:///Users/alexsbryan/dev/svrngs/scripts/build-web.sh#L36-L146); [deploy-page.sh:1–12,35–41](file:///Users/alexsbryan/dev/svrngs/scripts/deploy-page.sh#L1-L41).
+
+As a contrast in actual use, the doc app imports Tiptap/Yjs functionality into its editor and persistence flow. Its build manifest pins Tiptap **3.31.3**, y-tiptap **3.0.9**, Yjs **13.6.32**, y-indexeddb **9.0.12**, y-protocols **1.0.7**, and esbuild **0.25.12**; `bundle/build.sh` bundles them into vendored ESM. Those dependencies serve collaborative prose editing, not governance judgment. [doc/app.js:6–23,29–54,77–103](file:///Users/alexsbryan/dev/svrngs/apps/doc/app.js#L6-L103); [doc/bundle/package.json:5–22](file:///Users/alexsbryan/dev/svrngs/apps/doc/bundle/package.json#L5-L22); [doc/bundle/build.sh:7–14](file:///Users/alexsbryan/dev/svrngs/apps/doc/bundle/build.sh#L7-L14).
+
+#### Boundary inventory: implementation, not dependency inference
+
+| Concern | What the examined implementation does |
+|---|---|
+| Shell/navigation | HOME reads path/query once, composes 16 feature modules, and renders an explicit ordered set of places. `/ask` and `?screen=<id>` are special views. The phone composes eleven feature modules with fixed heading/response priority and places. No general-purpose router is present in these examined roots. [home.js:21–61](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L21-L61); [page/page.js:13–74](file:///Users/alexsbryan/dev/svrngs/web/page/page.js#L13-L74) |
+| Current context | Computer home renders several groups at once, keyed by `g.id`, each with its own GROUP state. Phone PAGE owns one `group`; its entry flow chooses an explicit token, a group matching a requested app, or the most recently opened stored group. Ambiguous matching groups are offered to the person. This is not a ready-made canon record/workspace router. [home.js:49](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L49); [group.js:28–50](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/group.js#L28-L50); [enter.js:33–48](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L33-L48); [store.js:137–142](file:///Users/alexsbryan/dev/svrngs/web/store.js#L137-L142) |
+| Contextual disclosure | Reusable native `<details>` (`Fold`) keeps open state in its owner; changed-app details show who changed files and offer an action alongside that explanation. No general inspector/sidebar framework is demonstrated here. [parts.js:24–39](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/parts.js#L24-L39); [changes.js:23–29](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/changes.js#L23-L29) |
+| API/RPC and types | Home uses small handwritten `get`/`post` fetch wrappers. Feature modules supply routes and interpret responses, including positional arrays for join/group results. Rust request structs and domain parsers remain server-side; the phone WASM bridge exports Rust functions/objects with wasm-bindgen. I found no generated shared HTTP client/types in the inspected home client and build path. **Generated WASM glue is not equivalent to a generated HTTP contract.** [group.js:13–22](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/group.js#L13-L22); [home/page/join.js:16–24](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/join.js#L16-L24); [home.rs:616–668](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L616-L668); [web/src/join.rs:39–125](file:///Users/alexsbryan/dev/svrngs/web/src/join.rs#L39-L125) |
+| Async work/progress | Local state machines emit effects, update subscribers before starting effects, and dispatch success/failure messages. Shelf has an explicit busy state and bounded post-command rereads, not a generalized task scheduler or percentage progress system. [machine.js:25–47](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/machine.js#L25-L47); [ui/shelf.js:25–55](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/shelf.js#L25-L55) |
+| Recovery/invalidation | HOME rereads on `again` after writes and when visible; GROUP reads people/lends independently with request counters. Phone keeps prior list data when a reread fails and says it is stale. Doc has its own heartbeat/backoff/reconnect boundary. [home.js:25–31,55–63](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L25-L63); [group.js:28–38](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/group.js#L28-L38); [enter.js:21–25,57–82](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L21-L82); [doc/sync.js:19–37,144–181](file:///Users/alexsbryan/dev/svrngs/apps/doc/sync.js#L19-L181) |
+| Ownership/persistence/cache | Phone group metadata and sealed keys are IndexedDB-owned; transport keys/endpoints are effect-edge variables, not serializable view state. App-shell assets have a different cache from domain data. The shell worker caches only GETs for its own origin. [enter.js:87–99,125–145](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L87-L145); [store.js:35–69,103–109,137–155,207–224](file:///Users/alexsbryan/dev/svrngs/web/store.js#L35-L224); [sw.js:19–46](file:///Users/alexsbryan/dev/svrngs/web/sw.js#L19-L46) |
+| Model configuration | The inspected platform home offers generic running-service lending. Model-specific discovery and forwarding live in `apps/pantry/pantry.mjs`: probe `/v1/models`, distinguish unavailable/unknown/no-model outcomes, show observation age, route explicit model IDs, and print an address/API-key setup instruction. **This is a CLI/service integration, not evidence of a complete model-settings UI.** [home.rs:435–456,470–519](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L435-L519); [pantry.mjs:198–230,270–324,434–508,540–559](file:///Users/alexsbryan/dev/svrngs/apps/pantry/pantry.mjs#L198-L559) |
+| First run/onboarding | HOME explicitly says there is no group and offers join/make. JOIN checks what a link is for before showing the specific join action, hides an unnecessary name field for a device link, blocks duplicate submit, and retains useful input on refusal. Phone rejects unsupported fragment keys explicitly. [home.js:46–49](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L46-L49); [home/page/join.js:16–28](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/join.js#L16-L28); [enter.js:33–48](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L33-L48) |
+| Testing/accessibility | Node tests exercise transitions, invalid states, failed effects, ownership collisions, stale responses, and duplicate submissions. Browser drivers exercise actual roots, gather requests/load counts/errors, and support Chromium/WebKit. Native controls, labels, details, system colors, and visible keyboard focus provide useful accessibility foundations; they do not establish screen-reader or WCAG conformance. [machine.test.mjs:45–125](file:///Users/alexsbryan/dev/svrngs/web/tests/machine.test.mjs#L45-L125); [frame.test.mjs:26–90](file:///Users/alexsbryan/dev/svrngs/web/tests/pages/frame.test.mjs#L26-L90); [home-join.test.mjs:20–50](file:///Users/alexsbryan/dev/svrngs/web/tests/pages/home-join.test.mjs#L20-L50); [home.mjs:21–75](file:///Users/alexsbryan/dev/svrngs/web/tests/home.mjs#L21-L75); [parts.js:15–43](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/parts.js#L15-L43); [look.css:12–52](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/look.css#L12-L52) |
+
+#### Normative instructions relevant to application/UI separation
+
+These sections were read directly, including all twelve architecture principles. They are **svrngs’ governing documents**, not automatic authorization to change canon’s contract:
+
+- `AGENTS.md:39–53`: one decider; pure synchronous core; app-specific code belongs in apps; boundaries by ownership. `NORTH_STAR.md:12–20` asks for few readable concepts. `docs/DESIGN.md` §2 explicitly says to take the required slice rather than the surrounding system, defer speculative platforms, and separate app-specific ownership. [AGENTS.md:39–53](file:///Users/alexsbryan/dev/svrngs/AGENTS.md#L39-L53); [NORTH_STAR.md:12–20](file:///Users/alexsbryan/dev/svrngs/NORTH_STAR.md#L12-L20); [DESIGN.md:103–125](file:///Users/alexsbryan/dev/svrngs/docs/DESIGN.md#L103-L125).
+- Architecture principle **§8**, “One decider, one name,” forbids duplicated deciding and prefers sharing the body/equivalence evidence; **§10** asks that invariants be structural; **§11** requires citing the existing surface checked before introducing a subsystem; **§12** assigns data/lifetime/recovery to the component itself and display/requests to the client. [ARCH_PRINCIPLES.md:228–255](file:///Users/alexsbryan/dev/svrngs/docs/principles/ARCH_PRINCIPLES.md#L228-L255); [§10:294–321](file:///Users/alexsbryan/dev/svrngs/docs/principles/ARCH_PRINCIPLES.md#L294-L321); [§11:325–347](file:///Users/alexsbryan/dev/svrngs/docs/principles/ARCH_PRINCIPLES.md#L325-L347); [§12:353–389](file:///Users/alexsbryan/dev/svrngs/docs/principles/ARCH_PRINCIPLES.md#L353-L389).
+- Architecture **§6**, “Never silently substitute,” distinguishes no answer from an answer of absence; **§1** requires visible decisions and warns against a status probe blocking on the resource it monitors. Those directly inform honest UI states and model/job health. [§6:165–192](file:///Users/alexsbryan/dev/svrngs/docs/principles/ARCH_PRINCIPLES.md#L165-L192); [§1:42–60](file:///Users/alexsbryan/dev/svrngs/docs/principles/ARCH_PRINCIPLES.md#L42-L60).
+- `RUST_ARCH.md` **§2** puts the pure synchronous domain inside an imperative shell; **§3–4** explain single ownership; **§6** makes errors domain concepts; **§7** says start concrete and prefer calls/typed channels over an in-process bus. [RUST_ARCH.md:16–77](file:///Users/alexsbryan/dev/svrngs/docs/principles/RUST_ARCH.md#L16-L77).
+
+### Inferences
+
+- Canon can use frontend component/state boundaries while continuing to ship static assets inside its Rust binary. The embedded home is the relevant precedent; the phone’s independently hosted WASM endpoint is a different distribution problem. [home.rs:101–164](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L101-L164); [web/Cargo.toml:9–31](file:///Users/alexsbryan/dev/svrngs/web/Cargo.toml#L9-L31).
+- A first-class canon UI needs more durable record/workflow navigation than this multi-group landing page demonstrates. The responsibility split transfers; the existing page layout is not a full information architecture for canon. [home.js:34–49](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L34-L49); [enter.js:37–48](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L37-L48).
+
+### Gaps
+
+- No live browser verification or current gate result. No exhaustive audit of every `apps/` page, deployment artifact, or generated output. Package provenance was read, not independently rehashed.
+- No full model-configuration UI, generalized background-task UI, selected-record inspector system, or comprehensive accessibility test was established in the examined platform pages. This is a scoped finding, not a claim that none exists anywhere in svrngs.
+
+## 2. Which seven lessons transfer, and what should canon avoid?
+
+### Takeaway
+
+Borrow **specific ownership rules and failure handling**, not the whole framework or platform. Highest leverage: one Rust decision path, explicit per-workflow state, stale-answer protection, local feedback, and deep links carrying stable context. The examples below are observed implementations; canon applications and costs are provisional recommendations based on the supplied canon brief.
+
+### Cited Findings
+
+#### 1. Make the UI a peer caller of application services
+
+**Observed responsibility:** home’s join route parses input and delegates to `at.host.join`; CLI’s `join_group` also calls `node.host().join`. The home’s group creation calls `Asking::found`; its router merges existing surface/removal/room/play routers instead of cloning their deciding inside JS. Phone joining uses `svrngs_core::joining` and `seed::answered`, not a second JS implementation of signing/seed belief. [home.rs:605–612,641–668,156–164](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L605-L668); [cli.rs:1610–1638](file:///Users/alexsbryan/dev/svrngs/crates/svrngs/src/cli.rs#L1610-L1638); [web/src/join.rs:14–17,85–125](file:///Users/alexsbryan/dev/svrngs/web/src/join.rs#L14-L125).
+
+**Why canon benefits — recommendation:** UI review/change/undo, approvals, draws, and rotations should ask the Rust application boundary for an answer and display the returned judgment/reasons. A browser reducer decides whether a drawer is open or a request is pending; it does not decide whether an agreement stands, a seat is authorized, or a resource allocation is valid. UI/CLI/MCP parity becomes reuse of one service path rather than reimplementation.
+
+**Adoption cost:** medium if existing application calls are available, high if adapters currently own orchestration. Existing routes and extraction opportunities must be confirmed by the canon investigator. Prefer fewer, narrow, behavior-preserving adapters; near-zero Rust headroom makes parallel orchestration expensive. A generated client is optional: a tiny checked transport module plus representative contract fixtures can precede any generator.
+
+**Failure modes/debt:** the observed handwritten client interprets response shapes in feature modules; JOIN destructures a positional result tuple. That is easy to drift without a generated/checked contract. The fetch helpers also discard most error metadata into `Error(message)`. Preserve useful status/domain identifiers in a canon client rather than copying these wrappers literally. [group.js:18–22](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/group.js#L18-L22); [join.js:18–24](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/join.js#L18-L24).
+
+#### 2. Give each workflow one state owner and a visible effect boundary
+
+**Observed responsibility:** `machine.js` separates pure `step(state,message)` from asynchronous `io`, validates named region states, notifies subscribers, and traces transitions/refusals. `useStore` subscribes and immediately rereads so an update between render and subscription is not missed. Phone composition rejects two flows claiming one field/region/message and rejects changes to another flow’s fields. [machine.js:12–47](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/machine.js#L12-L47); [view.js:14–31](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/view.js#L14-L31); [page.js:32–64](file:///Users/alexsbryan/dev/svrngs/web/page/page.js#L32-L64).
+
+**Why canon benefits — recommendation:** put route/current-record identity in one shell owner, server snapshots in one record-scoped owner, and draft/form/disclosure state in the relevant workflow. An async draft answer must still belong to the record and draft revision that requested it. This gives review quotations, proposal editing, and approval work an understandable lifetime.
+
+**Adoption cost:** low-to-medium for a small reducer and explicit effects; medium-to-high for the full runtime ownership/composition framework. No XState, Redux, global bus, or plugin registry is required to adopt the pattern.
+
+**Failure modes/debt:** `get()` exposes state references; shallow copy/ownership checks are discipline aids, not deep immutability or static typing. Effects are scheduled in array order, but promises execute concurrently and can complete out of order. The runner has no cancellation/disposal API; unmounting the view only unsubscribes it. Canon should introduce cancellation/generation checks where context changes, not assume this runner supplies them. [machine.js:13,31–47](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/machine.js#L13-L47); [view.js:18–31](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/view.js#L18-L31).
+
+#### 3. Treat async truth as part of the user experience
+
+**Observed responsibility:** request counters reject late answers; GROUP reads independent data concurrently, allowing people to render before slow lends. HOME keeps content during `rereading`. Phone entry keeps its previous list and reports reread failure. SHELF disables conflicting input, prevents duplicate submit, says “Bringing…”, and rereads projections with bounded 1/2/4/8-second waits after an accepted command. [machine.js:18–22](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/machine.js#L18-L22); [group.js:28–50](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/group.js#L28-L50); [home.js:25–31,49](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L25-L49); [enter.js:21–25,62–82](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L21-L82); [ui/shelf.js:25–55](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/shelf.js#L25-L55).
+
+**Why canon benefits — recommendation:** distinguish “reading”, “no agreements”, “could not read”, “previous answer; refreshing”, “draft generated”, and “change recorded”. Re-read affected Rust projections after a write and on returning to the tab so CLI/MCP changes appear. Model/source operations should keep the person’s input on failure and show phase text, not invented percentage completion. Render independent record/history/model-health information independently.
+
+**Adoption cost:** low for request tokens, explicit states, refresh-after-write, and local status; medium for resilient long-running task observation. A first slice need not add a generalized job service.
+
+**Failure modes/debt:** do not blindly retry writes after an ambiguous transport failure; the command may already have committed. Read/reconcile first unless the existing service provides safe request identity. SHELF’s polling follows svrngs’ delayed carried-file projection; canon should not import that polling if its local command already returns an authoritative projection. Retry exhaustion is traced rather than prominently surfaced in SHELF, so copy the boundedness, improve the explanation. [ui/shelf.js:33–39](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/shelf.js#L33-L39).
+
+#### 4. Share a small set of native UI responsibilities
+
+**Observed responsibility:** `Act` supplies disabled/busy behavior and an adjacent answer; `Field` supplies labels/input events; `Fold` provides native disclosure; Row/Keep/Heading supply repeated semantics. Both roots share the implementation through one renderer. CSS uses system colors/fonts and explicit `:focus-visible`. The changed-app fold keeps explanation and relevant action together. [parts.js:8–49](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/parts.js#L8-L49); [view.js:1–12](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/view.js#L1-L12); [look.css:12–52](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/look.css#L12-L52); [changes.js:23–29](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/changes.js#L23-L29).
+
+**Why canon benefits — recommendation:** a small `Action`, `Status`, labeled field, disclosure, quotation/source link, and record-reference primitive could unify review, explanations, history, and configuration without a design-system project. Show reasons/provenance alongside the action they inform; avoid a global toast as the sole result. This can be done with current browser/DOM conventions if canon does not need Preact yet.
+
+**Adoption cost:** low for shared rendering helpers/native controls; medium if adopting a new renderer. Vendoring Preact brings license/provenance/update work even without a bundler. The source enforces a single versioned module URL because duplicate Preact instances previously broke hooks; that is real maintenance machinery, not “zero infrastructure.” [vendor/README.md:23–48](file:///Users/alexsbryan/dev/svrngs/web/vendor/README.md#L23-L48); [specifiers.test.mjs:23–50](file:///Users/alexsbryan/dev/svrngs/web/tests/specifiers.test.mjs#L23-L50).
+
+**Failure modes/debt:** observed semantic defaults are not an accessibility certification. In the shown `Act`/`Said`/Heading implementation, dynamic results have no live-region semantics; focus management is limited to an input ref. Canon needs deliberate status announcement, focus restoration, keyboard navigation, and narrow-screen source/detail testing. Dense one-line templates also trade counted lines for readability; do not compress a UI merely to game a cap. [parts.js:15–39,49](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/parts.js#L15-L49).
+
+#### 5. Make context-bearing addresses and onboarding part of the shell
+
+**Observed responsibility:** phone entry interprets the fragment in one place, rejects unsupported keys, resolves a requested app against known groups, and offers ambiguous groups rather than guessing. HOME consumes a completion notice once using `history.replaceState`; a screen link carries stable group ID. JOIN discovers what a link means before exposing “Join <group> as <person>”. [enter.js:18–48](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L18-L48); [home.js:34–36,55–62](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L34-L62); [screen.js:40–50](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/screen.js#L40-L50); [join.js:16–28](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/join.js#L16-L28).
+
+**Why canon benefits — recommendation:** a bookmark should return to a specific record and workflow/entity, e.g. review/source, approval, question, or history event. Carry stable IDs, not display names or row indices. Put missing-record, no-record, and model-not-configured states in the same shell and send people directly to the next useful action. Use contextual disclosure for reasons, not a separate unanchored “details” universe.
+
+**Adoption cost:** low-to-medium for one small URL parser/serializer plus browser back/forward handling; no router dependency is inherently necessary. More if routes expose filesystem paths or require resolving multiple local records; the canon investigation must determine the existing selection boundary.
+
+**Failure modes/debt:** this is a **partial precedent**, not a router to copy. The phone reloads on `hashchange`; HOME reads its address once. Neither establishes full SPA history restoration or nested workflow navigation. Phone fallback to the most recent group is convenient for a landing page, but a canon deep link must never silently open a different record when its target is unavailable. [app.js:37–42](file:///Users/alexsbryan/dev/svrngs/web/app.js#L37-L42); [home.js:34–35](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L34-L35); [enter.js:41–48](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L41-L48).
+
+#### 6. Keep integration recovery with its owner; expose honest model provenance
+
+**Observed responsibility:** doc’s DOM-free sync module owns heartbeat silence detection, connection timeout, bounded backoff intervals, and handling a frozen tab. Its view only reacts to callbacks and displays retained local edits/reconnection. Pantry keeps model discovery/forwarding outside platform UI, returns observation age, distinguishes unavailable from unknown model IDs, and forwards the explicitly selected model with lender provenance headers. [doc/sync.js:19–37,73–89,144–181](file:///Users/alexsbryan/dev/svrngs/apps/doc/sync.js#L19-L181); [doc/app.js:182–238](file:///Users/alexsbryan/dev/svrngs/apps/doc/app.js#L182-L238); [pantry.mjs:245–258,270–324,434–508](file:///Users/alexsbryan/dev/svrngs/apps/pantry/pantry.mjs#L245-L508).
+
+**Why canon benefits — recommendation:** canon’s model/application service owns configured endpoint/provider/model identity, credential storage, actual request execution, timeout, and recovery policy. UI shows configured/checked/failed/unchecked state, when it was checked, and which model produced a draft. Treat draft generation as assistance with provenance; Rust still judges governance. Draft typing retained locally is not an appended agreement, and retrying draft generation is not retrying a governance commit.
+
+**Adoption cost:** low for state/provenance and a connection-check action if the service already exists; medium-to-high for new service endpoints. No need to import Pantry, peer discovery, a proxy, CRDTs, or a model manager.
+
+**Failure modes/debt:** doc has an explicit recovery workaround: issue an HTTP `poke` before reconnecting because its worker otherwise retains a dead dial. That is a visible consequence of stacked transport ownership; copying multiple reconnection layers would reproduce the coupling. Likewise Yjs offline edits/merge are valid for collaborative prose, not proof that approval/undo governance commands should be buffered and replayed. [doc/app.js:187–195](file:///Users/alexsbryan/dev/svrngs/apps/doc/app.js#L187-L195); [doc/sync.js:90–108,119–130](file:///Users/alexsbryan/dev/svrngs/apps/doc/sync.js#L90-L130).
+
+#### 7. Test workflow boundaries, and account for the entire frontend
+
+**Observed responsibility:** tests assert stale-answer rejection, no duplicate submit, effect failure, invalid state, and ownership collisions. The browser harness records requests and reload counts, testing outcomes beyond markup. `scripts/check.sh` wires page laws and browser/page targets into gates, including explicit missing-tool failures. [machine.test.mjs:54–125](file:///Users/alexsbryan/dev/svrngs/web/tests/machine.test.mjs#L54-L125); [home-join.test.mjs:20–50](file:///Users/alexsbryan/dev/svrngs/web/tests/pages/home-join.test.mjs#L20-L50); [frame.test.mjs:26–70](file:///Users/alexsbryan/dev/svrngs/web/tests/pages/frame.test.mjs#L26-L70); [home.mjs:51–75](file:///Users/alexsbryan/dev/svrngs/web/tests/home.mjs#L51-L75); [check.sh:53–65,86–107](file:///Users/alexsbryan/dev/svrngs/scripts/check.sh#L53-L107).
+
+**Why canon benefits — recommendation:** verify a small set of actual front-door journeys: reopen a deep-linked record; review a quotation and draft; explain a refusal; commit and re-read; undo by the existing service; recover from model failure; reflect a CLI/MCP change without losing typed input. Keep Rust contract/oracle fixtures authoritative. Use pure transition tests for races and a few browser journeys for navigation/focus/request boundaries.
+
+**Adoption cost:** medium for meaningful end-to-end coverage; low for focused reducer fixtures. Browser dependencies and fixtures are costs even if product Rust stays flat.
+
+**Failure modes/debt:** parity tests load pre-migration code via `git show 19b63b2b:<path>` and write it under `target/`. This is a useful migration instrument but a maintenance dependency on git history. Byte-for-byte legacy markup parity is not a durable definition of a first-class UX. A guard verifies removal of the parallel UI switch, which is useful evidence for retiring a transitional frontend rather than maintaining two forever. [before.mjs:1–17](file:///Users/alexsbryan/dev/svrngs/web/tests/pages/before.mjs#L1-L17); [parts.test.mjs:1–14,50–121](file:///Users/alexsbryan/dev/svrngs/web/tests/parts.test.mjs#L1-L121); [one-ui.test.mjs:14–27](file:///Users/alexsbryan/dev/svrngs/web/tests/one-ui.test.mjs#L14-L27).
+
+**Important size lesson:** svrngs’ current `lean_check.py` explicitly moves JS/MJS to a separate `js` rung, but its cap is **`None`**, pending a future jubilee. Its code counter excludes `apps/`, tests, node_modules and several generated/recorded directories. This is visible accounting policy, not evidence that frontend growth is free or already tightly bounded. [lean_check.py:388–425,460–467](file:///Users/alexsbryan/dev/svrngs/scripts/lean_check.py#L388-L467).
+
+For scale, a read-only tracked-source physical-line count using `git grep -c '^'` over `crates/svrngs-node/src/home/*.js` and `web/*.js`, excluding `web/vendor/**` and `web/tests/**`, counted **1,460 lines in 34 home JS files** and **2,325 lines in 20 phone JS files**: **3,785 physical lines** total. Git pathspecs include descendant JS here. This includes shared UI once under home, comments/blank lines and browser-session scripts; it excludes CSS/HTML, vendor, Rust/WASM, apps, and tests. It is **not** the repository’s product-code metric, a byte-size measurement, or a proposed canon allowance. The count is a recorded command observation; the separate counter’s definition is sourced above.
+
+### Inferences
+
+#### Prioritized borrow/avoid table
+
+Cost denotes relative adoption/maintenance effort, not an approved estimate. Recommendations follow from the numbered implementation evidence above.
+
+| Priority | Borrow / avoid | Canon rationale | Cost and principal risk |
+|---|---|---|---|
+| P0 | **Borrow:** one application command/query path for UI/CLI/MCP | Full experience requires operations and explanations, not a second CRUD-only model. Lesson 1. | Medium; high if existing adapters own orchestration. Reuse/extraction must fit the Rust cap and contract discipline. |
+| P0 | **Borrow:** scoped state, request generations, explicit failure/stale/busy states | Review/model/source work must not overwrite another record or imply an uncommitted agreement is recorded. Lessons 2–3. | Low–medium; cancellation and ambiguous-write recovery need explicit treatment. |
+| P0 | **Borrow:** stable record/workflow URLs and actionable empty/error states | Makes the UI a place to return to, share context, and begin work. Lesson 5. | Low–medium; URL selection is not authorization and may not silently substitute records. |
+| P1 | **Borrow:** native semantic primitives and adjacent explanations/results | Small reusable vocabulary spans sources, decisions, approvals, resources, history and setup. Lesson 4. | Low; add real focus/status accessibility behavior instead of relying on visual feedback. |
+| P1 | **Borrow:** observation-based model/service status and clear ownership | Setup becomes a workflow; model failure is distinct from an invalid governance action. Lesson 6. | Low–medium if services exist; UI must not inherit process supervision. |
+| P1 | **Borrow:** behavior/race tests, a few real browser journeys, and an explicit JS budget | Protects contract truth and usability while exposing frontend cost. Lesson 7. | Medium; fixtures and browser tooling need maintenance. |
+| Avoid | Entire phone networking/authority stack, worker proxying, wildcard deployment, browser-held signing identity | Solves svrngs’ peer/remote-app trust problem rather than canon’s single-binary local front door. [web/Cargo.toml:21–41](file:///Users/alexsbryan/dev/svrngs/web/Cargo.toml#L21-L41); [home.rs:181–234](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L181-L234); [sw.js:4–16](file:///Users/alexsbryan/dev/svrngs/web/sw.js#L4-L16) | High; transport/browser partitioning and multiple recovery owners. Retain canon’s established local-origin boundary rather than importing a new security architecture. |
+| Avoid | Copying the full composition registry/message namespace or a general plugin platform | A small closed set of canon workflows can use imports and calls. Lessons 2, 5; [RUST_ARCH §7](file:///Users/alexsbryan/dev/svrngs/docs/principles/RUST_ARCH.md#L69-L77). | Medium–high fixed complexity; runtime string dispatch is not free type safety. |
+| Avoid | CRDT governance state, browser-authoritative agreement caches, offline command replay | Canon’s append-only Rust judgment is the authority; local drafts and cached displays are different categories. Lessons 1, 6. | High semantic risk and migration burden; plain draft persistence is much smaller. |
+| Avoid | Hiding product JS/TS outside a Rust-only count or declaring “no build step” costless | The observed frontend is thousands of lines and the current JS rung is uncapped. Lesson 7. | Budget product JS/TS, HTML/CSS, vendor bytes and test/tooling growth separately and visibly. |
+
+### Gaps
+
+- Source suggests useful transition discipline; it does not prove every state/message race is covered. I did not fuzz the runner or validate cancellation behavior live.
+- No evidence here establishes canon’s exact existing service affordances, route contract, available frontend code budget, or model configuration API. Those are dependencies on the other investigation, not permission to create substitutes.
+
+## 3. What minimum viable structure does this suggest for canon?
+
+### Takeaway
+
+**Recommended shape:** one embedded browser shell, one current-record/URL owner, a small Rust-facing client, a few shared semantic primitives, and workflow modules that render authoritative Rust answers. Keep typed input and disclosure state in the browser; keep durable governance, model execution/configuration, and service lifetime in Rust. This is an application of the observed embedded home/service reuse and explicit ownership pattern, not a claim that svrngs already implements canon’s desired UI. [home.rs:101–164,641–668](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L101-L668); [machine.js:1–10](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/machine.js#L1-L10); [ARCH_PRINCIPLES §12](file:///Users/alexsbryan/dev/svrngs/docs/principles/ARCH_PRINCIPLES.md#L353-L375).
+
+### Cited Findings
+
+- Embedded asset serving, explicit feature composition, local state owners, shared native primitives, and refresh-after-write are all working-source patterns, with no dependency on adopting the phone networking stack. [home.rs:101–164](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home.rs#L101-L164); [home.js:21–63](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L21-L63); [view.js:14–31](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/view.js#L14-L31); [parts.js:15–49](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/ui/parts.js#L15-L49).
+- Asset versions are a real consistency boundary: `build-web.sh` hashes JS/glue/WASM/shared files, stamps all relevant URLs, and fails on leftover placeholders. Preact’s imports are guarded against duplicate URLs. This supports a small coherent release/version mechanism, not necessarily a canon service worker. [build-web.sh:125–142](file:///Users/alexsbryan/dev/svrngs/scripts/build-web.sh#L125-L142); [specifiers.test.mjs:23–50](file:///Users/alexsbryan/dev/svrngs/web/tests/specifiers.test.mjs#L23-L50).
+
+### Inferences
+
+#### Proposed responsibility map — provisional, names illustrative
+
+```text
+existing embedded UI assets/
+  app.js          # one bootstrap; shell, navigation, record choice, URL/back/forward
+  context.js      # current record + read generation + snapshot freshness
+  client.js       # one checked HTTP boundary; preserve structured Rust errors
+  state.js        # small transitions/effects only where async workflows need them
+  ui.js           # actions/status/fields/disclosure/quotation/record references
+  work.js         # first end-to-end review -> draft/change -> result/history slice
+  [later workflow modules, only as justified by actual journeys]
+```
+
+This is a boundary sketch, not a demand for six new files or for a frontend rewrite. Combine modules if existing code already owns these jobs. Shared primitives may use existing DOM rendering; choose Preact only if component reuse and state subscriptions justify its vendor/update cost. All assets remain build-time inputs embedded by the single Rust binary, using the existing server/origin/session design.
+
+**State policy:** the URL names record, workflow and stable target; shell context resolves it and owns its lifetime. Server answers carry the authoritative result/reasons and, if existing APIs support it, a revision/freshness marker. Pending work carries record ID and request generation. Per-workflow state owns form input, expanded explanation, pending/error/result. Reads refresh after relevant mutations and tab return; first implement a simple full-record refresh if cheap. Do not introduce an entity cache/invalidation graph without evidence of a performance problem. The motivating examples are HOME’s broad refresh, GROUP request counters, and the phone’s stale-list behavior. [home.js:25–31,62](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/home.js#L25-L62); [group.js:30–37](file:///Users/alexsbryan/dev/svrngs/crates/svrngs-node/src/home/page/group.js#L30-L37); [enter.js:21–25,72–82](file:///Users/alexsbryan/dev/svrngs/web/page/enter.js#L21-L82).
+
+**Navigation hypothesis to validate with the full canon brief:** organize around work rather than raw record CRUD: current agreements and what needs attention; review/source/draft/change; governance/people/seats/rooms/procedures/approvals; questions/tensions/revisit; shared resources/draws/rotations; history/sharing; model/setup. Preserve target context across these places, so a question can lead to a source, a proposal, an approval, and the resulting history. This is a recommendation based on the user-supplied workflows, not a taxonomy found in svrngs or a claim that all these screens are funded.
+
+**First vertical slice:** open/select a record, follow a deep link to a review/source item, inspect its quotation and Rust explanation, request a draft with model identity visible, edit it, ask the existing application service to make the change, show the recorded result and history, and exercise existing undo semantics. Include a refused operation, a failed model request, and an externally changed record. If source/draft/change are not connected by current services, choose the nearest genuinely end-to-end supported journey first rather than building a parallel UI-specific domain pipeline.
+
+#### Provisional cost envelope — frontend growth is explicit
+
+These are **planning allowances from this research judgment**, not measurements, deadlines, caps, or implementation approval. They assume reuse of existing Rust services and a small existing UI. They estimate *handwritten product JS/TS physical source lines* for the initial foundation plus one vertical slice, not the complete experience:
+
+| Responsibility | Illustrative JS/TS allowance |
+|---|---:|
+| Bootstrap, shell, navigation and URL round-trip | 80–140 |
+| Record context and freshness/generation ownership | 60–100 |
+| Checked client/error normalization | 80–140 |
+| Small state/effect helpers | 90–160 |
+| Shared semantic primitives | 100–180 |
+| First real workflow slice and local feedback | 130–220 |
+| **Initial JS/TS total** | **540–940** |
+
+Also expose approximately **120–220 CSS**, **30–60 HTML**, and **180–320 initial test** lines as separate planning allowances, plus any vendored library’s actual bytes/license files and build/tooling changes. A renderer adoption, generated-client pipeline, rich source viewer, or substantial existing-code replacement can invalidate these allowances; count the resulting net and gross changes rather than reporting only Rust.
+
+Full workflow coverage is a separate scope decision: even six further families at a rough **100–250 JS/TS lines each** would add **600–1,500** before rich editing, advanced task tracking, and tests. This is deliberately a warning against calling the first slice “the whole UI,” not a promise that all remaining capability fits those numbers. The observed 3,785-line main-page JS inventory and separate uncapped JS rung are reasons to insist on this accounting. [lean_check.py:388–425](file:///Users/alexsbryan/dev/svrngs/scripts/lean_check.py#L388-L425).
+
+**Rust headroom:** no honest net-new Rust allowance can be assigned from this research. Prefer existing services/routes and any approved behavior-preserving extraction that reduces duplication; require the canon audit to identify the actual cap impact. New HTTP shapes, command semantics, reinterpretation of saved records, or public contract changes remain separate approval decisions under canon’s existing discipline. Do not move deterministic judgments to JS merely to satisfy a Rust line count.
+
+#### Small acceptance bar before expanding scope
+
+1. A fresh visitor can choose/open a record and start a useful supported workflow without CLI knowledge; empty/unchecked/refused states each offer the relevant next step.
+2. A bookmark/reload/back/forward round-trip preserves record and target; an unavailable target is named rather than substituted.
+3. Review/draft/commit/refusal/history show authoritative service outcomes; local drafts are visibly distinct from recorded changes.
+4. An old async answer cannot repaint a newly selected record; duplicate submit and ambiguous write failure have explicit handling.
+5. Returning after a CLI/MCP change refreshes the read model without erasing typed work.
+6. Keyboard/focus/status behavior and a narrow viewport are exercised in a browser; pure state tests cover a late answer and failure recovery. Existing Rust contracts remain the oracle.
+7. Report product JS/TS, HTML/CSS, Rust, tests/tooling, and vendor bytes separately. Expansion waits for a costed workflow decision.
+
+These are recommended future acceptance criteria grounded in the transition/browser techniques above, **not checks run in this research session**. [machine.test.mjs:54–125](file:///Users/alexsbryan/dev/svrngs/web/tests/machine.test.mjs#L54-L125); [home-join.test.mjs:20–50](file:///Users/alexsbryan/dev/svrngs/web/tests/pages/home-join.test.mjs#L20-L50); [home.mjs:51–75](file:///Users/alexsbryan/dev/svrngs/web/tests/home.mjs#L51-L75).
+
+### Gaps
+
+- The exact minimum depends on the other canon investigation: which workflows are already exposed, where current-record selection lives, whether source/draft work has persistent job identity, how CLI/MCP mutations become observable, and how much JS/TS/Rust can be approved.
+- A service/client schema-generation decision needs a real parity/maintenance cost comparison. svrngs demonstrates a small handwritten boundary, not evidence that hand-maintained schemas scale indefinitely.
+- Accessibility, source-quotation ergonomics, dense governance workflows, and actual first-run success need direct user/browser evaluation. This static research does not establish them.
+- Experimental temporal canon-institution must remain an explicitly labeled, separate read-only/source-built experience unless the operator chooses a different scope; no svrngs pattern is evidence for promoting it into the production legacy workflow.

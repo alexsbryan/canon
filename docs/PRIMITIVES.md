@@ -61,6 +61,11 @@ community's behalf.
 [The contract](./CONTRACT.md) indexes the guarantees, executable checks, and
 assumptions behind that shape.
 
+[The mechanism/interpreter boundary](./INSTITUTION_BOUNDARY.md) records the
+costed extraction: primitives stay in core, optional institutional choices
+belong to a separate library, and the existing interpretation stays compatible
+while the neutral projection seam is established.
+
 ## The thesis
 
 A governance tool cannot make people good, brave, or fair. What it can do is

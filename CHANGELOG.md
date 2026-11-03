@@ -7,7 +7,17 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.6.0 — 2026-11-02
+
 ### Before you upgrade
+
+- canon-core adds the opt-in `Effect` / read-only `Projection` API. It applies
+  caller-selected mechanical effects and does not certify institutional assent.
+  Existing `Log::derive` and `derive_at` behavior and record outcomes are
+  unchanged. The optional canon-institution library retains fixed-basis v1 and
+  adds explicit-arrangements temporal v2; pending proposals are separate from
+  applied mechanical facts in the v2 result. No record is automatically migrated
+  and no production CLI default switches interpretation.
 
 - Text output now uses plain words: a rule, an area, who is in charge,
   how rules pass here and how actions are judged here, where it said
@@ -54,6 +64,16 @@ renames that heading to the version, and its section becomes the release notes
 
 ### Changes
 
+- `canon ui` now opens setup when no record is found. Choose a profile and
+  deliberately create the record in the browser, using the same founding
+  procedure and seat as `canon init`. Setup never rewrites an existing record
+  or publishes a partially founded ledger. You can identify and make signed
+  decisions after browser-first setup.
+- Browser history opens grants, procedures, silences and other recorded acts;
+  pending policy changes appear in the shared review queue. Task pages show
+  record and actor context, navigation, and accurately labeled source excerpts.
+  Failed forms retain their input, and partial writes or unreadable outcomes
+  no longer claim that nothing was written or that a change took effect.
 - A bare `canon` inside a canon is a short page for whoever runs it: how
   many rules are in force and which areas you are in charge of, what is
   waiting for your yes or no (`review`'s own list), what is past its review

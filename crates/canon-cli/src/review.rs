@@ -42,6 +42,8 @@ pub enum Kind {
     Retraction,
     /// A change to how a room's rules get made.
     DecisionRule,
+    /// A change to how proposals are judged.
+    Policy,
 }
 
 impl Kind {
@@ -51,6 +53,7 @@ impl Kind {
             Kind::Change => "change to a rule",
             Kind::Retraction => "repeal",
             Kind::DecisionRule => "how rules pass",
+            Kind::Policy => "how proposals are judged",
         }
     }
 }
@@ -94,6 +97,14 @@ fn standing(st: &Canon, id: &ActId) -> Option<String> {
         .iter()
         .find(|r| r.act == *id)
         .map(|r| format!("{:?}", r.verdict))
+        .or_else(|| {
+            st.pending_policies()
+                .iter()
+                .chain(st.policies())
+                .find(|p| p.act == *id)
+                .and_then(|p| p.verdict.as_ref())
+                .map(|v| format!("{v:?}"))
+        })
 }
 
 /// Where something stands after a decision, as one line a person reads.
@@ -129,6 +140,17 @@ pub fn outcome(st: &Canon, id: &ActId) -> String {
     }
     if let Some(r) = st.retractions().iter().find(|r| r.act == *id) {
         return verdict(&r.verdict, "retracted");
+    }
+    if let Some(p) = st
+        .pending_policies()
+        .iter()
+        .chain(st.policies())
+        .find(|p| p.act == *id)
+    {
+        return p.verdict.as_ref().map_or_else(
+            || "in force".into(),
+            |v| verdict(v, "in force: this is how proposals are judged now"),
+        );
     }
     "no longer in this canon".into()
 }
@@ -218,6 +240,25 @@ pub fn queue(log: &Log, st: &Canon, actor: &str, now: i64) -> Vec<Item> {
         });
     }
 
+    for p in st.pending_policies() {
+        let Some(Verdict::Proposed { needs, .. }) = &p.verdict else {
+            continue;
+        };
+        items.push(Item {
+            id: p.act.clone(),
+            kind: Kind::Policy,
+            text: p.text.clone(),
+            by: p.actor.clone(),
+            at: p.at,
+            scope: p.scope.as_ref().map(ToString::to_string),
+            source: None,
+            replaces: Vec::new(),
+            because: String::new(),
+            needs: needs.clone(),
+            yours: false,
+        });
+    }
+
     // The fold, asked. Signatures are set aside first: what does not count
     // already does not, and a hypothetical position cannot be signed.
     let out: std::collections::BTreeSet<&ActId> =
@@ -268,8 +309,10 @@ pub fn decide(
     approve: bool,
     because: &str,
 ) -> Result<String, String> {
-    answer(d, actor, id.as_str(), None, approve, because)?;
-    let st = store::read(d)?.derive_at(store::now());
+    let act = answer(d, actor, id.as_str(), None, approve, because)?;
+    let st = store::read(d)
+        .map_err(|e| format!("{e}; position {} was recorded", act.id))?
+        .derive_at(store::now());
     Ok(outcome(&st, id))
 }
 
@@ -532,6 +575,7 @@ fn stand(d: &Path, actor: &str, scope: &Scope, prompt: &mut dyn Prompt) -> Stand
     match crate::cmds::took(d, &act.id) {
         crate::cmds::Took::Applied | crate::cmds::Took::Open(_) => Stand::Took,
         crate::cmds::Took::Refused(why) | crate::cmds::Took::Proposed(why) => Stand::Refused(why),
+        crate::cmds::Took::Unknown(why) => Stand::Failed(why),
     }
 }
 

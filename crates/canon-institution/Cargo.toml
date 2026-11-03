@@ -1,0 +1,19 @@
+[package]
+name = "canon-institution"
+description = "Optional institutional interpretation over canon's governance primitives."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+# The diagnostic runner is not a second production CLI or an installer target.
+[[bin]]
+name = "canon-institution"
+path = "src/main.rs"
+
+[dependencies]
+canon-core = { path = "../canon-core", default-features = false }
+serde = { workspace = true }
+serde_json = { workspace = true }

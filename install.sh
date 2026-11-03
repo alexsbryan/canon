@@ -113,5 +113,5 @@ case ":$PATH:" in
     printf '    export PATH="%s:$PATH"\n' "$INSTALL_DIR" ;;
 esac
 
-printf '\n  next:  canon init --profile house\n'
+printf '\n  next:  canon ui\n'
 printf '         https://github.com/%s/blob/main/docs/GETTING_STARTED.md\n\n' "$REPO"

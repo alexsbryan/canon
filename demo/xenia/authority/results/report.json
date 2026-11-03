@@ -1,0 +1,266 @@
+{
+  "instrument": "complete",
+  "canon_commit": "f63441adc43499267c27656ae680338622582bf1",
+  "binary_sha256": "3019f28178bf14e9c677997a7596f8ab4f6d9caaadc61ed3033f9f20467faab8",
+  "instrument_sha256": "1014a2923aa4146c5067f953533e7f3b3aa8de3c4dd400febb9f9e29fde5ad5f",
+  "cases_sha256": "6bb26d362209a838073cb2ef180214b4b9230125ffe2dce26bb6458af4de983d",
+  "results": [
+    {
+      "experiment": "adoption",
+      "case": "pending-repeal",
+      "judgment": "holds",
+      "expected": {
+        "status": "retracted"
+      },
+      "observed": {
+        "status": "retracted"
+      },
+      "record": "1793637169228818000-4592",
+      "actor": "agent:helper",
+      "argv": [
+        "repeal",
+        "can-708765109a78",
+        "-m",
+        "Authority experiment pending-repeal"
+      ],
+      "code": 0,
+      "stdout": "repealed can-708765109a78\n",
+      "stderr": "",
+      "before_sha256": "6c200398e923ac1da8f23afaffd12f1e6709d5af9877d011cc200cd748cff2a6",
+      "after_sha256": "f20557c2ab31c2feb0985ef808a946753086e8001b2e33d6945f3282e57c6feb",
+      "appended": "{\"id\":\"can-db4c4cca9b3b\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"retract\",\"target\":\"can-708765109a78\",\"rationale\":\"Authority experiment pending-repeal\"}\n"
+    },
+    {
+      "experiment": "adoption",
+      "case": "adopted-repeal",
+      "judgment": "fails",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "retracted"
+      },
+      "record": "1793637169287274000-4596",
+      "actor": "agent:helper",
+      "argv": [
+        "repeal",
+        "can-b77b8f1f2882",
+        "-m",
+        "Authority experiment adopted-repeal"
+      ],
+      "code": 0,
+      "stdout": "repealed can-b77b8f1f2882\n",
+      "stderr": "",
+      "before_sha256": "edbe45b55bd6b6ad28133bbd29c61d2ad0807c30948d38e1084c29077e01ae45",
+      "after_sha256": "91912b9f73ac712c0278eab1abf86e4e51549de3b96d6bfb8f9e738a3541cfcf",
+      "appended": "{\"id\":\"can-eb2f1d1e4c55\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"retract\",\"target\":\"can-b77b8f1f2882\",\"rationale\":\"Authority experiment adopted-repeal\"}\n"
+    },
+    {
+      "experiment": "adoption",
+      "case": "pending-undo",
+      "judgment": "holds",
+      "expected": {
+        "status": "absent"
+      },
+      "observed": {
+        "status": "absent"
+      },
+      "record": "1793637169344656000-4601",
+      "actor": "agent:helper",
+      "argv": [
+        "undo",
+        "can-58071415ddbb",
+        "-m",
+        "Authority experiment pending-undo"
+      ],
+      "code": 0,
+      "stdout": "reverted can-58071415ddbb (itself revertible)\n",
+      "stderr": "",
+      "before_sha256": "500a89f096392dbb7fab28361a292ed5f949d3c29fa5d63cec55a417a5481bb1",
+      "after_sha256": "5258468516d02712c7587f738e473aba4060d5266de692eaa56ebcbfaef4c7bf",
+      "appended": "{\"id\":\"can-59fdd69c518f\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"revert\",\"targets\":[\"can-58071415ddbb\"],\"rationale\":\"Authority experiment pending-undo\"}\n"
+    },
+    {
+      "experiment": "adoption",
+      "case": "adopted-undo",
+      "judgment": "fails",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "absent"
+      },
+      "record": "1793637169404724000-4607",
+      "actor": "agent:helper",
+      "argv": [
+        "undo",
+        "can-023f780aae07",
+        "-m",
+        "Authority experiment adopted-undo"
+      ],
+      "code": 0,
+      "stdout": "reverted can-023f780aae07 (itself revertible)\n",
+      "stderr": "",
+      "before_sha256": "1f2a9e63e256fb5c9cfd108401ca6efa8381eb03535d155054a9533bbaa08fd4",
+      "after_sha256": "635acade8c3f63e86796025a0eb2f4a2b3a0124d207d4ecb176a623494520321",
+      "appended": "{\"id\":\"can-f5c42ebd973a\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"revert\",\"targets\":[\"can-023f780aae07\"],\"rationale\":\"Authority experiment adopted-undo\"}\n"
+    },
+    {
+      "experiment": "adoption",
+      "case": "stranger-repeal",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "record": "1793637169464363000-4614",
+      "actor": "agent:stranger",
+      "argv": [
+        "repeal",
+        "can-84770893ca80",
+        "-m",
+        "Authority experiment stranger-repeal"
+      ],
+      "code": 0,
+      "stdout": "PROPOSED, not yet applied \u2014 needs approval from a person in charge of house\n  approve it:  canon approve can-8d3038ccc30e\n  object:      canon object can-8d3038ccc30e -m \"<why>\"\n",
+      "stderr": "",
+      "before_sha256": "fe928b7e451636b91b98a63936f1b7d266d55d29abcfe192b105e807a863047d",
+      "after_sha256": "a25d97fd3d1a63630b33633ec7d4b597378e7b8e6f0b76d519e7a3caa393161b",
+      "appended": "{\"id\":\"can-8d3038ccc30e\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:stranger\",\"op\":\"retract\",\"target\":\"can-84770893ca80\",\"rationale\":\"Authority experiment stranger-repeal\"}\n"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "local",
+      "judgment": "holds",
+      "expected": {
+        "status": "active"
+      },
+      "observed": {
+        "status": "active"
+      },
+      "record": "1793637169592871000-4628",
+      "actor": "human:Mira",
+      "argv": [
+        "approve",
+        "can-a9fe4fe17e50",
+        "-m",
+        "Authority experiment local"
+      ],
+      "code": 0,
+      "stdout": "can-a9fe4fe17e50  approved by human:Mira\n  in force \u2014 approved by Mira, in charge of house_a\n",
+      "stderr": "",
+      "before_sha256": "3617963fe1395574821ab4f6ea6e790056fbdfe144d0d647f190dafcae1bc236",
+      "after_sha256": "0e6f19743e30786b98fb43cef6c16a50e0dc3a281f0d35563322f74d08ba4f32",
+      "appended": "{\"id\":\"can-ef9539b809ad\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-a9fe4fe17e50\",\"pull\":\"toward\",\"because\":\"Authority experiment local\"}\n"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "one-house",
+      "judgment": "holds",
+      "expected": {
+        "status": "proposed",
+        "original_status": "active"
+      },
+      "observed": {
+        "status": "proposed",
+        "original_status": "active"
+      },
+      "record": "1793637169653307000-4632",
+      "actor": "human:Mira",
+      "argv": [
+        "approve",
+        "can-6823ca8efabc",
+        "-m",
+        "Authority experiment one-house"
+      ],
+      "code": 0,
+      "stdout": "can-6823ca8efabc  approved by human:Mira\n  PROPOSED, not yet a rule \u2014 needs approval from human:Sam\n  approve it:  canon approve can-6823ca8efabc\n  object:      canon object can-6823ca8efabc -m \"<why>\"\n",
+      "stderr": "",
+      "before_sha256": "88b2b26c8becc46facfe1a71b85b168ad21e24f60a7610c23608b976a4331128",
+      "after_sha256": "8a39d1d7c8b5a32420d1d1b7ed0d5135c21548f2bf6f940bfc0f9ee35a490411",
+      "appended": "{\"id\":\"can-66cd1c7f2d58\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-6823ca8efabc\",\"pull\":\"toward\",\"because\":\"Authority experiment one-house\"}\n"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "both-houses",
+      "judgment": "holds",
+      "expected": {
+        "status": "active",
+        "original_status": "superseded"
+      },
+      "observed": {
+        "status": "active",
+        "original_status": "superseded"
+      },
+      "record": "1793637169709428000-4636",
+      "actor": "human:Mira",
+      "argv": [
+        "approve",
+        "can-169f752ed1fb",
+        "-m",
+        "Authority experiment both-houses"
+      ],
+      "code": 0,
+      "stdout": "can-169f752ed1fb  approved by human:Mira\n  in force \u2014 approved jointly by Mira, Sam\n",
+      "stderr": "",
+      "before_sha256": "82539dccf5e8672a19c3ecdbb8f2d9fc887765c6f80e14e4af13be5225785c48",
+      "after_sha256": "6f9710f7d8fb9502758633b28ac346fb62ea4c51808fd271bf25422d40b200f4",
+      "appended": "{\"id\":\"can-8dcb3c0f68b1\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-169f752ed1fb\",\"pull\":\"toward\",\"because\":\"Authority experiment both-houses\"}\n"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "remove-delegate",
+      "judgment": "fails",
+      "expected": {
+        "sam_holds": true
+      },
+      "observed": {
+        "sam_holds": false
+      },
+      "record": "1793637169767790000-4640",
+      "actor": "human:Mira",
+      "argv": [
+        "withdraw",
+        "human:Sam",
+        "courtyard",
+        "--yes",
+        "-m",
+        "House A acts alone"
+      ],
+      "code": 0,
+      "stdout": "human:Sam is no longer in charge of courtyard, or anything under it\n",
+      "stderr": "",
+      "before_sha256": "ab952ac08cf384b6458366b30522a997a4e9bf224f6917588d277416a8ddfa58",
+      "after_sha256": "55593752cc43cca054e50e66af8737eddd4dc96a14b0e00fcc8d1de5235c849f",
+      "appended": "{\"id\":\"can-b4dff47c0d36\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"withdraw\",\"holder\":\"human:Sam\",\"scope\":\"courtyard\",\"rationale\":\"House A acts alone\"}\n"
+    },
+    {
+      "experiment": "courtyard",
+      "case": "move-rule",
+      "judgment": "fails",
+      "expected": {
+        "scope": "courtyard",
+        "status": "active"
+      },
+      "observed": {
+        "scope": "house_a",
+        "status": "active"
+      },
+      "record": "1793637169828658000-4644",
+      "actor": "human:Mira",
+      "argv": [
+        "area",
+        "can-70c1672a611f",
+        "house_a"
+      ],
+      "code": 0,
+      "stdout": "can-70c1672a611f is in house_a\n",
+      "stderr": "",
+      "before_sha256": "5013e99f771e31688a92fd81860ca50424641af13402832b447a74e5fd70d6ac",
+      "after_sha256": "7aaaf71036d46294df2708d2863638200d2247db6607a6a947c085e08b36be71",
+      "appended": "{\"id\":\"can-22b569d43d78\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"scoped\",\"commitment\":\"can-70c1672a611f\",\"scope\":\"house_a\"}\n"
+    }
+  ]
+}

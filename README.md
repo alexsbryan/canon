@@ -35,6 +35,17 @@ download the zip from
 In the folder where you want to keep your group's record:
 
 ```sh
+canon ui
+```
+
+It opens your record in a browser on this machine. If no record is found,
+choose a profile and create one there; nothing is written until you submit.
+Choose `house` for a group, then propose one of your own agreements. No model
+is needed. The page shows where the record lives and who you are acting as.
+
+To work in the terminal:
+
+```sh
 canon init --profile house
 canon add "Quiet hours are 10pm to 7am."
 canon list
@@ -94,6 +105,8 @@ the boundary.
 - [Run it through Slack](./docs/SELF_HOST.md) — one container on a home
   server, so housemates propose and approve without installing anything.
 - [The guide](./docs/GUIDE.md) — the ideas and commands, in plain words.
+- [Try the institution reader](./docs/INSTITUTIONS.md) — an experimental
+  walkthrough where adopted rules belong to the group, including their removal.
 - [The design](./docs/PRIMITIVES.md) — what the tool fixes and what it
   leaves to your group, informed by Elinor Ostrom's work on shared resources.
 - [The evidence](./docs/DEMO_PLAN.md) — experiments, measurements, and

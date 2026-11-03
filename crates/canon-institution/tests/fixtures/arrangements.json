@@ -1,0 +1,444 @@
+[
+  {
+    "arrangements": {
+      "boundary": 1578009600,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-600770d5cda4"
+        }
+      ],
+      "pending": [
+        "can-708765109a78"
+      ]
+    },
+    "case": "pending-repeal",
+    "experiment": "adoption"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578182400,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-0a038b629da6"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-b77b8f1f2882"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-7875032fa48a"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-0b27d3f043b3"
+        }
+      ],
+      "pending": []
+    },
+    "case": "adopted-repeal",
+    "experiment": "adoption"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578009600,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-8f3f00719729"
+        }
+      ],
+      "pending": [
+        "can-58071415ddbb"
+      ]
+    },
+    "case": "pending-undo",
+    "experiment": "adoption"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578182400,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-023f780aae07"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-986090f09ac1"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-def1b54e76bd"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-a172577385d7"
+        }
+      ],
+      "pending": []
+    },
+    "case": "adopted-undo",
+    "experiment": "adoption"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578182400,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-874f24238798"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-bfd09099e095"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-8b2d18529abb"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-679ea901a1f3"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-84770893ca80"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-c65dc34edfea"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-805424bb7db2"
+        }
+      ],
+      "pending": []
+    },
+    "case": "stranger-repeal",
+    "experiment": "adoption"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578182400,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-bd0e112be7fd"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-e6a4a9a87dee"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-556534a25849"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-4e5103cbd15c"
+        }
+      ],
+      "pending": [
+        "can-a9fe4fe17e50"
+      ]
+    },
+    "case": "local",
+    "experiment": "courtyard"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578182400,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-55ee60bbaa08"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-e06d3af52afa"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-1de9a0ec0dff"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-5cb6ccaae2b7"
+        }
+      ],
+      "pending": [
+        "can-6823ca8efabc"
+      ]
+    },
+    "case": "one-house",
+    "experiment": "courtyard"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578268800,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-2fe37169a2e7"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-ff02e731ffa5"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-5bc7b49b514e"
+        },
+        {
+          "effective_at": 1578182400,
+          "source": "can-b1211e4d2912"
+        },
+        {
+          "effective_at": 1578268800,
+          "source": "can-2675f2a52dbb"
+        }
+      ],
+      "pending": [
+        "can-169f752ed1fb"
+      ]
+    },
+    "case": "both-houses",
+    "experiment": "courtyard"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578096000,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-1ab35ab04f25"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-356fb38ca41e"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-0fcba50e4f0b"
+        }
+      ],
+      "pending": []
+    },
+    "case": "remove-delegate",
+    "experiment": "courtyard"
+  },
+  {
+    "arrangements": {
+      "boundary": 1578096000,
+      "effects": [
+        {
+          "effective_at": 1577836800,
+          "source": "can-19b5c49bcabd"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-269e2039a62e"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-63627a34c91b"
+        },
+        {
+          "effective_at": 1577836800,
+          "source": "can-c132386aba26"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-55b94f219aa2"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-918d73a42198"
+        },
+        {
+          "effective_at": 1577923200,
+          "source": "can-b5d32681a0d6"
+        },
+        {
+          "effective_at": 1578009600,
+          "source": "can-232f8ca8769e"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-70c1672a611f"
+        },
+        {
+          "effective_at": 1578096000,
+          "source": "can-1a2a9006a4dd"
+        }
+      ],
+      "pending": []
+    },
+    "case": "move-rule",
+    "experiment": "courtyard"
+  }
+]

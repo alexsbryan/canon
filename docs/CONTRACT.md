@@ -87,6 +87,13 @@ probabilistic conformance guarantee is claimed.
 
 ## Changing the contract
 
+The additive [mechanical projection API](../crates/canon-core/src/projection.rs)
+is a caller-selected view, not the legacy institutional `Canon`. The source
+records and signatures remain immutable; an `Effect` supplies its source ID and
+effective time. Institutional assent belongs to the optional interpreter. The
+[boundary design](INSTITUTION_BOUNDARY.md) records the approved extraction and
+its compatibility paths.
+
 The contract is also written down, as files in [contract/](../contract/) that
 the suite holds the code to:
 

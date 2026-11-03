@@ -109,6 +109,36 @@ fn assert_by(text: &str, ts: i64, actor: &str) -> Act {
     )
 }
 
+#[test]
+fn mechanical_selection_verifies_against_unselected_key_bindings() {
+    let signer = Signer::new(99);
+    let binding = bind("human:owner", 10, &[], &[&signer]);
+    let forged = assert_by("unsigned under a bound name", 11, "human:owner");
+    let signed = signer.seal(
+        assert_by("genuine source", 12, "human:owner"),
+        core::slice::from_ref(&binding),
+    );
+    let log = Log::from_acts(vec![binding, forged.clone(), signed.clone()]);
+    let select = |source| crate::Effect {
+        source,
+        effective_at: 20,
+    };
+    assert!(
+        matches!(crate::Projection::from_effects(&log, &[select(forged.id.clone())], 30),
+        Err(crate::ProjectionError::UnverifiedSource(id)) if id == forged.id)
+    );
+    let projected =
+        crate::Projection::from_effects(&log, &[select(signed.id.clone())], 30).unwrap();
+    assert!(projected.get(&signed.id).is_some());
+    assert_eq!(
+        serde_json::to_value(&projected).unwrap()["unverified"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
 fn grant(holder: &str, scope: &str, ts: i64, actor: &str) -> Act {
     Act::new(
         ActKind::Grant {

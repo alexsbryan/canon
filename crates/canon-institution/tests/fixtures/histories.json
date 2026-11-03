@@ -1,0 +1,135 @@
+[
+  {
+    "experiment": "adoption",
+    "case": "pending-repeal",
+    "basis": "{\"id\":\"can-874f24238798\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:June\",\"scope\":\"house\"}\n{\"id\":\"can-bfd09099e095\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house\"}\n{\"id\":\"can-8b2d18529abb\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule.\",\"rule\":{\"rule\":\"unanimous\"},\"scope\":\"house\",\"governs\":\"all\"}\n{\"id\":\"can-600770d5cda4\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-708765109a78\",\"scope\":\"house\"}\n{\"id\":\"can-708765109a78\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"assert\",\"text\":\"Quiet hours begin at 10pm.\",\"source\":\"pending-repeal\"}\n",
+    "appended": "{\"id\":\"can-db4c4cca9b3b\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"retract\",\"target\":\"can-708765109a78\",\"rationale\":\"Authority experiment pending-repeal\"}\n",
+    "before_sha256": "6c200398e923ac1da8f23afaffd12f1e6709d5af9877d011cc200cd748cff2a6",
+    "after_sha256": "f20557c2ab31c2feb0985ef808a946753086e8001b2e33d6945f3282e57c6feb",
+    "target": "can-708765109a78",
+    "original": null,
+    "native_observed": {
+      "status": "retracted"
+    }
+  },
+  {
+    "experiment": "adoption",
+    "case": "adopted-repeal",
+    "basis": "{\"id\":\"can-874f24238798\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:June\",\"scope\":\"house\"}\n{\"id\":\"can-bfd09099e095\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house\"}\n{\"id\":\"can-8b2d18529abb\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule.\",\"rule\":{\"rule\":\"unanimous\"},\"scope\":\"house\",\"governs\":\"all\"}\n{\"id\":\"can-0a038b629da6\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-b77b8f1f2882\",\"scope\":\"house\"}\n{\"id\":\"can-b77b8f1f2882\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"assert\",\"text\":\"Quiet hours begin at 10pm.\",\"source\":\"adopted-repeal\"}\n{\"id\":\"can-7875032fa48a\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-b77b8f1f2882\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n{\"id\":\"can-0b27d3f043b3\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"human:June\",\"op\":\"position\",\"about\":\"can-b77b8f1f2882\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n",
+    "appended": "{\"id\":\"can-eb2f1d1e4c55\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"retract\",\"target\":\"can-b77b8f1f2882\",\"rationale\":\"Authority experiment adopted-repeal\"}\n",
+    "before_sha256": "edbe45b55bd6b6ad28133bbd29c61d2ad0807c30948d38e1084c29077e01ae45",
+    "after_sha256": "91912b9f73ac712c0278eab1abf86e4e51549de3b96d6bfb8f9e738a3541cfcf",
+    "target": "can-b77b8f1f2882",
+    "original": null,
+    "native_observed": {
+      "status": "retracted"
+    }
+  },
+  {
+    "experiment": "adoption",
+    "case": "pending-undo",
+    "basis": "{\"id\":\"can-874f24238798\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:June\",\"scope\":\"house\"}\n{\"id\":\"can-bfd09099e095\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house\"}\n{\"id\":\"can-8b2d18529abb\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule.\",\"rule\":{\"rule\":\"unanimous\"},\"scope\":\"house\",\"governs\":\"all\"}\n{\"id\":\"can-58071415ddbb\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"assert\",\"text\":\"Quiet hours begin at 10pm.\",\"source\":\"pending-undo\"}\n{\"id\":\"can-8f3f00719729\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-58071415ddbb\",\"scope\":\"house\"}\n",
+    "appended": "{\"id\":\"can-59fdd69c518f\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"revert\",\"targets\":[\"can-58071415ddbb\"],\"rationale\":\"Authority experiment pending-undo\"}\n",
+    "before_sha256": "500a89f096392dbb7fab28361a292ed5f949d3c29fa5d63cec55a417a5481bb1",
+    "after_sha256": "5258468516d02712c7587f738e473aba4060d5266de692eaa56ebcbfaef4c7bf",
+    "target": "can-58071415ddbb",
+    "original": null,
+    "native_observed": {
+      "status": "absent"
+    }
+  },
+  {
+    "experiment": "adoption",
+    "case": "adopted-undo",
+    "basis": "{\"id\":\"can-874f24238798\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:June\",\"scope\":\"house\"}\n{\"id\":\"can-bfd09099e095\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house\"}\n{\"id\":\"can-8b2d18529abb\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule.\",\"rule\":{\"rule\":\"unanimous\"},\"scope\":\"house\",\"governs\":\"all\"}\n{\"id\":\"can-023f780aae07\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"assert\",\"text\":\"Quiet hours begin at 10pm.\",\"source\":\"adopted-undo\"}\n{\"id\":\"can-986090f09ac1\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-023f780aae07\",\"scope\":\"house\"}\n{\"id\":\"can-def1b54e76bd\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-023f780aae07\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n{\"id\":\"can-a172577385d7\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"human:June\",\"op\":\"position\",\"about\":\"can-023f780aae07\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n",
+    "appended": "{\"id\":\"can-f5c42ebd973a\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:helper\",\"op\":\"revert\",\"targets\":[\"can-023f780aae07\"],\"rationale\":\"Authority experiment adopted-undo\"}\n",
+    "before_sha256": "1f2a9e63e256fb5c9cfd108401ca6efa8381eb03535d155054a9533bbaa08fd4",
+    "after_sha256": "635acade8c3f63e86796025a0eb2f4a2b3a0124d207d4ecb176a623494520321",
+    "target": "can-023f780aae07",
+    "original": null,
+    "native_observed": {
+      "status": "absent"
+    }
+  },
+  {
+    "experiment": "adoption",
+    "case": "stranger-repeal",
+    "basis": "{\"id\":\"can-874f24238798\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:June\",\"scope\":\"house\"}\n{\"id\":\"can-bfd09099e095\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house\"}\n{\"id\":\"can-8b2d18529abb\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira and June make house rules unanimously. An agent may cancel its own pending proposal; only the house can change or remove an adopted rule.\",\"rule\":{\"rule\":\"unanimous\"},\"scope\":\"house\",\"governs\":\"all\"}\n{\"id\":\"can-679ea901a1f3\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-84770893ca80\",\"scope\":\"house\"}\n{\"id\":\"can-84770893ca80\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"agent:helper\",\"op\":\"assert\",\"text\":\"Quiet hours begin at 10pm.\",\"source\":\"stranger-repeal\"}\n{\"id\":\"can-c65dc34edfea\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-84770893ca80\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n{\"id\":\"can-805424bb7db2\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"human:June\",\"op\":\"position\",\"about\":\"can-84770893ca80\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n",
+    "appended": "{\"id\":\"can-8d3038ccc30e\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"agent:stranger\",\"op\":\"retract\",\"target\":\"can-84770893ca80\",\"rationale\":\"Authority experiment stranger-repeal\"}\n",
+    "before_sha256": "fe928b7e451636b91b98a63936f1b7d266d55d29abcfe192b105e807a863047d",
+    "after_sha256": "a25d97fd3d1a63630b33633ec7d4b597378e7b8e6f0b76d519e7a3caa393161b",
+    "target": "can-84770893ca80",
+    "original": null,
+    "native_observed": {
+      "status": "active"
+    }
+  },
+  {
+    "experiment": "courtyard",
+    "case": "local",
+    "basis": "{\"id\":\"can-19b5c49bcabd\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"courtyard\"}\n{\"id\":\"can-269e2039a62e\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"house_b\"}\n{\"id\":\"can-63627a34c91b\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house_a\"}\n{\"id\":\"can-c132386aba26\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"courtyard\"}\n{\"id\":\"can-55b94f219aa2\",\"v\":2,\"ts_unix\":1577923200,\"actor\":\"human:Sam\",\"op\":\"ratification\",\"text\":\"House B's appointed delegate approves local changes.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_b\"}\n{\"id\":\"can-918d73a42198\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"joint\",\"holders\":[\"human:Mira\",\"human:Sam\"]},\"scope\":\"courtyard\",\"governs\":\"all\"}\n{\"id\":\"can-b5d32681a0d6\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_a\",\"governs\":\"all\"}\n{\"id\":\"can-bd0e112be7fd\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"assert\",\"text\":\"The courtyard is available to both houses.\",\"source\":\"local\"}\n{\"id\":\"can-e6a4a9a87dee\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"scoped\",\"commitment\":\"can-bd0e112be7fd\",\"scope\":\"courtyard\"}\n{\"id\":\"can-556534a25849\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Sam\",\"op\":\"position\",\"about\":\"can-bd0e112be7fd\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n{\"id\":\"can-4e5103cbd15c\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-a9fe4fe17e50\",\"scope\":\"house_a\"}\n{\"id\":\"can-a9fe4fe17e50\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"agent:helper\",\"op\":\"assert\",\"text\":\"House A keeps its bikes inside its own shed.\",\"source\":\"local\"}\n",
+    "appended": "{\"id\":\"can-ef9539b809ad\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-a9fe4fe17e50\",\"pull\":\"toward\",\"because\":\"Authority experiment local\"}\n",
+    "before_sha256": "3617963fe1395574821ab4f6ea6e790056fbdfe144d0d647f190dafcae1bc236",
+    "after_sha256": "0e6f19743e30786b98fb43cef6c16a50e0dc3a281f0d35563322f74d08ba4f32",
+    "target": "can-a9fe4fe17e50",
+    "original": "can-bd0e112be7fd",
+    "native_observed": {
+      "status": "active"
+    }
+  },
+  {
+    "experiment": "courtyard",
+    "case": "one-house",
+    "basis": "{\"id\":\"can-19b5c49bcabd\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"courtyard\"}\n{\"id\":\"can-269e2039a62e\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"house_b\"}\n{\"id\":\"can-63627a34c91b\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house_a\"}\n{\"id\":\"can-c132386aba26\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"courtyard\"}\n{\"id\":\"can-55b94f219aa2\",\"v\":2,\"ts_unix\":1577923200,\"actor\":\"human:Sam\",\"op\":\"ratification\",\"text\":\"House B's appointed delegate approves local changes.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_b\"}\n{\"id\":\"can-918d73a42198\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"joint\",\"holders\":[\"human:Mira\",\"human:Sam\"]},\"scope\":\"courtyard\",\"governs\":\"all\"}\n{\"id\":\"can-b5d32681a0d6\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_a\",\"governs\":\"all\"}\n{\"id\":\"can-55ee60bbaa08\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"assert\",\"text\":\"The courtyard is available to both houses.\",\"source\":\"one-house\"}\n{\"id\":\"can-e06d3af52afa\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"scoped\",\"commitment\":\"can-55ee60bbaa08\",\"scope\":\"courtyard\"}\n{\"id\":\"can-1de9a0ec0dff\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Sam\",\"op\":\"position\",\"about\":\"can-55ee60bbaa08\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n{\"id\":\"can-5cb6ccaae2b7\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-6823ca8efabc\",\"scope\":\"courtyard\"}\n{\"id\":\"can-6823ca8efabc\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"agent:helper\",\"op\":\"supersede\",\"text\":\"The courtyard closes at 9pm.\",\"old\":[\"can-55ee60bbaa08\"],\"rationale\":\"one-house\"}\n",
+    "appended": "{\"id\":\"can-66cd1c7f2d58\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-6823ca8efabc\",\"pull\":\"toward\",\"because\":\"Authority experiment one-house\"}\n",
+    "before_sha256": "88b2b26c8becc46facfe1a71b85b168ad21e24f60a7610c23608b976a4331128",
+    "after_sha256": "8a39d1d7c8b5a32420d1d1b7ed0d5135c21548f2bf6f940bfc0f9ee35a490411",
+    "target": "can-6823ca8efabc",
+    "original": "can-55ee60bbaa08",
+    "native_observed": {
+      "status": "proposed",
+      "original_status": "active"
+    }
+  },
+  {
+    "experiment": "courtyard",
+    "case": "both-houses",
+    "basis": "{\"id\":\"can-19b5c49bcabd\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"courtyard\"}\n{\"id\":\"can-269e2039a62e\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"house_b\"}\n{\"id\":\"can-63627a34c91b\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house_a\"}\n{\"id\":\"can-c132386aba26\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"courtyard\"}\n{\"id\":\"can-55b94f219aa2\",\"v\":2,\"ts_unix\":1577923200,\"actor\":\"human:Sam\",\"op\":\"ratification\",\"text\":\"House B's appointed delegate approves local changes.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_b\"}\n{\"id\":\"can-918d73a42198\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"joint\",\"holders\":[\"human:Mira\",\"human:Sam\"]},\"scope\":\"courtyard\",\"governs\":\"all\"}\n{\"id\":\"can-b5d32681a0d6\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_a\",\"governs\":\"all\"}\n{\"id\":\"can-2fe37169a2e7\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"assert\",\"text\":\"The courtyard is available to both houses.\",\"source\":\"both-houses\"}\n{\"id\":\"can-ff02e731ffa5\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"scoped\",\"commitment\":\"can-2fe37169a2e7\",\"scope\":\"courtyard\"}\n{\"id\":\"can-5bc7b49b514e\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Sam\",\"op\":\"position\",\"about\":\"can-2fe37169a2e7\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n{\"id\":\"can-169f752ed1fb\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"agent:helper\",\"op\":\"supersede\",\"text\":\"The courtyard closes at 9pm.\",\"old\":[\"can-2fe37169a2e7\"],\"rationale\":\"both-houses\"}\n{\"id\":\"can-b1211e4d2912\",\"v\":2,\"ts_unix\":1578182400,\"actor\":\"agent:helper\",\"op\":\"scoped\",\"commitment\":\"can-169f752ed1fb\",\"scope\":\"courtyard\"}\n{\"id\":\"can-2675f2a52dbb\",\"v\":2,\"ts_unix\":1578268800,\"actor\":\"human:Sam\",\"op\":\"position\",\"about\":\"can-169f752ed1fb\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n",
+    "appended": "{\"id\":\"can-8dcb3c0f68b1\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"position\",\"about\":\"can-169f752ed1fb\",\"pull\":\"toward\",\"because\":\"Authority experiment both-houses\"}\n",
+    "before_sha256": "82539dccf5e8672a19c3ecdbb8f2d9fc887765c6f80e14e4af13be5225785c48",
+    "after_sha256": "6f9710f7d8fb9502758633b28ac346fb62ea4c51808fd271bf25422d40b200f4",
+    "target": "can-169f752ed1fb",
+    "original": "can-2fe37169a2e7",
+    "native_observed": {
+      "status": "active",
+      "original_status": "superseded"
+    }
+  },
+  {
+    "experiment": "courtyard",
+    "case": "remove-delegate",
+    "basis": "{\"id\":\"can-19b5c49bcabd\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"courtyard\"}\n{\"id\":\"can-269e2039a62e\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"house_b\"}\n{\"id\":\"can-63627a34c91b\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house_a\"}\n{\"id\":\"can-c132386aba26\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"courtyard\"}\n{\"id\":\"can-55b94f219aa2\",\"v\":2,\"ts_unix\":1577923200,\"actor\":\"human:Sam\",\"op\":\"ratification\",\"text\":\"House B's appointed delegate approves local changes.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_b\"}\n{\"id\":\"can-918d73a42198\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"joint\",\"holders\":[\"human:Mira\",\"human:Sam\"]},\"scope\":\"courtyard\",\"governs\":\"all\"}\n{\"id\":\"can-b5d32681a0d6\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_a\",\"governs\":\"all\"}\n{\"id\":\"can-1ab35ab04f25\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"scoped\",\"commitment\":\"can-356fb38ca41e\",\"scope\":\"courtyard\"}\n{\"id\":\"can-356fb38ca41e\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"assert\",\"text\":\"The courtyard is available to both houses.\",\"source\":\"remove-delegate\"}\n{\"id\":\"can-0fcba50e4f0b\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Sam\",\"op\":\"position\",\"about\":\"can-356fb38ca41e\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n",
+    "appended": "{\"id\":\"can-b4dff47c0d36\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"withdraw\",\"holder\":\"human:Sam\",\"scope\":\"courtyard\",\"rationale\":\"House A acts alone\"}\n",
+    "before_sha256": "ab952ac08cf384b6458366b30522a997a4e9bf224f6917588d277416a8ddfa58",
+    "after_sha256": "55593752cc43cca054e50e66af8737eddd4dc96a14b0e00fcc8d1de5235c849f",
+    "target": "can-356fb38ca41e",
+    "original": "can-356fb38ca41e",
+    "native_observed": {
+      "sam_holds": false
+    }
+  },
+  {
+    "experiment": "courtyard",
+    "case": "move-rule",
+    "basis": "{\"id\":\"can-19b5c49bcabd\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"courtyard\"}\n{\"id\":\"can-269e2039a62e\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Sam\",\"scope\":\"house_b\"}\n{\"id\":\"can-63627a34c91b\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"house_a\"}\n{\"id\":\"can-c132386aba26\",\"v\":2,\"ts_unix\":1577836800,\"actor\":\"human:founder\",\"op\":\"grant\",\"holder\":\"human:Mira\",\"scope\":\"courtyard\"}\n{\"id\":\"can-55b94f219aa2\",\"v\":2,\"ts_unix\":1577923200,\"actor\":\"human:Sam\",\"op\":\"ratification\",\"text\":\"House B's appointed delegate approves local changes.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_b\"}\n{\"id\":\"can-918d73a42198\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"joint\",\"holders\":[\"human:Mira\",\"human:Sam\"]},\"scope\":\"courtyard\",\"governs\":\"all\"}\n{\"id\":\"can-b5d32681a0d6\",\"v\":4,\"ts_unix\":1577923200,\"actor\":\"human:Mira\",\"op\":\"ratification\",\"text\":\"Mira speaks for House A and Sam for House B. Each approves local changes. Courtyard changes require both. Neither can remove the other delegate or transfer courtyard rules to one house alone.\",\"rule\":{\"rule\":\"standing\"},\"scope\":\"house_a\",\"governs\":\"all\"}\n{\"id\":\"can-232f8ca8769e\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"scoped\",\"commitment\":\"can-70c1672a611f\",\"scope\":\"courtyard\"}\n{\"id\":\"can-70c1672a611f\",\"v\":2,\"ts_unix\":1578009600,\"actor\":\"human:Mira\",\"op\":\"assert\",\"text\":\"The courtyard is available to both houses.\",\"source\":\"move-rule\"}\n{\"id\":\"can-1a2a9006a4dd\",\"v\":2,\"ts_unix\":1578096000,\"actor\":\"human:Sam\",\"op\":\"position\",\"about\":\"can-70c1672a611f\",\"pull\":\"toward\",\"because\":\"I agree to this exact proposal.\"}\n",
+    "appended": "{\"id\":\"can-22b569d43d78\",\"v\":2,\"ts_unix\":1793637169,\"actor\":\"human:Mira\",\"op\":\"scoped\",\"commitment\":\"can-70c1672a611f\",\"scope\":\"house_a\"}\n",
+    "before_sha256": "5013e99f771e31688a92fd81860ca50424641af13402832b447a74e5fd70d6ac",
+    "after_sha256": "7aaaf71036d46294df2708d2863638200d2247db6607a6a947c085e08b36be71",
+    "target": "can-70c1672a611f",
+    "original": "can-70c1672a611f",
+    "native_observed": {
+      "scope": "house_a",
+      "status": "active"
+    }
+  }
+]
