@@ -250,6 +250,77 @@ fn every_write_goes_through_the_same_door() {
 }
 
 #[test]
+fn the_decision_comes_before_its_history_and_the_identity_prompt() {
+    let (log, _, _) = crate::review::tests::house();
+    let c = ctx("first", &log);
+    let page = respond(&get("/", true), &c).body;
+    let decide = page.find("action=\"/decide\"").expect("a decision waits");
+    for later in ["History and supporting entries", "Identify yourself"] {
+        assert!(decide < page.find(later).expect(later), "{later}: {page}");
+    }
+    assert!(!page.contains("No source passage"), "{page}");
+}
+
+#[test]
+fn a_waiting_rule_can_be_decided_from_its_own_history() {
+    let (log, quiet, pans) = crate::review::tests::house();
+    let c = ctx("history-decide", &log);
+    let page = respond(&get(&format!("/why/{}", quiet.as_str()), true), &c).body;
+    assert!(page.contains("action=\"/decide\""), "{page}");
+    let theirs = respond(&get(&format!("/why/{}", pans.as_str()), true), &c).body;
+    assert!(
+        !theirs.contains("action=\"/decide\""),
+        "the kitchen is sam's: {theirs}"
+    );
+    let body = format!("token={TOKEN}&id={}&decision=approve", quiet.as_str());
+    assert_eq!(respond(&at("/decide", &body), &c).status, 303);
+    let settled = respond(&get(&format!("/why/{}", quiet.as_str()), true), &c).body;
+    assert!(!settled.contains("action=\"/decide\""), "{settled}");
+}
+
+#[test]
+fn taking_a_rule_away_says_nobody_is_asked_and_a_silence_says_what_it_is_not() {
+    let (log, quiet, _) = crate::review::tests::house();
+    let c = ctx("say-so", &log);
+    let body = format!("token={TOKEN}&id={}&decision=approve", quiet.as_str());
+    assert_eq!(respond(&at("/decide", &body), &c).status, 303);
+    let path = format!("/why/{}", quiet.as_str());
+    let page = respond(&get(&path, true), &c).body;
+    assert!(page.contains("goes as soon as you press"), "{page}");
+    let gone = format!(
+        "token={TOKEN}&id={}&because=No+longer+needed",
+        quiet.as_str()
+    );
+    let r = respond(&at("/retract", &gone), &c);
+    let back = r.headers.iter().find(|(k, _)| k == "Location").unwrap();
+    let page = respond(&get(&back.1, true), &c).body;
+    assert!(page.contains("Nobody else was asked."), "{page}");
+
+    let home = respond(&get("/", true), &c).body;
+    assert!(home.contains("does not approve, object to or cancel"));
+    assert!(!home.contains("the group decided"), "{home}");
+}
+
+#[test]
+fn a_reason_given_with_a_proposal_is_kept_and_read_as_a_note() {
+    let (log, _, _) = crate::review::tests::house();
+    let mut c = ctx("reason", &log);
+    c.actor = "agent:drafter".into();
+    let body = format!(
+        "token={TOKEN}&text=Bins+go+out+on+Tuesday.&scope=house&because=The+collection+moved"
+    );
+    assert_eq!(respond(&at("/propose", &body), &c).status, 303);
+    assert!(acts(&c).contains(r#""source":"The collection moved""#));
+    c.actor = "human:alex".into();
+    let page = respond(&get("/", true), &c).body;
+    assert!(
+        page.contains("Noted with it: The collection moved"),
+        "{page}"
+    );
+    assert!(!page.contains("Source reference"), "{page}");
+}
+
+#[test]
 fn a_rule_can_be_proposed_changed_and_taken_away_from_the_page() {
     let (log, _, _) = crate::review::tests::house();
     let c = ctx("rules", &log);
