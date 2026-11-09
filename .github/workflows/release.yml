@@ -62,12 +62,12 @@ jobs:
       matrix:
         include:
           - target: aarch64-apple-darwin
-            runner: macos-14
+            runner: macos-15
           # Cross-compiled on the same arm64 image. GitHub's hosted Intel Macs
           # queue for a long time, and with no native code there is nothing
           # the cross build can get wrong that a native one would catch.
           - target: x86_64-apple-darwin
-            runner: macos-14
+            runner: macos-15
           - target: x86_64-unknown-linux-musl
             runner: ubuntu-22.04
           - target: aarch64-unknown-linux-musl
