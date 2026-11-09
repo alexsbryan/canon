@@ -612,7 +612,10 @@ fn propose(form: &Form, ctx: &Ctx) -> Response {
             }
         },
     };
-    match crate::cmds::propose(&ctx.dir, &ctx.actor, text, scope, None) {
+    // What `canon add -m` keeps: `why` shows it as where the rule came from.
+    let because = form.get("because").trim();
+    let because = (!because.is_empty()).then_some(because);
+    match crate::cmds::propose(&ctx.dir, &ctx.actor, text, scope, because) {
         Ok(act) => Response::see(&format!("/?done={}", act.id.as_str())),
         Err(e) => home(ctx, None, None, Some(write_error(&e))),
     }
@@ -752,7 +755,7 @@ fn did_note(ctx: &Ctx, log: &Log, st: &Canon, id: &str) -> Option<String> {
         ActKind::Supersede { text, .. } => {
             format!("Recorded. {} is {}.", quote(text), review::outcome(st, &id))
         }
-        ActKind::Retract { .. } => took("Retracted."),
+        ActKind::Retract { .. } => took("Taken away. Nobody else was asked."),
         ActKind::Silence { about, .. } => {
             format!("Recorded: {} is left unwritten on purpose.", quote(about))
         }
@@ -809,7 +812,6 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         )
     };
     b.push_str(&context(ctx));
-    b.push_str(&format!("<p class=\"who\">{who}</p>"));
     if let Some(e) = error {
         b.push_str(&format!(
             "<p class=\"note bad\" role=\"alert\">{}</p>",
@@ -860,10 +862,7 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
     if mine.is_empty() {
         b.push_str("<p class=\"quiet\">When someone proposes a rule for an area you are in charge of, it appears here for you to approve or object to.</p>");
     }
-    let touch = canon_core::sign::verify(log.acts())
-        .bindings
-        .get(&ctx.actor)
-        .is_some_and(|bd| bd.keys.iter().any(canon_core::Key::touch_required));
+    let touch = asks_for_touch(&log, ctx);
     for item in &mine {
         b.push_str(&motion(ctx, item, now, touch));
     }
@@ -883,6 +882,8 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         }
         b.push_str("</ul></details>");
     }
+    // After the queue: nothing waiting on someone should sit behind this.
+    b.push_str(&format!("<p class=\"who\">{who}</p>"));
 
     let rooms: std::collections::BTreeSet<String> = st
         .grants()
@@ -895,19 +896,29 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
          <label>The rule, as you would want it read<textarea name=\"text\" required rows=\"3\">{}</textarea></label>\
          <label>Which room it belongs to, if one<input name=\"scope\" list=\"rooms\" placeholder=\"the whole canon\" value=\"{}\"></label>\
          <datalist id=\"rooms\">{}</datalist>\
+         <p class=\"meta\">The room decides who has to agree. Left blank, the whole canon's procedure applies, not any room's.</p>\
+         <label>Why, if others should know<textarea name=\"because\" rows=\"2\">{}</textarea></label>\
          <button class=\"carry\">Propose it</button></form></details>",
         if ctx.field("/propose", None, "text").is_some() { " open" } else { "" },
         token_field(ctx), esc(ctx.field("/propose", None, "text").unwrap_or("")), esc(ctx.field("/propose", None, "scope").unwrap_or("")),
         rooms
             .iter()
             .map(|r| format!("<option value=\"{}\">", esc(r)))
-            .collect::<String>()
+            .collect::<String>(),
+        esc(ctx.field("/propose", None, "because").unwrap_or(""))
     ));
 
     b.push_str(&in_force(&st));
     b.push_str(&unwritten(ctx, &st));
     b.push_str("</main>");
     Response::html(200, page(&format!("{} — canon", name), &b))
+}
+
+fn asks_for_touch(log: &Log, ctx: &Ctx) -> bool {
+    canon_core::sign::verify(log.acts())
+        .bindings
+        .get(&ctx.actor)
+        .is_some_and(|bd| bd.keys.iter().any(canon_core::Key::touch_required))
 }
 
 fn waiting_line(n: usize) -> String {
@@ -969,6 +980,7 @@ fn motion(ctx: &Ctx, item: &Item, now: i64, touch: bool) -> String {
             m.push_str(&format!("<p class=\"rule\">{}</p>", esc(&item.text)));
         }
     }
+    m.push_str(&decide_form(ctx, item, touch));
     if !item.because.is_empty() {
         m.push_str(&format!(
             "<figure class=\"because\"><blockquote>{}</blockquote><figcaption>{}, on why</figcaption></figure>",
@@ -983,15 +995,20 @@ fn motion(ctx: &Ctx, item: &Item, now: i64, touch: bool) -> String {
                 esc(&p),
                 esc(src)
             )),
-            None => m.push_str(&format!("<p class=\"meta\">Source reference: {}. No excerpt is available here.</p>", esc(src))),
+            None => m.push_str(&format!("<p class=\"meta\">Noted with it: {}</p>", esc(src))),
         }
-    } else {
-        m.push_str("<p class=\"meta\">No source passage was recorded.</p>");
     }
     m.push_str(&format!(
         "<p class=\"needs\">Needs {}</p><p class=\"meta\"><a href=\"/why/{}\">History and supporting entries</a></p>",
         esc(&item.needs), esc(item.id.as_str())
     ));
+    m.push_str("</article>");
+    m
+}
+
+/// Approve and Object, on the card and on the waiting rule's own history.
+fn decide_form(ctx: &Ctx, item: &Item, touch: bool) -> String {
+    let mut m = String::new();
     let hidden = format!(
         "<input type=\"hidden\" name=\"token\" value=\"{}\"><input type=\"hidden\" name=\"id\" value=\"{}\">",
         esc(&ctx.token),
@@ -1010,7 +1027,6 @@ fn motion(ctx: &Ctx, item: &Item, now: i64, touch: bool) -> String {
     if touch {
         m.push_str("<p class=\"meta\">Your key will ask for a touch in the terminal running this page.</p>");
     }
-    m.push_str("</article>");
     m
 }
 
@@ -1078,7 +1094,7 @@ fn in_force(st: &Canon) -> String {
 fn unwritten(ctx: &Ctx, st: &Canon) -> String {
     let mut b = String::from(
         "<section class=\"charter\"><h2>Unwritten on purpose</h2>\
-         <p class=\"quiet\">Things the group decided not to make rules about, and why.</p>",
+         <p class=\"quiet\">Things someone here chose to leave unwritten, and why.</p>",
     );
     if !st.silences().is_empty() {
         b.push_str("<ul class=\"silences\">");
@@ -1106,6 +1122,7 @@ fn unwritten(ctx: &Ctx, st: &Canon) -> String {
     b.push_str(&format!(
         "<details class=\"act\"{}><summary>Leave something unwritten on purpose</summary>\
          <form method=\"post\" action=\"/silence\">{}\
+          <p class=\"meta\">This is your own note about exactly what you name. It does not approve, object to or cancel any proposal.</p>\
           <label>What it is about<input name=\"about\" required value=\"{}\"></label>\
           <label>What leaving it unwritten protects<textarea name=\"because\" required rows=\"2\">{}</textarea></label>\
          <button class=\"carry\">Record it</button></form></details></section>",
@@ -1232,10 +1249,15 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
             esc(&note)
         ));
     }
-    b.push_str(&format!(
-        "<main><p class=\"rule lone\">{}</p><ul class=\"history\">",
-        esc(text)
-    ));
+    b.push_str(&format!("<main><p class=\"rule lone\">{}</p>", esc(text)));
+    let now = store::now();
+    if let Some(item) = review::queue(&log, &st, &ctx.actor, now)
+        .iter()
+        .find(|i| i.yours && i.id == id)
+    {
+        b.push_str(&decide_form(ctx, item, asks_for_touch(&log, ctx)));
+    }
+    b.push_str("<ul class=\"history\">");
     for line in &e.lines {
         let depth = if line.starts_with(' ') {
             " class=\"sub\""
@@ -1261,10 +1283,11 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
               <label>Why it is changing, which everyone will see<textarea name=\"because\" required rows=\"2\">{}</textarea></label>\
              <button class=\"carry\">Change it</button></form></details>\
               <details class=\"act\"{}><summary>Take it away</summary>\
+             <p class=\"meta\">Unlike a new wording, this needs no one's approval if you wrote this rule or are in charge of its area: it goes as soon as you press the button. Otherwise it is put to whoever is in charge.</p>\
              <form method=\"post\" action=\"/retract\">{hidden}\
               <label>Why it should go, which everyone will see<textarea name=\"because\" required rows=\"2\">{}</textarea></label>\
              <button class=\"object\">Take it away</button></form></details></div>\
-             <p class=\"meta\">If you are not in charge of this rule's area, a change is put to whoever is.</p>",
+             <p class=\"meta\">A new wording goes through this area's usual approval.</p>",
             if ctx.field("/replace", Some(id.as_str()), "text").is_some() { " open" } else { "" },
             esc(ctx.field("/replace", Some(id.as_str()), "text").unwrap_or(text)),
             esc(ctx.field("/replace", Some(id.as_str()), "because").unwrap_or("")),

@@ -366,6 +366,21 @@ canon did before there was a choice), `joint:a,b` (everyone named),
 deepest one wins, so the kitchen can decide differently from the house
 and neither has to know about the other.
 
+**What `unanimous` does not cover.** A new rule, a new wording and a change of
+the procedure itself all wait for everyone in charge. These other changes do
+not, and each stays in the history:
+
+| Change | Who can make it, and when it lands |
+|---|---|
+| Take a rule away (`canon repeal`) or undo it (`canon undo`) | Its author or anyone in charge: at once |
+| Undo the procedure (`canon undo`) | Its author: at once, so the room goes back to what it had before |
+| Move a rule to another area (`canon area`) | Its author: at once, and from then on the new area's procedure applies to it. In someone's personal area, that can be them alone |
+| Add or remove someone in charge (`canon give`, `canon withdraw`) | Someone in charge: at once. A new person counts only on later proposals |
+| Leave while a proposal is waiting on you (`canon withdraw`) | At once, and the proposal is refused rather than passed without you |
+
+If your group needs any of these to take everyone, `unanimous` does not promise
+that today, so settle it among yourselves before relying on it.
+
 **Policy** is the other axis — what `canon check` decides under when a
 proposal runs into a rule: `default`, `consent`, `threshold`,
 `supermajority --of 2/3`, `subsidiarity`. Both are ordinary recorded acts,
