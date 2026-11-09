@@ -7,6 +7,25 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.6.1 — 2026-11-09
+
+### In the browser
+
+- Approve and Object now sit directly under a rule's words on the home page,
+  and on a waiting rule's history page, which could only be read before.
+  "Identify yourself" moves below the queue.
+- Taking a rule away says, before and after you press the button, that it needs
+  nobody's approval if you wrote the rule or are in charge of its area.
+- A silence says it is your own note: it does not approve, object to or cancel
+  a proposal.
+- Propose takes an optional reason, read back as a note on the rule, and says
+  that a blank room falls under the whole canon's procedure. "No source passage
+  was recorded" is gone.
+
+[GETTING_STARTED](./docs/GETTING_STARTED.md) adds a table of what `unanimous`
+does not cover: who can repeal, undo, change an area and put someone in charge.
+Records, the command line and `--json` are unchanged.
+
 ## 0.6.0 — 2026-11-02
 
 ### Before you upgrade

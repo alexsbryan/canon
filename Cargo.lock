@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "canon-cli"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "canon-contract",
  "canon-core",
@@ -77,7 +77,7 @@ dependencies = [
 
 [[package]]
 name = "canon-contract"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "quote",
  "syn 2.0.119",
@@ -85,7 +85,7 @@ dependencies = [
 
 [[package]]
 name = "canon-core"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "ed25519-compact",
  "proptest",
@@ -96,7 +96,7 @@ dependencies = [
 
 [[package]]
 name = "canon-institution"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "canon-core",
  "serde",
