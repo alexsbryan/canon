@@ -51,18 +51,13 @@ pub fn positionals(args: &[String]) -> Vec<&str> {
     let mut out = Vec::new();
     let mut skip = false;
     for a in args {
-        if skip {
-            skip = false;
+        if std::mem::take(&mut skip) {
             continue;
         }
-        if takes_value(a) {
-            skip = true;
-            continue;
+        skip = takes_value(a);
+        if !skip && !a.starts_with('-') {
+            out.push(a.as_str());
         }
-        if a.starts_with('-') {
-            continue;
-        }
-        out.push(a.as_str());
     }
     out
 }
@@ -128,24 +123,27 @@ pub fn report_status(d: &Path, id: &ActId) {
             _ => println!("  in force"),
         },
         Status::Proposed { needs } => {
-            println!(
-                "{}",
-                crate::wrap::hang("  PROPOSED, not yet a rule — needs ", needs)
-            );
-            println!("  approve it:  canon approve {id}");
-            println!("  object:      canon object {id} -m \"<why>\"");
+            say_proposed("  PROPOSED, not yet a rule — needs ", needs, id)
         }
-        Status::Refused { by, why, .. } => {
-            println!(
-                "{}",
-                crate::wrap::hang(
-                    &format!("  REFUSED{}: ", crate::explain::refused_by(by, None, |b| b)),
-                    &crate::explain::refused_why(by, why)
-                )
-            );
-        }
+        Status::Refused { by, why, .. } => say_refused(by, why),
         Status::Superseded { .. } | Status::Retracted { .. } => {}
     }
+}
+
+fn say_refused(by: &str, why: &str) {
+    println!(
+        "{}",
+        crate::wrap::hang(
+            &format!("  REFUSED{}: ", crate::explain::refused_by(by, None, |b| b)),
+            &crate::explain::refused_why(by, why)
+        )
+    );
+}
+
+fn say_proposed(head: &str, needs: &str, id: &ActId) {
+    println!("{}", crate::wrap::hang(head, needs));
+    println!("  approve it:  canon approve {id}");
+    println!("  object:      canon object {id} -m \"<why>\"");
 }
 
 /// Where a change to a scope's rule stands, in the words `list` uses.
@@ -153,23 +151,12 @@ pub fn report_verdict(id: &ActId, v: &canon_core::Verdict) {
     use canon_core::Verdict;
     match v {
         Verdict::Ratified { since, .. } => println!("  in force since {}", store::ymd(*since)),
-        Verdict::Proposed { needs, .. } => {
-            println!(
-                "{}",
-                crate::wrap::hang("  PROPOSED, not yet how this area decides — needs ", needs)
-            );
-            println!("  approve it:  canon approve {id}");
-            println!("  object:      canon object {id} -m \"<why>\"");
-        }
-        Verdict::Refused { by, why, .. } => {
-            println!(
-                "{}",
-                crate::wrap::hang(
-                    &format!("  REFUSED{}: ", crate::explain::refused_by(by, None, |b| b)),
-                    &crate::explain::refused_why(by, why)
-                )
-            );
-        }
+        Verdict::Proposed { needs, .. } => say_proposed(
+            "  PROPOSED, not yet how this area decides — needs ",
+            needs,
+            id,
+        ),
+        Verdict::Refused { by, why, .. } => say_refused(by, why),
     }
 }
 
@@ -186,22 +173,9 @@ pub fn report_retraction(r: &canon_core::Retraction) {
             )
         ),
         Verdict::Proposed { needs, .. } => {
-            println!(
-                "{}",
-                crate::wrap::hang("  PROPOSED, not yet repealed — needs ", needs)
-            );
-            println!("  approve it:  canon approve {}", r.act);
-            println!("  object:      canon object {} -m \"<why>\"", r.act);
+            say_proposed("  PROPOSED, not yet repealed — needs ", needs, &r.act)
         }
-        Verdict::Refused { by, why, .. } => {
-            println!(
-                "{}",
-                crate::wrap::hang(
-                    &format!("  REFUSED{}: ", crate::explain::refused_by(by, None, |b| b)),
-                    &crate::explain::refused_why(by, why)
-                )
-            );
-        }
+        Verdict::Refused { by, why, .. } => say_refused(by, why),
     }
 }
 
@@ -274,12 +248,7 @@ pub fn announce(t: &Took, id: &ActId, headline: impl FnOnce()) -> i32 {
         // A proposal, the way an add by a non-holder is one: not applied,
         // so no success line, and not refused, so it exits as an add does.
         Took::Proposed(needs) => {
-            println!(
-                "{}",
-                crate::wrap::hang("PROPOSED, not yet applied — needs ", needs)
-            );
-            println!("  approve it:  canon approve {id}");
-            println!("  object:      canon object {id} -m \"<why>\"");
+            say_proposed("PROPOSED, not yet applied — needs ", needs, id);
             0
         }
         Took::Applied => {
@@ -297,12 +266,12 @@ pub fn governed(d: &Path, id: &ActId, headline: impl FnOnce()) -> i32 {
 /// `--scope <s>` on a write: the commitment is scoped in the same breath, so
 /// the ratification rule of that scope applies from the first fold.
 fn scope_arg(args: &[String]) -> Result<Option<canon_core::Scope>, String> {
-    match flag(args, "--area") {
-        None => Ok(None),
-        Some(raw) => canon_core::Scope::new(raw)
-            .map(Some)
-            .ok_or_else(|| format!("`{raw}` is not an area")),
-    }
+    flag(args, "--area").map(parse_area).transpose()
+}
+
+/// An area by its dotted name, or the refusal every verb gives.
+pub fn parse_area(raw: &str) -> Result<canon_core::Scope, String> {
+    canon_core::Scope::new(raw).ok_or_else(|| format!("`{raw}` is not an area"))
 }
 
 pub fn fail(e: impl std::fmt::Display) -> i32 {
@@ -321,6 +290,11 @@ macro_rules! or_fail {
     };
 }
 pub(crate) use or_fail;
+
+/// A value as indented JSON on stdout, which is what every `--json` prints.
+pub fn print_json<T: serde::Serialize + ?Sized>(v: &T) {
+    println!("{}", serde_json::to_string_pretty(v).unwrap_or_default());
+}
 
 pub fn write(d: &Path, kind: ActKind) -> Result<Act, String> {
     write_as(d, kind, &store::actor())
@@ -390,10 +364,7 @@ pub fn initialize(
         let granted = if plain || open || canon_core::Person::of(founder).is_none() {
             false
         } else {
-            let scope = match canon_core::Scope::new(profile.scope()) {
-                Some(s) => s,
-                None => return Err(format!("`{}` is not an area", profile.scope())),
-            };
+            let scope = parse_area(profile.scope())?;
             let kind = ActKind::Grant {
                 holder: founder.to_string(),
                 scope,
@@ -547,14 +518,10 @@ pub fn add(args: &[String]) -> i32 {
         .collect::<Vec<_>>()
         .join(" — ");
     let source = (!source.is_empty()).then_some(source);
-    match propose(&d, &store::actor(), text, scope, source.as_deref()) {
-        Ok(act) => {
-            println!("{}  {}", act.id, text);
-            report_status(&d, &act.id);
-            0
-        }
-        Err(e) => fail(e),
-    }
+    let act = or_fail!(propose(&d, &store::actor(), text, scope, source.as_deref()));
+    println!("{}  {}", act.id, text);
+    report_status(&d, &act.id);
+    0
 }
 
 /// Write a commitment, and its scope when it has one: what `add` writes,
@@ -566,15 +533,22 @@ pub fn propose(
     scope: Option<canon_core::Scope>,
     source: Option<&str>,
 ) -> Result<Act, String> {
-    let act = write_as(
-        d,
-        ActKind::Assert {
-            text: text.to_string(),
-            from: None,
-            source: source.map(str::to_string),
-        },
-        actor,
-    )?;
+    let kind = ActKind::Assert {
+        text: text.to_string(),
+        from: None,
+        source: source.map(str::to_string),
+    };
+    write_placed(d, actor, kind, scope)
+}
+
+/// Write `kind`, and its area in the same breath when it has one.
+fn write_placed(
+    d: &Path,
+    actor: &str,
+    kind: ActKind,
+    scope: Option<canon_core::Scope>,
+) -> Result<Act, String> {
+    let act = write_as(d, kind, actor)?;
     if let Some(s) = scope {
         write_as(
             d,
@@ -601,27 +575,12 @@ pub fn replace(
     why: &str,
     scope: Option<canon_core::Scope>,
 ) -> Result<Act, String> {
-    let act = write_as(
-        d,
-        ActKind::Supersede {
-            text: text.to_string(),
-            old: vec![old.clone()],
-            rationale: why.to_string(),
-        },
-        actor,
-    )?;
-    if let Some(s) = scope {
-        write_as(
-            d,
-            ActKind::Scoped {
-                commitment: act.id.clone(),
-                scope: s,
-            },
-            actor,
-        )
-        .map_err(|e| format!("{e}; {} was recorded, but its room was not", act.id))?;
-    }
-    Ok(act)
+    let kind = ActKind::Supersede {
+        text: text.to_string(),
+        old: vec![old.clone()],
+        rationale: why.to_string(),
+    };
+    write_placed(d, actor, kind, scope)
 }
 
 /// Approve a proposal: a position toward it, by name. Whether that makes it
@@ -671,14 +630,17 @@ fn weigh(args: &[String], approve: bool) -> i32 {
                 .unwrap_or_else(|| fail(e))
         }
     };
-    match answer(&d, &store::actor(), target.as_str(), None, approve, because) {
-        Ok(act) => {
-            println!("{}  {done} {}", target, act.actor);
-            report_status(&d, &target);
-            0
-        }
-        Err(e) => fail(e),
-    }
+    let act = or_fail!(answer(
+        &d,
+        &store::actor(),
+        target.as_str(),
+        None,
+        approve,
+        because
+    ));
+    println!("{}  {done} {}", target, act.actor);
+    report_status(&d, &target);
+    0
 }
 
 /// Approve or object to `about` as `actor`: the position act, written.
@@ -729,11 +691,7 @@ pub fn list(args: &[String]) -> i32 {
         // status. Emitting an array of live commitments made the human
         // output's own hint — "canon list --json for detail" about carried
         // contradictions — untrue, because the conflicts were not in it.
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&crate::render::with_scope_and_rank(&st))
-                .unwrap_or_default()
-        );
+        print_json(&crate::render::with_scope_and_rank(&st));
         return 0;
     }
     let profile = Profile::load(&d).unwrap_or_default();
@@ -930,37 +888,33 @@ pub fn why(args: &[String]) -> i32 {
     };
     let (_, log, st) = or_fail!(load());
     let id = or_fail!(crate::explain::resolve_why(&st, &log, needle));
-    match crate::explain::explain(&log, &st, &id) {
-        Ok(e) => {
-            if has(args, "--json") {
-                let record = st
-                    .get(&id)
-                    .and_then(|c| serde_json::to_value(c).ok())
-                    .or_else(|| st.question(&id).and_then(|q| serde_json::to_value(q).ok()))
-                    .or_else(|| {
-                        st.silences()
-                            .iter()
-                            .find(|s| s.act == id)
-                            .and_then(|s| serde_json::to_value(s).ok())
-                    })
-                    .unwrap_or(serde_json::Value::Null);
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&serde_json::json!({
-                        "id": id.to_string(),
-                        "headline": e.headline,
-                        "lines": e.lines,
-                        "record": record,
-                    }))
-                    .unwrap_or_default()
-                );
-            } else {
-                print!("{}", e.render("  "));
-            }
-            0
-        }
-        Err(e) => fail(e),
+    let e = or_fail!(crate::explain::explain_at(&log, &st, &id, store::now()));
+    if has(args, "--json") {
+        let view = st
+            .question(&id)
+            .map(|_| crate::questions::view(&log, &st, store::now(), &id));
+        let record = st
+            .get(&id)
+            .and_then(|c| serde_json::to_value(c).ok())
+            .or_else(|| st.question(&id).and_then(|q| serde_json::to_value(q).ok()))
+            .or_else(|| {
+                st.silences()
+                    .iter()
+                    .find(|s| s.act == id)
+                    .and_then(|s| serde_json::to_value(s).ok())
+            })
+            .unwrap_or(serde_json::Value::Null);
+        print_json(&serde_json::json!({
+            "id": id.to_string(),
+            "headline": e.headline,
+            "lines": e.lines,
+            "record": record,
+            "question_view": view,
+        }));
+    } else {
+        print!("{}", e.render("  "));
     }
+    0
 }
 
 pub fn supersede(args: &[String]) -> i32 {
@@ -977,22 +931,18 @@ pub fn supersede(args: &[String]) -> i32 {
         Ok(None) => st.scope_of(&old).cloned(),
         Err(e) => return fail(e),
     };
-    match replace(
+    let act = or_fail!(replace(
         &d,
         &store::actor(),
         &old,
         pos[1],
         flag(args, "-m").unwrap_or_default(),
         scope,
-    ) {
-        Ok(act) => {
-            println!("{}  {}", act.id, pos[1]);
-            println!("  replaces {old}");
-            report_status(&d, &act.id);
-            0
-        }
-        Err(e) => fail(e),
-    }
+    ));
+    println!("{}  {}", act.id, pos[1]);
+    println!("  replaces {old}");
+    report_status(&d, &act.id);
+    0
 }
 
 pub fn retract(args: &[String]) -> i32 {
@@ -1002,16 +952,14 @@ pub fn retract(args: &[String]) -> i32 {
     };
     let (d, _, st) = or_fail!(load());
     let target = or_fail!(crate::explain::resolve_any(&st, needle));
-    match write(
+    let act = or_fail!(write(
         &d,
         ActKind::Retract {
             target: target.clone(),
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
-    ) {
-        Ok(act) => governed(&d, &act.id, || println!("repealed {target}")),
-        Err(e) => fail(e),
-    }
+    ));
+    governed(&d, &act.id, || println!("repealed {target}"))
 }
 
 pub fn accept(args: &[String]) -> i32 {
@@ -1025,14 +973,9 @@ pub fn accept(args: &[String]) -> i32 {
         return fail("accept requires -m \"<reason>\" — a tolerated contradiction must say why");
     };
     let (d, _, st) = or_fail!(load());
-    let (a, b) = match (
-        crate::explain::resolve(&st, pos[0]),
-        crate::explain::resolve(&st, pos[1]),
-    ) {
-        (Ok(a), Ok(b)) => (a, b),
-        (Err(e), _) | (_, Err(e)) => return fail(e),
-    };
-    match write(
+    let a = or_fail!(crate::explain::resolve(&st, pos[0]));
+    let b = or_fail!(crate::explain::resolve(&st, pos[1]));
+    let act = or_fail!(write(
         &d,
         ActKind::Accept {
             a: a.clone(),
@@ -1040,18 +983,16 @@ pub fn accept(args: &[String]) -> i32 {
             rationale: rationale.to_string(),
             revisit: flag(args, "--revisit").map(str::to_string),
         },
-    ) {
-        Ok(act) => governed(&d, &act.id, || {
-            println!("carrying both, knowingly:");
-            println!("  {}", crate::explain::named(&st, &a));
-            println!("  {}", crate::explain::named(&st, &b));
-            println!("  {rationale}");
-            if let Some(r) = flag(args, "--revisit") {
-                println!("  look again by {r}");
-            }
-        }),
-        Err(e) => fail(e),
-    }
+    ));
+    governed(&d, &act.id, || {
+        println!("carrying both, knowingly:");
+        println!("  {}", crate::explain::named(&st, &a));
+        println!("  {}", crate::explain::named(&st, &b));
+        println!("  {rationale}");
+        if let Some(r) = flag(args, "--revisit") {
+            println!("  look again by {r}");
+        }
+    })
 }
 
 pub fn dismiss(args: &[String]) -> i32 {
@@ -1060,25 +1001,31 @@ pub fn dismiss(args: &[String]) -> i32 {
         return fail("usage: canon dismiss <a> <b> [-m \"<reason>\"]");
     }
     let (d, _, st) = or_fail!(load());
-    let (a, b) = match (
-        crate::explain::resolve(&st, pos[0]),
-        crate::explain::resolve(&st, pos[1]),
-    ) {
-        (Ok(a), Ok(b)) => (a, b),
-        (Err(e), _) | (_, Err(e)) => return fail(e),
-    };
-    match write(
+    let a = or_fail!(crate::explain::resolve(&st, pos[0]));
+    let b = or_fail!(crate::explain::resolve(&st, pos[1]));
+    let act = or_fail!(write(
         &d,
         ActKind::Dismiss {
             a: a.clone(),
             b: b.clone(),
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
-    ) {
-        Ok(act) => governed(&d, &act.id, || {
-            println!("dismissed: {a} and {b} are not in conflict")
-        }),
-        Err(e) => fail(e),
+    ));
+    governed(&d, &act.id, || {
+        println!("dismissed: {a} and {b} are not in conflict")
+    })
+}
+
+/// The one act whose id starts with `needle`, or which of the two ways it
+/// failed to be one.
+pub fn act_matching(log: &Log, needle: &str, hint: &str) -> Result<ActId, String> {
+    let hits: Vec<&Act> = (log.acts().iter())
+        .filter(|a| a.id.as_str().starts_with(needle))
+        .collect();
+    match hits.len() {
+        1 => Ok(hits[0].id.clone()),
+        0 => Err(format!("no act matching `{needle}`{hint}")),
+        n => Err(format!("`{needle}` matches {n} acts — use more characters")),
     }
 }
 
@@ -1088,20 +1035,7 @@ pub fn undo(args: &[String]) -> i32 {
         return fail("usage: canon undo <act-id> -m \"<reason>\"");
     };
     let (d, log, _) = or_fail!(load());
-    let hits: Vec<&Act> = log
-        .acts()
-        .iter()
-        .filter(|a| a.id.as_str() == *target || a.id.as_str().starts_with(target))
-        .collect();
-    let act_id = match hits.len() {
-        1 => hits[0].id.clone(),
-        0 => {
-            return fail(format!(
-                "no act matching `{target}` — `canon log` to see them"
-            ))
-        }
-        n => return fail(format!("`{target}` matches {n} acts — use more characters")),
-    };
+    let act_id = or_fail!(act_matching(&log, target, " — `canon log` to see them"));
     match write(
         &d,
         ActKind::Revert {
@@ -1127,18 +1061,22 @@ pub fn undo(args: &[String]) -> i32 {
 /// extensible, and carrying it *silently* would let a canon answer as though
 /// it had read everything when it had not.
 pub fn carried_note(canon: &Canon) -> Option<String> {
-    if canon.carried().is_empty() {
-        return None;
-    }
-    let mut kinds: Vec<&str> = canon.carried().iter().map(|(_, k)| k.as_str()).collect();
+    // A reply to a question is carried by the core and read by `why` and
+    // `open`, so it is not among what this build could not read.
+    let unread = |k: &&str| *k != crate::questions::OP;
+    let mut kinds: Vec<&str> = (canon.carried().iter().map(|(_, k)| k.as_str()))
+        .filter(unread)
+        .collect();
+    let n = kinds.len();
     kinds.sort_unstable();
     kinds.dedup();
-    Some(format!(
-        "  {} act(s) carried but not interpreted by this build ({}) — `canon log` shows them.\n  \
+    (n > 0).then(|| {
+        format!(
+        "  {n} act(s) carried but not interpreted by this build ({}) — `canon log` shows them.\n  \
          They had no effect on the answer above. A newer canon may read them.",
-        canon.carried().len(),
         kinds.join(", ")
-    ))
+    )
+    })
 }
 
 pub fn log(args: &[String]) -> i32 {
@@ -1256,6 +1194,13 @@ pub fn log(args: &[String]) -> i32 {
             // annotation this build does not understand is that nothing is
             // lost; rendering it as though it were nothing would lose it
             // exactly where a person would look for it.
+            ActKind::Annotation { kind, body } if kind == crate::questions::OP => {
+                let at = |v: Option<&serde_json::Value>| {
+                    v.and_then(|v| v.as_str()).unwrap_or("?").to_string()
+                };
+                let q = body.get("question").and_then(|q| q.get("id"));
+                format!("reply      to {}: {}", at(q), at(body.get("text")))
+            }
             ActKind::Annotation { kind, body } => {
                 let fields: Vec<String> = body.keys().map(String::clone).collect();
                 format!(
@@ -1320,56 +1265,94 @@ pub fn question(args: &[String]) -> i32 {
         return fail("usage: canon question \"<what the canon does not cover>\"");
     };
     let d = or_fail!(dir());
-    match write(
+    let act = or_fail!(write(
         &d,
         ActKind::Question {
             text: (*text).to_string(),
             proposal: flag(args, "--from-proposal").map(str::to_string),
         },
-    ) {
-        Ok(act) => {
-            println!("{}  ? {}", act.id, text);
-            println!(
-                "  answer it:  canon amend {} \"<the rule>\" -m \"<reason>\"",
-                act.id
-            );
-            0
-        }
-        Err(e) => fail(e),
-    }
+    ));
+    println!("{}  ? {}", act.id, text);
+    println!(
+        "  answer it:  canon amend {} \"<the rule>\" -m \"<reason>\"",
+        act.id
+    );
+    0
 }
 
-/// What the canon does not cover.
+/// Say what you know about a question. It is kept beside the question and
+/// makes no rule; closing the question is `repeal`, a separate act.
+pub fn respond(args: &[String]) -> i32 {
+    let pos = positionals(args);
+    let [needle, text] = pos[..] else {
+        return fail("usage: canon respond <question-id> \"<what you know>\" [--attribution \"<who said it>\"] [--source \"<where from>\"] [--remaining \"<what is still open>\"] [--corrects <reply-id>]");
+    };
+    let (d, log, st) = or_fail!(load());
+    let q = or_fail!(crate::explain::resolve_question(&st, needle));
+    let own = |f| flag(args, f).map(str::to_string);
+    let said = crate::questions::Said {
+        text: text.to_string(),
+        attribution: own("--attribution"),
+        source: own("--source"),
+        remaining: own("--remaining"),
+        ..Default::default()
+    };
+    let kind = or_fail!(crate::questions::reply(
+        &log,
+        &st,
+        &store::actor(),
+        &q,
+        said,
+        flag(args, "--corrects")
+    ));
+    let act = or_fail!(write(&d, kind));
+    // The record as it reads now decides whether the reply counts.
+    let (_, log, st) = or_fail!(load());
+    let view = crate::questions::view(&log, &st, store::now(), &q);
+    if !view.replies.iter().any(|r| r.id == act.id) {
+        return fail(format!(
+            "{} was written and does not count — `canon why {q}` says why",
+            act.id
+        ));
+    }
+    println!("{}  reply to {q}", act.id);
+    println!("  kept beside the question; it makes no rule and closes nothing");
+    println!("  read it:  canon why {q}");
+    0
+}
+
+/// What the canon does not cover. `--all` adds the questions that were
+/// answered by a rule or closed; a closed one with something new said about
+/// it is listed either way.
 pub fn open(args: &[String]) -> i32 {
-    let (_, _, st) = or_fail!(load());
-    let open: Vec<_> = st.open().collect();
+    let (_, log, st) = or_fail!(load());
+    let open = crate::questions::listed(&log, &st, store::now(), has(args, "--all"));
     if has(args, "--json") {
         // Each question as it always rendered, in its field order, plus how
-        // many seconded it.
+        // many seconded it and what was said back.
         #[derive(serde::Serialize)]
         struct Row<'a> {
             #[serde(flatten)]
             question: &'a canon_core::Question,
             seconds: usize,
+            question_view: &'a crate::questions::View,
         }
         let rows: Vec<Row> = open
             .iter()
-            .map(|q| Row {
+            .map(|(q, v)| Row {
                 question: q,
                 seconds: st.seconds(&q.id),
+                question_view: v,
             })
             .collect();
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&rows).unwrap_or_default()
-        );
+        print_json(&rows);
         return 0;
     }
     if open.is_empty() {
         println!("no open questions. `canon question \"<...>\"` records one.");
         return 0;
     }
-    for q in &open {
+    for (q, v) in &open {
         println!("{}  ? {}", q.id, q.text);
         if let Some(p) = &q.proposal {
             println!("      from: \"{p}\"");
@@ -1378,8 +1361,15 @@ pub fn open(args: &[String]) -> i32 {
         if n > 0 {
             println!("      {n} second(s)");
         }
+        for note in crate::questions::notes(q, v) {
+            println!("      {note}");
+        }
     }
-    println!("\n{} open", open.len());
+    let live = st.open().count();
+    match open.len() - live {
+        0 => println!("\n{live} open"),
+        more => println!("\n{live} open, {more} more shown"),
+    }
     0
 }
 

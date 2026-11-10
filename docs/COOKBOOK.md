@@ -595,6 +595,57 @@ Their standing ends and the thing they know outlives the seat — with the tool
 saying plainly how thin the anonymity is, rather than promising more than a
 log can give.
 
+### "What happened to our question?"
+
+Somebody asked why the inlet was left off the drawing. The engineer answered
+at a meeting, partly. The person who asked has since left. Whoever comes next
+should find the same question, what was said, and what is still owed.
+
+```sh
+canon question "Why is the inlet label absent from the drawing?"
+canon respond can-38d2641df6db "The copy omitted that label."
+canon respond can-38d2641df6db "The label was left off when the drawing was copied." \
+  --attribution "Engineer, as reported by the meeting clerk" \
+  --source "meeting-note:section-2" \
+  --remaining "Check the intended inlet location with affected farmers"
+canon why can-38d2641df6db
+```
+
+```text
+can-38d2641df6db  ? Why is the inlet label absent from the drawing?
+  asked 2026-11-09 by ola
+  open — the canon does not cover this
+  reply can-fa890bc7d458, entered 2026-11-09 by clerk: The label was left off when the drawing was copied.
+    said by: Engineer, as reported by the meeting clerk
+    source: meeting-note:section-2
+    still open: Check the intended inlet location with affected farmers
+```
+
+**A reply is not a rule.** It is kept beside the question and changes nothing
+else: no rule, no proposal, nothing to approve. `canon amend <question>` still
+answers a question with a rule, and is the wrong verb for an explanation.
+
+Anyone with the record can reply, and each reply is shown under the name that
+entered it. `--attribution` passes on someone else's words; it does not make
+them that person's act. Left out, the source reads "not supplied" and what
+remains reads "not assessed", never "nothing". `--corrects <reply-id>`
+replaces a reply of your own and keeps the old one as history. Two people who
+disagree are two replies.
+
+When there is nothing more to track here, close it and say why:
+
+```sh
+canon repeal can-38d2641df6db -m "Stop tracking in this notebook; follow-up remains with the DCO"
+canon open --all
+```
+
+Closing is the existing `repeal`, with its existing rule: the person who asked
+or someone in charge of the question's area closes it at once, and anyone
+else's closing waits for one of them. It says who stopped tracking and why. It
+does not say anybody was satisfied. `canon undo <the closing act>` opens it
+again. A reply written after it closed lists the question under `canon open`
+again as needing attention, and does not reopen it.
+
 ### "An agent is acting in our community"
 
 ```sh
@@ -624,8 +675,9 @@ show that it did.
 
 A commons usually has something to share out — sites, headgates, machine
 slots. Say what there is, say how it goes round, and the schedule computes
-itself. This is Alanya's inshore fishery, which has run this way since the
-seventies:
+itself. The example is a made-up eleven-boat, eleven-site coast, modelled on
+Alanya's inshore fishery. It is an illustration of the rule, not the
+fishery's calendar:
 
 ```sh
 canon allot fishery.sites --unit site \
@@ -666,10 +718,14 @@ computes the same answer. A rotation costs no daily bookkeeping at all.
 
 Four things worth knowing:
 
-- **The sign of `--step` is the direction.** Alanya rotates east from
-  September and west from January: same rule, different sign.
+- **The sign of `--step` is the direction, and which sign is east depends on
+  the counts.** With as many sites as boats, or more, `--step 1` moves each
+  boat one site along the list. With more boats than sites it moves each
+  boat one site back, so write `--step -1` to go along the list. Changing the
+  sign or the order adopts a new rule, which starts again from its own first
+  turn; it does not carry on from where the boats were.
 - **`--from-draw <id>` orders by a lot nobody can steer**, reusing a draw's
-  verified seed. That's Alanya's September assignment.
+  verified seed. It is canon's own draw, not a record of a lot drawn by hand.
 - **Who may take a turn is who holds standing over the scope** — boundaries
   decide who may appropriate, not just who may decide.
 - **A `--order` roster restricts turns to the people it names**, and anyone
@@ -677,8 +733,17 @@ Four things worth knowing:
   That's how you keep a monitor out of the rotation without taking away the
   standing it watches with.
 
-`canon pool --at 2027-01-14` asks about any date. `canon who` is authority;
+`canon pool fishery.sites --at 2027-01-14` asks about any date, under the
+rule, the pool and the people as they are in the record now. It does not show
+what the schedule was before a later change. `canon who` is authority;
 `canon pool` is appropriation.
+
+The fishery Berkes described in 1986 had 34 sites and 37 boats, so three
+boats sit out each day. That is the more-boats-than-sites case: one site east
+a day is `--step -1`, with the 37 boats in `--order` as the lot placed them.
+The names, the lot, who sat out first and the dates the direction turned are
+not in the published account, so canon can show how such a course runs and
+cannot show the days it ran.
 
 ### "Who's on the panel?"
 

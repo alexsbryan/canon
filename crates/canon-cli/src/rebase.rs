@@ -479,22 +479,9 @@ pub(crate) fn obstacles(r: &Reading, base: &Snapshot) -> Vec<Obstacle> {
 }
 
 fn render(seed: &Snapshot, target: &Snapshot, changes: &[Change], landed: &[Landed]) -> String {
-    let carries = landed
-        .iter()
-        .filter(|l| l.verdict == Verdict::Carries)
-        .count();
-    let already = landed
-        .iter()
-        .filter(|l| l.verdict == Verdict::Already)
-        .count();
-    let conflicts = landed
-        .iter()
-        .filter(|l| l.verdict == Verdict::Conflicts)
-        .count();
-    let orphaned = landed
-        .iter()
-        .filter(|l| l.verdict == Verdict::Orphaned)
-        .count();
+    let count = |v: Verdict| landed.iter().filter(|l| l.verdict == v).count();
+    let (carries, already) = (count(Verdict::Carries), count(Verdict::Already));
+    let (conflicts, orphaned) = (count(Verdict::Conflicts), count(Verdict::Orphaned));
     // A change the model said nothing about is neither carried nor conflicted
     // — it is unmapped, and reported as such rather than counted as a pass.
     let unmapped = changes.len().saturating_sub(landed.len());

@@ -7,6 +7,64 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+### Before you upgrade
+
+- `canon why <question>` says more about a question written before this
+  release. One that was withdrawn now shows who withdrew it and the reason
+  they gave, under the `withdrawn <date>` line it always showed. When two
+  withdrawals fit and the record does not say which is in force, both are
+  shown and neither is named. The record's own status is unchanged, and
+  `--json` keeps `record` as it was and adds `question_view`.
+- `canon open` lists a closed question again when something was said about
+  it after it closed, marked as needing attention. Its count line reads
+  `0 open, 1 more shown` in that case. `--json` rows keep every field they
+  had and add `question_view`.
+- A question answered by `canon amend` is still answered by that rule. No old
+  record is read as a reply.
+- A `rank` act now counts only when its writer is in charge of the rule's
+  area, or the area was open when it was written. Before, anyone who could
+  append could re-rank a protected rule and take away its entrenchment. A
+  record where somebody without that standing ranked a rule reads
+  differently: that rank is ignored and listed as not applied. `canon rank`
+  says so instead of printing the new rank. No fixture in this repository
+  changes.
+- A record holding two different acts under one id keeps one of them, the
+  earliest and then the least by its bytes, on every machine. Before, which
+  survived could depend on the order the lines were read, and two dated
+  differently were both kept. Ids are content-addressed, so this only
+  touches a forged or damaged record.
+
+### Added
+
+- `canon respond <question> "<what you know>"` keeps a reply beside a
+  question. It makes no rule and closes nothing. `--attribution`, `--source`,
+  `--remaining` and `--corrects` are optional. `canon why`, `canon open`, the
+  page and the MCP tools show replies the same way. The page can ask a
+  question, reply to one and close one.
+- `canon open --all` also lists questions that were answered or closed.
+- A reply is written as a `question_response` annotation
+  ([SPEC](./docs/SPEC.md#question_response-a-reply-to-a-question-read-by-the-tool-and-not-by-the-fold)).
+  An older canon carries it, reports it as not interpreted and makes no rule
+  from it.
+
+### Fixed
+
+- A ratification rule written as a `twice` of a `twice` no longer stops the
+  reader. `canon ratification set` never wrote one, but a hand-written line
+  could, and the first proposal judged under it panicked. The proposal is now
+  refused with the reason "its rule asks twice over twice, which canon does
+  not read". No record that could be read before reads differently.
+- `--step`, `--count`, `--max-chunks` and `--objections` take a negative
+  number as their value, spaced or with `=`. `canon allocation set rotation
+  --step -1` was refused as an unknown flag `-1`; it now writes the rule. A
+  count that cannot be negative is refused by its own verb ("--count takes a
+  number above zero") where it used to be refused as a flag. No other flag
+  reads a leading `-` as a value.
+- The cookbook's rotation recipe says which sign of `--step` moves a holder
+  along the list when holders outnumber units, and that the eleven-boat
+  example is an illustration. STUDY.md and the fixture provenance say Maple
+  House is a fictional benchmark corpus. No fixture, score or record changed.
+
 ## 0.6.1 — 2026-11-09
 
 ### In the browser

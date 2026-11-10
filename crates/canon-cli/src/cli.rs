@@ -78,7 +78,8 @@ pub(crate) const VERBS: &[Verb] = &[
     ("voice", &[], &[], crate::govern::voice),
     ("second", &[], &[], crate::govern::second),
     ("replay", &["--constitutional", "--expect", "--escalate", "--objections", "--of", "--out", "--rulings", "--profile", "--passes", "--scenario", "--write-scenario"], &["--brief", "--by-about", "--cautious", "--json", "--no-repair"], crate::replay::run),
-    ("open", &[], &["--json"], crate::cmds::open),
+    ("respond", &["--attribution", "--corrects", "--remaining", "--source"], &[], crate::cmds::respond),
+    ("open", &[], &["--all", "--json"], crate::cmds::open),
     ("witness", &["--base", "--slack"], &["--gate", "--json"], crate::guard::witness),
     ("guard", &["--check", "--slack"], &["--apply"], crate::guard::guard),
     ("identify", &[], &[], crate::identify::run),
@@ -359,7 +360,12 @@ fn command(verb: &'static str, valued: &[&'static str], switches: &[&'static str
         .disable_version_flag(true)
         .arg(Arg::new("positional").num_args(0..));
     for f in valued {
-        let a = declare(f).action(ArgAction::Append);
+        // A whole-number flag takes `-1` as its value. Only these, and only
+        // numbers: every other flag still reads a leading `-` as a flag.
+        let numeric = matches!(*f, "--step" | "--count" | "--max-chunks" | "--objections");
+        let a = declare(f)
+            .action(ArgAction::Append)
+            .allow_negative_numbers(numeric);
         // `--from` takes every path until the next flag, because a shell
         // expands `--from ~/notes/**/*.md` into many arguments.
         //

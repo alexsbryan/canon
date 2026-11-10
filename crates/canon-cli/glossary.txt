@@ -23,6 +23,7 @@ dismiss: say two rules only seem to conflict.
 undo: take back an act, yours or one in an area you are in charge of.
 log: every act in the record, oldest first, under the record's own names.
 question: write down something the rules do not cover yet.
+respond: say what you know about a question. It is kept beside the question and makes no rule.
 who: who is in charge of an area, and how rules pass and actions are judged there.
 give: put someone in charge of an area, until a date if you name one; the record calls it `grant`.
 withdraw: step back from an area you are in charge of, or take someone off one.

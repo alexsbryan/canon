@@ -201,3 +201,62 @@ fn small_canons_still_list_their_rules_and_large_canons_show_an_index() {
     let small = list_of(&two, &json!({})).unwrap();
     assert!(small.contains("Rule 0 about") && small.contains("Rule 1 about"));
 }
+
+#[test]
+fn a_question_reads_the_same_here_as_in_the_terminal() {
+    use canon_core::{Act, ActKind, Log};
+    let asked = Act::new(
+        ActKind::Question {
+            text: "Why is the inlet label absent?".into(),
+            proposal: None,
+        },
+        100,
+        "human:ola",
+    );
+    let empty = Log::from_acts(vec![asked.clone()]);
+    let st = canon_institution::legacy(&empty, None);
+    let said = crate::questions::Said {
+        text: "The copy omitted it.".into(),
+        remaining: Some("Ask the farmers".into()),
+        ..Default::default()
+    };
+    let kind = crate::questions::reply(&empty, &st, "human:clerk", &asked.id, said, None).unwrap();
+    let close = ActKind::Retract {
+        target: asked.id.clone(),
+        rationale: "follow-up is with the DCO".into(),
+    };
+    let late = crate::questions::Said {
+        text: "Still unlabelled.".into(),
+        ..Default::default()
+    };
+    let late = crate::questions::reply(&empty, &st, "human:ola", &asked.id, late, None).unwrap();
+    let log = Log::from_acts(vec![
+        asked.clone(),
+        Act::new(kind, 200, "human:clerk"),
+        Act::new(close, 300, "human:ola"),
+        Act::new(late, 400, "human:ola"),
+    ]);
+    let dir = std::env::temp_dir().join(format!("canon-mcp-questions-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("acts.jsonl"), log.render()).unwrap();
+
+    // The same lines `canon why` prints, at this reader's own clock.
+    let st = canon_institution::legacy(&log, None);
+    let terminal = crate::explain::explain(&log, &st, &asked.id).unwrap();
+    assert_eq!(
+        render_why(&dir, asked.id.as_str()).unwrap(),
+        terminal.render("")
+    );
+    assert!(terminal.lines.iter().any(|l| l.contains("closed by ola")));
+    // Closed, with something said since: still listed, and said why.
+    let open = render_open(&dir).unwrap();
+    assert!(
+        open.contains("needs attention: new information since it was closed"),
+        "{open}"
+    );
+    assert!(
+        open.contains("2 reply(ies)") && open.contains("0 open question(s)."),
+        "{open}"
+    );
+}

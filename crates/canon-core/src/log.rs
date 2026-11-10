@@ -117,23 +117,29 @@ impl Log {
     /// land in the same second, and within that second the canonical order is
     /// by id — deterministic, and arbitrary to a reader. It is chosen over
     /// preserving file order because two machines must render byte-identical
-    /// files after a merge. The fold does not depend on it
-    /// (`same_second_ordering_does_not_change_the_result`), so this affects
-    /// display and bytes only.
+    /// files after a merge. **The fold reads acts in this order**, so within
+    /// one second an act that sorts first is applied first: a grant and an
+    /// act it would authorize, written in the same second, can read either
+    /// way round. `same_second_ordering_does_not_change_the_result` covers
+    /// the cases that do not depend on it, not every case.
+    ///
+    /// One act per id, and which one does not depend on arrival: the
+    /// earliest, then the least by its own bytes. Ids are content-addressed,
+    /// so two acts share one only in a forged or damaged record, and the
+    /// answer there has to be the same on every machine too.
     pub fn from_acts(mut acts: Vec<Act>) -> Self {
-        acts.sort_by(|a, b| a.ts_unix.cmp(&b.ts_unix).then_with(|| a.id.cmp(&b.id)));
-        acts.dedup_by(|a, b| a.id == b.id);
+        let bytes = |a: &Act| serde_json::to_string(a).unwrap_or_default();
+        acts.sort_by_cached_key(|a| (a.ts_unix, a.id.clone(), bytes(a)));
+        let mut seen = alloc::collections::BTreeSet::new();
+        acts.retain(|a| seen.insert(a.id.clone()));
         Self { acts }
     }
 
     /// Append one act, preserving order and ignoring an exact duplicate.
     pub fn push(&mut self, act: Act) {
-        if self.acts.iter().any(|a| a.id == act.id) {
-            return;
-        }
-        self.acts.push(act);
-        self.acts
-            .sort_by(|a, b| a.ts_unix.cmp(&b.ts_unix).then_with(|| a.id.cmp(&b.id)));
+        let mut acts = core::mem::take(&mut self.acts);
+        acts.push(act);
+        *self = Self::from_acts(acts);
     }
 
     /// Render as JSONL, one act per line, newline-terminated.

@@ -180,24 +180,15 @@ pub fn run_scenario(
         }
         let at = |e: String| format!("scenario line {}: {e}", i + 1);
         let body: Value = serde_json::from_str(line).map_err(|e| at(e.to_string()))?;
-        let kind = body
-            .get("step")
-            .and_then(|v| v.as_str())
+        let kind = str_at(&body, "step")
             .ok_or_else(|| at("a step needs `step`".into()))?
             .to_string();
-        let name = body
-            .get("name")
-            .and_then(|v| v.as_str())
-            .unwrap_or(&kind)
-            .to_string();
+        let name = str_at(&body, "name").unwrap_or(&kind).to_string();
         let canon = Log::from_acts(acts.clone()).derive_at(now);
 
         let result = match kind.as_str() {
             "clock" => {
-                let raw = body
-                    .get("at")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| at("clock needs `at`".into()))?;
+                let raw = str_at(&body, "at").ok_or_else(|| at("clock needs `at`".into()))?;
                 now = canon_core::date::parse_ymd(raw)
                     .ok_or_else(|| at(format!("`{raw}` is not a date")))?;
                 json!({ "now": raw })
@@ -308,10 +299,7 @@ pub fn run_scenario(
                     .collect::<Vec<_>>(),
             }),
             "voice" => {
-                let who = body
-                    .get("actor")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| at("voice needs `actor`".into()))?;
+                let who = str_at(&body, "actor").ok_or_else(|| at("voice needs `actor`".into()))?;
                 let v = canon.voice_of(who);
                 json!({
                     "asked": v.asked.len(),
@@ -343,18 +331,12 @@ pub fn run_scenario(
 
         steps.push(Step {
             name,
-            subject: body
-                .get("proposal")
-                .and_then(|v| v.as_str())
-                .map(str::to_string),
+            subject: str_at(&body, "proposal").map(str::to_string),
             principle: body
                 .get("principle")
                 .and_then(Value::as_u64)
                 .map(|n| n as u8),
-            strength: body
-                .get("strength")
-                .and_then(|v| v.as_str())
-                .map(str::to_string),
+            strength: str_at(&body, "strength").map(str::to_string),
             result,
         });
     }
@@ -367,19 +349,18 @@ pub fn run_scenario(
     })
 }
 
+/// A string field of a JSON value, when it has one.
+fn str_at<'a>(v: &'a Value, key: &str) -> Option<&'a str> {
+    v.get(key).and_then(Value::as_str)
+}
+
 fn scope_of(body: &Value, key: &str) -> Result<canon_core::Scope, String> {
-    let raw = body
-        .get(key)
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| format!("needs `{key}`"))?;
+    let raw = str_at(body, key).ok_or_else(|| format!("needs `{key}`"))?;
     canon_core::Scope::new(raw).ok_or_else(|| format!("`{raw}` is not an area"))
 }
 
 fn id_of(body: &Value, key: &str, labels: &BTreeMap<String, ActId>) -> Result<ActId, String> {
-    let raw = body
-        .get(key)
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| format!("needs `{key}`"))?;
+    let raw = str_at(body, key).ok_or_else(|| format!("needs `{key}`"))?;
     match raw.strip_prefix('@') {
         Some(name) => labels
             .get(name)
@@ -513,14 +494,8 @@ fn check_step(
     now: i64,
     forced: Option<&canon_core::Rule>,
 ) -> Result<Value, String> {
-    let proposal = body
-        .get("proposal")
-        .and_then(|v| v.as_str())
-        .ok_or("check needs `proposal`")?;
-    let about = body
-        .get("about")
-        .and_then(|v| v.as_str())
-        .unwrap_or(proposal);
+    let proposal = str_at(body, "proposal").ok_or("check needs `proposal`")?;
+    let about = str_at(body, "about").unwrap_or(proposal);
 
     let mut positions = Vec::new();
     for p in body
@@ -534,10 +509,7 @@ fn check_step(
             Some("toward") => Pull::Toward,
             other => return Err(format!("a position needs `pull`, not {other:?}")),
         };
-        let because = p
-            .get("because")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default();
+        let because = str_at(p, "because").unwrap_or_default();
         positions.push(match p.get("citing") {
             Some(_) => Position::of(id_of(p, "citing", labels)?, pull, because),
             None => Position::by(
@@ -609,13 +581,7 @@ pub struct Divergence {
 pub fn diverge(adopted: &Replay, forced: &Replay) -> Vec<Divergence> {
     let mut out = Vec::new();
     for (a, f) in adopted.steps.iter().zip(&forced.steps) {
-        let read = |s: &Step, k: &str| {
-            s.result
-                .get(k)
-                .and_then(Value::as_str)
-                .unwrap_or("")
-                .to_string()
-        };
+        let read = |s: &Step, k: &str| str_at(&s.result, k).unwrap_or("").to_string();
         // A `status` step diverges when a rule stands somewhere else:
         // in force under one ratification rule, still a proposal under
         // another.
@@ -1135,23 +1101,14 @@ pub fn run(args: &[String]) -> i32 {
     // weighing is usually the one with a number in it — "what would two
     // objections have done to us" — and a counterfactual that cannot express
     // the rule under discussion is a demo.
-    let forced = match flag(args, "--rulings") {
-        None => None,
-        Some(name) => match crate::govern::rule_from(args, name) {
-            Ok(r) => Some(r),
-            Err(e) => return fail(e),
-        },
-    };
+    let forced = flag(args, "--rulings").map(|n| crate::govern::rule_from(args, n));
+    let forced = or_fail!(forced.transpose());
     // The same for how a proposal becomes a rule: `--ratification` re-judges
     // every `status` step under the rule named, so "what would twice have
     // done to the last year" is a question with an answer.
-    let forced_ratify = match flag(args, "--passes") {
-        None => None,
-        Some(raw) => match crate::govern::ratify_from(raw) {
-            Ok(r) => Some(r),
-            Err(e) => return fail(e),
-        },
-    };
+    let forced_ratify = or_fail!(flag(args, "--passes")
+        .map(crate::govern::ratify_from)
+        .transpose());
     let started = std::time::Instant::now();
     let replay = or_fail!(run_scenario(
         &seed,
@@ -1226,7 +1183,7 @@ pub fn run(args: &[String]) -> i32 {
             .iter()
             .map(|s| (s.name.clone(), s.result.clone()))
             .collect();
-        println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
+        crate::cmds::print_json(&out);
     } else {
         if let Some(rule) = &replay.forced {
             // The counterfactual has to name itself, or a reader cannot tell

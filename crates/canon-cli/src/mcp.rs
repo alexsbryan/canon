@@ -384,8 +384,10 @@ fn list_of(canon: &canon_core::Canon, args: &Value) -> Result<String, String> {
 }
 
 fn render_open(dir: &Path) -> Result<String, String> {
-    let canon = canon_institution::legacy(&store::read(dir)?, None);
-    let open: Vec<_> = canon.open().collect();
+    let log = store::read(dir)?;
+    let canon = canon_institution::legacy(&log, None);
+    // This reader's clock is the record's last act, so nothing is held back.
+    let open = crate::questions::listed(&log, &canon, i64::MAX, false);
     if open.is_empty() {
         return Ok(
             "No open questions. Note that this means nobody has RECORDED a gap — it is not a \
@@ -394,7 +396,7 @@ fn render_open(dir: &Path) -> Result<String, String> {
         );
     }
     let mut out = String::new();
-    for q in &open {
+    for (q, v) in &open {
         out.push_str(&format!("{}  {}\n", q.id, q.text));
         if let Some(p) = &q.proposal {
             out.push_str(&format!("    surfaced by: \"{p}\"\n"));
@@ -403,8 +405,11 @@ fn render_open(dir: &Path) -> Result<String, String> {
         if n > 0 {
             out.push_str(&format!("    {n} second(s)\n"));
         }
+        for note in crate::questions::notes(q, v) {
+            out.push_str(&format!("    {note}\n"));
+        }
     }
-    out.push_str(&format!("\n{} open question(s).", open.len()));
+    out.push_str(&format!("\n{} open question(s).", canon.open().count()));
     Ok(out)
 }
 

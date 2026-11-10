@@ -3,7 +3,7 @@
   "schema_version": 1,
   "note": "Which of Ostrom's eight design principles this corpus carries MATERIAL for, and the smallest phrase each turns on. Written from the corpus by hand, before any run was scored against it and without looking at any candidate set — the same rule `extraction-anchors.json` states for itself. An anchor asks whether extraction reached that PASSAGE, never whether it used a particular word: each `must` entry is a list of alternatives satisfied by any one of them. A principle marked `absent` is a claim about the DOCUMENT, not about canon: it says a community reading only this text has nothing to build that principle from, and finding it anyway would be the extractor inventing.",
   "kind": "self-governed",
-  "kind_note": "A house's own charter and its own recorded decisions. The people bound by these rules wrote them and can change them, which is the condition Ostrom's principles 3 and 7 describe.",
+  "kind_note": "A fictional benchmark co-op (PROVENANCE.md), written as a house's own charter and its own recorded decisions. In the document, the people bound by these rules wrote them and can change them, which is the condition Ostrom's principles 3 and 7 describe. `self-governed` names the form the document depicts, not who wrote the corpus.",
   "principles": {
     "1": {
       "name": "clearly defined boundaries",

@@ -58,6 +58,44 @@ fn from_still_takes_every_path_and_a_bare_dash() {
 }
 
 #[test]
+fn a_whole_number_flag_takes_a_negative_value_and_nothing_else_does() {
+    // `--step -1` was refused as an unknown flag `-1`, so the only way to
+    // write a backwards rotation was `--step 36` on a ring of 37.
+    let spaced = check("allocation", &args(&["set", "--area", "a", "--step", "-1"])).unwrap();
+    let equals = check("allocation", &args(&["set", "--area", "a", "--step=-1"])).unwrap();
+    assert_eq!(spaced, equals);
+    assert_eq!(&spaced[3..], &args(&["--step", "-1"])[..]);
+    // The other three are whole numbers too, and their handlers refuse a
+    // negative one by type; here it only has to arrive as the value.
+    for (verb, flag) in [
+        ("allot", "--count"),
+        ("draft", "--max-chunks"),
+        ("rulings", "--objections"),
+        ("replay", "--objections"),
+    ] {
+        let got = check(verb, &args(&[flag, "-3"])).unwrap();
+        assert_eq!(got, args(&[flag, "-3"]), "{verb} {flag}");
+    }
+    // A flag is still not a value: a missing one, a typo and a real flag
+    // after `--step` are each refused, and so is a typo after a real value.
+    for given in [
+        vec!["set", "--step"],
+        vec!["set", "--step", "--per", "1d"],
+        vec!["set", "--step", "--stepp"],
+        vec!["set", "--step", "-1", "--nonsense"],
+        vec!["set", "--step", "-x"],
+    ] {
+        assert!(check("allocation", &args(&given)).is_err(), "{given:?}");
+    }
+    // A flag that is not a whole number keeps reading `-1` as a flag.
+    assert!(check("allocation", &args(&["set", "--per", "-1"])).is_err());
+    assert!(check("add", &args(&["a rule", "--area", "-1"])).is_err());
+    // And the greedy `--from` did not get any greedier.
+    let typo = check("draft", &args(&["--from", "notes", "--dry-runn"])).unwrap_err();
+    assert!(typo.contains("--dry-run"), "{typo}");
+}
+
+#[test]
 fn a_verb_this_table_does_not_know_passes_through() {
     // `--version` and an outright typo are `main`'s to answer, and a second
     // opinion here would just be a worse error message.

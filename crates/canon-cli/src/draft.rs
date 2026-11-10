@@ -1348,13 +1348,7 @@ fn continue_run(
     target: &str,
     seen: &mut Seen,
 ) -> i32 {
-    let recorded: DraftRun = match std::fs::read_to_string(target)
-        .map_err(|e| format!("reading {target}: {e}"))
-        .and_then(|raw| read_run(&raw).map_err(|e| format!("{target}: {e}")))
-    {
-        Ok(r) => r,
-        Err(e) => return crate::cmds::fail(e),
-    };
+    let recorded = crate::cmds::or_fail!(load_run(Path::new(target)));
     let client = match model::client_for(dir, crate::cmds::has(args, "--allow-remote")) {
         Ok(c) => c,
         Err(e) => return model::report(e),
@@ -1424,6 +1418,13 @@ fn continue_with(
     execute(pipeline, seen, args)
 }
 
+/// A recorded run, read from its file.
+fn load_run(path: &Path) -> Result<DraftRun, String> {
+    let at = path.display();
+    let raw = std::fs::read_to_string(path).map_err(|e| format!("reading {at}: {e}"))?;
+    read_run(&raw).map_err(|e| format!("{at}: {e}"))
+}
+
 /// Re-run a recorded run's pipeline against its tape — every stage, no model.
 ///
 /// A replay judges PURE CODE over recorded model output: citation cutting,
@@ -1438,14 +1439,7 @@ fn continue_with(
 /// run that was recorded, and re-reading the sources would let the file change
 /// underneath the evidence.
 fn replay(dir: &Path, args: &[String], target: &str) -> i32 {
-    let raw = match std::fs::read_to_string(target) {
-        Ok(r) => r,
-        Err(e) => return crate::cmds::fail(format!("reading {target}: {e}")),
-    };
-    let recorded = match read_run(&raw) {
-        Ok(r) => r,
-        Err(e) => return crate::cmds::fail(format!("{target}: {e}")),
-    };
+    let recorded = crate::cmds::or_fail!(load_run(Path::new(target)));
     if recorded.tape.is_empty() {
         return crate::cmds::fail(format!(
             "{target} carries no tape — it was recorded before runs kept their \
@@ -1733,14 +1727,7 @@ fn resume(dir: &Path, profile: Profile, seen: &mut Seen, pick: Option<&str>) -> 
     let mut accepted = 0usize;
     let mut opened = 0usize;
     for path in &found {
-        let raw = match std::fs::read_to_string(path) {
-            Ok(r) => r,
-            Err(e) => return crate::cmds::fail(format!("reading {}: {e}", path.display())),
-        };
-        let run = match read_run(&raw) {
-            Ok(r) => r,
-            Err(e) => return crate::cmds::fail(format!("{}: {e}", path.display())),
-        };
+        let run = crate::cmds::or_fail!(load_run(path));
         // Re-read per run: what the last run's review wrote is already in
         // the canon, and the next run must not offer it again.
         let Ok(canon) = store::read(dir).map(|l| l.derive()) else {
@@ -1937,10 +1924,7 @@ pub fn run(args: &[String]) -> i32 {
             ..Default::default()
         };
         if crate::cmds::has(args, "--json") {
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&quiet).unwrap_or_default()
-            );
+            crate::cmds::print_json(&quiet);
         } else {
             println!("nothing new — all {found} passage(s) have been read before.");
         }
@@ -2252,10 +2236,7 @@ fn execute(r: Pipeline, seen: &mut Seen, args: &[String]) -> i32 {
 
     if dry_run {
         if crate::cmds::has(args, "--json") {
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&artifact).unwrap_or_default()
-            );
+            crate::cmds::print_json(&artifact);
         } else {
             for i in &kept {
                 let c = &candidates[*i];
