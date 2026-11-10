@@ -20,10 +20,8 @@ use alloc::{
     vec::Vec,
 };
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
-use crate::fold::{Canon, Disposition, Status};
-use crate::id::ActId;
+use canon_core::{id::digest_hex, ActId, Canon, Disposition, Status};
 
 /// One commitment as it travels: its text, and the id it had upstream.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -66,8 +64,8 @@ impl Snapshot {
         let commitments: Vec<SnapshotCommitment> = canon
             .active()
             .map(|c| SnapshotCommitment {
-                id: c.id.clone(),
-                text: c.text.clone(),
+                id: c.id().clone(),
+                text: c.text().to_string(),
             })
             .collect();
         Self {
@@ -107,16 +105,11 @@ impl Snapshot {
     /// what the sender published.
     pub fn parse(block: &str) -> Result<Self, String> {
         let lines: Vec<&str> = block.lines().collect();
-        let start = lines
-            .iter()
+        let start = (lines.iter())
             .position(|l| l.trim_start().starts_with("--- canon "))
             .ok_or("no canon snapshot here — the block starts `--- canon <name> · ...`")?;
-        let end = lines
-            .iter()
-            .enumerate()
-            .skip(start + 1)
-            .find(|(_, l)| l.trim_start().starts_with("---"))
-            .map(|(i, _)| i)
+        let end = (start + 1..lines.len())
+            .find(|i| lines[*i].trim_start().starts_with("---"))
             .ok_or("the snapshot has no closing `--- N live` line")?;
 
         let header = lines[start]
@@ -190,14 +183,7 @@ pub fn generation_of(commitments: &[SnapshotCommitment]) -> String {
         .map(|c| format!("{}\u{1f}{}", c.id, c.text))
         .collect();
     pairs.sort_unstable();
-    let digest = Sha256::digest(pairs.join("|").as_bytes());
-    digest
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect::<String>()
-        .chars()
-        .take(GENERATION)
-        .collect()
+    digest_hex(pairs.join("|").as_bytes())[..GENERATION].into()
 }
 
 /// How one inherited commitment fared.
@@ -266,25 +252,26 @@ impl Divergence {
             // The link is `from`, recorded in the act, NOT position or text
             // matching: a canon that arrived by paste has no git history, and
             // text matching would call an edited rule a different rule.
-            let local = canon
-                .commitments
-                .iter()
-                .find(|c| c.from.as_ref() == Some(&s.id))
+            let local = (canon.commitments().iter())
+                .find(|c| c.from() == Some(&s.id))
                 .or_else(|| carried_for(&s.id));
             let fate = match local {
                 None => Fate::Absent,
-                Some(c) => match &c.status {
+                Some(c) => match c.status() {
                     // A proposal or a refusal of an inherited rule leaves the
                     // inherited rule where it was: untouched.
                     Status::Proposed { .. } | Status::Refused { .. } => Fate::Untouched,
                     Status::Retracted { .. } => Fate::Retracted,
                     Status::Superseded { by } => Fate::Superseded {
                         by: by.clone(),
-                        text: canon.get(by).map(|n| n.text.clone()).unwrap_or_default(),
+                        text: canon
+                            .get(by)
+                            .map(|n| n.text().to_string())
+                            .unwrap_or_default(),
                     },
                     Status::Active => canon
                         .tolerated()
-                        .find(|x| x.a == c.id || x.b == c.id)
+                        .find(|x| x.a == *c.id() || x.b == *c.id())
                         .and_then(|x| match &x.disposition {
                             Disposition::Tolerated { rationale, .. } => Some(Fate::Accepted {
                                 rationale: rationale.clone(),
@@ -305,30 +292,25 @@ impl Divergence {
         // no `from` of its own, and counting that as an addition would report
         // every rewrite twice — once as a supersession and once as new law
         // the adopter invented.
-        let mut descends: BTreeSet<ActId> = canon
-            .commitments
-            .iter()
+        let mut descends: BTreeSet<ActId> = (canon.commitments().iter())
             .filter(|c| {
-                c.from
-                    .as_ref()
+                c.from()
                     .is_some_and(|f| seed.commitments.iter().any(|s| &s.id == f))
             })
-            .map(|c| c.id.clone())
+            .map(|c| c.id().clone())
             .chain(
                 seed.commitments
                     .iter()
                     .filter_map(|s| carried_for(&s.id))
-                    .map(|c| c.id.clone()),
+                    .map(|c| c.id().clone()),
             )
             .collect();
         // Transitive: superseding a supersession is still not an addition.
         loop {
-            let grown: Vec<ActId> = canon
-                .commitments
-                .iter()
-                .filter(|c| !descends.contains(&c.id))
-                .filter(|c| c.replaces.iter().any(|r| descends.contains(r)))
-                .map(|c| c.id.clone())
+            let grown: Vec<ActId> = (canon.commitments().iter())
+                .filter(|c| !descends.contains(c.id()))
+                .filter(|c| c.replaces().iter().any(|r| descends.contains(r)))
+                .map(|c| c.id().clone())
                 .collect();
             if grown.is_empty() {
                 break;
@@ -337,8 +319,8 @@ impl Divergence {
         }
         let added = canon
             .active()
-            .filter(|c| !descends.contains(&c.id))
-            .map(|c| c.id.clone())
+            .filter(|c| !descends.contains(c.id()))
+            .map(|c| c.id().clone())
             .collect();
         Self {
             lineage: seed.lineage.clone(),

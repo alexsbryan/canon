@@ -16,4 +16,6 @@ sha2 = { workspace = true }
 ed25519-compact = { workspace = true }
 
 [dev-dependencies]
+# Test-only: the laws also compare what the readers say of each state.
+canon-readers = { path = "../canon-readers" }
 proptest = { version = "1", default-features = false, features = ["std"] }

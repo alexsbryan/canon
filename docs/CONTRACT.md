@@ -64,9 +64,17 @@ the mechanical laws and is not a CI requirement.
 ## Generated cases
 
 The generated checks use 128 fresh cases per law, shrink failures, and persist
-regression seeds. Histories include equal timestamps, replacements, retractions,
-undos, agent proposals, questions, silences, and review dates. They do not cover
-every operation or every possible history. Expanding the generators changes the
+regression seeds. Replay, arrival order and merge each run over two generators.
+The narrow one writes equal timestamps, replacements, retractions, undos, agent
+proposals, questions, silences, and review dates. The wide one writes every
+operation, five actors (an agent and `anonymous` among them), nested and
+personal areas, real grants and withdrawals, keys that bind, unsigned acts,
+references to acts that are not there, and backdated acts; a fixed-seed test
+fails if a kind or a gate stops being reached. They do not cover every possible
+history. One exclusion is named and pinned in `tests/laws.rs`: an annotation
+built in memory under a reserved operation or envelope field name does not
+render and parse back to itself, so the wide generator renames it. A parsed
+record never holds one. Expanding the generators changes the
 assurance coverage and deserves the same review as changing a law's test.
 
 Run the checks with the workspace suite:

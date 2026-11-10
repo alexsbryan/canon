@@ -6,6 +6,7 @@
 //! possible and is the single most important fact about this layer.
 
 use canon_core::{Act, ActKind, Authority, LadderKey, Outcome, Policy as _, Rule, Scope};
+use canon_readers::{Pools as _, Reviews as _};
 
 use crate::cmds::{fail, flag, has, load, or_fail, positionals, write};
 use crate::store;
@@ -1435,10 +1436,10 @@ pub fn overdue(args: &[String]) -> i32 {
 
 /// One overdue thing, as `canon overdue` prints it, and as the page a bare
 /// `canon` prints shows the first few.
-pub fn say_due(canon: &canon_core::Canon, o: &canon_core::Overdue, now: i64) {
+pub fn say_due(canon: &canon_core::Canon, o: &canon_readers::Overdue, now: i64) {
     let when = store::ymd(o.due);
     match &o.what {
-        canon_core::Due::Horizon { rationale } => {
+        canon_readers::Due::Horizon { rationale } => {
             let what = canon
                 .get(&o.target)
                 .map(|c| c.text().to_string())
@@ -1449,7 +1450,7 @@ pub fn say_due(canon: &canon_core::Canon, o: &canon_core::Overdue, now: i64) {
                 println!("          {rationale}");
             }
         }
-        canon_core::Due::Revisit { other, rationale } => {
+        canon_readers::Due::Revisit { other, rationale } => {
             println!(
                 "{when}  {}\n          carried against {}",
                 crate::explain::named(canon, &o.target),
@@ -1457,7 +1458,7 @@ pub fn say_due(canon: &canon_core::Canon, o: &canon_core::Overdue, now: i64) {
             );
             println!("          \"{rationale}\"");
         }
-        canon_core::Due::Standing { holder, scope } => {
+        canon_readers::Due::Standing { holder, scope } => {
             println!("{when}  {holder} is no longer in charge of {scope}");
             // The Ostrom-4 residue: standing that lapsed and nobody
             // renewed is exactly what a monitor's accountability looks

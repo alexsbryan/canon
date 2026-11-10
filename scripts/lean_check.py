@@ -12,7 +12,15 @@ import re
 import sys
 from pathlib import Path
 
-CAPS = {"canon-core": 5093, "canon-institution": 747, "canon-cli": 15597, "canon-contract": 220}
+# canon-readers took its cap out of canon-core's when the readers left the
+# core (operator, 2026-11-09): 5093 became 4416 + 677, and no total moved.
+CAPS = {
+    "canon-core": 4416,
+    "canon-readers": 677,
+    "canon-institution": 747,
+    "canon-cli": 15597,
+    "canon-contract": 220,
+}
 # Institution envelope 21,350 + operator-approved 300 for browser setup/UI-1–4.
 # Shared staged initialization replaces CLI-only setup; native forms reuse review
 # and explanation helpers rather than introducing a frontend/application platform.

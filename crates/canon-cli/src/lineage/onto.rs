@@ -29,7 +29,8 @@
 
 use std::path::Path;
 
-use canon_core::{ActId, ActKind, Canon, Commitment, Snapshot, SnapshotCommitment, Status};
+use canon_core::{ActId, ActKind, Canon, Commitment, Status};
+use canon_readers::{Snapshot, SnapshotCommitment};
 
 use crate::cmds::{fail, or_fail};
 use crate::model;
@@ -70,7 +71,7 @@ pub(super) fn onto(
         ));
     }
     let carried = or_fail!(super::load_carried(dir));
-    let d = canon_core::Divergence::compute_carried(&seed, canon, &carried);
+    let d = canon_readers::Divergence::compute_carried(&seed, canon, &carried);
     let base = Base {
         snapshot: target,
         log: target_log,

@@ -1,0 +1,14 @@
+[package]
+name = "canon-readers"
+description = "Readings of a canon record that decide nothing: turns, draws, review dates and lineage."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# no_std + alloc, as canon-core is, so a page can use it as the CLI does.
+[dependencies]
+canon-core = { path = "../canon-core", default-features = false }
+serde = { workspace = true }
+serde_json = { workspace = true }

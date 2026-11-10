@@ -11,7 +11,8 @@ the architectural boundary.
 
 ```
 canon-cli ────────────────→ canon-core
-    └─→ canon-institution ─→ canon-core
+    ├─→ canon-institution ─→ canon-core
+    └─→ canon-readers ─────→ canon-core
 
 demo/xenia ─→ the actual application surface
 ```

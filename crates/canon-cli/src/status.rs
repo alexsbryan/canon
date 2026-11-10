@@ -12,6 +12,7 @@ use std::collections::BTreeSet;
 
 use crate::cmds::{load, or_fail};
 use crate::{explain::one_line, govern::say_due, profile::Profile, review, store, wrap};
+use canon_readers::Reviews as _;
 
 pub fn page() -> i32 {
     let (d, log, st) = or_fail!(load());

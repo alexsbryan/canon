@@ -928,6 +928,8 @@ impl Canon {
         {
             return Seat::Open;
         }
+        // The whole canon: anyone holding a top-level scope, or anyone at
+        // all if no top-level scope has been granted.
         let level: Vec<&&crate::scope::Grant> = (prior.iter())
             .filter(|g| scope.map_or(g.scope.depth() == 1, |s| g.scope.covers(s)))
             .collect();
@@ -992,118 +994,6 @@ impl Canon {
         scopes
     }
 
-    /// What holding a scope means, said so the reader can act on it. A
-    /// scope is its own name; "this canon" is not a scope anyone can be
-    /// granted, so it is said as the scopes that hold it.
-    fn held_as(&self, scope: Option<&Scope>, at: i64) -> String {
-        if scope.is_some() {
-            return where_(scope);
-        }
-        let scopes: Vec<String> = self
-            .canon_scopes(at)
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        match scopes.split_last() {
-            None => where_(None),
-            Some((only, [])) => format!("this canon (its area {only})"),
-            Some((last, rest)) => format!("this canon (its areas {} or {last})", rest.join(", ")),
-        }
-    }
-
-    /// What the people a share counts held, by name: a scope is its own
-    /// name, and the whole canon is the scopes that held it at `at` — "the
-    /// 30 people who held house", where "who held this canon" names nothing
-    /// anyone was granted.
-    fn held_then(&self, scope: Option<&Scope>, at: i64) -> String {
-        if scope.is_some() {
-            return where_(scope);
-        }
-        let scopes: Vec<String> = self
-            .canon_scopes(at)
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        match scopes.split_last() {
-            None => where_(None),
-            Some((only, [])) => only.clone(),
-            Some((last, rest)) => format!("{} or {last}", rest.join(", ")),
-        }
-    }
-
-    fn holder_at(&self, scope: Option<&Scope>, actor: &str, at: i64) -> bool {
-        self.holding(scope, actor, at).is_some()
-    }
-
-    /// The person, if they hold the scope at its narrowest level at `at`.
-    fn holding<'a>(&self, scope: Option<&Scope>, actor: &'a str, at: i64) -> Option<Person<'a>> {
-        Person::of(actor).filter(|_| self.holders_at(scope, at).contains(actor))
-    }
-
-    /// Held BEFORE the moment. A house whose first rules and first grants
-    /// were written in the same sitting has not locked its founders out of
-    /// their own charter; see [`Canon::may_govern`].
-    fn nobody_holds_before(&self, scope: Option<&Scope>, at: i64) -> bool {
-        !self.grants.iter().any(|g| {
-            g.granted_at < at
-                && g.held_at(at)
-                && scope.is_none_or(|s| g.scope.covers(s))
-                && self.counts(g, scope, at)
-        })
-    }
-
-    /// The earliest moment after `t1` at which someone who did not hold the
-    /// scope at `t1` holds it, and who that was.
-    fn turnover_after(&self, scope: Option<&Scope>, t1: i64) -> Option<(i64, String)> {
-        let then = self.holders_at(scope, t1);
-        self.grants
-            .iter()
-            .filter(|g| {
-                g.granted_at > t1
-                    && is_human(&g.actor)
-                    && scope.is_none_or(|s| g.scope.covers(s))
-                    && self.counts(g, scope, g.granted_at)
-                    && !then.contains(g.actor.as_str())
-                    && self.holder_at(scope, &g.actor, g.granted_at)
-            })
-            .map(|g| (g.granted_at, g.actor.clone()))
-            .min()
-    }
-
-    /// What the people the rule names said about it. Only human holders
-    /// count; the record keeps everyone's word, ratification counts the
-    /// people the rule names. `after` drops everything at or before a
-    /// moment; `implicit` counts the proposer's own act as their approval.
-    fn tally<'a>(&'a self, p: &Proposal<'a>, after: Option<i64>, implicit: bool) -> Tally<'a> {
-        let mut t = Tally::default();
-        if let Some(who) = self.holding(p.scope, p.actor, p.at).filter(|_| implicit) {
-            t.approved.push((who, p.at));
-        }
-        let mut said: Vec<&crate::fold::Stated> = self
-            .positions
-            .iter()
-            .filter(|s| s.about == p.id.as_str() && after.is_none_or(|a| s.at > a))
-            .collect();
-        said.sort_by_key(|s| s.at);
-        for s in said {
-            let Some(who) = self.holding(p.scope, &s.by, s.at) else {
-                continue;
-            };
-            match s.position.pull {
-                Pull::Toward => {
-                    if !t.approved.iter().any(|(w, _)| *w == who) {
-                        t.approved.push((who, s.at));
-                    }
-                }
-                Pull::Against => t.object(s.at, who, &s.position.because),
-            }
-        }
-        // By time, so "the n-th approval" means what it says. Stable, so
-        // the proposer's own act stays ahead of anything in its second.
-        t.approved.sort_by_key(|(_, at)| *at);
-        t
-    }
-
     /// What any person said about a proposal, at or after `from`. What
     /// decides an agent's proposal in a scope nobody holds, where there are
     /// no holders to count.
@@ -1120,6 +1010,233 @@ impl Canon {
                 Pull::Against => t.object(s.at, who, &s.position.because),
             }
         }
+        t
+    }
+
+    /// Where a proposal stands under a rule you name. What the
+    /// counterfactual asks.
+    pub fn ratify_under(&self, rule: &Ratify, p: &Proposal, now: i64) -> Verdict {
+        let count = Count(self, Own(self));
+        match rule {
+            Ratify::Twice { each, between } => count.judge_twice(each, between, p, now),
+            _ => settle(count.judge_once(rule, p, &count.tally(p, None, true), p.at, now)),
+        }
+    }
+
+    /// Where a proposal stands under the ratification rule its scope had
+    /// when it was written.
+    ///
+    /// Pure: the proposal, the positions about it, who held standing when,
+    /// and the clock. Nothing else.
+    pub fn ratify_proposal(&self, p: &Proposal, now: i64) -> Verdict {
+        let rule = self.ratification_for_at(p.scope, p.at).clone();
+        self.ratify_under(&rule, p, now)
+    }
+
+    /// Where a retraction written without standing stands. See
+    /// [`crate::fold::Retraction`].
+    ///
+    /// **Not the scope's ratification rule.** Retracting somebody else's
+    /// commitment directly takes standing over its scope and nothing more,
+    /// under any rule, so the people whose word counts here are exactly the
+    /// people who could have written it themselves: a person whose seat is
+    /// not [`Seat::Lacking`] when they speak. Judging it under `consent`
+    /// instead would let a stranger's retraction take effect by waiting.
+    pub fn judge_retraction(&self, p: &Proposal, now: i64) -> Verdict {
+        Count(self, Own(self)).judge_retraction(p, now)
+    }
+
+    /// A commitment, as something put to its scope.
+    pub fn proposal_of<'a>(&'a self, c: &'a Commitment) -> Proposal<'a> {
+        Proposal {
+            id: &c.id,
+            scope: self.scope_of(&c.id),
+            at: c.asserted_at,
+            actor: &c.actor,
+        }
+    }
+
+    /// Where this commitment stands under the ratification rule of its scope.
+    pub fn ratify(&self, c: &Commitment, now: i64) -> Verdict {
+        self.ratify_proposal(&self.proposal_of(c), now)
+    }
+}
+
+/// Who counts toward a proposal: every reading of standing that a tally or a
+/// rule makes. A verdict is a function of the rule, one of these, what was
+/// said and the clock, and of nothing else about who holds what. [`Canon`]
+/// is the one the fold uses.
+pub(crate) trait Electorate {
+    /// [`Canon::holders_at`].
+    fn holders_at(&self, scope: Option<&Scope>, at: i64) -> BTreeSet<&str>;
+    /// [`Canon::canon_scopes`].
+    fn canon_scopes(&self, at: i64) -> Vec<&Scope>;
+    /// [`Canon::may_govern`].
+    fn may_govern(&self, actor: &str, scope: Option<&Scope>, at: i64) -> bool;
+    /// Held BEFORE the moment; see the implementation for [`Canon`].
+    fn nobody_holds_before(&self, scope: Option<&Scope>, at: i64) -> bool;
+    /// The earliest moment after `t1` somebody new holds the scope, and who.
+    fn turnover_after(&self, scope: Option<&Scope>, t1: i64) -> Option<(i64, String)>;
+    /// The first moment in `(from, now]` at which `actor` stops counting.
+    fn holding_ended(&self, scope: Option<&Scope>, actor: &str, from: i64, now: i64)
+        -> Option<i64>;
+
+    /// The person, if they hold the scope at its narrowest level at `at`.
+    fn holding<'a>(&self, scope: Option<&Scope>, actor: &'a str, at: i64) -> Option<Person<'a>> {
+        Person::of(actor).filter(|_| self.holders_at(scope, at).contains(actor))
+    }
+
+    /// What the people a share counts held, by name: a scope is its own
+    /// name, and the whole canon is the scopes that held it at `at` — "the
+    /// 30 people who held house", where "who held this canon" names nothing
+    /// anyone was granted.
+    fn held_then(&self, scope: Option<&Scope>, at: i64) -> String {
+        let scopes: Vec<String> = (self.canon_scopes(at).iter())
+            .map(|s| s.to_string())
+            .collect();
+        match scopes.split_last() {
+            Some((only, [])) if scope.is_none() => only.clone(),
+            Some((last, rest)) if scope.is_none() => format!("{} or {last}", rest.join(", ")),
+            _ => where_(scope),
+        }
+    }
+
+    /// What holding a scope means, said so the reader can act on it. A
+    /// scope is its own name; "this canon" is not a scope anyone can be
+    /// granted, so it is said as the scopes that hold it.
+    fn held_as(&self, scope: Option<&Scope>, at: i64) -> String {
+        let n = self.canon_scopes(at).len();
+        if scope.is_some() || n == 0 {
+            return where_(scope);
+        }
+        let s = if n == 1 { "" } else { "s" };
+        format!("this canon (its area{s} {})", self.held_then(None, at))
+    }
+}
+
+/// The record's own reading of who counts. A wrapper, so the trait is no
+/// part of [`Canon`]'s public surface.
+#[derive(Clone, Copy)]
+struct Own<'c>(&'c Canon);
+
+impl Electorate for Own<'_> {
+    fn holders_at(&self, scope: Option<&Scope>, at: i64) -> BTreeSet<&str> {
+        self.0.holders_at(scope, at)
+    }
+    fn canon_scopes(&self, at: i64) -> Vec<&Scope> {
+        self.0.canon_scopes(at)
+    }
+    fn may_govern(&self, actor: &str, scope: Option<&Scope>, at: i64) -> bool {
+        self.0.may_govern(actor, scope, at)
+    }
+
+    /// Held BEFORE the moment. A house whose first rules and first grants
+    /// were written in the same sitting has not locked its founders out of
+    /// their own charter; see [`Canon::may_govern`].
+    fn nobody_holds_before(&self, scope: Option<&Scope>, at: i64) -> bool {
+        !self.0.grants.iter().any(|g| {
+            g.granted_at < at
+                && g.held_at(at)
+                && scope.is_none_or(|s| g.scope.covers(s))
+                && self.0.counts(g, scope, at)
+        })
+    }
+
+    /// The earliest moment after `t1` at which someone who did not hold the
+    /// scope at `t1` holds it, and who that was.
+    fn turnover_after(&self, scope: Option<&Scope>, t1: i64) -> Option<(i64, String)> {
+        let then = self.0.holders_at(scope, t1);
+        self.0
+            .grants
+            .iter()
+            .filter(|g| {
+                g.granted_at > t1
+                    && is_human(&g.actor)
+                    && scope.is_none_or(|s| g.scope.covers(s))
+                    && self.0.counts(g, scope, g.granted_at)
+                    && !then.contains(g.actor.as_str())
+                    && self.holding(scope, &g.actor, g.granted_at).is_some()
+            })
+            .map(|g| (g.granted_at, g.actor.clone()))
+            .min()
+    }
+
+    /// The first moment after `from`, up to `now`, at which `actor` no longer
+    /// counts as holding `scope`: a withdrawal, a lapse, or someone granted a
+    /// narrower level of it, which moves who counts. Only a moment a grant
+    /// begins or ends, or personal scopes are switched, can change that, so
+    /// those are the moments read.
+    fn holding_ended(
+        &self,
+        scope: Option<&Scope>,
+        actor: &str,
+        from: i64,
+        now: i64,
+    ) -> Option<i64> {
+        let mut moments: Vec<i64> = (self.0)
+            .grants
+            .iter()
+            .flat_map(|g| {
+                [
+                    Some(g.granted_at),
+                    g.withdrawn_at,
+                    g.horizon.map(|h| h.saturating_add(1)),
+                ]
+            })
+            .chain(
+                self.0
+                    .personal
+                    .on
+                    .iter()
+                    .flat_map(|(since, until, _)| [Some(*since), *until]),
+            )
+            .flatten()
+            .filter(|at| *at > from && *at <= now)
+            .collect();
+        moments.sort_unstable();
+        moments.dedup();
+        moments
+            .into_iter()
+            .find(|at| self.holding(scope, actor, *at).is_none())
+    }
+}
+
+/// One count: what was said, read from the record, and who counts, read from
+/// `E` alone.
+struct Count<'a, E>(&'a Canon, E);
+
+impl<'a, E: Electorate> Count<'a, E> {
+    /// What the people the rule names said about it. Only human holders
+    /// count; the record keeps everyone's word, ratification counts the
+    /// people the rule names. `after` drops everything at or before a
+    /// moment; `implicit` counts the proposer's own act as their approval.
+    fn tally(&self, p: &Proposal<'a>, after: Option<i64>, implicit: bool) -> Tally<'a> {
+        let mut t = Tally::default();
+        if let Some(who) = self.1.holding(p.scope, p.actor, p.at).filter(|_| implicit) {
+            t.approved.push((who, p.at));
+        }
+        let mut said: Vec<&crate::fold::Stated> = (self.0)
+            .positions
+            .iter()
+            .filter(|s| s.about == p.id.as_str() && after.is_none_or(|a| s.at > a))
+            .collect();
+        said.sort_by_key(|s| s.at);
+        for s in said {
+            let Some(who) = self.1.holding(p.scope, &s.by, s.at) else {
+                continue;
+            };
+            match s.position.pull {
+                Pull::Toward => {
+                    if !t.approved.iter().any(|(w, _)| *w == who) {
+                        t.approved.push((who, s.at));
+                    }
+                }
+                Pull::Against => t.object(s.at, who, &s.position.because),
+            }
+        }
+        // By time, so "the n-th approval" means what it says. Stable, so
+        // the proposer's own act stays ahead of anything in its second.
+        t.approved.sort_by_key(|(_, at)| *at);
         t
     }
 
@@ -1141,8 +1258,8 @@ impl Canon {
                 // law before any person has read it. With nobody holding the
                 // scope there is nobody narrower to ask, so any person's
                 // word decides.
-                if !is_human(p.actor) && self.nobody_holds_before(p.scope, from) {
-                    let people = self.people_said(p, from);
+                if !is_human(p.actor) && self.1.nobody_holds_before(p.scope, from) {
+                    let people = self.0.people_said(p, from);
                     return Outcome {
                         completed: people.approved.first().map(|(who, at)| {
                             (*at, format!("approved by {who}; nobody was in charge of {here}"))
@@ -1154,7 +1271,7 @@ impl Canon {
                         ),
                     };
                 }
-                if self.nobody_holds_before(p.scope, from) {
+                if self.1.nobody_holds_before(p.scope, from) {
                     return Outcome {
                         // "Held before", not "holds": in a founding script
                         // the scope IS held, one second too late to count.
@@ -1182,7 +1299,7 @@ impl Canon {
                     refused: objection(t.first_objection()),
                     needs: format!(
                         "approval from one person in charge of {}{}",
-                        self.held_as(p.scope, now),
+                        self.1.held_as(p.scope, now),
                         if is_human(p.actor) {
                             ""
                         } else {
@@ -1299,8 +1416,8 @@ impl Canon {
     /// Everything here is read off the bar, never off which rule named it,
     /// so `majority` and the share more than half are one count.
     fn judge_share(&self, bar: Bar, p: &Proposal, t: &Tally, from: i64, now: i64) -> Outcome {
-        let here = self.held_then(p.scope, from);
-        let voters = self.holders_at(p.scope, from);
+        let here = self.1.held_then(p.scope, from);
+        let voters = self.1.holders_at(p.scope, from);
         let n = voters.len();
         // Only a bar of everyone lets one person decide at every size of
         // house, so only there does one reasoned objection count against,
@@ -1363,7 +1480,7 @@ impl Canon {
                         (*at, why)
                     })
             };
-            let ended = self
+            let ended = (self.1)
                 .holding_ended(p.scope, voter, from, now)
                 .map(|at| (at, None));
             let Some((at, why)) = [said, ended]
@@ -1474,44 +1591,6 @@ impl Canon {
         }
     }
 
-    /// The first moment after `from`, up to `now`, at which `actor` no longer
-    /// counts as holding `scope`: a withdrawal, a lapse, or someone granted a
-    /// narrower level of it, which moves who counts. Only a moment a grant
-    /// begins or ends, or personal scopes are switched, can change that, so
-    /// those are the moments read.
-    fn holding_ended(
-        &self,
-        scope: Option<&Scope>,
-        actor: &str,
-        from: i64,
-        now: i64,
-    ) -> Option<i64> {
-        let mut moments: Vec<i64> = self
-            .grants
-            .iter()
-            .flat_map(|g| {
-                [
-                    Some(g.granted_at),
-                    g.withdrawn_at,
-                    g.horizon.map(|h| h.saturating_add(1)),
-                ]
-            })
-            .chain(
-                self.personal
-                    .on
-                    .iter()
-                    .flat_map(|(since, until, _)| [Some(*since), *until]),
-            )
-            .flatten()
-            .filter(|at| *at > from && *at <= now)
-            .collect();
-        moments.sort_unstable();
-        moments.dedup();
-        moments
-            .into_iter()
-            .find(|at| !self.holder_at(scope, actor, *at))
-    }
-
     fn judge_twice(&self, each: &Ratify, between: &Between, p: &Proposal, now: i64) -> Verdict {
         // First vote: everything said, and the proposer's own act counts.
         let first = self.judge_once(each, p, &self.tally(p, None, true), p.at, now);
@@ -1531,6 +1610,7 @@ impl Canon {
         let boundary = match between {
             Between::Days { days } => Some((t1 + i64::from(*days) * DAY, None)),
             Between::Turnover => self
+                .1
                 .turnover_after(p.scope, t1)
                 .map(|(b, who)| (b, Some(who))),
         };
@@ -1577,39 +1657,11 @@ impl Canon {
         }
     }
 
-    /// Where a proposal stands under a rule you name. What the
-    /// counterfactual asks.
-    pub fn ratify_under(&self, rule: &Ratify, p: &Proposal, now: i64) -> Verdict {
-        match rule {
-            Ratify::Twice { each, between } => self.judge_twice(each, between, p, now),
-            _ => settle(self.judge_once(rule, p, &self.tally(p, None, true), p.at, now)),
-        }
-    }
-
-    /// Where a proposal stands under the ratification rule its scope had
-    /// when it was written.
-    ///
-    /// Pure: the proposal, the positions about it, who held standing when,
-    /// and the clock. Nothing else.
-    pub fn ratify_proposal(&self, p: &Proposal, now: i64) -> Verdict {
-        let rule = self.ratification_for_at(p.scope, p.at).clone();
-        self.ratify_under(&rule, p, now)
-    }
-
-    /// Where a retraction written without standing stands. See
-    /// [`crate::fold::Retraction`].
-    ///
-    /// **Not the scope's ratification rule.** Retracting somebody else's
-    /// commitment directly takes standing over its scope and nothing more,
-    /// under any rule, so the people whose word counts here are exactly the
-    /// people who could have written it themselves: a person whose seat is
-    /// not [`Seat::Lacking`] when they speak. Judging it under `consent`
-    /// instead would let a stranger's retraction take effect by waiting.
-    pub fn judge_retraction(&self, p: &Proposal, now: i64) -> Verdict {
+    fn judge_retraction(&self, p: &Proposal, now: i64) -> Verdict {
         let here = where_(p.scope);
-        let mut said: Vec<(Person, &crate::fold::Stated)> = self
+        let mut said: Vec<(Person, &crate::fold::Stated)> = (self.0)
             .people_on(p.id.as_str())
-            .filter(|(_, s)| self.seat(&s.by, p.scope, s.at) != Seat::Lacking)
+            .filter(|(_, s)| self.1.may_govern(&s.by, p.scope, s.at))
             .collect();
         said.sort_by_key(|(_, s)| s.at);
         let completed = said
@@ -1627,24 +1679,9 @@ impl Canon {
             refused,
             needs: format!(
                 "approval from a person in charge of {}",
-                self.held_as(p.scope, now)
+                self.1.held_as(p.scope, now)
             ),
         })
-    }
-
-    /// A commitment, as something put to its scope.
-    pub fn proposal_of<'a>(&'a self, c: &'a Commitment) -> Proposal<'a> {
-        Proposal {
-            id: &c.id,
-            scope: self.scope_of(&c.id),
-            at: c.asserted_at,
-            actor: &c.actor,
-        }
-    }
-
-    /// Where this commitment stands under the ratification rule of its scope.
-    pub fn ratify(&self, c: &Commitment, now: i64) -> Verdict {
-        self.ratify_proposal(&self.proposal_of(c), now)
     }
 }
 
@@ -1877,5 +1914,89 @@ mod tests {
         assert!(r.prose().contains("no new voices"), "{}", r.prose());
         let r = Ratify::parse("twice:turnover:standing").unwrap();
         assert!(!r.prose().contains("no new voices"));
+    }
+
+    /// Nobody holds anything in this record: who counts is handed in.
+    struct Three;
+
+    impl Electorate for Three {
+        fn holders_at(&self, _: Option<&Scope>, _: i64) -> BTreeSet<&str> {
+            ["human:a", "human:b", "human:c"].into()
+        }
+        fn canon_scopes(&self, _: i64) -> Vec<&Scope> {
+            Vec::new()
+        }
+        fn may_govern(&self, actor: &str, _: Option<&Scope>, _: i64) -> bool {
+            actor == "human:a"
+        }
+        fn nobody_holds_before(&self, _: Option<&Scope>, _: i64) -> bool {
+            false
+        }
+        fn turnover_after(&self, _: Option<&Scope>, _: i64) -> Option<(i64, String)> {
+            None
+        }
+        fn holding_ended(&self, _: Option<&Scope>, _: &str, _: i64, _: i64) -> Option<i64> {
+            None
+        }
+    }
+
+    #[test]
+    fn a_count_reads_who_counts_from_the_electorate_it_is_handed() {
+        use crate::{Act, ActKind, Log};
+        let text = "quiet after ten".into();
+        let kind = ActKind::Assert {
+            text,
+            from: None,
+            source: None,
+        };
+        let rule = Act::new(kind, 100, "human:new");
+        let say = |by: &str, at: i64, pull: Pull| {
+            let about = rule.id.to_string();
+            let because = "said".into();
+            let kind = ActKind::Position {
+                about,
+                citing: None,
+                pull,
+                because,
+            };
+            Act::new(kind, at, by)
+        };
+        let acts = vec![
+            rule.clone(),
+            say("human:z", 105, Pull::Against),
+            say("agent:reader", 106, Pull::Toward),
+            say("human:a", 110, Pull::Toward),
+            say("human:b", 120, Pull::Toward),
+        ];
+        let canon = Log::from_acts(acts).derive_at(200);
+        let p = Proposal {
+            id: &rule.id,
+            scope: None,
+            at: 100,
+            actor: "human:new",
+        };
+        let majority = Ratify::parse("majority").unwrap();
+
+        // The record's own reading: nobody was in charge, so no share exists.
+        let own = canon.ratify_under(&majority, &p, 200);
+        assert!(matches!(own, Verdict::Refused { .. }), "{own:?}");
+
+        // Handed three voters, the same words ratify at the second approval,
+        // and neither the stranger's objection nor the agent's yes is counted.
+        let count = Count(&canon, Three);
+        let t = count.tally(&p, None, true);
+        assert_eq!(t.approved.len(), 2);
+        assert!(t.against.is_empty());
+        let handed = settle(count.judge_once(&majority, &p, &t, p.at, 200));
+        assert!(
+            matches!(handed, Verdict::Ratified { since: 120, .. }),
+            "{handed:?}"
+        );
+        // A retraction counts whoever the electorate says may govern.
+        let handed = count.judge_retraction(&p, 200);
+        assert!(
+            matches!(handed, Verdict::Ratified { since: 110, .. }),
+            "{handed:?}"
+        );
     }
 }
