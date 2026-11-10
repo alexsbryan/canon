@@ -67,6 +67,7 @@ dependencies = [
  "canon-contract",
  "canon-core",
  "canon-institution",
+ "canon-readers",
  "clap",
  "getrandom 0.3.4",
  "ignore",
@@ -87,6 +88,7 @@ dependencies = [
 name = "canon-core"
 version = "0.6.1"
 dependencies = [
+ "canon-readers",
  "ed25519-compact",
  "proptest",
  "serde",
@@ -96,6 +98,15 @@ dependencies = [
 
 [[package]]
 name = "canon-institution"
+version = "0.6.1"
+dependencies = [
+ "canon-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "canon-readers"
 version = "0.6.1"
 dependencies = [
  "canon-core",

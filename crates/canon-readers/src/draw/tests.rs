@@ -7,8 +7,7 @@
 //! fair and is not launders a chosen panel as a drawn one.
 
 use super::*;
-use crate::act::{Act, ActKind};
-use crate::log::Log;
+use canon_core::{Act, ActKind, Log};
 
 const BOUNDARY: i64 = 1_000;
 
@@ -46,7 +45,7 @@ fn seal(commit: &ActId, actor: &str, secret: &str, at: i64) -> Act {
     Act::new(
         ActKind::DrawSecret {
             commit: commit.clone(),
-            digest: crate::id::digest_hex(secret.as_bytes()),
+            digest: canon_core::id::digest_hex(secret.as_bytes()),
         },
         at,
         actor,
@@ -323,7 +322,7 @@ fn a_second_secret_from_the_same_actor_is_ignored() {
     let canon = Log::from_acts(acts).derive();
     assert_eq!(
         canon
-            .sealed
+            .sealed()
             .iter()
             .filter(|s| s.actor == "human:p0")
             .count(),
@@ -446,7 +445,7 @@ fn the_shuffle_reaches_every_position_and_does_not_favour_one() {
     for round in 0..400 {
         let mut items: Vec<String> = (0..8).map(|i| format!("p{i}")).collect();
         super::shuffle(
-            &crate::id::digest_hex(format!("seed{round}").as_bytes()),
+            &canon_core::id::digest_hex(format!("seed{round}").as_bytes()),
             &mut items,
         );
         *counts.entry(items[0].clone()).or_insert(0usize) += 1;

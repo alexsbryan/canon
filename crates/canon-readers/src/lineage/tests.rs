@@ -3,8 +3,8 @@
 //! crate, and no model anywhere near a lineage.
 
 use super::*;
-use crate::act::ActKind;
-use crate::{Act, Log};
+use canon_core::ActKind;
+use canon_core::{Act, Log};
 
 fn asserted(text: &str, ts: i64) -> Act {
     Act::new(

@@ -9,6 +9,19 @@ renames that heading to the version, and its section becomes the release notes
 
 ### Before you upgrade
 
+- A Rust caller of `canon-core` that asks whose turn it is, who a draw
+  seats, what is past its date, or how a canon has moved from its seed now
+  takes those from the new crate `canon-readers`. `Canon::pool_at`,
+  `Canon::draw`, `Canon::overdue` and `Canon::unreadable_dates` are the
+  traits `Pools`, `Draws` and `Reviews` there (`use canon_readers::{Draws,
+  Pools, Reviews};` and the calls are unchanged), and `Schedule`, `Award`,
+  `PoolError`, `Drawn`, `DrawError`, `Due`, `Overdue` and the whole `lineage`
+  module (`Snapshot`, `Divergence`, `Fate`, `Inherited`, `generation_of`)
+  moved with them. They are no longer part of `contract/api.txt`: nothing in
+  the fold or in any ratification rule reads them, and they cannot change
+  what is in force. The types a record embeds (`Allotment`, `Allocation`,
+  `Order`, `Horizon`, the draw's `Committed`, `Sealed` and `Opened`) stay in
+  `canon-core`. No command, flag, output or record reads differently.
 - `canon why <question>` says more about a question written before this
   release. One that was withdrawn now shows who withdrew it and the reason
   they gave, under the `withdrawn <date>` line it always showed. When two

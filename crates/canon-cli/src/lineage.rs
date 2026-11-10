@@ -23,7 +23,8 @@ use std::io::Read;
 use std::path::Path;
 use std::process::Command;
 
-use canon_core::{ActId, ActKind, Canon, Divergence, Fate, Log, Snapshot};
+use canon_core::{ActId, ActKind, Canon, Log};
+use canon_readers::{Divergence, Fate, Snapshot};
 
 use crate::cmds::{fail, has, or_fail, positionals};
 use crate::profile::Profile;
