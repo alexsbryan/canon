@@ -7,6 +7,8 @@ renames that heading to the version, and its section becomes the release notes
 
 ## Unreleased
 
+## 0.7.0 — 2026-11-10
+
 ### Before you upgrade
 
 - A Rust caller of `canon-core` that asks whose turn it is, who a draw
