@@ -21,7 +21,8 @@
 //! The number that matters is the first line: **how much of your law survives
 //! before you commit to the move.**
 
-use canon_core::{ActId, Canon, Divergence, Fate, Snapshot, SnapshotCommitment};
+use canon_core::{ActId, Canon};
+use canon_readers::{Divergence, Fate, Snapshot, SnapshotCommitment};
 use serde::Deserialize;
 
 use crate::model::{Client, ModelError, Schema};

@@ -12,6 +12,7 @@
 use std::path::Path;
 
 use canon_core::{ActId, ActKind};
+use canon_readers::Draws as _;
 
 use crate::cmds::{fail, flag, has, load, or_fail, positionals, write};
 use crate::store;

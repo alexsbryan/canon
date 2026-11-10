@@ -3,7 +3,8 @@
 //! offer: a conflict never comes with a runnable command, and a mapping that
 //! points nowhere is dropped rather than aimed at a neighbouring rule.
 
-use canon_core::{Act, ActKind, Log, SnapshotCommitment};
+use canon_core::{Act, ActKind, Log};
+use canon_readers::SnapshotCommitment;
 use serde_json::json;
 
 use super::*;
@@ -19,7 +20,7 @@ fn snap(lineage: &str, generation_of: &[(&str, &str)]) -> Snapshot {
         .collect();
     Snapshot {
         lineage: lineage.into(),
-        generation: canon_core::lineage::generation_of(&commitments),
+        generation: canon_readers::lineage::generation_of(&commitments),
         profile: "house".into(),
         at: 0,
         commitments,

@@ -32,6 +32,7 @@ use std::path::Path;
 use canon_core::{
     Act, ActId, ActKind, Attributes, Canon, Log, Policy, Position, Pull, Source, Standing,
 };
+use canon_readers::{Draws as _, Pools as _, Reviews as _};
 use serde_json::{json, Map, Value};
 
 use crate::cmds::{fail, flag, has, or_fail, positionals};

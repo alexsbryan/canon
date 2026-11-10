@@ -16,23 +16,13 @@ allot::Allocation  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deser
 allot::Allocation::name  fn name (& self) -> String
 allot::Allocation::prose  fn prose (& self) -> String
 allot::Allotment  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Allotment { pub scope : Scope , pub unit : String , pub units : Vec < String > , pub text : String , pub at : i64 , pub actor : String , pub act : ActId , }
-allot::Award  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Award { pub unit : String , pub actor : String , }
 allot::Canon::allocation_for  fn allocation_for (& self , _ : & Scope) -> Option < & AdoptedAllocation >
 allot::Canon::allotment_for  fn allotment_for (& self , _ : & Scope) -> Option < & Allotment >
-allot::Canon::pool_at  fn pool_at (& self , _ : & Scope , _ : i64) -> Result < Schedule , PoolError >
 allot::Order  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "order" , rename_all = "snake_case")] pub enum Order { Holders , Given { actors : Vec < String > } , FromDraw { commit : ActId } , }
-allot::PoolError  # [derive (Debug , Clone , PartialEq , Eq)] pub enum PoolError { NoAllotment , NoRule , NobodyHolds , Draw (String) , }
-allot::PoolError::impl::core :: fmt :: Display  
-allot::Schedule  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Schedule { pub scope : Scope , pub unit : String , pub period : i64 , pub rule : String , pub awards : Vec < Award > , pub idle : Vec < String > , pub free : Vec < String > , }
 date::parse_ymd  fn parse_ymd (_ : & str) -> Option < i64 >
 date::ymd  fn ymd (_ : i64) -> String
-draw::Canon::draw  fn draw (& self , _ : & ActId) -> Result < Drawn , DrawError >
 draw::Canon::draws_announced  fn draws_announced (& self) -> & [Committed]
 draw::Committed  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Committed { pub act : ActId , pub scope : Scope , pub count : usize , pub after_ts : i64 , pub at : i64 , pub drawer : String , # [serde (default , skip_serializing_if = "String::is_empty")] pub rationale : String , }
-draw::DrawError  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "error" , rename_all = "snake_case")] pub enum DrawError { NoSuchDraw { commit : ActId , } , BoundaryNotInFuture { after_ts : i64 , committed_at : i64 , } , NothingRevealed , EmptyPool { scope : Scope , } , PoolTooSmall { pool : usize , count : usize , } , NoSeats , }
-draw::DrawError::impl::core :: error :: Error  
-draw::DrawError::impl::core :: fmt :: Display  
-draw::Drawn  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Drawn { pub commit : ActId , pub seats : Vec < String > , pub pool : Vec < String > , pub seed : String , pub contributed : Vec < String > , pub withheld : Vec < String > , }
 draw::Opened  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Opened { pub commit : ActId , pub actor : String , pub secret : String , pub at : i64 , }
 draw::Sealed  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Sealed { pub commit : ActId , pub actor : String , pub digest : String , pub at : i64 , }
 export::ANONYMOUS  act::ANONYMOUS
@@ -47,7 +37,6 @@ export::Allotment  allot::Allotment
 export::Ancestry  fold::Ancestry
 export::Attributes  policy::Attributes
 export::Authority  policy::Authority
-export::Award  allot::Award
 export::BadBar  ratify::BadBar
 export::Bar  ratify::Bar
 export::Between  ratify::Between
@@ -57,18 +46,12 @@ export::Commitment  fold::Commitment
 export::Conflict  fold::Conflict
 export::Decision  policy::Decision
 export::Disposition  fold::Disposition
-export::Divergence  lineage::Divergence
-export::DrawError  draw::DrawError
-export::Drawn  draw::Drawn
-export::Due  horizon::Due
 export::Effect  projection::Effect
 export::FORMAT_VERSION  act::FORMAT_VERSION
-export::Fate  lineage::Fate
 export::Governs  ratify::Governs
 export::Grant  scope::Grant
 export::Horizon  horizon::Horizon
 export::ID_PREFIX  id::ID_PREFIX
-export::Inherited  lineage::Inherited
 export::Key  sign::Key
 export::Keyed  fold::Keyed
 export::LadderKey  policy::LadderKey
@@ -76,11 +59,9 @@ export::Log  log::Log
 export::NotARule  ratify::NotARule
 export::Order  allot::Order
 export::Outcome  standing::Outcome
-export::Overdue  horizon::Overdue
 export::ParseError  log::ParseError
 export::Person  person::Person
 export::Policy  policy::Policy
-export::PoolError  allot::PoolError
 export::Position  standing::Position
 export::Projection  projection::Projection
 export::ProjectionError  projection::ProjectionError
@@ -92,12 +73,9 @@ export::Retraction  fold::Retraction
 export::Rule  policy::Rule
 export::Ruling  fold::Ruling
 export::SIGNED_VERSION  act::SIGNED_VERSION
-export::Schedule  allot::Schedule
 export::Scope  scope::Scope
 export::Seat  ratify::Seat
 export::Silence  fold::Silence
-export::Snapshot  lineage::Snapshot
-export::SnapshotCommitment  lineage::SnapshotCommitment
 export::Source  standing::Source
 export::Standing  standing::Standing
 export::Stated  fold::Stated
@@ -179,11 +157,7 @@ fold::Voice  # [derive (Debug)] pub struct Voice < 'a > { pub asked : Vec < & 'a
 fold::Voice < '_ >::answered  fn answered (& self) -> usize
 fold::Voice < '_ >::is_empty  fn is_empty (& self) -> bool
 fold::Voice < '_ >::open  fn open (& self) -> usize
-horizon::Canon::overdue  fn overdue (& self , _ : i64) -> Vec < Overdue >
-horizon::Canon::unreadable_dates  fn unreadable_dates (& self) -> Vec < (ActId , String) >
-horizon::Due  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "kind" , rename_all = "snake_case")] pub enum Due { Horizon { # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Revisit { other : ActId , # [serde (default , skip_serializing_if = "String::is_empty")] rationale : String , } , Standing { holder : String , scope : Scope } , }
 horizon::Horizon  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Horizon { pub target : ActId , pub at : i64 , # [serde (default , skip_serializing_if = "String::is_empty")] pub rationale : String , pub set_at : i64 , pub act : ActId , }
-horizon::Overdue  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Overdue { pub target : ActId , pub due : i64 , pub what : Due , }
 id::ActId  # [derive (Debug , Clone , PartialEq , Eq , PartialOrd , Ord , Hash , Serialize , Deserialize)] # [serde (transparent)] pub struct ActId (String) ;
 id::ActId::as_str  fn as_str (& self) -> & str
 id::ActId::derive  fn derive (_ : i64 , _ : & str , _ : & str) -> Self
@@ -192,18 +166,6 @@ id::ActId::impl::core :: fmt :: Display
 id::ID_PREFIX  pub const ID_PREFIX : & str = "can" ;
 id::digest_hex  fn digest_hex (_ : & [u8]) -> String
 id::short_digest  fn short_digest (_ : & str) -> String
-lineage::Divergence  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Divergence { pub lineage : String , pub generation : String , pub inherited : Vec < Inherited > , pub added : Vec < ActId > , }
-lineage::Divergence::compute  fn compute (_ : & Snapshot , _ : & Canon) -> Self
-lineage::Divergence::compute_carried  fn compute_carried (_ : & Snapshot , _ : & Canon , _ : & [(ActId , ActId)]) -> Self
-lineage::Divergence::count  fn count (& self , _ : impl Fn (& Fate) -> bool) -> usize
-lineage::Fate  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "fate" , rename_all = "snake_case")] pub enum Fate { Untouched , Superseded { by : ActId , text : String } , Retracted , Accepted { rationale : String } , Absent , }
-lineage::Inherited  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Inherited { pub upstream : ActId , pub text : String , pub fate : Fate , }
-lineage::Snapshot  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct Snapshot { pub lineage : String , pub generation : String , pub profile : String , pub at : i64 , pub commitments : Vec < SnapshotCommitment > , }
-lineage::Snapshot::of  fn of (_ : & Canon , _ : impl Into < String > , _ : impl Into < String > , _ : i64 ,) -> Self
-lineage::Snapshot::parse  fn parse (_ : & str) -> Result < Self , String >
-lineage::Snapshot::render  fn render (& self , _ : & str) -> String
-lineage::SnapshotCommitment  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] pub struct SnapshotCommitment { pub id : ActId , pub text : String , }
-lineage::generation_of  fn generation_of (_ : & [SnapshotCommitment]) -> String
 log::Log  # [derive (Debug , Clone , Default)] pub struct Log { acts : Vec < Act > , }
 log::Log::acts  fn acts (& self) -> & [Act]
 log::Log::derive  fn derive (& self) -> crate :: fold :: Canon
@@ -224,7 +186,6 @@ module::draw  public module
 module::fold  public module
 module::horizon  public module
 module::id  public module
-module::lineage  public module
 module::log  public module
 module::person  public module
 module::policy  public module
@@ -309,6 +270,7 @@ ratify::Canon::seat  fn seat (& self , _ : & str , _ : Option < & Scope > , _ : 
 ratify::Governs  # [derive (Debug , Clone , Copy , PartialEq , Eq , Serialize , Deserialize)] # [serde (rename_all = "snake_case")] pub enum Governs { Commitments , All , }
 ratify::NotARule  # [derive (Debug , Clone , Copy , PartialEq , Eq)] pub enum NotARule { Unknown , Share , Bar (BadBar) , }
 ratify::NotARule::impl::core :: fmt :: Display  
+ratify::Own < '_ >::impl::Electorate  
 ratify::Personal  # [derive (Debug , Clone , Default , PartialEq , Eq)] pub struct Personal { pub (crate) declared : bool , pub (crate) on : Vec < (i64 , Option < i64 > , ActId) > , }
 ratify::Proposal  # [derive (Debug , Clone , Copy)] pub struct Proposal < 'a > { pub id : & 'a ActId , pub scope : Option < & 'a Scope > , pub at : i64 , pub actor : & 'a str , }
 ratify::Ratify  # [derive (Debug , Clone , PartialEq , Eq , Serialize , Deserialize)] # [serde (tag = "rule" , rename_all = "snake_case")] pub enum Ratify { Standing , Joint { holders : Vec < String > } , Threshold { approve : usize , block : usize } , Majority , Unanimous , Share (Bar) , Consent { days : u32 } , Twice { each : Box < Ratify > , between : Between } , }
