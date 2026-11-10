@@ -749,3 +749,163 @@ fn an_agent_founder_does_not_gain_a_seat_and_setup_cannot_replace_a_damaged_reco
         crate::profile::Profile::House
     );
 }
+
+/// Sam is in charge of the canal; Ola asked there.
+fn canal() -> (canon_core::Log, ActId) {
+    let scope = canon_core::Scope::new("canal").unwrap();
+    let asked = canon_core::Act::new(
+        ActKind::Question {
+            text: "Why is the inlet label absent?".into(),
+            proposal: None,
+        },
+        100,
+        "human:ola",
+    );
+    let grant = ActKind::Grant {
+        holder: "human:sam".into(),
+        scope: scope.clone(),
+        horizon: None,
+        rationale: String::new(),
+    };
+    let scoped = ActKind::Scoped {
+        commitment: asked.id.clone(),
+        scope,
+    };
+    let id = asked.id.clone();
+    let acts = vec![
+        canon_core::Act::new(grant, 10, "human:sam"),
+        asked,
+        canon_core::Act::new(scoped, 100, "human:sam"),
+    ];
+    (canon_core::Log::from_acts(acts), id)
+}
+
+#[test]
+fn a_question_is_asked_replied_to_and_closed_from_the_page() {
+    let (log, q) = canal();
+    let mut c = ctx("questions", &log);
+    let home = respond(&get("/", true), &c).body;
+    assert!(
+        home.contains(&format!("href=\"/why/{}\"", q.as_str())),
+        "{home}"
+    );
+    assert!(home.contains("action=\"/ask\""));
+
+    // Asking writes a question as the page's own actor and opens it.
+    let r = respond(
+        &at("/ask", &format!("token={TOKEN}&text=Who+holds+the+key%3F")),
+        &c,
+    );
+    assert_eq!(r.status, 303);
+    let (_, st) = load(&c).unwrap();
+    let mine = st.open().find(|x| x.text == "Who holds the key?").unwrap();
+    assert_eq!(mine.actor, "human:alex");
+    let before = acts(&c);
+    assert_eq!(
+        respond(&at("/ask", &format!("token={TOKEN}&text=+")), &c).status,
+        200
+    );
+    assert_eq!(acts(&c), before, "a question with no words is not written");
+
+    // One field is a whole reply. The page says who writes and what it is not.
+    let page = respond(&get(&format!("/why/{}", q.as_str()), true), &c).body;
+    assert!(page.contains("Add what you know") && page.contains("Written as alex."));
+    assert!(page.contains("It makes no rule and closes nothing."));
+    let body = format!("token={TOKEN}&id={}&text=The+copy+omitted+it.", q.as_str());
+    let r = respond(&at("/respond", &body), &c);
+    assert_eq!(r.status, 303, "{}", r.body);
+    let (log, st) = load(&c).unwrap();
+    assert_eq!(st.proposed().count() + st.active().count(), 0, "no rule");
+    let v = crate::questions::view(&log, &st, i64::MAX, &q);
+    assert_eq!(v.replies.len(), 1);
+    assert_eq!(v.replies[0].actor, "human:alex");
+    // The optional fields, and a correction of that reply by its own id.
+    let body = format!(
+        "token={TOKEN}&id={}&text=The+copy+omitted+it+and+the+scale.&attribution=Engineer&source=note+2&remaining=Ask+the+farmers&corrects={}",
+        q.as_str(),
+        v.replies[0].id.as_str()
+    );
+    assert_eq!(respond(&at("/respond", &body), &c).status, 303);
+    // A reply with no words keeps what was typed and writes nothing.
+    let before = acts(&c);
+    let body = format!(
+        "token={TOKEN}&id={}&text=+&source=kept+%3Cthis%3E",
+        q.as_str()
+    );
+    let r = respond(&at("/respond", &body), &c);
+    assert!(r.body.contains("Nothing was written."), "{}", r.body);
+    assert!(r.body.contains("value=\"kept &lt;this&gt;\""), "{}", r.body);
+    assert_eq!(acts(&c), before);
+
+    // Every line `why` gives the terminal is on the page: one reading.
+    let (log, st) = load(&c).unwrap();
+    let page = respond(&get(&format!("/why/{}", q.as_str()), true), &c).body;
+    let said = crate::explain::explain(&log, &st, &q).unwrap();
+    assert!(said.lines.iter().any(|l| l.contains("corrected by")));
+    assert!(said
+        .lines
+        .iter()
+        .any(|l| l == "  still open: Ask the farmers"));
+    for line in &said.lines {
+        assert!(page.contains(&linked(line.trim())), "missing `{line}`");
+    }
+
+    // Alex has no seat on the canal and did not ask: closing is a proposal,
+    // the page says so, and the question stays open.
+    assert!(page.contains("Close tracking this question"));
+    assert!(page.contains("otherwise it is put to whoever is in charge"));
+    let close = |c: &Ctx, why: &str| {
+        let body = format!("token={TOKEN}&id={}&because={why}", q.as_str());
+        respond(&at("/retract", &body), c)
+    };
+    let before = acts(&c);
+    assert!(close(&c, "").body.contains("Nothing was written."));
+    assert_eq!(acts(&c), before, "closing needs its reason");
+    let r = close(&c, "handing+over");
+    assert_eq!(r.status, 303);
+    let done = r
+        .headers
+        .iter()
+        .find(|(k, _)| k == "Location")
+        .unwrap()
+        .1
+        .clone();
+    let after = respond(&get(&done, true), &c).body;
+    assert!(after.contains("Put to the room"), "{after}");
+    assert!(load(&c).unwrap().1.open().any(|x| x.id == q));
+
+    // Sam is in charge: the same button closes it, and says what that means.
+    c.actor = "human:sam".into();
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let r = close(&c, "Follow-up+remains+with+the+DCO");
+    let done = r
+        .headers
+        .iter()
+        .find(|(k, _)| k == "Location")
+        .unwrap()
+        .1
+        .clone();
+    let after = respond(&get(&done, true), &c).body;
+    assert!(
+        after.contains("Closed: tracking stopped here. That does not say it was answered."),
+        "{after}"
+    );
+    assert!(
+        after.contains(
+            "closed by sam, withdrawn from the active notebook: Follow-up remains with the DCO"
+        ),
+        "{after}"
+    );
+    assert!(
+        after.contains("The copy omitted it."),
+        "the replies outlive the closing"
+    );
+    assert!(
+        !after.contains("Close tracking this question"),
+        "already closed"
+    );
+    assert!(
+        after.contains("Add what you know"),
+        "and can still be added to"
+    );
+}

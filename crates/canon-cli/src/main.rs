@@ -28,6 +28,7 @@ mod mcp;
 mod model;
 mod profile;
 mod quantify;
+mod questions;
 mod rebase;
 mod render;
 mod replay;
@@ -133,7 +134,12 @@ RECORD                                        (no model needed)
   dismiss <a> <b> [-m \"<reason>\"]        not a real conflict
   undo <act-id> [-m \"<reason>\"]          take back an act — yours, or one in your area
   question \"<text>\"                      record what the canon does not cover
+  respond <question-id> \"<what you know>\" say what you know about a question; it makes no rule
+          [--attribution \"<who said it>\"]  when you are passing on someone else's words
+          [--source \"<where from>\"] [--remaining \"<what is still open>\"]
+          [--corrects <reply-id>]          replace a reply of your own; the old one is kept
   open                                   the open questions
+       --all                             and the closed and answered ones
   log                                    the raw acts
   mcp                                    serve the agent surface on stdio
 

@@ -669,17 +669,10 @@ impl Canon {
     /// Anything that is not a question has none: weight on a proposal is a
     /// vote, and an unsigned vote is reported, never counted as a second.
     pub fn seconds(&self, q: &ActId) -> usize {
-        if self.question(q).is_none() {
-            return 0;
-        }
-        self.positions
-            .iter()
-            .filter(|s| {
-                s.about == q.as_str()
-                    && s.position.actor().is_some()
-                    && is_second(&s.by, s.position.pull)
-            })
-            .count()
+        let second =
+            |s: &&Stated| s.position.actor().is_some() && is_second(&s.by, s.position.pull);
+        let about = self.positions.iter().filter(|s| s.about == q.as_str());
+        self.question(q).map_or(0, |_| about.filter(second).count())
     }
 
     /// What each person last said about this subject, in the order they said
@@ -1324,11 +1317,9 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
                     });
                     continue;
                 }
-                if !own
-                    && !gate(&mut canon, act, scope.as_ref(), || {
-                        format!("{} retracted {target} without standing over it", act.actor)
-                    })
-                {
+                // Lacking went to the area above, so this only records an
+                // act that took because the area was open.
+                if !own && !gate(&mut canon, act, scope.as_ref(), String::new) {
                     continue;
                 }
                 match (by_id.get_mut(target), questions.get_mut(target)) {
@@ -1482,8 +1473,21 @@ fn fold(acts: &[Act], now: i64, seed: &crate::ratify::Personal) -> Canon {
             | ActKind::DrawCommit { .. }
             | ActKind::DrawSecret { .. }
             | ActKind::DrawReveal { .. }
-            | ActKind::Horizon { .. }
-            | ActKind::Rank { .. } => crate::effects::apply_selected(&mut canon, act, act.ts_unix),
+            | ActKind::Horizon { .. } => {
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix)
+            }
+            ActKind::Rank { commitment, .. } => {
+                // A rank decides how hard a rule is to change, so setting
+                // one takes being in charge of the rule's area. Ungated, any
+                // writer could re-rank a protected rule and unprotect it.
+                let scope = canon.scope_of(commitment).cloned();
+                if !gate(&mut canon, act, scope.as_ref(), || {
+                    format!("{} ranked {commitment}, not in charge of it", act.actor)
+                }) {
+                    continue;
+                }
+                crate::effects::apply_selected(&mut canon, act, act.ts_unix);
+            }
             // Recorded, never acted on. This arm IS "not interpreted".
             // Read before the fold began, by `crate::sign::verify`: a key
             // act decides which of its actor's acts reach this loop, and

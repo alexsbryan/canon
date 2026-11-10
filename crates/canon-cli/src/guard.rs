@@ -335,15 +335,11 @@ pub fn witness(args: &[String]) -> i32 {
         let child = store::raw(&dir).unwrap_or_default();
         let findings = witness_pair(&parent, &child, store::now(), slack);
         if has(args, "--json") {
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&serde_json::json!({
-                    "base": base,
-                    "slack": slack,
-                    "findings": findings,
-                }))
-                .unwrap_or_default()
-            );
+            crate::cmds::print_json(&serde_json::json!({
+                "base": base,
+                "slack": slack,
+                "findings": findings,
+            }));
         } else {
             let added = parse(&child).0.len().saturating_sub(parse(&parent).0.len());
             println!(
@@ -387,16 +383,12 @@ pub fn witness(args: &[String]) -> i32 {
                 })
             })
             .collect();
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&serde_json::json!({
-                "ledger": repo.ledger,
-                "slack": slack,
-                "acts": h.acts,
-                "commits": rows,
-            }))
-            .unwrap_or_default()
-        );
+        crate::cmds::print_json(&serde_json::json!({
+            "ledger": repo.ledger,
+            "slack": slack,
+            "acts": h.acts,
+            "commits": rows,
+        }));
         return 0;
     }
     let signed = h.commits.iter().filter(|(c, _)| c.sig == "G").count();
@@ -469,15 +461,8 @@ pub fn guard(args: &[String]) -> i32 {
 
 fn hook_path(repo: &Repo) -> Option<PathBuf> {
     let hooks = git(&repo.root, &["rev-parse", "--git-path", "hooks"]).ok()?;
-    let p = PathBuf::from(&hooks);
-    Some(
-        if p.is_absolute() {
-            p
-        } else {
-            repo.root.join(p)
-        }
-        .join("pre-push"),
-    )
+    // Joining an absolute path replaces the base, so one join serves both.
+    Some(repo.root.join(hooks).join("pre-push"))
 }
 
 /// Is the check in the hook — or in a script the hook hands off to? A
@@ -497,14 +482,7 @@ fn hook_installed(repo: &Repo) -> bool {
                 .replace("$(git rev-parse --show-toplevel)", &root)
         })
         .filter(|t| t.ends_with(".sh"))
-        .map(|t| {
-            let p = PathBuf::from(&t);
-            if p.is_absolute() {
-                p
-            } else {
-                repo.root.join(p)
-            }
-        })
+        .map(|t| repo.root.join(t))
         .filter_map(|p| std::fs::read_to_string(p).ok())
         .any(|s| s.contains("canon witness"))
 }

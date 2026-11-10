@@ -743,8 +743,10 @@ involved believes they are being disciplined.
    that it cannot be composed — the attempt, in the commit message or here.
    Törbel's per-household entitlement looked like a new `share` op until the
    composition was tried: a grant already says *holds this scope*, so *holds
-   four units of it* is a widening of `grant`, the way `horizon` was a widening
-   that paid for five technologies at once.
+   four units of it* would be a widening of `grant`, the way `horizon` was a
+   widening that paid for five technologies at once. That widening is not
+   built: `Grant` carries no count, and nothing computes a household's
+   entitlement.
 
 `crates/canon-cli/tests/adequacy_bar.rs` enforces the census: every op in the
 format is listed there with the primitive it serves and the composition it

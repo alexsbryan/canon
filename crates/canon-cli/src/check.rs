@@ -606,7 +606,7 @@ pub fn run(args: &[String]) -> i32 {
     let decision = rule.decide(&standing, &attrs, &canon);
     if crate::cmds::has(args, "--json") {
         let v = payload(profile, &canon, &standing, &decision, &attrs);
-        println!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
+        crate::cmds::print_json(&v);
     } else {
         print!("{}", render(profile, &canon, &standing, &decision, &attrs));
         if let Some(note) = crate::cmds::carried_note(&canon) {

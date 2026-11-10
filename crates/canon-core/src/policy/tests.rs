@@ -613,6 +613,75 @@ fn entrenchment_raises_the_bar_for_a_principle_and_leaves_a_convention_alone() {
 }
 
 #[test]
+fn only_somebody_in_charge_of_a_rule_can_change_its_rank() {
+    // Entrenchment reads the latest rank. A rank anybody could write was a
+    // way round it: re-rank the principle as a convention, then amend it
+    // under the base rule.
+    let repo = crate::scope::Scope::new("repo").unwrap();
+    let rule = Act::new(
+        ActKind::Assert {
+            text: "never merge without review".into(),
+            from: None,
+            source: None,
+        },
+        100,
+        "human:alex",
+    );
+    let rank = |rank: &str, ts: i64, actor: &str| {
+        let kind = ActKind::Rank {
+            commitment: rule.id.clone(),
+            rank: rank.into(),
+        };
+        Act::new(kind, ts, actor)
+    };
+    let grant = ActKind::Grant {
+        holder: "human:alex".into(),
+        scope: repo.clone(),
+        horizon: None,
+        rationale: String::new(),
+    };
+    let scoped = ActKind::Scoped {
+        commitment: rule.id.clone(),
+        scope: repo,
+    };
+    let stranger = rank("convention", 300, "human:stranger");
+    let agent = rank("convention", 301, "agent:helper");
+    let canon = Log::from_acts(vec![
+        Act::new(grant, 10, "human:alex"),
+        rule.clone(),
+        Act::new(scoped, 100, "human:alex"),
+        rank("principle", 200, "human:alex"),
+        stranger.clone(),
+        agent.clone(),
+    ])
+    .derive();
+
+    assert_eq!(canon.rank_of(&rule.id), Some("principle"));
+    for refused in [&stranger, &agent] {
+        let found = canon.ungoverned().iter().find(|(id, _)| *id == refused.id);
+        let (_, why) = found.expect("refused, and on the record as refused");
+        assert!(why.contains("not in charge of it"), "{why}");
+    }
+    let entrenched = Rule::Entrenched {
+        protected: vec!["principle".into()],
+        base: Box::new(Rule::Consent),
+    };
+    let s = standing(&canon, vec![]);
+    let d = entrenched.decide(
+        &s,
+        &Attributes::about("x").amending(rule.id.clone()),
+        &canon,
+    );
+    assert_eq!(d.authority, Authority::AskPanel, "still protected");
+
+    // Somebody in charge can still lower it, on the record.
+    let mut acts = vec![rule.clone(), rank("principle", 200, "human:alex")];
+    acts.push(rank("convention", 300, "human:alex"));
+    let open = Log::from_acts(acts).derive();
+    assert_eq!(open.rank_of(&rule.id), Some("convention"));
+}
+
+#[test]
 fn what_cannot_be_undone_is_not_decided_by_silence() {
     // The planted-sabotage shape: a proposal no commitment supports, whose
     // effect cannot be reversed. It lands in the one outcome that cannot

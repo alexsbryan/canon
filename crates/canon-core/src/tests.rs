@@ -294,6 +294,32 @@ fn supersede_works_when_every_act_shares_one_second() {
 }
 
 #[test]
+fn two_acts_sharing_an_id_resolve_the_same_whichever_arrived_first() {
+    // Ids are content-addressed, so this is a forged or damaged record. The
+    // merge laws still have to hold for it: the survivor is chosen by what
+    // the acts say, never by which line a machine happened to read first.
+    let honest = assert_c("Quiet after eleven.", 100);
+    for ts in [100, 50, 200] {
+        let mut forged = assert_c("Loud until dawn.", ts);
+        forged.id = honest.id.clone();
+        let one = Log::from_acts(vec![honest.clone(), forged.clone()]);
+        let other = Log::from_acts(vec![forged.clone(), honest.clone()]);
+        assert_eq!(one.len(), 1, "one act per id, at {ts}");
+        assert_eq!(one.render(), other.render(), "at {ts}");
+        let mut pushed = Log::from_acts(vec![forged.clone()]);
+        pushed.push(honest.clone());
+        assert_eq!(
+            pushed.render(),
+            one.render(),
+            "push is the same merge, at {ts}"
+        );
+    }
+    // An exact duplicate still collapses, and nothing else is touched.
+    let twice = Log::from_acts(vec![honest.clone(), honest.clone(), assert_c("b", 100)]);
+    assert_eq!(twice.len(), 2);
+}
+
+#[test]
 fn same_second_ordering_does_not_change_the_result() {
     let old = assert_c("original", 500);
     let sup = Act::new(

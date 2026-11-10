@@ -101,16 +101,11 @@ pub fn adopt(args: &[String]) -> i32 {
         if let Err(e) = std::io::stdin().read_to_string(&mut block) {
             return fail(format!("reading the pasted block: {e}"));
         }
-        match Snapshot::parse(&block) {
-            Ok(s) => (s, None, "paste".to_string()),
-            Err(e) => return fail(e),
-        }
+        (or_fail!(Snapshot::parse(&block)), None, "paste".to_string())
     } else if let Some(target) = pos.first() {
         let (url, gen) = split_generation(target);
-        match fetch(&dir, url, gen) {
-            Ok((s, log)) => (s, Some(log), url.to_string()),
-            Err(e) => return fail(e),
-        }
+        let (s, log) = or_fail!(fetch(&dir, url, gen));
+        (s, Some(log), url.to_string())
     } else {
         return fail(
             "usage: canon adopt <url>[@generation] | --paste  [--except <id>,… -m \"<why>\"] \
@@ -125,37 +120,33 @@ pub fn adopt(args: &[String]) -> i32 {
     // a half-adopted canon behind it.
     let except = or_fail!(excepted(&snapshot, &crate::cmds::flags(args, "--except")));
     let why = crate::cmds::flag(args, "-m").unwrap_or_default();
-    match write_adoption(&dir, &snapshot, &source, &except, why) {
-        Ok(n) => {
-            println!(
-                "adopted {}@{} — {n} commitment(s), each carrying where it came from",
-                snapshot.lineage, snapshot.generation
-            );
-            if !except.is_empty() {
-                println!(
-                    "  {} retracted as it arrived (--except){}",
-                    except.len(),
-                    if why.is_empty() {
-                        String::new()
-                    } else {
-                        format!(": {why}")
-                    }
-                );
+    let n = or_fail!(write_adoption(&dir, &snapshot, &source, &except, why));
+    println!(
+        "adopted {}@{} — {n} commitment(s), each carrying where it came from",
+        snapshot.lineage, snapshot.generation
+    );
+    if !except.is_empty() {
+        println!(
+            "  {} retracted as it arrived (--except){}",
+            except.len(),
+            if why.is_empty() {
+                String::new()
+            } else {
+                format!(": {why}")
             }
-            println!("  canon diff --upstream   how you have diverged, later");
-            if source == "paste" {
-                // A pasted fork has no URL to fetch from, and nothing at
-                // adoption used to say how it takes a later generation.
-                println!(
-                    "  later generations: a newer `canon share` block of {}, piped into \
-                     `canon upgrade --paste`",
-                    snapshot.lineage
-                );
-            }
-            0
-        }
-        Err(e) => fail(e),
+        );
     }
+    println!("  canon diff --upstream   how you have diverged, later");
+    if source == "paste" {
+        // A pasted fork has no URL to fetch from, and nothing at
+        // adoption used to say how it takes a later generation.
+        println!(
+            "  later generations: a newer `canon share` block of {}, piped into \
+             `canon upgrade --paste`",
+            snapshot.lineage
+        );
+    }
+    0
 }
 
 /// The seed's commitments named by `--except`, by id or unique prefix, as
@@ -482,7 +473,7 @@ pub fn diff(args: &[String]) -> i32 {
     let seed = or_fail!(load_seed(&dir));
     let d = or_fail!(diverged(&dir, &seed, &canon));
     if has(args, "--json") {
-        println!("{}", serde_json::to_string_pretty(&d).unwrap_or_default());
+        crate::cmds::print_json(&d);
         return 0;
     }
     if has(args, "--propose") {
@@ -648,10 +639,8 @@ pub fn upgrade(args: &[String]) -> i32 {
                  `canon upgrade --paste`",
             );
         };
-        match fetch(&dir, &url, generation) {
-            Ok((next, upstream)) => (next, upstream, url),
-            Err(e) => return fail(e),
-        }
+        let (next, upstream) = or_fail!(fetch(&dir, &url, generation));
+        (next, upstream, url)
     };
     if next.generation == seed.generation {
         println!(
@@ -684,16 +673,14 @@ pub fn upgrade(args: &[String]) -> i32 {
             // local law without anyone deciding to.
             Some(anc) => match (fate_of(&anc), local_of(&anc)) {
                 (Some(Fate::Untouched), Some(local)) => {
-                    if let Err(e) = crate::cmds::write(
+                    or_fail!(crate::cmds::write(
                         &dir,
                         ActKind::Supersede {
                             text: c.text.clone(),
                             old: vec![local.id().clone()],
                             rationale: format!("upstream {}@{}", next.lineage, next.generation),
                         },
-                    ) {
-                        return fail(e);
-                    }
+                    ));
                     applied += 1;
                 }
                 (Some(other), _) => held.push(format!(
@@ -707,16 +694,14 @@ pub fn upgrade(args: &[String]) -> i32 {
             // Genuinely new upstream law. Nothing local to conflict with, so
             // this is not a decision anyone has to make.
             None => {
-                if let Err(e) = crate::cmds::write(
+                or_fail!(crate::cmds::write(
                     &dir,
                     ActKind::Assert {
                         text: c.text.clone(),
                         from: Some(c.id.clone()),
                         source: None,
                     },
-                ) {
-                    return fail(e);
-                }
+                ));
                 applied += 1;
             }
         }
@@ -734,7 +719,7 @@ pub fn upgrade(args: &[String]) -> i32 {
         }
         match (fate_of(&sc.id), local_of(&sc.id)) {
             (Some(Fate::Untouched), Some(local)) => {
-                if let Err(e) = crate::cmds::write(
+                or_fail!(crate::cmds::write(
                     &dir,
                     ActKind::Retract {
                         target: local.id().clone(),
@@ -743,9 +728,7 @@ pub fn upgrade(args: &[String]) -> i32 {
                             next.lineage, next.generation
                         ),
                     },
-                ) {
-                    return fail(e);
-                }
+                ));
                 applied += 1;
             }
             (Some(other), _) => held.push(format!(
@@ -758,19 +741,15 @@ pub fn upgrade(args: &[String]) -> i32 {
         }
     }
 
-    if let Err(e) = crate::cmds::write(
+    or_fail!(crate::cmds::write(
         &dir,
         ActKind::Adopt {
             lineage: next.lineage.clone(),
             generation: next.generation.clone(),
             source: Some(source.clone()),
         },
-    ) {
-        return fail(e);
-    }
-    if let Err(e) = save_seed(&dir, &next) {
-        return fail(e);
-    }
+    ));
+    or_fail!(save_seed(&dir, &next));
 
     println!(
         "upgraded {} from {} to {} — {applied} change(s) applied",

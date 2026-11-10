@@ -147,32 +147,7 @@ pub fn resolve_why(canon: &Canon, log: &Log, needle: &str) -> Result<ActId, Stri
             ids.push(id);
         }
     }
-    pick_acts(canon, ids.into_iter(), needle)
-}
-
-fn pick_acts<'a>(
-    canon: &'a Canon,
-    ids: impl Iterator<Item = &'a ActId>,
-    needle: &str,
-) -> Result<ActId, String> {
-    let matches = |id: &ActId| id.as_str() == needle || id.as_str().starts_with(needle);
-    let mut hits: Vec<&ActId> = ids.filter(|id| matches(id)).collect();
-    // An adopted rule is known by its upstream id, which has no local act.
-    if hits.is_empty() {
-        hits = canon
-            .commitments()
-            .iter()
-            .filter(|c| c.from().is_some_and(matches))
-            .map(|c| c.id())
-            .collect();
-    }
-    match hits.len() {
-        1 => Ok(hits[0].clone()),
-        0 => Err(format!("no record matching `{needle}`")),
-        n => Err(format!(
-            "`{needle}` matches {n} records — use more characters"
-        )),
-    }
+    pick(canon, ids.into_iter(), needle, "record")
 }
 
 /// Resolve a question by id or unique prefix.
@@ -243,11 +218,17 @@ fn pick<'a>(
 }
 
 pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, String> {
+    explain_at(log, canon, id, i64::MAX)
+}
+
+/// [`explain`], with replies to a question dated after `now` held back. The
+/// record's own last act is the clock when nobody supplies one.
+pub fn explain_at(log: &Log, canon: &Canon, id: &ActId, now: i64) -> Result<Explanation, String> {
     if let Some(s) = canon.silences().iter().find(|s| &s.act == id) {
         return Ok(explain_silence(s));
     }
     if let Some(q) = canon.question(id) {
-        return Ok(explain_question(canon, q));
+        return Ok(explain_question(log, canon, q, now));
     }
     let c = match canon.get(id) {
         Some(c) => c,
@@ -439,7 +420,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                     ActKind::Dismiss { a, b, .. } => !want_accept && conflict.is_pair(a, b),
                     _ => false,
                 })
-                .map(|act| format!("by {}, {}", person(&act.actor), store::ymd(act.ts_unix)))
+                .map(|act| format!("by {}, {}: ", person(&act.actor), store::ymd(act.ts_unix)))
                 .unwrap_or_default()
         };
         // Who ruled and why on its own line under what was ruled: one event,
@@ -448,12 +429,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
         match &conflict.disposition {
             Disposition::Tolerated { rationale, revisit } => {
                 lines.push(format!("carried against {}", named(canon, other)));
-                let who = ruled(true);
-                lines.push(if who.is_empty() {
-                    format!("  {rationale}")
-                } else {
-                    format!("  {who}: {rationale}")
-                });
+                lines.push(format!("  {}{rationale}", ruled(true)));
                 if let Some(r) = revisit {
                     lines.push(format!("  look again by {r}"));
                 }
@@ -468,12 +444,7 @@ pub fn explain(log: &Log, canon: &Canon, id: &ActId) -> Result<Explanation, Stri
                     "called not in conflict with {}",
                     named(canon, other)
                 ));
-                let who = ruled(false);
-                lines.push(if who.is_empty() {
-                    format!("  {why}")
-                } else {
-                    format!("  {who}: {why}")
-                });
+                lines.push(format!("  {}{why}", ruled(false)));
             }
             Disposition::Open { reason } => {
                 lines.push(format!(
@@ -573,7 +544,7 @@ fn explain_act(act: &canon_core::Act, canon: &Canon) -> Explanation {
     }
 }
 
-fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
+fn explain_question(log: &Log, canon: &Canon, q: &canon_core::Question, now: i64) -> Explanation {
     let mut lines = vec![format!(
         "asked {} by {}",
         store::ymd(q.asked_at),
@@ -589,11 +560,18 @@ fn explain_question(canon: &Canon, q: &canon_core::Question) -> Explanation {
                 "answer it:  canon amend {} \"<the rule>\" -m \"<reason>\"",
                 q.id
             ));
+            lines.push(format!(
+                "say what you know:  canon respond {} \"<what you know>\"",
+                q.id
+            ));
         }
         Status::Superseded { by } => lines.push(format!("answered by {}", named(canon, by))),
         Status::Retracted { at } => lines.push(format!("withdrawn {}", store::ymd(*at))),
         Status::Proposed { .. } | Status::Refused { .. } => {}
     }
+    let closed = matches!(q.status, Status::Retracted { .. });
+    let view = crate::questions::view(log, canon, now, &q.id);
+    lines.extend(crate::questions::lines(&view, closed));
     Explanation {
         headline: format!("{}  ? {}", q.id, q.text),
         lines,

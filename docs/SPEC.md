@@ -237,6 +237,42 @@ or `draw` writes them as annotations; every other implementation keeps
 reading the log, keeps merging it, and keeps rendering it byte-identically,
 while declining to act on what it does not understand.
 
+#### `question_response`: a reply to a question, read by the tool and not by the fold
+
+canon's own tool writes one annotation the fold does not read. A reply to a
+question is carried by `canon-core` like any unknown annotation: it is no
+commitment, no proposal, no grant and no ruling, and no fold result depends
+on it. `canon why`, `canon open`, the page and the MCP tools read it and show
+it beside the question.
+
+```json
+{"op": "question_response", "schema": "canon-question-response/1",
+ "question": {"id": "can-0123456789ab", "sha256": "<64 hex>"},
+ "text": "The copied drawing omitted the label.",
+ "attribution": "Engineer, as reported by the meeting clerk",
+ "source": "meeting-note:section-2",
+ "remaining": "Check the intended inlet location with affected farmers",
+ "corrects": {"id": "can-abcdef012345", "sha256": "<64 hex>"}}
+```
+
+`schema`, `question` and a non-blank `text` are required. `sha256` is the
+signing digest of the act it names, so a reply pins the question's words and
+not only its id. The act's `actor` is who entered the reply. `attribution` is
+who they say said it, and is a claim, not that person's act. An absent
+`attribution`, `source` or `remaining` means nobody said; an absent
+`remaining` never means nothing remains. There is no field for complete,
+accepted or resolved.
+
+A reply counts when the fold carried it (so it is verified and not undone),
+when its `question` digest matches the question in the record, and when it is
+not dated before the question. `corrects` names an earlier reply to the same
+question by the same writer; that reply is then shown as history. A reply
+with another schema, an unknown field or a pin that does not match is kept in
+the record, named as not counted, and has no effect.
+
+A question is closed by `retract`, as before. Replies do not close it and a
+reply written after it closed does not reopen it.
+
 ## Deriving current state
 
 Implementations MUST produce identical state for the same set of acts

@@ -18,17 +18,9 @@ const FILE: &str = "acts.jsonl";
 /// A codebase canon is committed at the repo root; a personal one lives in
 /// `$HOME`. Falling back to `$HOME` is what makes `canon` work from anywhere.
 pub fn locate(start: &Path) -> Option<PathBuf> {
-    let mut cur = Some(start);
-    while let Some(dir) = cur {
-        let candidate = dir.join(DIR);
-        if candidate.join(FILE).is_file() {
-            return Some(candidate);
-        }
-        cur = dir.parent();
-    }
-    home()
-        .map(|h| h.join(DIR))
-        .filter(|p| p.join(FILE).is_file())
+    let here = start.ancestors().map(|d| d.join(DIR));
+    here.chain(home().map(|h| h.join(DIR)))
+        .find(|c| c.join(FILE).is_file())
 }
 
 pub fn home() -> Option<PathBuf> {

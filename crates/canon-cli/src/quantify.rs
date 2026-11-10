@@ -290,10 +290,7 @@ const MAX_TOKENS_PER_TEXT: u32 = 256;
 /// structural rather than a parity trick on [`BATCH`]: each call carries
 /// whole pairs because they are chunked as pairs.
 pub fn quantify_pairs(client: &Client, pairs: &[(&str, &str)]) -> Result<PairReadings, ModelError> {
-    let mut out = PairReadings {
-        readings: Vec::with_capacity(pairs.len()),
-        unread: Vec::new(),
-    };
+    let mut out = PairReadings::default();
     for (b, block) in pairs.chunks(BATCH / 2).enumerate() {
         let first = b * (BATCH / 2);
         match read_pairs(client, block) {
@@ -326,19 +323,10 @@ pub fn quantify_pairs(client: &Client, pairs: &[(&str, &str)]) -> Result<PairRea
 
 /// One reading call over whole pairs, with a ceiling sized to its texts.
 fn read_pairs(client: &Client, block: &[(&str, &str)]) -> Result<Vec<PairReading>, ModelError> {
-    let mut flat: Vec<&str> = Vec::with_capacity(block.len() * 2);
-    for (a, b) in block {
-        flat.push(a);
-        flat.push(b);
-    }
+    let flat: Vec<&str> = block.iter().flat_map(|(a, b)| [*a, *b]).collect();
     let leg = client.capped(MAX_TOKENS_PER_TEXT * flat.len() as u32);
-    let read = read_block(&leg, &flat)?;
-    let mut it = read.into_iter();
-    let mut out = Vec::with_capacity(block.len());
-    while let (Some(a), Some(b)) = (it.next(), it.next()) {
-        out.push((a, b));
-    }
-    Ok(out)
+    let mut it = read_block(&leg, &flat)?.into_iter();
+    Ok(std::iter::from_fn(|| Some((it.next()?, it.next()?))).collect())
 }
 
 /// One reading call over at most [`BATCH`] texts, answers in the order given.
@@ -402,19 +390,11 @@ fn read_block(client: &Client, block: &[&str]) -> Result<Vec<Vec<Quantity>>, Mod
 /// Only fires when BOTH state quantities. A rule with no numbers may still
 /// be a duplicate of one that has them.
 pub fn differs_by_quantity(a: &[Quantity], b: &[Quantity]) -> bool {
-    if a.is_empty() || b.is_empty() {
-        return false;
-    }
-    for qa in a {
-        for qb in b {
-            let (ca, oa) = qa.key();
-            let (cb, ob) = qb.key();
-            if oa == ob && ca != cb {
-                return true;
-            }
-        }
-    }
-    false
+    let differ = |qa: &Quantity, qb: &Quantity| {
+        let ((ca, oa), (cb, ob)) = (qa.key(), qb.key());
+        oa == ob && ca != cb
+    };
+    a.iter().any(|qa| b.iter().any(|qb| differ(qa, qb)))
 }
 
 /// A quantity the rule states that its own citation does not.

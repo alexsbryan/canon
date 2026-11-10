@@ -16,7 +16,7 @@ different questions.
 | | question | needs a model | runtime | state |
 |---|---|---|---|---|
 | **Leg 1** | do the eight compose out of the primitives across institutions of different shapes, with no mechanism written per resource? | no | ~3 s | ten institutions clear it |
-| **Leg 2** | point canon at a real community's real documents, cold — is the material for the eight in there, and does extraction reach it? | yes | one sweep | first numbers in |
+| **Leg 2** | point canon at documents of the kind a community already has, cold — is the material for the eight in there, and does extraction reach it? The house corpus is a fictional benchmark, not a community's archive. | yes | one sweep | first numbers in |
 
 Neither leg settles the headline question. Leg 1 tests a family of shapes I
 chose; leg 2 tests two documents. [What this does not
@@ -293,6 +293,11 @@ touch the harder question, and nothing in it should be read as touching it:
 this.** That needs a model, and it is measured the way the founding demo is
 measured — against vendored corpora, naming the model and endpoint.
 
+Leg 2 does not settle it either. Maple House is a fictional benchmark charter
+and decision corpus ([its provenance](../fixtures/maple-house/PROVENANCE.md)).
+Its runs establish that extraction reaches hand-written anchors in that
+synthetic corpus. They are not a real community's outcome.
+
 ## The design
 
 For each corpus, a hand-written `ostrom-anchors.json` says, per principle,
@@ -308,9 +313,9 @@ produces — so a sweep paid for once answers both questions:
 - **own words** — the proposed rule a person would actually review carries the
   principle. This is the number that means something.
 
-**The two corpora are chosen to disagree.** `maple-house` is a house's own
-charter and its own recorded decisions: the people bound by the rules wrote
-them. `des-moines-noise` is a municipal ordinance: the people bound by it did
+**The two corpora are chosen to disagree.** `maple-house` is a fictional
+co-op, written as a house's own charter and its own recorded decisions: in the
+document, the people bound by the rules wrote them. `des-moines-noise` is a municipal ordinance: the people bound by it did
 not write it and cannot change it by any procedure the text describes.
 Ostrom's argument predicts those two documents carry different principles, and
 the manifests are that prediction written down before scoring.
@@ -362,8 +367,9 @@ default. "Reached" here means the proposal a reviewer would see contains the
 phrase the principle turns on. It does not mean the model understood the
 principle.
 
-**A house charter nobody wrote with Ostrom in mind carries material for seven
-of the eight principles outright, and part of the eighth.** Extraction reached
+**A fictional house charter, written to plant known conflicts and not to
+illustrate Ostrom, carries material for seven of the eight principles
+outright, and part of the eighth.** Extraction reached
 all seven in its own words. Principle 7 came out as *"Recorded decisions amend
 or extend the Charter starting from the date they are made"* — the
 right-to-organise material, correctly, unprompted.
@@ -423,12 +429,15 @@ compose Ostrom's eight design principles out of canon's nine primitives with
 no mechanism written per institution; where a policy change lands is the same
 in all ten; and the instrument goes red on four single-variable ablations
 exactly where each predicted, including two that were predicted to lose two
-principles or the wrong one.
+principles or the wrong one. This is composition over vocabularies I wrote,
+three of them stylised from published accounts. It does not validate any
+actual institution against its sources.
 
-**Measured once.** That the documents one real self-governing community
-already had carry material for seven of the eight principles outright, and
-that a 27B-class local model reached all seven in its own words. One corpus,
-three runs, one model.
+**Measured once.** That a fictional benchmark corpus, written as a
+self-governing house's charter and decisions, carries material for seven of
+the eight principles outright, and that a 27B-class local model reached all
+seven hand-written anchors in its own words. One synthetic corpus, three runs,
+one model: reach in that corpus, not a real community's outcome.
 
 **Not shown, and worth stating plainly.**
 

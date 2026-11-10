@@ -7,9 +7,9 @@ commons — written by hand and fed to one shared spine.
 ## What is claimed
 
 That the eight design principles can be composed out of canon's nine
-primitives for an arbitrary common-pool resource, with **no mechanism written
-per resource**; that the resulting governance behaves the same way in ten
-unrelated domains; and that the instrument measuring this can go red, because
+primitives for each vocabulary here, with **no mechanism written per
+resource**; that the resulting governance behaves the same way across the ten
+domains those vocabularies name, all fed to one authored spine; and that the instrument measuring this can go red, because
 four single-variable ablations make it go red exactly where each predicted.
 
 That claim is about the primitives, and it is checked by `cargo test --test
@@ -24,8 +24,9 @@ fixes.
 Nobody pointed `canon draft` at a Valais village archive. The vocabularies are
 written; the governance is derived. Whether an Ostrom-conformant canon falls
 out of a real community's actual mess is a different question, it needs a
-model, and it is [STUDY.md](../../docs/STUDY.md) leg 2 — which has produced no
-number yet and says so.
+model, and it is [STUDY.md](../../docs/STUDY.md) leg 2. Its first numbers are
+in, measured on a fictional benchmark house and a municipal ordinance, not on
+a community's archive.
 
 **That the three historical fixtures are history.** `torbel-alpine`,
 `valencia-huerta` and `alanya-fishery` are stylised from Elinor Ostrom's

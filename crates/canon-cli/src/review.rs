@@ -462,11 +462,7 @@ pub fn run(args: &[String]) -> i32 {
                     .is_none_or(|o| scope_of(i).is_some_and(|s| o.covers(&s)))
             })
             .collect();
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&serde_json::json!({ "actor": actor, "items": items }))
-                .unwrap_or_default()
-        );
+        crate::cmds::print_json(&serde_json::json!({ "actor": actor, "items": items }));
         return 0;
     }
     let (actor, from) = store::actor_from();

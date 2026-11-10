@@ -381,6 +381,8 @@ pub fn respond(req: &Request, ctx: &Ctx) -> Response {
                     "/propose" => propose(&form, ctx),
                     "/replace" => replace(&form, ctx),
                     "/retract" => retract(&form, ctx),
+                    "/ask" => ask(&form, ctx),
+                    "/respond" => reply(&form, ctx),
                     "/silence" => silence(&form, ctx),
                     "/lift" => lift(&form, ctx),
                     "/identify" => identify(&form, ctx),
@@ -398,8 +400,19 @@ pub fn respond(req: &Request, ctx: &Ctx) -> Response {
                         .0
                         .iter()
                         .filter(|(k, _)| {
-                            ["text", "because", "scope", "about", "id", "profile"]
-                                .contains(&k.as_str())
+                            [
+                                "text",
+                                "because",
+                                "scope",
+                                "about",
+                                "id",
+                                "profile",
+                                "attribution",
+                                "source",
+                                "remaining",
+                                "corrects",
+                            ]
+                            .contains(&k.as_str())
                         })
                         .map(|(k, v)| format!("<dt>{}</dt><dd><pre>{}</pre></dd>", esc(k), esc(v)))
                         .collect::<String>();
@@ -410,15 +423,8 @@ pub fn respond(req: &Request, ctx: &Ctx) -> Response {
                 response
             }
         },
-        ("GET", _) => Response::html(
-            404,
-            page(
-                "Not here",
-                "<p><a href=\"/\">Back to what is waiting</a></p>",
-            ),
-        ),
-        _ => Response::html(
-            405,
+        (method, _) => Response::html(
+            if method == "GET" { 404 } else { 405 },
             page(
                 "Not here",
                 "<p><a href=\"/\">Back to what is waiting</a></p>",
@@ -569,17 +575,24 @@ fn decide(form: &Form, ctx: &Ctx) -> Response {
     };
     let waiting = review::queue(&log, &st, &ctx.actor, store::now());
     if !waiting.iter().any(|i| i.yours && i.id == id) {
-        return home(
-            ctx,
-            None,
-            None,
-            Some("That is not waiting on you any more. Nothing was written.".into()),
-        );
+        return refused(ctx, "that is not waiting on you any more");
     }
     match review::decide(&ctx.dir, &ctx.actor, &id, approve, field("because")) {
         Ok(_) => Response::see(&format!("/?done={}", id.as_str())),
         Err(e) => home(ctx, None, None, Some(write_error(&e))),
     }
+}
+
+/// The first page again, saying why nothing was written.
+fn refused(ctx: &Ctx, why: &str) -> Response {
+    home(ctx, None, None, Some(not_written(why)))
+}
+
+/// What went wrong, then what was just done, above the page.
+fn banners(error: Option<String>, did: Option<String>) -> String {
+    let bad = |e: String| format!("<p class=\"note bad\" role=\"alert\">{}</p>", linked(&e));
+    let ok = |n: String| format!("<p class=\"note\" role=\"status\">{}</p>", esc(&n));
+    error.map(bad).unwrap_or_default() + &did.map(ok).unwrap_or_default()
 }
 
 fn not_written(e: &str) -> String {
@@ -594,21 +607,15 @@ fn write_error(e: &str) -> String {
 fn propose(form: &Form, ctx: &Ctx) -> Response {
     let text = form.get("text");
     if text.is_empty() {
-        return home(ctx, None, None, Some(not_written("a rule needs its words")));
+        return refused(ctx, "a rule needs its words");
     }
     let scope = match form.get("scope") {
         "" => None,
         raw => match canon_core::Scope::new(raw) {
             Some(s) => Some(s),
             None => {
-                return home(
-                    ctx,
-                    None,
-                    None,
-                    Some(not_written(&format!(
-                        "`{raw}` is not a room: use a dotted name like house.kitchen"
-                    ))),
-                )
+                let why = format!("`{raw}` is not a room: use a dotted name like house.kitchen");
+                return refused(ctx, &why);
             }
         },
     };
@@ -619,6 +626,72 @@ fn propose(form: &Form, ctx: &Ctx) -> Response {
         Ok(act) => Response::see(&format!("/?done={}", act.id.as_str())),
         Err(e) => home(ctx, None, None, Some(write_error(&e))),
     }
+}
+
+/// Write down something nobody has answered: `canon question`.
+fn ask(form: &Form, ctx: &Ctx) -> Response {
+    if form.get("text").trim().is_empty() {
+        return refused(ctx, "a question needs its words");
+    }
+    let kind = ActKind::Question {
+        text: form.get("text").to_string(),
+        proposal: None,
+    };
+    match crate::cmds::write_as(&ctx.dir, kind, &ctx.actor) {
+        Ok(a) => Response::see(&format!("/why/{}", a.id.as_str())),
+        Err(e) => home(ctx, None, None, Some(write_error(&e))),
+    }
+}
+
+/// Say what you know about a question: `canon respond`.
+fn reply(form: &Form, ctx: &Ctx) -> Response {
+    let back = |note: String| self::why(ctx, form.get("id"), None, Some(note));
+    let given = |k: &str| Some(form.get(k).trim().to_string()).filter(|s| !s.is_empty());
+    let said = crate::questions::Said {
+        text: form.get("text").to_string(),
+        attribution: given("attribution"),
+        source: given("source"),
+        remaining: given("remaining"),
+        ..Default::default()
+    };
+    let checked = load(ctx).and_then(|(log, st)| {
+        let q = crate::explain::resolve_question(&st, form.get("id"))?;
+        let old = given("corrects");
+        crate::questions::reply(&log, &st, &ctx.actor, &q, said, old.as_deref()).map(|k| (q, k))
+    });
+    let (q, kind) = match checked {
+        Ok(v) => v,
+        Err(e) => return back(not_written(&e)),
+    };
+    match crate::cmds::write_as(&ctx.dir, kind, &ctx.actor) {
+        Ok(a) => Response::see(&format!("/why/{}?did={}", q.as_str(), a.id.as_str())),
+        Err(e) => back(write_error(&e)),
+    }
+}
+
+/// The questions a reader is shown, and a way to ask one: `canon open`.
+fn asked(ctx: &Ctx, log: &Log, st: &Canon) -> String {
+    let mut b =
+        String::from("<section class=\"charter\"><h2>Questions</h2><ul class=\"silences\">");
+    for (q, v) in crate::questions::listed(log, st, store::now(), false) {
+        b.push_str(&format!(
+            "<li><p class=\"about\"><a href=\"/why/{}\">{}</a></p><p class=\"meta\">{}</p></li>",
+            esc(q.id.as_str()),
+            esc(&q.text),
+            esc(&crate::questions::notes(q, &v).join(". "))
+        ));
+    }
+    b.push_str(&format!(
+        "</ul><details class=\"act\"{}><summary>Ask a question</summary>\
+         <form method=\"post\" action=\"/ask\">{}\
+         <label>What nobody has answered yet<textarea name=\"text\" required rows=\"2\">{}</textarea></label>\
+         <p class=\"meta\">Written as you. A question makes no rule, and anyone can say what they know about it.</p>\
+         <button class=\"carry\">Ask it</button></form></details></section>",
+        if ctx.field("/ask", None, "text").is_some() { " open" } else { "" },
+        token_field(ctx),
+        esc(ctx.field("/ask", None, "text").unwrap_or(""))
+    ));
+    b
 }
 
 /// An in-force rule named by a form, or why not.
@@ -655,9 +728,15 @@ fn replace(form: &Form, ctx: &Ctx) -> Response {
 /// Take a rule away with no replacement: `canon retract`.
 fn retract(form: &Form, ctx: &Ctx) -> Response {
     let back = |note: String| self::why(ctx, form.get("id"), None, Some(note));
-    let (target, _) = match in_force_rule(ctx, form.get("id")) {
-        Ok(v) => v,
-        Err(e) => return back(not_written(&e)),
+    // An open question is closed the way a rule is taken away: one act.
+    let asked = load(ctx).ok().and_then(|(_, st)| {
+        let open = st.open().find(|q| q.id.as_str() == form.get("id"));
+        open.map(|q| q.id.clone())
+    });
+    let target = match (asked, in_force_rule(ctx, form.get("id"))) {
+        (Some(q), _) => q,
+        (None, Ok((rule, _))) => rule,
+        (None, Err(e)) => return back(not_written(&e)),
     };
     if form.get("because").is_empty() {
         return back(not_written("taking a rule away needs the reason"));
@@ -676,14 +755,8 @@ fn retract(form: &Form, ctx: &Ctx) -> Response {
 fn silence(form: &Form, ctx: &Ctx) -> Response {
     let (about, why) = (form.get("about"), form.get("because"));
     if about.is_empty() || why.is_empty() {
-        return home(
-            ctx,
-            None,
-            None,
-            Some(not_written(
-                "something left unwritten on purpose needs a name and what leaving it unwritten protects",
-            )),
-        );
+        let why = "something left unwritten on purpose needs a name and what leaving it unwritten protects";
+        return refused(ctx, why);
     }
     let act = ActKind::Silence {
         about: about.to_string(),
@@ -704,12 +777,7 @@ fn lift(form: &Form, ctx: &Ctx) -> Response {
     };
     let current = st.silences().iter().any(|s| s.act == id);
     if !current {
-        return home(
-            ctx,
-            None,
-            None,
-            Some(not_written("that is not left unwritten any more")),
-        );
+        return refused(ctx, "that is not left unwritten any more");
     }
     let act = ActKind::Revert {
         targets: vec![id],
@@ -755,7 +823,13 @@ fn did_note(ctx: &Ctx, log: &Log, st: &Canon, id: &str) -> Option<String> {
         ActKind::Supersede { text, .. } => {
             format!("Recorded. {} is {}.", quote(text), review::outcome(st, &id))
         }
+        ActKind::Retract { target, .. } if st.question(target).is_some() => {
+            took("Closed: tracking stopped here. That does not say it was answered.")
+        }
         ActKind::Retract { .. } => took("Taken away. Nobody else was asked."),
+        ActKind::Annotation { kind, .. } if kind == crate::questions::OP => {
+            "Kept beside the question. It makes no rule and closes nothing.".into()
+        }
         ActKind::Silence { about, .. } => {
             format!("Recorded: {} is left unwritten on purpose.", quote(about))
         }
@@ -812,18 +886,10 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         )
     };
     b.push_str(&context(ctx));
-    if let Some(e) = error {
-        b.push_str(&format!(
-            "<p class=\"note bad\" role=\"alert\">{}</p>",
-            linked(&e)
-        ));
-    }
-    if let Some(note) = did.and_then(|id| did_note(ctx, &log, &st, id)) {
-        b.push_str(&format!(
-            "<p class=\"note\" role=\"status\">{}</p>",
-            esc(&note)
-        ));
-    }
+    b.push_str(&banners(
+        error,
+        did.and_then(|d| did_note(ctx, &log, &st, d)),
+    ));
     if let Some(id) = done {
         let id = ActId::from_raw(id);
         let what = st
@@ -908,6 +974,7 @@ fn home(ctx: &Ctx, done: Option<&str>, did: Option<&str>, error: Option<String>)
         esc(ctx.field("/propose", None, "because").unwrap_or(""))
     ));
 
+    b.push_str(&asked(ctx, &log, &st));
     b.push_str(&in_force(&st));
     b.push_str(&unwritten(ctx, &st));
     b.push_str("</main>");
@@ -1139,12 +1206,7 @@ fn identify_page(ctx: &Ctx, error: Option<String>) -> Response {
         Err(e) => return unavailable(ctx, &e),
     };
     let mut b = context(ctx);
-    if let Some(e) = error {
-        b.push_str(&format!(
-            "<p class=\"note bad\" role=\"alert\">{}</p>",
-            linked(&e)
-        ));
-    }
+    b.push_str(&banners(error, None));
     b.push_str("<main>");
     let person = esc(crate::explain::person(&ctx.actor));
     if let Some(bound) = canon_core::sign::verify(log.acts())
@@ -1226,7 +1288,7 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
             page("Not in this canon", "<p><a href=\"/\">Back</a></p>"),
         );
     };
-    let Ok(e) = crate::explain::explain(&log, &st, &id) else {
+    let Ok(e) = crate::explain::explain_at(&log, &st, &id, store::now()) else {
         return Response::html(
             404,
             page("Not in this canon", "<p><a href=\"/\">Back</a></p>"),
@@ -1237,18 +1299,10 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
         .split_once("  ")
         .map_or(e.headline.as_str(), |(_, t)| t);
     let mut b = context(ctx);
-    if let Some(e) = error {
-        b.push_str(&format!(
-            "<p class=\"note bad\" role=\"alert\">{}</p>",
-            linked(&e)
-        ));
-    }
-    if let Some(note) = did.and_then(|d| did_note(ctx, &log, &st, d)) {
-        b.push_str(&format!(
-            "<p class=\"note\" role=\"status\">{}</p>",
-            esc(&note)
-        ));
-    }
+    b.push_str(&banners(
+        error,
+        did.and_then(|d| did_note(ctx, &log, &st, d)),
+    ));
     b.push_str(&format!("<main><p class=\"rule lone\">{}</p>", esc(text)));
     let now = store::now();
     if let Some(item) = review::queue(&log, &st, &ctx.actor, now)
@@ -1294,6 +1348,42 @@ fn why(ctx: &Ctx, needle: &str, did: Option<&str>, error: Option<String>) -> Res
             if ctx.field("/retract", Some(id.as_str()), "because").is_some() { " open" } else { "" },
             esc(ctx.field("/retract", Some(id.as_str()), "because").unwrap_or(""))
         ));
+    }
+    if let Some(q) = st.question(&id) {
+        let hidden = format!(
+            "{}<input type=\"hidden\" name=\"id\" value=\"{}\">",
+            token_field(ctx),
+            esc(id.as_str())
+        );
+        let kept =
+            |path: &str, name: &str| esc(ctx.field(path, Some(id.as_str()), name).unwrap_or(""));
+        let me = esc(crate::explain::person(&ctx.actor));
+        b.push_str(&format!(
+            "<div class=\"changes\"><details class=\"act\" open><summary>Add what you know</summary>\
+             <form method=\"post\" action=\"/respond\">{hidden}\
+             <label>What you know<textarea name=\"text\" required rows=\"3\">{}</textarea></label>\
+             <p class=\"meta\">Written as {me}. It is kept beside the question. It makes no rule and closes nothing.</p>\
+             <details><summary>Source, someone else's account, what remains, a correction</summary>\
+             <label>Who said it, if you are passing it on<input name=\"attribution\" value=\"{}\"></label>\
+             <label>Where it comes from<input name=\"source\" value=\"{}\"></label>\
+             <label>What is still open<input name=\"remaining\" value=\"{}\"></label>\
+             <label>The id of your own earlier reply this corrects<input name=\"corrects\" value=\"{}\"></label></details>\
+             <button class=\"carry\">Add it</button></form></details>",
+            kept("/respond", "text"), kept("/respond", "attribution"), kept("/respond", "source"),
+            kept("/respond", "remaining"), kept("/respond", "corrects")
+        ));
+        if matches!(q.status, canon_core::Status::Active) {
+            b.push_str(&format!(
+                "<details class=\"act\"{}><summary>Close tracking this question</summary>\
+                 <p class=\"meta\">Closing stops tracking it here. It does not say the question was answered. It is written as {me}: if you asked it or are in charge of its area it closes when you press the button, and otherwise it is put to whoever is in charge. <code>canon undo</code> on the closing act opens it again.</p>\
+                 <form method=\"post\" action=\"/retract\">{hidden}\
+                 <label>Why tracking stops, which everyone will see<textarea name=\"because\" required rows=\"2\">{}</textarea></label>\
+                 <button class=\"object\">Close it</button></form></details>",
+                if ctx.field("/retract", Some(id.as_str()), "because").is_some() { " open" } else { "" },
+                kept("/retract", "because")
+            ));
+        }
+        b.push_str("</div>");
     }
     b.push_str("</main>");
     Response::html(200, page(&crate::explain::one_line(text), &b))

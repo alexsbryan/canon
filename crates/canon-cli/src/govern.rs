@@ -342,10 +342,7 @@ pub fn ratification(args: &[String]) -> i32 {
         Some("show") | None => {
             let (_, _, canon) = or_fail!(load());
             if has(args, "--json") {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&canon.ratifications()).unwrap_or_default()
-                );
+                crate::cmds::print_json(&canon.ratifications());
                 return 0;
             }
             let next = "canon ratification set joint:human:a,human:b --area house.kitchen";
@@ -443,9 +440,7 @@ pub fn allot(args: &[String]) -> i32 {
             "usage: canon allot <area> --named a,b,c | --count <n> [--unit <noun>] [-m \"<what it is>\"]",
         );
     };
-    let Some(scope) = Scope::new(raw) else {
-        return fail(format!("`{raw}` is not an area"));
-    };
+    let scope = or_fail!(crate::cmds::parse_area(raw));
     let unit = flag(args, "--unit").unwrap_or("turn").to_string();
     let units: Vec<String> = match (flag(args, "--named"), flag(args, "--count")) {
         (Some(_), Some(_)) => {
@@ -472,7 +467,7 @@ pub fn allot(args: &[String]) -> i32 {
         || format!("{} {unit}(s) in {scope}.", units.len()),
         str::to_string,
     );
-    match write(
+    let act = or_fail!(write(
         &d,
         ActKind::Allot {
             text: text.clone(),
@@ -480,20 +475,16 @@ pub fn allot(args: &[String]) -> i32 {
             units: units.clone(),
             scope: scope.clone(),
         },
-    ) {
-        Ok(act) => {
-            let code = crate::cmds::governed(&d, &act.id, || {
-                println!("{}  {} {unit}(s) in {scope}", act.id, units.len());
-                println!("  {text}");
-                println!("  {}", units.join(", "));
-            });
-            if code == 0 {
-                println!("\n  now say how they are shared:  canon allocation set rotation --area {scope}");
-            }
-            code
-        }
-        Err(e) => fail(e),
+    ));
+    let code = crate::cmds::governed(&d, &act.id, || {
+        println!("{}  {} {unit}(s) in {scope}", act.id, units.len());
+        println!("  {text}");
+        println!("  {}", units.join(", "));
+    });
+    if code == 0 {
+        println!("\n  now say how they are shared:  canon allocation set rotation --area {scope}");
     }
+    code
 }
 
 pub fn allocation(args: &[String]) -> i32 {
@@ -598,9 +589,7 @@ pub fn pool(args: &[String]) -> i32 {
     let Some(raw) = pos.first() else {
         return fail("usage: canon pool <area> [--at YYYY-MM-DD]");
     };
-    let Some(scope) = Scope::new(raw) else {
-        return fail(format!("`{raw}` is not an area"));
-    };
+    let scope = or_fail!(crate::cmds::parse_area(raw));
     let (_, _, canon) = or_fail!(load());
     let at = match flag(args, "--at") {
         None => store::now(),
@@ -611,10 +600,7 @@ pub fn pool(args: &[String]) -> i32 {
     };
     let schedule = or_fail!(canon.pool_at(&scope, at));
     if has(args, "--json") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&schedule).unwrap_or_default()
-        );
+        crate::cmds::print_json(&schedule);
         return 0;
     }
     println!(
@@ -708,7 +694,7 @@ pub fn decide(args: &[String]) -> i32 {
     // A ladder keyed on the cited rule cannot see a decision that cites
     // nothing. Said once, here, rather than discovered at the next check.
     let missed = citing.is_empty() && canon.policies().iter().any(|p| keys_on_cited(&p.rule));
-    match write(
+    let act = or_fail!(write(
         &d,
         ActKind::Decided {
             about: (*about).to_string(),
@@ -717,26 +703,24 @@ pub fn decide(args: &[String]) -> i32 {
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
             citing: citing.clone(),
         },
-    ) {
-        Ok(act) => crate::cmds::governed(&d, &act.id, || {
-            println!("{act_id}  decided about \"{about}\"", act_id = act.id);
-            println!("  {} / {authority}", format!("{outcome:?}").to_lowercase());
-            if !citing.is_empty() {
-                let ids: Vec<&str> = citing.iter().map(|i| i.as_str()).collect();
-                println!("  citing {}", ids.join(", "));
-            }
-            // The rung is shown because the ladder is the point: a decision
-            // that silently moves the next one up is a decision nobody saw.
-            println!("  this is decision {} about it", prior + 1);
-            if missed {
-                println!(
-                    "  a graduated policy here counts by the rule cited; without --citing \
+    ));
+    crate::cmds::governed(&d, &act.id, || {
+        println!("{act_id}  decided about \"{about}\"", act_id = act.id);
+        println!("  {} / {authority}", format!("{outcome:?}").to_lowercase());
+        if !citing.is_empty() {
+            let ids: Vec<&str> = citing.iter().map(|i| i.as_str()).collect();
+            println!("  citing {}", ids.join(", "));
+        }
+        // The rung is shown because the ladder is the point: a decision
+        // that silently moves the next one up is a decision nobody saw.
+        println!("  this is decision {} about it", prior + 1);
+        if missed {
+            println!(
+                "  a graduated policy here counts by the rule cited; without --citing \
                      this decision will not count on that ladder"
-                );
-            }
-        }),
-        Err(e) => fail(e),
-    }
+            );
+        }
+    })
 }
 
 /// Whether a rule, or a rule it wraps, is a ladder keyed on cited rules.
@@ -767,19 +751,12 @@ pub fn rank(args: &[String]) -> i32 {
     }
     let (d, _, canon) = or_fail!(load());
     let id = or_fail!(crate::explain::resolve(&canon, pos[0]));
-    match write(
-        &d,
-        ActKind::Rank {
-            commitment: id.clone(),
-            rank: pos[1].to_string(),
-        },
-    ) {
-        Ok(_) => {
-            println!("{id} is a {}", pos[1]);
-            0
-        }
-        Err(e) => fail(e),
-    }
+    let kind = ActKind::Rank {
+        commitment: id.clone(),
+        rank: pos[1].to_string(),
+    };
+    let act = or_fail!(write(&d, kind));
+    crate::cmds::governed(&d, &act.id, || println!("{id} is a {}", pos[1]))
 }
 
 // ── canon who ───────────────────────────────────────────────
@@ -865,10 +842,7 @@ fn who_holds_the_canon(args: &[String]) -> i32 {
         .collect();
     holders.sort_by(|a, b| a.scope.cmp(&b.scope).then_with(|| a.actor.cmp(&b.actor)));
     if has(args, "--json") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&holders).unwrap_or_default()
-        );
+        crate::cmds::print_json(&holders);
         return 0;
     }
     if holders.is_empty() {
@@ -927,10 +901,7 @@ pub fn who(args: &[String]) -> i32 {
     let now = store::now();
     let deciders = canon.who_decides(&scope, now);
     if has(args, "--json") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(&deciders).unwrap_or_default()
-        );
+        crate::cmds::print_json(&deciders);
         return 0;
     }
     if deciders.is_empty() {
@@ -1001,9 +972,7 @@ pub fn grant(args: &[String]) -> i32 {
     if let Some(e) = bare_actor(pos[0], "give") {
         return fail(e);
     }
-    let Some(scope) = Scope::new(pos[1]) else {
-        return fail(format!("`{}` is not an area", pos[1]));
-    };
+    let scope = or_fail!(crate::cmds::parse_area(pos[1]));
     let horizon = match flag(args, "--until").map(canon_core::date::parse_ymd) {
         None => None,
         Some(Some(ts)) => Some(ts),
@@ -1011,61 +980,64 @@ pub fn grant(args: &[String]) -> i32 {
     };
     let (d, _, _) = or_fail!(load());
     let rationale = flag(args, "-m").unwrap_or_default();
-    match give(&d, &store::actor(), pos[0], &scope, horizon, rationale) {
-        Ok(act) => {
-            let holder = pos[0];
-            let took = crate::cmds::took(&d, &act.id);
-            if let crate::cmds::Took::Refused(why) = &took {
-                let c = store::read(&d).map(|l| l.derive_at(store::now()));
-                let ask = c.map_or(String::new(), |c| deciders(&c, &scope));
-                println!("{}", crate::wrap::hang("NOT APPLIED: ", why));
-                println!(
-                    "  on the record as {} — a request to {ask}; they say yes with",
-                    act.id
-                );
-                println!("    canon approve {}", act.id);
-                return 1;
-            }
-            let code = crate::cmds::announce(&took, &act.id, || {
-                match horizon {
+    let act = or_fail!(give(
+        &d,
+        &store::actor(),
+        pos[0],
+        &scope,
+        horizon,
+        rationale
+    ));
+    let holder = pos[0];
+    let took = crate::cmds::took(&d, &act.id);
+    if let crate::cmds::Took::Refused(why) = &took {
+        let c = store::read(&d).map(|l| l.derive_at(store::now()));
+        let ask = c.map_or(String::new(), |c| deciders(&c, &scope));
+        println!("{}", crate::wrap::hang("NOT APPLIED: ", why));
+        println!(
+            "  on the record as {} — a request to {ask}; they say yes with",
+            act.id
+        );
+        println!("    canon approve {}", act.id);
+        return 1;
+    }
+    let code = crate::cmds::announce(&took, &act.id, || {
+        match horizon {
                     Some(h) => println!("{holder} is in charge of {scope} until {}", store::ymd(h)),
                     None => println!(
                         "{holder} is in charge of {scope}, with no end date — `canon overdue` will never mention it"
                     ),
                 }
-                // Who granted is on the line, because it is not always who
-                // you think: with `CANON_ACTOR` unset it is the git name.
-                println!("  given by {}", act.actor);
-                println!("  to take it back:  canon withdraw {holder} {scope} -m \"<why>\"");
-            });
-            if code != 0 || holder == act.actor {
-                return code;
-            }
-            // A founder who grants somebody else, under a name that is not
-            // their own, has seated that person and not themselves — and
-            // every act they write from the next second on is a proposal
-            // waiting on the holder. Neither the grant nor the next add
-            // said so; this does, on the act that caused it.
-            let now = store::now();
-            let seated = store::read(&d).map(|l| l.derive_at(now)).is_ok_and(|c| {
-                c.who_decides(&scope, now)
-                    .iter()
-                    .any(|g| g.actor == act.actor)
-            });
-            if !seated {
-                println!(
-                    "  {} is not in charge of {scope}. From the next second, their writes here are",
-                    act.actor
-                );
-                println!(
-                    "  proposals waiting on {holder} — `canon give {} {scope}` if that is wrong.",
-                    act.actor
-                );
-            }
-            code
-        }
-        Err(e) => fail(e),
+        // Who granted is on the line, because it is not always who
+        // you think: with `CANON_ACTOR` unset it is the git name.
+        println!("  given by {}", act.actor);
+        println!("  to take it back:  canon withdraw {holder} {scope} -m \"<why>\"");
+    });
+    if code != 0 || holder == act.actor {
+        return code;
     }
+    // A founder who grants somebody else, under a name that is not
+    // their own, has seated that person and not themselves — and
+    // every act they write from the next second on is a proposal
+    // waiting on the holder. Neither the grant nor the next add
+    // said so; this does, on the act that caused it.
+    let now = store::now();
+    let seated = store::read(&d).map(|l| l.derive_at(now)).is_ok_and(|c| {
+        c.who_decides(&scope, now)
+            .iter()
+            .any(|g| g.actor == act.actor)
+    });
+    if !seated {
+        println!(
+            "  {} is not in charge of {scope}. From the next second, their writes here are",
+            act.actor
+        );
+        println!(
+            "  proposals waiting on {holder} — `canon give {} {scope}` if that is wrong.",
+            act.actor
+        );
+    }
+    code
 }
 
 /// `by` grants `holder` standing over `scope`: the grant act, written.
@@ -1229,9 +1201,7 @@ pub fn withdraw(args: &[String]) -> i32 {
     if let Some(e) = bare_actor(pos[0], "withdraw") {
         return fail(e);
     }
-    let Some(scope) = Scope::new(pos[1]) else {
-        return fail(format!("`{}` is not an area", pos[1]));
-    };
+    let scope = or_fail!(crate::cmds::parse_area(pos[1]));
     let ask = flag(args, "--ask").filter(|q| !q.trim().is_empty());
     let you = pos[0] == store::actor();
     if you {
@@ -1324,22 +1294,16 @@ pub fn scoped(args: &[String]) -> i32 {
     }
     let (d, _, canon) = or_fail!(load());
     let id = or_fail!(crate::explain::resolve(&canon, pos[0]));
-    let Some(scope) = Scope::new(pos[1]) else {
-        return fail(format!("`{}` is not an area", pos[1]));
-    };
-    match write(
+    let scope = or_fail!(crate::cmds::parse_area(pos[1]));
+    or_fail!(write(
         &d,
         ActKind::Scoped {
             commitment: id.clone(),
             scope: scope.clone(),
         },
-    ) {
-        Ok(_) => {
-            println!("{id} is in {scope}");
-            0
-        }
-        Err(e) => fail(e),
-    }
+    ));
+    println!("{id} is in {scope}");
+    0
 }
 
 // ── canon position ──────────────────────────────────────────
@@ -1384,17 +1348,20 @@ pub fn take(args: &[String], about: &str, toward: bool, because: &str) -> i32 {
             Err(e) => return fail(e),
         },
     };
-    match crate::cmds::answer(&d, &store::actor(), about, citing.clone(), toward, because) {
-        Ok(act) => {
-            let way = if toward { "toward" } else { "against" };
-            println!("{}  {way} \"{about}\"", act.id);
-            if let Some(c) = citing {
-                println!("  citing {c}");
-            }
-            0
-        }
-        Err(e) => fail(e),
+    let act = or_fail!(crate::cmds::answer(
+        &d,
+        &store::actor(),
+        about,
+        citing.clone(),
+        toward,
+        because
+    ));
+    let way = if toward { "toward" } else { "against" };
+    println!("{}  {way} \"{about}\"", act.id);
+    if let Some(c) = citing {
+        println!("  citing {c}");
     }
+    0
 }
 
 // ── canon horizon / canon overdue ───────────────────────────
@@ -1411,36 +1378,18 @@ pub fn horizon(args: &[String]) -> i32 {
     let (d, log, _) = or_fail!(load());
     // Any act may carry a horizon, not just a commitment: a grant, an
     // accepted contradiction and a question are all things somebody defers.
-    let hits: Vec<&canon_core::Act> = log
-        .acts()
-        .iter()
-        .filter(|a| a.id.as_str().starts_with(pos[0]))
-        .collect();
-    let target = match hits.len() {
-        1 => hits[0].id.clone(),
-        0 => return fail(format!("no act matching `{}`", pos[0])),
-        n => {
-            return fail(format!(
-                "`{}` matches {n} acts — use more characters",
-                pos[0]
-            ))
-        }
-    };
-    match write(
+    let target = or_fail!(crate::cmds::act_matching(&log, pos[0], ""));
+    or_fail!(write(
         &d,
         ActKind::Horizon {
             target: target.clone(),
             at,
             rationale: flag(args, "-m").unwrap_or_default().to_string(),
         },
-    ) {
-        Ok(_) => {
-            println!("{target} comes back around {}", store::ymd(at));
-            println!("  `canon overdue` will surface it after that");
-            0
-        }
-        Err(e) => fail(e),
-    }
+    ));
+    println!("{target} comes back around {}", store::ymd(at));
+    println!("  `canon overdue` will surface it after that");
+    0
 }
 
 /// What has gone past its date.
@@ -1455,7 +1404,7 @@ pub fn overdue(args: &[String]) -> i32 {
     let now = store::now();
     let due = canon.overdue(now);
     if has(args, "--json") {
-        println!("{}", serde_json::to_string_pretty(&due).unwrap_or_default());
+        crate::cmds::print_json(&due);
         return 0;
     }
     if due.is_empty() {
@@ -1544,21 +1493,17 @@ pub fn silence(args: &[String]) -> i32 {
         );
     };
     let (d, _, _) = or_fail!(load());
-    match write(
+    let act = or_fail!(write(
         &d,
         ActKind::Silence {
             about: (*about).to_string(),
             rationale: rationale.to_string(),
         },
-    ) {
-        Ok(act) => {
-            println!("{}  unwritten on purpose: \"{about}\"", act.id);
-            println!("  {rationale}");
-            println!("  `canon check --about \"{about}\"` will say so rather than call it a gap");
-            0
-        }
-        Err(e) => fail(e),
-    }
+    ));
+    println!("{}  unwritten on purpose: \"{about}\"", act.id);
+    println!("  {rationale}");
+    println!("  `canon check --about \"{about}\"` will say so rather than call it a gap");
+    0
 }
 
 // ── canon voice ─────────────────────────────────────────────

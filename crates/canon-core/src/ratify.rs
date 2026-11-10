@@ -928,38 +928,16 @@ impl Canon {
         {
             return Seat::Open;
         }
-        let holds_any = || prior.iter().any(|g| g.actor == actor);
+        let level: Vec<&&crate::scope::Grant> = (prior.iter())
+            .filter(|g| scope.map_or(g.scope.depth() == 1, |s| g.scope.covers(s)))
+            .collect();
+        let mine = |g: &&crate::scope::Grant| g.actor == actor;
         // A scope nobody holds is open to anyone the canon has seated at all.
         // A stranger to the canon does not get a corner of it for free.
-        let open_to = |in_house: bool| if in_house { Seat::Open } else { Seat::Lacking };
-        let held_by = |holders: &[&&crate::scope::Grant]| {
-            if holders.iter().any(|g| g.actor == actor) {
-                Seat::Held
-            } else {
-                Seat::Lacking
-            }
-        };
-        match scope {
-            Some(s) => {
-                let covering: Vec<&&crate::scope::Grant> =
-                    prior.iter().filter(|g| g.scope.covers(s)).collect();
-                if covering.is_empty() {
-                    open_to(holds_any())
-                } else {
-                    held_by(&covering)
-                }
-            }
-            // The whole canon: anyone holding a top-level scope, or anyone
-            // at all if no top-level scope has been granted.
-            None => {
-                let top: Vec<&&crate::scope::Grant> =
-                    prior.iter().filter(|g| g.scope.depth() == 1).collect();
-                if top.is_empty() {
-                    open_to(holds_any())
-                } else {
-                    held_by(&top)
-                }
-            }
+        match (level.is_empty(), prior.iter().any(mine)) {
+            (false, _) if level.iter().any(|g| mine(g)) => Seat::Held,
+            (true, true) => Seat::Open,
+            _ => Seat::Lacking,
         }
     }
 
@@ -1299,7 +1277,13 @@ impl Canon {
                     ),
                 }
             }
-            Ratify::Twice { .. } => unreachable!("twice is judged by judge_twice"),
+            // A written line can nest what `Ratify::parse` refuses. Nothing
+            // is ratified under a rule nobody could explain.
+            Ratify::Twice { .. } => Outcome {
+                completed: None,
+                refused: Some((from, String::new(), NESTED.into())),
+                needs: String::new(),
+            },
         }
     }
 
@@ -1441,12 +1425,10 @@ impl Canon {
                 }
                 (at, String::new(), why)
             });
+        let mut missing: Vec<&str> = (voters.iter().copied())
+            .filter(|v| !approved.iter().any(|(who, _)| who.actor() == *v))
+            .collect();
         let needs = if all {
-            let missing: Vec<&str> = voters
-                .iter()
-                .copied()
-                .filter(|v| !approved.iter().any(|(who, _)| who.actor() == *v))
-                .collect();
             format!(
                 "approval from {}: everyone in charge of {here} when it was proposed",
                 missing.join(", ")
@@ -1459,12 +1441,7 @@ impl Canon {
             // Somebody who said no or no longer holds the scope is not a
             // name to chase, so they are left out.
             let lost_now: BTreeSet<&str> = lost.iter().map(|(_, voter, _)| *voter).collect();
-            let missing: Vec<&str> = voters
-                .iter()
-                .copied()
-                .filter(|v| !approved.iter().any(|(who, _)| who.actor() == *v))
-                .filter(|v| !lost_now.contains(v))
-                .collect();
+            missing.retain(|v| !lost_now.contains(v));
             let count = needed.saturating_sub(approved.len());
             if missing.is_empty() {
                 format!(
@@ -1672,6 +1649,7 @@ impl Canon {
 }
 
 static SHIPPED: Ratify = Ratify::Standing;
+const NESTED: &str = "its rule asks twice over twice, which canon does not read";
 
 #[cfg(test)]
 mod tests {

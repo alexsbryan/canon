@@ -77,6 +77,40 @@ fn histories() -> impl Strategy<Value = Vec<Act>> {
 }
 
 #[test]
+fn a_twice_of_twice_rule_refuses_what_is_put_to_it() {
+    // `Ratify::parse` refuses a `twice` of a `twice`, but the enum and a
+    // written line both allow one. The fold used to panic on the first
+    // proposal judged under it; it now refuses the proposal and says why.
+    let twice = |each| Ratify::Twice {
+        each: Box::new(each),
+        between: Between::Turnover,
+    };
+    let rule = Act::new(
+        ActKind::Ratification {
+            text: String::new(),
+            rule: twice(twice(Ratify::Standing)),
+            scope: None,
+            governs: None,
+            personal: None,
+        },
+        100,
+        "human:sam",
+    );
+    let proposal = ActKind::Assert {
+        text: "a proposed agreement".into(),
+        from: None,
+        source: None,
+    };
+    let written = Log::from_acts(vec![rule, Act::new(proposal, 101, "human:sam")]).render();
+    let canon = Log::parse(&written).unwrap().derive_at(200);
+    let put = canon.commitments().first().expect("the proposal");
+    let Verdict::Refused { why, .. } = canon.ratify(put, 200) else {
+        panic!("refused, with the reason")
+    };
+    assert!(why.contains("twice over twice"), "{why}");
+}
+
+#[test]
 fn generated_laws_are_indexed_by_the_contract() {
     // Function references make a stale/renamed check a compile error; the row
     // check makes removing its guarantee from the index an explicit change.

@@ -99,7 +99,7 @@ impl Allocation {
                 };
                 format!(
                     "Everyone takes a turn; it moves {} place(s) every {every}.",
-                    step.abs()
+                    step.unsigned_abs()
                 )
             }
         }
@@ -423,10 +423,10 @@ mod tests {
 
     #[test]
     fn alanya_rotates_every_boat_one_site_east_a_day() {
-        // Ostrom 1990, ch. 1: a hundred boats, a written list of named spots,
-        // a draw each September, and from then each boat moves one site along
-        // each day. This is the whole appropriation rule of a fishery that has
-        // worked since the seventies, and it costs no per-turn act at all.
+        // A synthetic control, eleven boats on eleven sites, after Ostrom
+        // 1990, ch. 1: a written list of named spots, a draw each September,
+        // and from then each boat moves one site along each day. Equal
+        // counts; the fishery's own 34 sites and 37 boats are not this test.
         let canon = fishery(Order::Given { actors: boats() }, 1, &boats(), sites());
         let day = |n: i64| START + DAY + n * DAY;
 
@@ -476,8 +476,8 @@ mod tests {
 
     #[test]
     fn the_sign_of_the_step_is_the_direction() {
-        // Alanya rotates east from September and west from January. One rule
-        // and a sign, not two rules.
+        // A synthetic control at equal counts: one rule and a sign, not two
+        // rules. With more boats than sites the same sign runs the other way.
         let east = fishery(Order::Given { actors: boats() }, 1, &boats(), sites());
         let west = fishery(Order::Given { actors: boats() }, -1, &boats(), sites());
         let day1 = START + DAY + DAY;

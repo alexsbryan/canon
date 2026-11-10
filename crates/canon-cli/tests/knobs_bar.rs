@@ -383,3 +383,79 @@ fn init_founds_the_canon_with_the_knobs_on_and_plain_without() {
     assert_eq!(c, 0, "{out}");
     assert!(out.contains("waits for a person"), "{out}");
 }
+
+/// A negative whole number reaches the handler that types it, in both
+/// spellings, and a refusal of any kind leaves the ledger as it was.
+#[test]
+fn a_negative_step_is_written_and_every_refusal_writes_nothing() {
+    let dir = fresh("negative-step");
+    let set = ["allocation", "set", "rotation", "--area", "house"];
+    for spelling in [&["--step", "-1"][..], &["--step=-1"][..]] {
+        let (c, out) = canon_as(&dir, "human:setup", &[&set[..], spelling].concat());
+        assert_eq!(c, 0, "{out}");
+        assert_eq!(last_line(&dir)["rule"]["step"], -1, "{out}");
+    }
+    let before = std::fs::read(dir.join("acts.jsonl")).unwrap();
+    let min = format!("--step={}", i64::MIN);
+    let (c, out) = canon_as(&dir, "human:setup", &[&set[..], &[&min]].concat());
+    assert_eq!(c, 0, "{out}");
+    assert_eq!(last_line(&dir)["rule"]["step"], i64::MIN, "{out}");
+    let kept = std::fs::read(dir.join("acts.jsonl")).unwrap();
+    assert_ne!(before, kept);
+    for refused in [
+        &["--step", "-1.5"][..],
+        &["--step="],
+        &["--step", "-9223372036854775809"],
+        &["--step", "-1", "--nonsense"],
+        &["--step"],
+    ] {
+        let (c, out) = canon_as(&dir, "human:setup", &[&set[..], refused].concat());
+        assert_ne!(c, 0, "{refused:?}: {out}");
+    }
+    for refused in [
+        &["allot", "house", "--count", "-2"][..],
+        &["allot", "house", "--count=-2"],
+        &[
+            "rulings",
+            "set",
+            "threshold",
+            "--area",
+            "house",
+            "--objections",
+            "-1",
+        ],
+    ] {
+        let (c, out) = canon_as(&dir, "human:setup", refused);
+        assert_ne!(c, 0, "{refused:?}: {out}");
+        assert!(out.contains("takes a number"), "{refused:?}: {out}");
+    }
+    assert_eq!(std::fs::read(dir.join("acts.jsonl")).unwrap(), kept);
+}
+
+/// A rank is what entrenchment reads, so only somebody in charge of the rule
+/// sets one, and a refused one says so instead of printing the new rank.
+#[test]
+fn ranking_a_rule_takes_being_in_charge_of_it() {
+    let dir = fresh("rank-gate");
+    let (c, out) = canon_as(&dir, "human:setup", &["give", "human:setup", "house"]);
+    assert_eq!(c, 0, "{out}");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let (c, out) = canon_as(
+        &dir,
+        "human:setup",
+        &["add", "Quiet after eleven.", "--area", "house"],
+    );
+    assert_eq!(c, 0, "{out}");
+    let rule = id_of(&out);
+    let (c, out) = canon_as(&dir, "human:setup", &["rank", &rule, "principle"]);
+    assert_eq!(c, 0, "{out}");
+    assert!(out.contains("is a principle"), "{out}");
+    let (c, out) = canon_as(&dir, "human:stranger", &["rank", &rule, "convention"]);
+    assert!(!out.contains("is a convention"), "{out}");
+    assert!(out.contains("not in charge of it"), "{c}: {out}");
+    let (_, listed) = canon_as(&dir, "human:setup", &["list", "--json"]);
+    assert!(
+        listed.contains("principle") && !listed.contains("\"convention\""),
+        "{listed}"
+    );
+}

@@ -11,7 +11,7 @@
 
 use std::path::Path;
 
-use canon_core::{ActId, ActKind, Scope};
+use canon_core::{ActId, ActKind};
 
 use crate::cmds::{fail, flag, has, load, or_fail, positionals, write};
 use crate::store;
@@ -89,9 +89,7 @@ fn commit(args: &[String], pos: &[&str]) -> i32 {
     if pos.len() < 3 {
         return fail("usage: canon draw commit <area> <seats> --after <YYYY-MM-DD> [-m \"<why>\"]");
     }
-    let Some(scope) = Scope::new(pos[1]) else {
-        return fail(format!("`{}` is not an area", pos[1]));
-    };
+    let scope = or_fail!(crate::cmds::parse_area(pos[1]));
     let Ok(count) = pos[2].parse::<usize>() else {
         return fail(format!("`{}` is not a number of seats", pos[2]));
     };
@@ -112,31 +110,27 @@ fn commit(args: &[String], pos: &[&str]) -> i32 {
     }
     let (d, _, canon) = or_fail!(load());
     let pool = canon.who_decides(&scope, after_ts).len();
-    match write(
-        &d,
-        ActKind::DrawCommit {
-            scope: scope.clone(),
-            count,
-            after_ts,
-            rationale: flag(args, "-m").unwrap_or_default().to_string(),
-        },
-    ) {
-        Ok(act) => {
-            println!("{}  {count} seat(s) from {scope}, after {raw}", act.id);
-            println!("  everyone in the pool seals a secret BEFORE {raw}:");
-            println!("    canon draw seal {}", act.id);
-            println!("  and opens it after:");
-            println!("    canon draw open {}", act.id);
-            // Absence reported at the moment it can still be fixed.
-            if pool == 0 {
-                eprintln!("\nwarning: nobody is in charge of `{scope}` yet — as it stands this draw has no pool.");
-            } else if count >= pool {
-                eprintln!("\nwarning: {count} seat(s) from a pool of {pool} would select everyone, which is not a draw.");
-            }
-            0
-        }
-        Err(e) => fail(e),
+    let kind = ActKind::DrawCommit {
+        scope: scope.clone(),
+        count,
+        after_ts,
+        rationale: flag(args, "-m").unwrap_or_default().to_string(),
+    };
+    let act = or_fail!(write(&d, kind));
+    println!("{}  {count} seat(s) from {scope}, after {raw}", act.id);
+    println!("  everyone in the pool seals a secret BEFORE {raw}:");
+    println!("    canon draw seal {}", act.id);
+    println!("  and opens it after:");
+    println!("    canon draw open {}", act.id);
+    // Absence reported at the moment it can still be fixed.
+    if pool == 0 {
+        eprintln!(
+            "\nwarning: nobody is in charge of `{scope}` yet — as it stands this draw has no pool."
+        );
+    } else if count >= pool {
+        eprintln!("\nwarning: {count} seat(s) from a pool of {pool} would select everyone, which is not a draw.");
     }
+    0
 }
 
 fn seal(_args: &[String], pos: &[&str]) -> i32 {
@@ -174,27 +168,21 @@ fn seal(_args: &[String], pos: &[&str]) -> i32 {
     if let Err(e) = std::fs::write(&path, format!("{secret}\n")) {
         return fail(format!("writing {}: {e}", path.display()));
     }
-    match write(
-        &d,
-        ActKind::DrawSecret {
-            commit: commit.clone(),
-            digest: canon_core::id::digest_hex(secret.as_bytes()),
-        },
-    ) {
-        Ok(_) => {
-            println!("sealed for {commit}");
-            println!(
-                "  your secret is in {} and is not in the log",
-                path.display()
-            );
-            println!(
-                "  open it after {}:  canon draw open {commit}",
-                store::ymd(announced.after_ts)
-            );
-            0
-        }
-        Err(e) => fail(e),
-    }
+    let kind = ActKind::DrawSecret {
+        commit: commit.clone(),
+        digest: canon_core::id::digest_hex(secret.as_bytes()),
+    };
+    or_fail!(write(&d, kind));
+    println!("sealed for {commit}");
+    println!(
+        "  your secret is in {} and is not in the log",
+        path.display()
+    );
+    println!(
+        "  open it after {}:  canon draw open {commit}",
+        store::ymd(announced.after_ts)
+    );
+    0
 }
 
 fn open(args: &[String], pos: &[&str]) -> i32 {
@@ -221,10 +209,7 @@ fn open(args: &[String], pos: &[&str]) -> i32 {
     let secret = match flag(args, "--secret") {
         Some(s) => s.to_string(),
         None => {
-            let path = match secrets_dir(&d) {
-                Ok(x) => x.join(commit.as_str()),
-                Err(e) => return fail(e),
-            };
+            let path = or_fail!(secrets_dir(&d)).join(commit.as_str());
             match std::fs::read_to_string(&path) {
                 Ok(s) => s.trim().to_string(),
                 Err(e) => {
@@ -237,20 +222,14 @@ fn open(args: &[String], pos: &[&str]) -> i32 {
             }
         }
     };
-    match write(
-        &d,
-        ActKind::DrawReveal {
-            commit: commit.clone(),
-            secret,
-        },
-    ) {
-        Ok(_) => {
-            println!("opened for {commit}");
-            println!("  read the panel:  canon draw show {commit}");
-            0
-        }
-        Err(e) => fail(e),
-    }
+    let kind = ActKind::DrawReveal {
+        commit: commit.clone(),
+        secret,
+    };
+    or_fail!(write(&d, kind));
+    println!("opened for {commit}");
+    println!("  read the panel:  canon draw show {commit}");
+    0
 }
 
 fn show(args: &[String], pos: &[&str]) -> i32 {
@@ -262,10 +241,7 @@ fn show(args: &[String], pos: &[&str]) -> i32 {
     match canon.draw(&commit) {
         Ok(drawn) => {
             if has(args, "--json") {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&drawn).unwrap_or_default()
-                );
+                crate::cmds::print_json(&drawn);
                 return 0;
             }
             for seat in &drawn.seats {
@@ -301,10 +277,7 @@ fn show(args: &[String], pos: &[&str]) -> i32 {
 fn list(args: &[String]) -> i32 {
     let (_, _, canon) = or_fail!(load());
     if has(args, "--json") {
-        println!(
-            "{}",
-            serde_json::to_string_pretty(canon.draws_announced()).unwrap_or_default()
-        );
+        crate::cmds::print_json(canon.draws_announced());
         return 0;
     }
     if canon.draws().is_empty() {
